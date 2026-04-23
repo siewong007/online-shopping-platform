@@ -1,0 +1,18 @@
+services:
+  db:
+    image: postgres:18.3
+    container_name: home-depot-clone-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: project_depot
+      POSTGRES_USER: project_depot
+      POSTGRES_PASSWORD: project_depot
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U project_depot -d project_depot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

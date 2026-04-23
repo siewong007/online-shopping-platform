@@ -1,0 +1,963 @@
+:root {
+  --page: #eef1f4;
+  --surface: #ffffff;
+  --surface-soft: #f6f7f8;
+  --ink: #111111;
+  --muted: #5a6169;
+  --line: #d6dbe1;
+  --orange: #f96302;
+  --orange-deep: #d35400;
+  --charcoal: #121212;
+  --charcoal-soft: #252525;
+  --sand: #f8efe6;
+  --success: #12805c;
+  --warning: #ba6f12;
+  --shadow: 0 18px 40px rgba(17, 17, 17, 0.08);
+  --display: "Helvetica Neue Condensed", "Arial Narrow", "Franklin Gothic Medium", sans-serif;
+  --body: "Helvetica Neue", "Avenir Next", Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--body);
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top right, rgba(249, 99, 2, 0.08), transparent 22rem),
+    linear-gradient(180deg, #f8f9fb 0%, #edf1f5 100%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-family: var(--display);
+  line-height: 0.96;
+  letter-spacing: -0.03em;
+}
+
+h1 {
+  font-size: clamp(2.6rem, 4vw, 4.4rem);
+}
+
+h2 {
+  font-size: clamp(2rem, 3vw, 3.2rem);
+}
+
+h3 {
+  font-size: clamp(1.3rem, 2vw, 2rem);
+}
+
+p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.58;
+}
+
+ul {
+  margin: 0;
+}
+
+.app-shell,
+.site-header,
+.mega-nav,
+.page-shell,
+.admin-layout {
+  width: min(1280px, calc(100% - 2rem));
+  margin: 0 auto;
+}
+
+.page-shell {
+  padding: 1.25rem 0 4rem;
+}
+
+.loading-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  font-family: var(--display);
+  font-size: 2rem;
+}
+
+.top-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.8rem 5vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  background: var(--charcoal);
+  color: white;
+}
+
+.top-strip p {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.top-link {
+  background: transparent;
+  color: #ffb26f;
+  font-weight: 800;
+}
+
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  padding: 1.2rem 0 1rem;
+}
+
+.brand-block,
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.depot-mark {
+  width: 5.6rem;
+  height: 5.6rem;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.08rem;
+  background: linear-gradient(135deg, var(--orange), var(--orange-deep));
+  color: white;
+  box-shadow: var(--shadow);
+  flex-shrink: 0;
+}
+
+.depot-mark span {
+  font-family: var(--display);
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 0.9;
+}
+
+.depot-mark.compact {
+  width: 4.2rem;
+  height: 4.2rem;
+}
+
+.depot-mark.compact span {
+  font-size: 0.82rem;
+}
+
+.brand-copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.eyebrow {
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.brand-tagline {
+  font-size: 1rem;
+  color: var(--charcoal);
+  font-weight: 700;
+}
+
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.search-shell {
+  min-width: min(34rem, 100%);
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.search-shell span {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.search-shell input,
+.campaign-controls select,
+.campaign-controls input {
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+}
+
+.solid-button,
+.outline-button,
+.text-link,
+.nav-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding: 0.82rem 1.15rem;
+  font-weight: 800;
+  transition: transform 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.solid-button {
+  background: linear-gradient(135deg, var(--orange), var(--orange-deep));
+  color: white;
+  box-shadow: var(--shadow);
+}
+
+.outline-button,
+.nav-button {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+.text-link {
+  min-height: auto;
+  padding: 0;
+  color: var(--orange-deep);
+}
+
+.solid-button:hover,
+.outline-button:hover,
+.nav-button:hover,
+.category-card:hover,
+.admin-nav-item:hover,
+.product-card button:hover {
+  transform: translateY(-2px);
+}
+
+.cart-button span {
+  min-width: 1.8rem;
+  height: 1.8rem;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.mega-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  padding: 0.95rem 0 1.35rem;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.mega-nav a {
+  padding: 0.72rem 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.hero-grid,
+.promo-rail,
+.service-grid,
+.metric-grid,
+.admin-panels.two-up,
+.fulfillment-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.hero-grid {
+  grid-template-columns: 2.15fr 1fr 1fr;
+  align-items: stretch;
+}
+
+.hero-panel,
+.promo-rail article,
+.service-card,
+.pro-panel,
+.product-card,
+.dashboard-panel,
+.metric-card,
+.fulfillment-column,
+.sidebar-card,
+.inventory-table,
+.campaign-preview,
+.category-card,
+.seasonal-band,
+.savings-band,
+.admin-main,
+.admin-sidebar {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.hero-panel {
+  padding: 1.4rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-primary {
+  min-height: 27rem;
+  display: grid;
+  align-content: space-between;
+  background:
+    linear-gradient(145deg, rgba(18, 18, 18, 0.96), rgba(37, 37, 37, 0.92)),
+    linear-gradient(135deg, var(--orange), var(--charcoal));
+  color: white;
+}
+
+.hero-primary p,
+.hero-primary .eyebrow,
+.pro-section p,
+.pro-section .eyebrow,
+.admin-sidebar .eyebrow,
+.admin-sidebar p,
+.admin-sidebar li,
+.campaign-preview p,
+.campaign-preview .eyebrow {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.hero-copy {
+  max-width: 42rem;
+}
+
+.hero-copy h2 {
+  max-width: 11ch;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.3rem;
+}
+
+.hero-metrics,
+.pro-panel {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.8rem;
+}
+
+.hero-metrics div,
+.mini-board div,
+.pro-panel div {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.hero-metrics strong,
+.pro-panel strong,
+.metric-card strong,
+.campaign-preview strong {
+  display: block;
+  font-family: var(--display);
+}
+
+.hero-metrics strong {
+  font-size: 1.45rem;
+}
+
+.hero-secondary {
+  background:
+    linear-gradient(180deg, rgba(249, 99, 2, 0.18), rgba(248, 239, 230, 0.96)),
+    var(--sand);
+}
+
+.hero-tertiary {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 244, 247, 0.96)),
+    var(--surface-soft);
+}
+
+.deal-points {
+  padding-left: 1.2rem;
+  margin: 1rem 0;
+  color: var(--ink);
+}
+
+.deal-points li + li {
+  margin-top: 0.55rem;
+}
+
+.mini-board {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1.25rem;
+}
+
+.mini-board span {
+  display: inline-block;
+  margin-bottom: 0.35rem;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.promo-rail {
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 1.2rem;
+}
+
+.promo-rail article,
+.service-card,
+.product-card,
+.metric-card,
+.dashboard-panel,
+.inventory-table,
+.fulfillment-column,
+.campaign-preview,
+.sidebar-card,
+.category-card {
+  padding: 1.2rem;
+}
+
+.promo-rail article {
+  border-top: 0.35rem solid var(--orange);
+}
+
+.seasonal-band {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 1.2rem;
+  padding: 1rem;
+}
+
+.seasonal-band span,
+.savings-tags span,
+.status-pill,
+.badge-chip,
+.tone-chip {
+  padding: 0.52rem 0.78rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.seasonal-band span,
+.savings-tags span,
+.status-pill,
+.tone-chip {
+  background: var(--surface-soft);
+}
+
+.badge-chip {
+  background: rgba(249, 99, 2, 0.12);
+  color: var(--orange-deep);
+}
+
+.section-heading {
+  display: grid;
+  gap: 0.35rem;
+  margin: 3.2rem 0 1.15rem;
+}
+
+.section-copy {
+  max-width: 38rem;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.9rem;
+}
+
+.category-card {
+  display: grid;
+  gap: 0.4rem;
+  text-align: left;
+}
+
+.category-card strong {
+  font-size: 1.08rem;
+}
+
+.category-card.active,
+.admin-nav-item.active {
+  background: linear-gradient(135deg, var(--orange), var(--orange-deep));
+  border-color: transparent;
+  color: white;
+}
+
+.category-card.active span {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.savings-band,
+.pro-section,
+.admin-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.savings-band {
+  margin-top: 2.2rem;
+  padding: 1.25rem 1.4rem;
+}
+
+.savings-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.product-card {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.product-topline {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.product-visual {
+  min-height: 11rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.15), transparent 32%),
+    linear-gradient(145deg, rgba(18, 18, 18, 0.96), rgba(249, 99, 2, 0.92));
+  color: white;
+}
+
+.product-visual span {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.product-visual strong {
+  font-family: var(--display);
+  font-size: 1.7rem;
+}
+
+.product-meta {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.product-card footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 1rem;
+}
+
+.price-label {
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.product-card footer strong {
+  display: block;
+  font-size: 1.7rem;
+  color: var(--ink);
+  font-family: var(--display);
+}
+
+.product-card button {
+  min-height: 2.85rem;
+  padding: 0.78rem 1rem;
+  background: var(--charcoal);
+  color: white;
+  font-weight: 800;
+}
+
+.service-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.service-card {
+  border-left: 0.35rem solid var(--orange);
+}
+
+.pro-section {
+  margin-top: 3.6rem;
+  padding: 1.5rem;
+  background:
+    linear-gradient(135deg, rgba(18, 18, 18, 0.96), rgba(37, 37, 37, 0.96)),
+    var(--charcoal);
+  color: white;
+}
+
+.pro-copy {
+  max-width: 38rem;
+}
+
+.admin-layout {
+  display: grid;
+  grid-template-columns: 18rem 1fr;
+  gap: 1rem;
+  min-height: 100vh;
+  padding: 1rem 0;
+}
+
+.admin-sidebar {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: rgba(18, 18, 18, 0.95);
+  color: white;
+}
+
+.admin-nav {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.admin-nav-item {
+  padding: 0.92rem 1rem;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 800;
+}
+
+.admin-main {
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.admin-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.metric-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.metric-card strong {
+  margin: 0.22rem 0;
+  font-size: 2rem;
+}
+
+.metric-card span,
+.activity-list span,
+.customer-list span {
+  color: var(--muted);
+}
+
+.admin-panels.two-up {
+  grid-template-columns: 1.4fr 1fr;
+  margin-top: 1rem;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.status-pill.live {
+  background: rgba(18, 128, 92, 0.12);
+  color: var(--success);
+}
+
+.status-pill.warning {
+  background: rgba(186, 111, 18, 0.12);
+  color: var(--warning);
+}
+
+.bar-chart,
+.customer-list,
+.activity-list,
+.catalog-list,
+.campaign-controls,
+.inventory-table {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.bar-chart div {
+  display: grid;
+  grid-template-columns: 6rem 1fr;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bar-chart strong {
+  padding: 0.68rem 0.85rem;
+  background: linear-gradient(135deg, var(--orange), var(--orange-deep));
+  color: white;
+}
+
+.customer-list div,
+.activity-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.customer-list div:last-child,
+.activity-list div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.inventory-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.inventory-header {
+  padding-top: 0;
+}
+
+.inventory-row:last-child {
+  border-bottom: 0;
+}
+
+.fulfillment-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.task-card {
+  margin-top: 0.85rem;
+  padding: 0.9rem;
+  background: var(--surface-soft);
+}
+
+.task-card strong {
+  display: block;
+  margin-bottom: 0.28rem;
+}
+
+.campaign-controls label {
+  display: grid;
+  gap: 0.42rem;
+  font-weight: 800;
+}
+
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.admin-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.admin-field {
+  display: grid;
+  gap: 0.42rem;
+  font-weight: 800;
+}
+
+.admin-field input,
+.admin-field select,
+.admin-field textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 0.85rem 0.9rem;
+  resize: vertical;
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-weight: 700;
+}
+
+.checkbox-field input {
+  width: 1rem;
+  height: 1rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.catalog-feedback {
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  font-weight: 700;
+}
+
+.catalog-feedback.success {
+  border-color: rgba(18, 128, 92, 0.24);
+  background: rgba(18, 128, 92, 0.08);
+  color: var(--success);
+}
+
+.catalog-feedback.error {
+  border-color: rgba(211, 84, 0, 0.24);
+  background: rgba(249, 99, 2, 0.08);
+  color: var(--orange-deep);
+}
+
+.catalog-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.catalog-list div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.campaign-preview {
+  display: grid;
+  align-content: center;
+  background:
+    linear-gradient(145deg, rgba(18, 18, 18, 0.96), rgba(37, 37, 37, 0.92)),
+    var(--charcoal);
+  color: white;
+}
+
+.campaign-preview strong {
+  font-size: clamp(2rem, 5vw, 4rem);
+}
+
+.activity-feed {
+  margin-top: 1rem;
+}
+
+@media (max-width: 1120px) {
+  .site-header,
+  .savings-band,
+  .pro-section,
+  .admin-topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-grid,
+  .promo-rail,
+  .product-grid,
+  .service-grid,
+  .metric-grid,
+  .category-grid,
+  .catalog-grid,
+  .admin-form-grid,
+  .admin-panels.two-up,
+  .fulfillment-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .admin-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .top-strip,
+  .brand-block,
+  .product-card footer,
+  .customer-list div,
+  .activity-list div {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hero-grid,
+  .promo-rail,
+  .product-grid,
+  .service-grid,
+  .metric-grid,
+  .category-grid,
+  .catalog-grid,
+  .admin-form-grid,
+  .admin-panels.two-up,
+  .fulfillment-grid,
+  .hero-metrics,
+  .pro-panel,
+  .inventory-row {
+    grid-template-columns: 1fr;
+  }
+
+  .search-shell {
+    min-width: 100%;
+  }
+
+  .depot-mark {
+    width: 4.6rem;
+    height: 4.6rem;
+  }
+
+  .depot-mark span {
+    font-size: 0.86rem;
+  }
+}
