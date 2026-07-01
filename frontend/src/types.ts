@@ -28,6 +28,13 @@ export type {
 } from "./modules/orders/types";
 
 export type {
+  CreatePaymentInput,
+  Payment,
+  PaymentStatus,
+  UpdatePaymentInput
+} from "./modules/payments/types";
+
+export type {
   CreateCustomerPortalProfileInput,
   CustomerPortalProfile,
   UpdateCustomerPortalProfileInput

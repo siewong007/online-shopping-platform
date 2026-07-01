@@ -2,6 +2,7 @@ import type {
   AdminDashboardPayload,
   CustomerPortalProfile,
   Order,
+  Payment,
   PermissionsPayload,
   StorefrontPayload
 } from "../types";
@@ -224,6 +225,41 @@ export const fallbackCustomerPortalProfiles: CustomerPortalProfile[] = [
   }
 ];
 
+export const fallbackPayments: Payment[] = [
+  {
+    id: 501,
+    order_id: 1042,
+    order_customer_name: "Falcon Builders",
+    order_customer_email: "ap@falconbuilders.com",
+    order_subtotal_cents: 119800,
+    idempotency_key: "pay-1042-capture-1",
+    amount_cents: 119800,
+    method: "Card",
+    status: "Captured",
+    reference: "ch_falcon_1042",
+    notes: "Approved through contractor card terminal.",
+    processed_at: "2026-06-29 08:43:00+00",
+    created_at: "2026-06-29 08:43:00+00",
+    updated_at: "2026-06-29 08:43:00+00"
+  },
+  {
+    id: 500,
+    order_id: 1041,
+    order_customer_name: "Dana Whitfield",
+    order_customer_email: "dana.w@example.com",
+    order_subtotal_cents: 64900,
+    idempotency_key: "pay-1041-pending-1",
+    amount_cents: 64900,
+    method: "ACH",
+    status: "Pending",
+    reference: "ach-dana-1041",
+    notes: "Awaiting settlement batch.",
+    processed_at: null,
+    created_at: "2026-06-29 07:18:00+00",
+    updated_at: "2026-06-29 07:18:00+00"
+  }
+];
+
 export const fallbackPermissions: PermissionsPayload = {
   roles: [
     {
@@ -262,12 +298,13 @@ export const fallbackPermissions: PermissionsPayload = {
     { id: 4, slug: "admin-campaigns", name: "Campaigns", description: "Promotional planning controls." },
     { id: 5, slug: "admin-catalog", name: "Catalog", description: "Category and product management." },
     { id: 6, slug: "admin-orders", name: "Orders", description: "Checkout order book." },
-    { id: 7, slug: "admin-customers", name: "Customers", description: "Customer portal membership, points and purchase controls." },
-    { id: 8, slug: "admin-permissions", name: "Permissions", description: "Role and page permission management." },
-    { id: 9, slug: "storefront", name: "Storefront", description: "Customer-facing shopping experience." }
+    { id: 7, slug: "admin-payments", name: "Payments", description: "Payment ledger, tender status and transaction controls." },
+    { id: 8, slug: "admin-customers", name: "Customers", description: "Customer portal membership, points and purchase controls." },
+    { id: 9, slug: "admin-permissions", name: "Permissions", description: "Role and page permission management." },
+    { id: 10, slug: "storefront", name: "Storefront", description: "Customer-facing shopping experience." }
   ],
   permissions: [
-    ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((pageId) => ({
+    ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((pageId) => ({
       role_id: 1,
       page_id: pageId,
       can_create: true,
@@ -283,8 +320,9 @@ export const fallbackPermissions: PermissionsPayload = {
       [2, 5, true, true, true, true],
       [2, 6, false, true, true, false],
       [2, 7, true, true, true, true],
-      [2, 8, false, false, false, false],
-      [2, 9, false, true, false, false],
+      [2, 8, true, true, true, true],
+      [2, 9, false, false, false, false],
+      [2, 10, false, true, false, false],
       [3, 1, false, true, false, false],
       [3, 2, false, false, false, false],
       [3, 3, false, false, false, false],
@@ -292,17 +330,19 @@ export const fallbackPermissions: PermissionsPayload = {
       [3, 5, true, true, true, true],
       [3, 6, false, true, false, false],
       [3, 7, false, true, false, false],
-      [3, 8, false, false, false, false],
-      [3, 9, false, true, false, false],
+      [3, 8, false, true, false, false],
+      [3, 9, false, false, false, false],
+      [3, 10, false, true, false, false],
       [4, 1, false, true, false, false],
       [4, 2, false, true, true, false],
       [4, 3, true, true, true, false],
       [4, 4, false, false, false, false],
       [4, 5, false, false, false, false],
       [4, 6, false, true, true, false],
-      [4, 7, false, true, false, false],
-      [4, 8, false, false, false, false],
-      [4, 9, false, false, false, false]
+      [4, 7, false, true, true, false],
+      [4, 8, false, true, false, false],
+      [4, 9, false, false, false, false],
+      [4, 10, false, false, false, false]
     ].map(([roleId, pageId, canCreate, canRead, canUpdate, canDelete]) => ({
       role_id: Number(roleId),
       page_id: Number(pageId),

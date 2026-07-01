@@ -19,6 +19,12 @@ export {
   updateAdminOrder
 } from "../modules/orders/api/orderApi";
 export {
+  createPayment,
+  deletePayment,
+  fetchPayments,
+  updatePayment
+} from "../modules/payments/api/paymentApi";
+export {
   createRole,
   deleteRole,
   fetchPermissions,

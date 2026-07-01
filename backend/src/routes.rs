@@ -7,7 +7,9 @@ use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
 use crate::{
     app_state::AppState,
-    modules::{catalog, customer_portal, dashboard, health, orders, permissions, storefront},
+    modules::{
+        catalog, customer_portal, dashboard, health, orders, payments, permissions, storefront,
+    },
 };
 
 pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
@@ -32,6 +34,16 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
             "/api/admin/orders/{order_id}",
             put(orders::controller::admin_update_order)
                 .delete(orders::controller::admin_delete_order),
+        )
+        .route(
+            "/api/admin/payments",
+            get(payments::controller::admin_payments)
+                .post(payments::controller::admin_create_payment),
+        )
+        .route(
+            "/api/admin/payments/{payment_id}",
+            put(payments::controller::admin_update_payment)
+                .delete(payments::controller::admin_delete_payment),
         )
         .route(
             "/api/admin/customer-portal",
