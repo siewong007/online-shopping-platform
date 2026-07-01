@@ -32,5 +32,22 @@ export {
   updateRolePermission
 } from "../modules/permissions/api/permissionsApi";
 export {
+  fetchSales,
+  fetchSalesSummary,
+  updateSalesDetails,
+  updateSalesStatus
+} from "../modules/sales/api/salesApi";
+export {
+  createInvoiceFromOrder,
+  fetchInvoices,
+  recordInvoicePayment,
+  updateInvoiceBilling,
+  voidInvoice
+} from "../modules/invoices/api/invoiceApi";
+export {
+  fetchSystemSettings,
+  updateSystemSetting
+} from "../modules/settings/api/settingsApi";
+export {
   fetchStorefront
 } from "../modules/storefront/api/storefrontApi";

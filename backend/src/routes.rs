@@ -8,7 +8,8 @@ use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use crate::{
     app_state::AppState,
     modules::{
-        catalog, customer_portal, dashboard, health, orders, payments, permissions, storefront,
+        catalog, customer_portal, dashboard, health, invoices, orders, payments, permissions,
+        sales, settings, storefront,
     },
 };
 
@@ -44,6 +45,47 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
             "/api/admin/payments/{payment_id}",
             put(payments::controller::admin_update_payment)
                 .delete(payments::controller::admin_delete_payment),
+        )
+        .route("/api/admin/sales", get(sales::controller::admin_sales))
+        .route(
+            "/api/admin/sales/summary",
+            get(sales::controller::admin_sales_summary),
+        )
+        .route(
+            "/api/admin/sales/{order_id}",
+            put(sales::controller::admin_update_sales_details),
+        )
+        .route(
+            "/api/admin/sales/{order_id}/status",
+            put(sales::controller::admin_update_sales_status),
+        )
+        .route(
+            "/api/admin/invoices",
+            get(invoices::controller::admin_invoices),
+        )
+        .route(
+            "/api/admin/invoices/from-order/{order_id}",
+            post(invoices::controller::admin_create_invoice_from_order),
+        )
+        .route(
+            "/api/admin/invoices/{invoice_id}",
+            put(invoices::controller::admin_update_invoice_billing),
+        )
+        .route(
+            "/api/admin/invoices/{invoice_id}/void",
+            post(invoices::controller::admin_void_invoice),
+        )
+        .route(
+            "/api/admin/invoices/{invoice_id}/payments",
+            post(invoices::controller::admin_record_invoice_payment),
+        )
+        .route(
+            "/api/admin/settings",
+            get(settings::controller::admin_settings),
+        )
+        .route(
+            "/api/admin/settings/{key}",
+            put(settings::controller::admin_update_setting),
         )
         .route(
             "/api/admin/customer-portal",
