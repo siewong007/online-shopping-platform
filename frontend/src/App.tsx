@@ -5,22 +5,27 @@ import {
   createAdminOrder as createAdminOrderRequest,
   createCategory as createCategoryRequest,
   createCustomerPortalProfile as createCustomerPortalProfileRequest,
+  createPayment as createPaymentRequest,
   createProduct as createProductRequest,
   createRole as createRoleRequest,
   deleteAdminOrder as deleteAdminOrderRequest,
   deleteCustomerPortalProfile as deleteCustomerPortalProfileRequest,
+  deletePayment as deletePaymentRequest,
   deleteRole as deleteRoleRequest,
   fetchAdminDashboard,
   fetchCustomerPortalProfiles,
   fetchOrders,
+  fetchPayments,
   fetchPermissions,
   fetchStorefront,
   updateAdminOrder as updateAdminOrderRequest,
   updateCustomerPortalProfile as updateCustomerPortalProfileRequest,
+  updatePayment as updatePaymentRequest,
   updateRole as updateRoleRequest,
   updateRolePermission as updateRolePermissionRequest
 } from "./lib/api";
 import { OrderControlPanel } from "./modules/orders/components/OrderControlPanel";
+import { PaymentManagementPanel } from "./modules/payments/components/PaymentManagementPanel";
 import { PermissionsPanel } from "./modules/permissions/components/PermissionsPanel";
 import { currencyFromCents, formatOrderDate } from "./shared/formatters";
 import type {
@@ -32,17 +37,20 @@ import type {
   CreateCategoryInput,
   CreateCustomerPortalProfileInput,
   CreateOrderInput,
+  CreatePaymentInput,
   CreateProductInput,
   CreateRoleInput,
   CustomerPortalProfile,
   FulfillmentItem,
   Order,
+  Payment,
   PermissionsPayload,
   Product,
   Role,
   RolePagePermission,
   StorefrontPayload,
   UpdateCustomerPortalProfileInput,
+  UpdatePaymentInput,
   UpdateRoleInput,
   UpdateRolePagePermissionInput
 } from "./types";
@@ -58,6 +66,7 @@ type AdminTab =
   | "catalog"
   | "customers"
   | "orders"
+  | "payments"
   | "permissions";
 
 type PermissionAction = "create" | "read" | "update" | "delete";
@@ -70,6 +79,7 @@ const adminTabs: { tab: AdminTab; label: string; pageSlug: string }[] = [
   { tab: "catalog", label: "Catalog", pageSlug: "admin-catalog" },
   { tab: "customers", label: "Customers", pageSlug: "admin-customers" },
   { tab: "orders", label: "Orders", pageSlug: "admin-orders" },
+  { tab: "payments", label: "Payments", pageSlug: "admin-payments" },
   { tab: "permissions", label: "Permissions", pageSlug: "admin-permissions" }
 ];
 
@@ -695,6 +705,7 @@ export default function App() {
   const [discount, setDiscount] = useState(25);
   const [activityFeed, setActivityFeed] = useState<ActivityItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [customerProfiles, setCustomerProfiles] = useState<CustomerPortalProfile[]>([]);
   const [permissions, setPermissions] = useState<PermissionsPayload | null>(null);
   const [activeRoleId, setActiveRoleId] = useState<number | null>(null);
@@ -711,15 +722,17 @@ export default function App() {
       fetchStorefront(),
       fetchAdminDashboard(),
       fetchOrders(),
+      fetchPayments(),
       fetchCustomerPortalProfiles(),
       fetchPermissions()
     ]).then(
-      ([storefrontData, dashboardData, ordersData, customerProfileData, permissionsData]) => {
+      ([storefrontData, dashboardData, ordersData, paymentsData, customerProfileData, permissionsData]) => {
         setStorefront(storefrontData);
         setDashboard(dashboardData);
         setSelectedCampaign(dashboardData.campaigns[0] ?? null);
         setActivityFeed(dashboardData.activity);
         setOrders(ordersData);
+        setPayments(paymentsData);
         setCustomerProfiles(customerProfileData);
         setPermissions(permissionsData);
         setActiveRoleId(permissionsData.roles.find((role) => role.is_super_admin)?.id ?? permissionsData.roles[0]?.id ?? null);
@@ -860,10 +873,62 @@ export default function App() {
     await deleteAdminOrderRequest(orderId, activeRoleForWrite());
 
     setOrders((current) => current.filter((order) => order.id !== orderId));
+    setPayments((current) => current.filter((payment) => payment.order_id !== orderId));
     setActivityFeed((current) => [
       {
         happened_at: "Now",
         detail: `Order #${orderId} was removed from the order book.`
+      },
+      ...current
+    ]);
+  };
+
+  const createPayment = async (input: CreatePaymentInput): Promise<Payment> => {
+    const payment = await createPaymentRequest(input, activeRoleForWrite());
+
+    setPayments((current) => {
+      const exists = current.some((item) => item.id === payment.id);
+      return exists
+        ? current.map((item) => (item.id === payment.id ? payment : item))
+        : [payment, ...current];
+    });
+    setActivityFeed((current) => [
+      {
+        happened_at: "Now",
+        detail: `Payment #${payment.id} recorded for order #${payment.order_id}.`
+      },
+      ...current
+    ]);
+
+    return payment;
+  };
+
+  const updatePayment = async (
+    paymentId: number,
+    input: UpdatePaymentInput
+  ): Promise<Payment> => {
+    const payment = await updatePaymentRequest(paymentId, input, activeRoleForWrite());
+
+    setPayments((current) => current.map((item) => (item.id === payment.id ? payment : item)));
+    setActivityFeed((current) => [
+      {
+        happened_at: "Now",
+        detail: `Payment #${payment.id} was updated for order #${payment.order_id}.`
+      },
+      ...current
+    ]);
+
+    return payment;
+  };
+
+  const deletePayment = async (paymentId: number): Promise<void> => {
+    await deletePaymentRequest(paymentId, activeRoleForWrite());
+
+    setPayments((current) => current.filter((payment) => payment.id !== paymentId));
+    setActivityFeed((current) => [
+      {
+        happened_at: "Now",
+        detail: `Payment #${paymentId} was deleted from the ledger.`
       },
       ...current
     ]);
@@ -1109,19 +1174,23 @@ export default function App() {
           onCreateAdminOrder={createAdminOrder}
           onCreateCategory={createCategory}
           onCreateCustomerPortalProfile={createCustomerPortalProfile}
+          onCreatePayment={createPayment}
           onCreateProduct={createProduct}
           onCreateRole={createRole}
           onDeleteAdminOrder={deleteAdminOrder}
           onDeleteCustomerPortalProfile={deleteCustomerPortalProfile}
+          onDeletePayment={deletePayment}
           onDeleteRole={deleteRole}
           onRunSync={runSupplierSync}
           onSelectCampaign={(name) =>
             setSelectedCampaign(dashboard.campaigns.find((item) => item.name === name) ?? null)
           }
           onUpdateAdminOrder={updateAdminOrder}
+          onUpdatePayment={updatePayment}
           onUpdateRole={updateRole}
           onUpdateRolePermission={updateRolePermission}
           orders={orders}
+          payments={payments}
           permissions={permissions}
           products={storefront.products}
           selectedCampaign={selectedCampaign}
@@ -1635,10 +1704,12 @@ type AdminViewProps = {
   onCreateCustomerPortalProfile: (
     input: CreateCustomerPortalProfileInput
   ) => Promise<CustomerPortalProfile>;
+  onCreatePayment: (input: CreatePaymentInput) => Promise<Payment>;
   onCreateProduct: (input: CreateProductInput) => Promise<Product>;
   onCreateRole: (input: CreateRoleInput) => Promise<Role>;
   onDeleteAdminOrder: (orderId: number) => Promise<void>;
   onDeleteCustomerPortalProfile: (profileId: number) => Promise<void>;
+  onDeletePayment: (paymentId: number) => Promise<void>;
   onDeleteRole: (roleId: number) => Promise<void>;
   onRunSync: () => void;
   onSelectCampaign: (name: string) => void;
@@ -1647,9 +1718,11 @@ type AdminViewProps = {
     profileId: number,
     input: UpdateCustomerPortalProfileInput
   ) => Promise<CustomerPortalProfile>;
+  onUpdatePayment: (paymentId: number, input: UpdatePaymentInput) => Promise<Payment>;
   onUpdateRole: (roleId: number, input: UpdateRoleInput) => Promise<Role>;
   onUpdateRolePermission: (input: UpdateRolePagePermissionInput) => Promise<RolePagePermission>;
   orders: Order[];
+  payments: Payment[];
   permissions: PermissionsPayload | null;
   products: Product[];
   selectedCampaign: CampaignOption | null;
@@ -1674,18 +1747,22 @@ function AdminView({
   onCreateAdminOrder,
   onCreateCategory,
   onCreateCustomerPortalProfile,
+  onCreatePayment,
   onCreateProduct,
   onCreateRole,
   onDeleteAdminOrder,
   onDeleteCustomerPortalProfile,
+  onDeletePayment,
   onDeleteRole,
   onRunSync,
   onSelectCampaign,
   onUpdateAdminOrder,
   onUpdateCustomerPortalProfile,
+  onUpdatePayment,
   onUpdateRole,
   onUpdateRolePermission,
   orders,
+  payments,
   permissions,
   products,
   selectedCampaign,
@@ -1717,6 +1794,9 @@ function AdminView({
   const canCreateOrders = canAccess(permissions, activeRoleId, "admin-orders", "create");
   const canUpdateOrders = canAccess(permissions, activeRoleId, "admin-orders", "update");
   const canDeleteOrders = canAccess(permissions, activeRoleId, "admin-orders", "delete");
+  const canCreatePayments = canAccess(permissions, activeRoleId, "admin-payments", "create");
+  const canUpdatePayments = canAccess(permissions, activeRoleId, "admin-payments", "update");
+  const canDeletePayments = canAccess(permissions, activeRoleId, "admin-payments", "delete");
   const canUpdateCampaigns = canAccess(permissions, activeRoleId, "admin-campaigns", "update");
   const canRunOperationsSync = canAccess(permissions, activeRoleId, "admin-overview", "update");
 
@@ -2344,6 +2424,19 @@ function AdminView({
           />
         ) : null}
 
+        {adminTab === "payments" ? (
+          <PaymentManagementPanel
+            canCreate={canCreatePayments}
+            canDelete={canDeletePayments}
+            canUpdate={canUpdatePayments}
+            onCreatePayment={onCreatePayment}
+            onDeletePayment={onDeletePayment}
+            onUpdatePayment={onUpdatePayment}
+            orders={orders}
+            payments={payments}
+          />
+        ) : null}
+
         {adminTab === "permissions" ? (
           <PermissionsPanel
             activeRoleId={activeRoleId}
@@ -2377,4 +2470,3 @@ function AdminView({
     </main>
   );
 }
-

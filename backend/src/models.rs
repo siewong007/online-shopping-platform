@@ -142,6 +142,44 @@ pub struct Order {
 }
 
 #[derive(Debug, Clone, Serialize, FromRow)]
+pub struct Payment {
+    pub id: i32,
+    pub order_id: i32,
+    pub order_customer_name: String,
+    pub order_customer_email: String,
+    pub order_subtotal_cents: i32,
+    pub idempotency_key: String,
+    pub amount_cents: i32,
+    pub method: String,
+    pub status: String,
+    pub reference: String,
+    pub notes: String,
+    pub processed_at: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct CreatePaymentInput {
+    pub order_id: i32,
+    pub idempotency_key: String,
+    pub amount_cents: i32,
+    pub method: String,
+    pub status: String,
+    pub reference: String,
+    pub notes: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct UpdatePaymentInput {
+    pub amount_cents: i32,
+    pub method: String,
+    pub status: String,
+    pub reference: String,
+    pub notes: String,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
 pub struct CustomerPortalProfile {
     pub id: i32,
     pub customer_name: String,
@@ -229,4 +267,126 @@ pub struct PermissionsPayload {
     pub roles: Vec<Role>,
     pub pages: Vec<PermissionPage>,
     pub permissions: Vec<RolePagePermission>,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct SystemSetting {
+    pub key: String,
+    pub value: String,
+    pub value_type: String,
+    pub category: String,
+    pub description: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct UpdateSystemSettingInput {
+    pub value: String,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct SalesRecord {
+    pub order_id: i32,
+    pub customer_name: String,
+    pub customer_email: String,
+    pub subtotal_cents: i32,
+    pub status: String,
+    pub payment_status: String,
+    pub channel: String,
+    pub sales_rep: String,
+    pub discount_cents: i32,
+    pub tax_cents: i32,
+    pub total_cents: i32,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct UpdateSalesDetailsInput {
+    pub channel: String,
+    pub sales_rep: String,
+    pub discount_cents: i32,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct UpdateSalesStatusInput {
+    pub status: String,
+    pub note: String,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct SalesStatusCount {
+    pub status: String,
+    pub count: i64,
+    pub total_cents: i64,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct SalesChannelCount {
+    pub channel: String,
+    pub count: i64,
+    pub total_cents: i64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SalesSummaryPayload {
+    pub total_revenue_cents: i64,
+    pub order_count: i64,
+    pub by_status: Vec<SalesStatusCount>,
+    pub by_channel: Vec<SalesChannelCount>,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct InvoiceLineItem {
+    pub product_id: i32,
+    pub product_name: String,
+    pub unit_price_cents: i32,
+    pub quantity: i32,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct InvoicePayment {
+    pub id: i32,
+    pub amount_cents: i32,
+    pub method: String,
+    pub paid_at: String,
+    pub note: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct Invoice {
+    pub id: i32,
+    pub invoice_number: String,
+    pub order_id: i32,
+    pub status: String,
+    pub billing_name: String,
+    pub billing_email: String,
+    pub billing_address: String,
+    pub subtotal_cents: i32,
+    pub discount_cents: i32,
+    pub tax_cents: i32,
+    pub total_cents: i32,
+    pub amount_paid_cents: i32,
+    pub issued_at: String,
+    pub due_at: String,
+    pub voided_at: Option<String>,
+    pub line_items: Vec<InvoiceLineItem>,
+    pub payments: Vec<InvoicePayment>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct CreateInvoiceFromOrderInput {
+    pub discount_cents: Option<i32>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct UpdateInvoiceBillingInput {
+    pub billing_address: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct RecordInvoicePaymentInput {
+    pub amount_cents: i32,
+    pub method: String,
+    pub note: String,
 }
