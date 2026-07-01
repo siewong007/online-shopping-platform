@@ -1,4 +1,10 @@
-import type { AdminDashboardPayload, StorefrontPayload } from "../types";
+import type {
+  AdminDashboardPayload,
+  CustomerPortalProfile,
+  Order,
+  PermissionsPayload,
+  StorefrontPayload
+} from "../types";
 
 export const fallbackStorefront: StorefrontPayload = {
   categories: [
@@ -164,5 +170,146 @@ export const fallbackAdminDashboard: AdminDashboardPayload = {
     { happened_at: "08:10", detail: "Milwaukee battery promo moved to the hero slot for western stores." },
     { happened_at: "08:42", detail: "Pro desk quote approved for Falcon Builders deck materials order." },
     { happened_at: "09:05", detail: "Dishwasher install route synced with updated delivery windows." }
+  ]
+};
+
+export const fallbackOrders: Order[] = [
+  {
+    id: 1042,
+    customer_name: "Falcon Builders",
+    customer_email: "ap@falconbuilders.com",
+    subtotal_cents: 119800,
+    created_at: "2026-06-29 08:42:00+00",
+    items: [
+      { product_id: 1, product_name: "Milwaukee M18 9-Tool Combo Kit", unit_price_cents: 64900, quantity: 1 },
+      { product_id: 2, product_name: "Pressure-Treated Decking Starter Pack", unit_price_cents: 54900, quantity: 1 }
+    ]
+  },
+  {
+    id: 1041,
+    customer_name: "Dana Whitfield",
+    customer_email: "dana.w@example.com",
+    subtotal_cents: 64900,
+    created_at: "2026-06-29 07:15:00+00",
+    items: [
+      { product_id: 1, product_name: "Milwaukee M18 9-Tool Combo Kit", unit_price_cents: 64900, quantity: 1 }
+    ]
+  }
+];
+
+export const fallbackCustomerPortalProfiles: CustomerPortalProfile[] = [
+  {
+    id: 1,
+    customer_name: "Falcon Builders",
+    customer_email: "ap@falconbuilders.com",
+    membership_tier: "Pro Xtra",
+    points_balance: 1840,
+    lifetime_purchase_cents: 184000,
+    total_orders: 3,
+    last_purchase_at: "2026-06-29 08:42:00+00",
+    created_at: "2026-06-29 08:00:00+00",
+    updated_at: "2026-06-29 08:42:00+00"
+  },
+  {
+    id: 2,
+    customer_name: "Dana Whitfield",
+    customer_email: "dana.w@example.com",
+    membership_tier: "Silver",
+    points_balance: 649,
+    lifetime_purchase_cents: 64900,
+    total_orders: 1,
+    last_purchase_at: "2026-06-29 07:15:00+00",
+    created_at: "2026-06-29 07:00:00+00",
+    updated_at: "2026-06-29 07:15:00+00"
+  }
+];
+
+export const fallbackPermissions: PermissionsPayload = {
+  roles: [
+    {
+      id: 1,
+      name: "Super Admin",
+      description: "Ultimate access across every page and action.",
+      is_super_admin: true,
+      created_at: "2026-06-29 08:00:00+00"
+    },
+    {
+      id: 2,
+      name: "Store Manager",
+      description: "Daily operations lead with broad store-console access.",
+      is_super_admin: false,
+      created_at: "2026-06-29 08:05:00+00"
+    },
+    {
+      id: 3,
+      name: "Catalog Specialist",
+      description: "Maintains departments, products and promotional content.",
+      is_super_admin: false,
+      created_at: "2026-06-29 08:10:00+00"
+    },
+    {
+      id: 4,
+      name: "Fulfillment Lead",
+      description: "Owns order flow, pickup readiness and inventory movement.",
+      is_super_admin: false,
+      created_at: "2026-06-29 08:15:00+00"
+    }
+  ],
+  pages: [
+    { id: 1, slug: "admin-overview", name: "Overview", description: "Store operations dashboard." },
+    { id: 2, slug: "admin-inventory", name: "Inventory", description: "Inventory health and replenishment." },
+    { id: 3, slug: "admin-fulfillment", name: "Fulfillment", description: "Order flow by fulfillment stage." },
+    { id: 4, slug: "admin-campaigns", name: "Campaigns", description: "Promotional planning controls." },
+    { id: 5, slug: "admin-catalog", name: "Catalog", description: "Category and product management." },
+    { id: 6, slug: "admin-orders", name: "Orders", description: "Checkout order book." },
+    { id: 7, slug: "admin-customers", name: "Customers", description: "Customer portal membership, points and purchase controls." },
+    { id: 8, slug: "admin-permissions", name: "Permissions", description: "Role and page permission management." },
+    { id: 9, slug: "storefront", name: "Storefront", description: "Customer-facing shopping experience." }
+  ],
+  permissions: [
+    ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((pageId) => ({
+      role_id: 1,
+      page_id: pageId,
+      can_create: true,
+      can_read: true,
+      can_update: true,
+      can_delete: true
+    })),
+    ...[
+      [2, 1, false, true, true, false],
+      [2, 2, false, true, true, false],
+      [2, 3, false, true, true, false],
+      [2, 4, true, true, true, false],
+      [2, 5, true, true, true, true],
+      [2, 6, false, true, true, false],
+      [2, 7, true, true, true, true],
+      [2, 8, false, false, false, false],
+      [2, 9, false, true, false, false],
+      [3, 1, false, true, false, false],
+      [3, 2, false, false, false, false],
+      [3, 3, false, false, false, false],
+      [3, 4, false, true, true, false],
+      [3, 5, true, true, true, true],
+      [3, 6, false, true, false, false],
+      [3, 7, false, true, false, false],
+      [3, 8, false, false, false, false],
+      [3, 9, false, true, false, false],
+      [4, 1, false, true, false, false],
+      [4, 2, false, true, true, false],
+      [4, 3, true, true, true, false],
+      [4, 4, false, false, false, false],
+      [4, 5, false, false, false, false],
+      [4, 6, false, true, true, false],
+      [4, 7, false, true, false, false],
+      [4, 8, false, false, false, false],
+      [4, 9, false, false, false, false]
+    ].map(([roleId, pageId, canCreate, canRead, canUpdate, canDelete]) => ({
+      role_id: Number(roleId),
+      page_id: Number(pageId),
+      can_create: Boolean(canCreate),
+      can_read: Boolean(canRead),
+      can_update: Boolean(canUpdate),
+      can_delete: Boolean(canDelete)
+    }))
   ]
 };
