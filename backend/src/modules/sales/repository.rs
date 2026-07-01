@@ -1,0 +1,31 @@
+use anyhow::Result;
+use sqlx::PgPool;
+
+use super::{
+    dto::{UpdateSalesDetailsInput, UpdateSalesStatusInput},
+    model::{SalesRecord, SalesSummaryPayload},
+};
+
+pub async fn fetch_sales(pool: &PgPool) -> Result<Vec<SalesRecord>> {
+    crate::db::fetch_sales(pool).await
+}
+
+pub async fn update_sales_details(
+    pool: &PgPool,
+    order_id: i32,
+    input: &UpdateSalesDetailsInput,
+) -> Result<SalesRecord> {
+    crate::db::update_sales_details(pool, order_id, input).await
+}
+
+pub async fn update_sales_status(
+    pool: &PgPool,
+    order_id: i32,
+    input: &UpdateSalesStatusInput,
+) -> Result<SalesRecord> {
+    crate::db::update_sales_status(pool, order_id, input).await
+}
+
+pub async fn fetch_sales_summary(pool: &PgPool) -> Result<SalesSummaryPayload> {
+    crate::db::fetch_sales_summary(pool).await
+}

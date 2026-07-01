@@ -1487,3 +1487,161 @@ ul {
 .cart-confirmation .solid-button {
   width: 100%;
 }
+
+.status-pill.danger {
+  background: rgba(211, 84, 0, 0.12);
+  color: var(--orange-deep);
+}
+
+.sales-list,
+.invoices-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.sales-row {
+  display: grid;
+  gap: 1rem;
+}
+
+.sales-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.sales-detail-grid div {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  background: var(--surface-soft);
+}
+
+.sales-detail-grid span {
+  color: var(--muted);
+}
+
+.sales-inline-form {
+  align-items: end;
+}
+
+.sales-terminal-note {
+  color: var(--muted);
+  margin: 0;
+}
+
+.settings-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 1rem;
+}
+
+.settings-row-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.settings-row {
+  display: grid;
+  gap: 0.6rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.settings-row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.settings-row-description {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.settings-row-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.settings-row-footer span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.invoice-print-view {
+  display: none;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .invoice-print-view,
+  .invoice-print-view * {
+    visibility: visible;
+  }
+
+  .invoice-print-view {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 1.5rem;
+    color: #111111;
+  }
+}
+
+.invoice-print-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.invoice-print-meta {
+  text-align: right;
+}
+
+.invoice-print-billing {
+  margin-bottom: 1.5rem;
+}
+
+.invoice-print-billing p {
+  margin: 0.15rem 0;
+}
+
+.invoice-print-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+}
+
+.invoice-print-table th,
+.invoice-print-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 0.6rem;
+  text-align: left;
+}
+
+.invoice-print-totals {
+  display: grid;
+  gap: 0.4rem;
+  max-width: 20rem;
+  margin-left: auto;
+}
+
+.invoice-print-totals div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}

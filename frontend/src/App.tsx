@@ -5,6 +5,7 @@ import {
   createAdminOrder as createAdminOrderRequest,
   createCategory as createCategoryRequest,
   createCustomerPortalProfile as createCustomerPortalProfileRequest,
+  createInvoiceFromOrder as createInvoiceFromOrderRequest,
   createPayment as createPaymentRequest,
   createProduct as createProductRequest,
   createRole as createRoleRequest,
@@ -14,19 +15,32 @@ import {
   deleteRole as deleteRoleRequest,
   fetchAdminDashboard,
   fetchCustomerPortalProfiles,
+  fetchInvoices,
   fetchOrders,
   fetchPayments,
   fetchPermissions,
+  fetchSales,
+  fetchSalesSummary,
   fetchStorefront,
+  fetchSystemSettings,
+  recordInvoicePayment as recordInvoicePaymentRequest,
   updateAdminOrder as updateAdminOrderRequest,
   updateCustomerPortalProfile as updateCustomerPortalProfileRequest,
+  updateInvoiceBilling as updateInvoiceBillingRequest,
   updatePayment as updatePaymentRequest,
   updateRole as updateRoleRequest,
-  updateRolePermission as updateRolePermissionRequest
+  updateRolePermission as updateRolePermissionRequest,
+  updateSalesDetails as updateSalesDetailsRequest,
+  updateSalesStatus as updateSalesStatusRequest,
+  updateSystemSetting as updateSystemSettingRequest,
+  voidInvoice as voidInvoiceRequest
 } from "./lib/api";
+import { InvoicesPanel } from "./modules/invoices/components/InvoicesPanel";
 import { OrderControlPanel } from "./modules/orders/components/OrderControlPanel";
 import { PaymentManagementPanel } from "./modules/payments/components/PaymentManagementPanel";
 import { PermissionsPanel } from "./modules/permissions/components/PermissionsPanel";
+import { SalesPanel } from "./modules/sales/components/SalesPanel";
+import { SettingsPanel } from "./modules/settings/components/SettingsPanel";
 import { currencyFromCents, formatOrderDate } from "./shared/formatters";
 import type {
   ActivityItem,
@@ -36,23 +50,33 @@ import type {
   Category,
   CreateCategoryInput,
   CreateCustomerPortalProfileInput,
+  CreateInvoiceFromOrderInput,
   CreateOrderInput,
   CreatePaymentInput,
   CreateProductInput,
   CreateRoleInput,
   CustomerPortalProfile,
   FulfillmentItem,
+  Invoice,
   Order,
   Payment,
   PermissionsPayload,
   Product,
+  RecordInvoicePaymentInput,
   Role,
   RolePagePermission,
+  SalesRecord,
+  SalesSummaryPayload,
   StorefrontPayload,
+  SystemSetting,
   UpdateCustomerPortalProfileInput,
+  UpdateInvoiceBillingInput,
   UpdatePaymentInput,
   UpdateRoleInput,
-  UpdateRolePagePermissionInput
+  UpdateRolePagePermissionInput,
+  UpdateSalesDetailsInput,
+  UpdateSalesStatusInput,
+  UpdateSystemSettingInput
 } from "./types";
 
 const CART_STORAGE_KEY = "depot-cart";
@@ -67,6 +91,9 @@ type AdminTab =
   | "customers"
   | "orders"
   | "payments"
+  | "sales"
+  | "invoices"
+  | "settings"
   | "permissions";
 
 type PermissionAction = "create" | "read" | "update" | "delete";
@@ -80,6 +107,9 @@ const adminTabs: { tab: AdminTab; label: string; pageSlug: string }[] = [
   { tab: "customers", label: "Customers", pageSlug: "admin-customers" },
   { tab: "orders", label: "Orders", pageSlug: "admin-orders" },
   { tab: "payments", label: "Payments", pageSlug: "admin-payments" },
+  { tab: "sales", label: "Sales", pageSlug: "admin-sales" },
+  { tab: "invoices", label: "Invoices", pageSlug: "admin-invoices" },
+  { tab: "settings", label: "Settings", pageSlug: "admin-settings" },
   { tab: "permissions", label: "Permissions", pageSlug: "admin-permissions" }
 ];
 
@@ -706,6 +736,10 @@ export default function App() {
   const [activityFeed, setActivityFeed] = useState<ActivityItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [sales, setSales] = useState<SalesRecord[]>([]);
+  const [salesSummary, setSalesSummary] = useState<SalesSummaryPayload | null>(null);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [systemSettings, setSystemSettings] = useState<SystemSetting[]>([]);
   const [customerProfiles, setCustomerProfiles] = useState<CustomerPortalProfile[]>([]);
   const [permissions, setPermissions] = useState<PermissionsPayload | null>(null);
   const [activeRoleId, setActiveRoleId] = useState<number | null>(null);
@@ -723,16 +757,35 @@ export default function App() {
       fetchAdminDashboard(),
       fetchOrders(),
       fetchPayments(),
+      fetchSales(),
+      fetchSalesSummary(),
+      fetchInvoices(),
+      fetchSystemSettings(),
       fetchCustomerPortalProfiles(),
       fetchPermissions()
     ]).then(
-      ([storefrontData, dashboardData, ordersData, paymentsData, customerProfileData, permissionsData]) => {
+      ([
+        storefrontData,
+        dashboardData,
+        ordersData,
+        paymentsData,
+        salesData,
+        salesSummaryData,
+        invoicesData,
+        systemSettingsData,
+        customerProfileData,
+        permissionsData
+      ]) => {
         setStorefront(storefrontData);
         setDashboard(dashboardData);
         setSelectedCampaign(dashboardData.campaigns[0] ?? null);
         setActivityFeed(dashboardData.activity);
         setOrders(ordersData);
         setPayments(paymentsData);
+        setSales(salesData);
+        setSalesSummary(salesSummaryData);
+        setInvoices(invoicesData);
+        setSystemSettings(systemSettingsData);
         setCustomerProfiles(customerProfileData);
         setPermissions(permissionsData);
         setActiveRoleId(permissionsData.roles.find((role) => role.is_super_admin)?.id ?? permissionsData.roles[0]?.id ?? null);
@@ -932,6 +985,109 @@ export default function App() {
       },
       ...current
     ]);
+  };
+
+  const updateSalesDetails = async (
+    orderId: number,
+    input: UpdateSalesDetailsInput
+  ): Promise<SalesRecord> => {
+    const sale = await updateSalesDetailsRequest(orderId, input, activeRoleForWrite());
+
+    setSales((current) => current.map((item) => (item.order_id === sale.order_id ? sale : item)));
+    void fetchSalesSummary().then(setSalesSummary);
+
+    return sale;
+  };
+
+  const updateSalesStatus = async (
+    orderId: number,
+    input: UpdateSalesStatusInput
+  ): Promise<SalesRecord> => {
+    const sale = await updateSalesStatusRequest(orderId, input, activeRoleForWrite());
+
+    setSales((current) => current.map((item) => (item.order_id === sale.order_id ? sale : item)));
+    void fetchSalesSummary().then(setSalesSummary);
+    setActivityFeed((current) => [
+      {
+        happened_at: "Now",
+        detail: `Sale #${sale.order_id} moved to ${sale.status}.`
+      },
+      ...current
+    ]);
+
+    return sale;
+  };
+
+  const createInvoiceFromOrder = async (
+    orderId: number,
+    input: CreateInvoiceFromOrderInput
+  ): Promise<Invoice> => {
+    const invoice = await createInvoiceFromOrderRequest(orderId, input, activeRoleForWrite());
+
+    setInvoices((current) => [invoice, ...current]);
+    setActivityFeed((current) => [
+      {
+        happened_at: "Now",
+        detail: `Invoice ${invoice.invoice_number} was created for order #${invoice.order_id}.`
+      },
+      ...current
+    ]);
+
+    return invoice;
+  };
+
+  const updateInvoiceBilling = async (
+    invoiceId: number,
+    input: UpdateInvoiceBillingInput
+  ): Promise<Invoice> => {
+    const invoice = await updateInvoiceBillingRequest(invoiceId, input, activeRoleForWrite());
+
+    setInvoices((current) => current.map((item) => (item.id === invoice.id ? invoice : item)));
+
+    return invoice;
+  };
+
+  const voidInvoice = async (invoiceId: number): Promise<Invoice> => {
+    const invoice = await voidInvoiceRequest(invoiceId, activeRoleForWrite());
+
+    setInvoices((current) => current.map((item) => (item.id === invoice.id ? invoice : item)));
+    setActivityFeed((current) => [
+      { happened_at: "Now", detail: `Invoice ${invoice.invoice_number} was voided.` },
+      ...current
+    ]);
+
+    return invoice;
+  };
+
+  const recordInvoicePayment = async (
+    invoiceId: number,
+    input: RecordInvoicePaymentInput
+  ): Promise<Invoice> => {
+    const invoice = await recordInvoicePaymentRequest(invoiceId, input, activeRoleForWrite());
+
+    setInvoices((current) => current.map((item) => (item.id === invoice.id ? invoice : item)));
+    setActivityFeed((current) => [
+      {
+        happened_at: "Now",
+        detail: `Payment recorded for invoice ${invoice.invoice_number}.`
+      },
+      ...current
+    ]);
+
+    return invoice;
+  };
+
+  const updateSystemSetting = async (
+    key: string,
+    input: UpdateSystemSettingInput
+  ): Promise<SystemSetting> => {
+    const setting = await updateSystemSettingRequest(key, input, activeRoleForWrite());
+
+    setSystemSettings((current) =>
+      current.map((item) => (item.key === setting.key ? setting : item))
+    );
+
+    return setting;
   };
 
   const createRole = async (input: CreateRoleInput): Promise<Role> => {
@@ -1174,6 +1330,7 @@ export default function App() {
           onCreateAdminOrder={createAdminOrder}
           onCreateCategory={createCategory}
           onCreateCustomerPortalProfile={createCustomerPortalProfile}
+          onCreateInvoiceFromOrder={createInvoiceFromOrder}
           onCreatePayment={createPayment}
           onCreateProduct={createProduct}
           onCreateRole={createRole}
@@ -1181,16 +1338,26 @@ export default function App() {
           onDeleteCustomerPortalProfile={deleteCustomerPortalProfile}
           onDeletePayment={deletePayment}
           onDeleteRole={deleteRole}
+          onRecordInvoicePayment={recordInvoicePayment}
           onRunSync={runSupplierSync}
           onSelectCampaign={(name) =>
             setSelectedCampaign(dashboard.campaigns.find((item) => item.name === name) ?? null)
           }
           onUpdateAdminOrder={updateAdminOrder}
+          onUpdateInvoiceBilling={updateInvoiceBilling}
           onUpdatePayment={updatePayment}
           onUpdateRole={updateRole}
           onUpdateRolePermission={updateRolePermission}
+          onUpdateSalesDetails={updateSalesDetails}
+          onUpdateSalesStatus={updateSalesStatus}
+          onUpdateSystemSetting={updateSystemSetting}
+          onVoidInvoice={voidInvoice}
           orders={orders}
           payments={payments}
+          invoices={invoices}
+          sales={sales}
+          salesSummary={salesSummary}
+          systemSettings={systemSettings}
           permissions={permissions}
           products={storefront.products}
           selectedCampaign={selectedCampaign}
@@ -1704,6 +1871,10 @@ type AdminViewProps = {
   onCreateCustomerPortalProfile: (
     input: CreateCustomerPortalProfileInput
   ) => Promise<CustomerPortalProfile>;
+  onCreateInvoiceFromOrder: (
+    orderId: number,
+    input: CreateInvoiceFromOrderInput
+  ) => Promise<Invoice>;
   onCreatePayment: (input: CreatePaymentInput) => Promise<Payment>;
   onCreateProduct: (input: CreateProductInput) => Promise<Product>;
   onCreateRole: (input: CreateRoleInput) => Promise<Role>;
@@ -1711,6 +1882,10 @@ type AdminViewProps = {
   onDeleteCustomerPortalProfile: (profileId: number) => Promise<void>;
   onDeletePayment: (paymentId: number) => Promise<void>;
   onDeleteRole: (roleId: number) => Promise<void>;
+  onRecordInvoicePayment: (
+    invoiceId: number,
+    input: RecordInvoicePaymentInput
+  ) => Promise<Invoice>;
   onRunSync: () => void;
   onSelectCampaign: (name: string) => void;
   onUpdateAdminOrder: (orderId: number, input: CreateOrderInput) => Promise<Order>;
@@ -1718,11 +1893,20 @@ type AdminViewProps = {
     profileId: number,
     input: UpdateCustomerPortalProfileInput
   ) => Promise<CustomerPortalProfile>;
+  onUpdateInvoiceBilling: (invoiceId: number, input: UpdateInvoiceBillingInput) => Promise<Invoice>;
   onUpdatePayment: (paymentId: number, input: UpdatePaymentInput) => Promise<Payment>;
   onUpdateRole: (roleId: number, input: UpdateRoleInput) => Promise<Role>;
   onUpdateRolePermission: (input: UpdateRolePagePermissionInput) => Promise<RolePagePermission>;
+  onUpdateSalesDetails: (orderId: number, input: UpdateSalesDetailsInput) => Promise<SalesRecord>;
+  onUpdateSalesStatus: (orderId: number, input: UpdateSalesStatusInput) => Promise<SalesRecord>;
+  onUpdateSystemSetting: (key: string, input: UpdateSystemSettingInput) => Promise<SystemSetting>;
+  onVoidInvoice: (invoiceId: number) => Promise<Invoice>;
   orders: Order[];
   payments: Payment[];
+  invoices: Invoice[];
+  sales: SalesRecord[];
+  salesSummary: SalesSummaryPayload | null;
+  systemSettings: SystemSetting[];
   permissions: PermissionsPayload | null;
   products: Product[];
   selectedCampaign: CampaignOption | null;
@@ -1747,6 +1931,7 @@ function AdminView({
   onCreateAdminOrder,
   onCreateCategory,
   onCreateCustomerPortalProfile,
+  onCreateInvoiceFromOrder,
   onCreatePayment,
   onCreateProduct,
   onCreateRole,
@@ -1754,15 +1939,25 @@ function AdminView({
   onDeleteCustomerPortalProfile,
   onDeletePayment,
   onDeleteRole,
+  onRecordInvoicePayment,
   onRunSync,
   onSelectCampaign,
   onUpdateAdminOrder,
   onUpdateCustomerPortalProfile,
+  onUpdateInvoiceBilling,
   onUpdatePayment,
   onUpdateRole,
   onUpdateRolePermission,
+  onUpdateSalesDetails,
+  onUpdateSalesStatus,
+  onUpdateSystemSetting,
+  onVoidInvoice,
   orders,
   payments,
+  invoices,
+  sales,
+  salesSummary,
+  systemSettings,
   permissions,
   products,
   selectedCampaign,
@@ -1797,6 +1992,10 @@ function AdminView({
   const canCreatePayments = canAccess(permissions, activeRoleId, "admin-payments", "create");
   const canUpdatePayments = canAccess(permissions, activeRoleId, "admin-payments", "update");
   const canDeletePayments = canAccess(permissions, activeRoleId, "admin-payments", "delete");
+  const canUpdateSales = canAccess(permissions, activeRoleId, "admin-sales", "update");
+  const canCreateInvoices = canAccess(permissions, activeRoleId, "admin-invoices", "create");
+  const canUpdateInvoices = canAccess(permissions, activeRoleId, "admin-invoices", "update");
+  const canUpdateSettings = canAccess(permissions, activeRoleId, "admin-settings", "update");
   const canUpdateCampaigns = canAccess(permissions, activeRoleId, "admin-campaigns", "update");
   const canRunOperationsSync = canAccess(permissions, activeRoleId, "admin-overview", "update");
 
@@ -2434,6 +2633,38 @@ function AdminView({
             onUpdatePayment={onUpdatePayment}
             orders={orders}
             payments={payments}
+          />
+        ) : null}
+
+        {adminTab === "sales" ? (
+          <SalesPanel
+            canUpdate={canUpdateSales}
+            onUpdateSalesDetails={onUpdateSalesDetails}
+            onUpdateSalesStatus={onUpdateSalesStatus}
+            sales={sales}
+            summary={salesSummary}
+          />
+        ) : null}
+
+        {adminTab === "invoices" ? (
+          <InvoicesPanel
+            canCreate={canCreateInvoices}
+            canUpdate={canUpdateInvoices}
+            invoices={invoices}
+            onCreateInvoiceFromOrder={onCreateInvoiceFromOrder}
+            onRecordInvoicePayment={onRecordInvoicePayment}
+            onUpdateInvoiceBilling={onUpdateInvoiceBilling}
+            onVoidInvoice={onVoidInvoice}
+            orders={orders}
+            settings={systemSettings}
+          />
+        ) : null}
+
+        {adminTab === "settings" ? (
+          <SettingsPanel
+            canUpdate={canUpdateSettings}
+            onUpdateSetting={onUpdateSystemSetting}
+            settings={systemSettings}
           />
         ) : null}
 

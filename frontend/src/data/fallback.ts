@@ -1,10 +1,14 @@
 import type {
   AdminDashboardPayload,
   CustomerPortalProfile,
+  Invoice,
   Order,
   Payment,
   PermissionsPayload,
-  StorefrontPayload
+  SalesRecord,
+  SalesSummaryPayload,
+  StorefrontPayload,
+  SystemSetting
 } from "../types";
 
 export const fallbackStorefront: StorefrontPayload = {
@@ -260,6 +264,144 @@ export const fallbackPayments: Payment[] = [
   }
 ];
 
+export const fallbackSales: SalesRecord[] = [
+  {
+    order_id: 1042,
+    customer_name: "Falcon Builders",
+    customer_email: "ap@falconbuilders.com",
+    subtotal_cents: 119800,
+    status: "paid",
+    payment_status: "paid",
+    channel: "pro-desk",
+    sales_rep: "Morgan Ellis",
+    discount_cents: 5000,
+    tax_cents: 8323,
+    total_cents: 123123,
+    created_at: "2026-06-29 08:42:00+00",
+    updated_at: "2026-06-29 09:10:00+00"
+  },
+  {
+    order_id: 1041,
+    customer_name: "Dana Whitfield",
+    customer_email: "dana.w@example.com",
+    subtotal_cents: 64900,
+    status: "confirmed",
+    payment_status: "unpaid",
+    channel: "web",
+    sales_rep: "",
+    discount_cents: 0,
+    tax_cents: 4705,
+    total_cents: 69605,
+    created_at: "2026-06-29 07:15:00+00",
+    updated_at: "2026-06-29 07:15:00+00"
+  }
+];
+
+export const fallbackSalesSummary: SalesSummaryPayload = {
+  total_revenue_cents: 192728,
+  order_count: 2,
+  by_status: [
+    { status: "paid", count: 1, total_cents: 123123 },
+    { status: "confirmed", count: 1, total_cents: 69605 }
+  ],
+  by_channel: [
+    { channel: "pro-desk", count: 1, total_cents: 123123 },
+    { channel: "web", count: 1, total_cents: 69605 }
+  ]
+};
+
+export const fallbackInvoices: Invoice[] = [
+  {
+    id: 1,
+    invoice_number: "INV-001001",
+    order_id: 1042,
+    status: "paid",
+    billing_name: "Falcon Builders",
+    billing_email: "ap@falconbuilders.com",
+    billing_address: "",
+    subtotal_cents: 119800,
+    discount_cents: 5000,
+    tax_cents: 8323,
+    total_cents: 123123,
+    amount_paid_cents: 123123,
+    issued_at: "2026-06-29 09:00:00+00",
+    due_at: "2026-07-29 09:00:00+00",
+    voided_at: null,
+    line_items: [
+      { product_id: 1, product_name: "Milwaukee M18 9-Tool Combo Kit", unit_price_cents: 64900, quantity: 1 },
+      { product_id: 2, product_name: "Pressure-Treated Decking Starter Pack", unit_price_cents: 54900, quantity: 1 }
+    ],
+    payments: [
+      {
+        id: 1,
+        amount_cents: 123123,
+        method: "ACH",
+        paid_at: "2026-06-29 09:10:00+00",
+        note: "Paid in full via contractor account."
+      }
+    ]
+  }
+];
+
+export const fallbackSystemSettings: SystemSetting[] = [
+  {
+    key: "general.company_name",
+    value: "Project Depot",
+    value_type: "string",
+    category: "general",
+    description: "Company name shown on invoices and storefront branding.",
+    updated_at: "2026-06-29 08:00:00+00"
+  },
+  {
+    key: "general.company_address",
+    value: "2455 Paces Ferry Road, Atlanta, GA 30339",
+    value_type: "string",
+    category: "general",
+    description: "Company mailing address shown on invoices.",
+    updated_at: "2026-06-29 08:00:00+00"
+  },
+  {
+    key: "general.currency_code",
+    value: "USD",
+    value_type: "string",
+    category: "general",
+    description: "ISO currency code used across sales and invoicing.",
+    updated_at: "2026-06-29 08:00:00+00"
+  },
+  {
+    key: "sales.default_tax_rate_bps",
+    value: "725",
+    value_type: "int",
+    category: "sales",
+    description: "Default sales tax rate in basis points (725 = 7.25%).",
+    updated_at: "2026-06-29 08:00:00+00"
+  },
+  {
+    key: "invoicing.number_prefix",
+    value: "INV-",
+    value_type: "string",
+    category: "invoicing",
+    description: "Prefix applied to generated invoice numbers.",
+    updated_at: "2026-06-29 08:00:00+00"
+  },
+  {
+    key: "invoicing.next_sequence",
+    value: "1002",
+    value_type: "int",
+    category: "invoicing",
+    description: "Next invoice sequence number to allocate.",
+    updated_at: "2026-06-29 08:00:00+00"
+  },
+  {
+    key: "invoicing.payment_terms_days",
+    value: "30",
+    value_type: "int",
+    category: "invoicing",
+    description: "Default number of days until an invoice is due.",
+    updated_at: "2026-06-29 08:00:00+00"
+  }
+];
+
 export const fallbackPermissions: PermissionsPayload = {
   roles: [
     {
@@ -301,10 +443,13 @@ export const fallbackPermissions: PermissionsPayload = {
     { id: 7, slug: "admin-payments", name: "Payments", description: "Payment ledger, tender status and transaction controls." },
     { id: 8, slug: "admin-customers", name: "Customers", description: "Customer portal membership, points and purchase controls." },
     { id: 9, slug: "admin-permissions", name: "Permissions", description: "Role and page permission management." },
-    { id: 10, slug: "storefront", name: "Storefront", description: "Customer-facing shopping experience." }
+    { id: 10, slug: "storefront", name: "Storefront", description: "Customer-facing shopping experience." },
+    { id: 11, slug: "admin-sales", name: "Sales", description: "Sales pipeline status, channel and payment tracking." },
+    { id: 12, slug: "admin-invoices", name: "Invoices", description: "Invoice generation, billing details and payment records." },
+    { id: 13, slug: "admin-settings", name: "Settings", description: "System-wide configuration for tax, invoicing and branding." }
   ],
   permissions: [
-    ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((pageId) => ({
+    ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map((pageId) => ({
       role_id: 1,
       page_id: pageId,
       can_create: true,
@@ -323,6 +468,9 @@ export const fallbackPermissions: PermissionsPayload = {
       [2, 8, true, true, true, true],
       [2, 9, false, false, false, false],
       [2, 10, false, true, false, false],
+      [2, 11, true, true, true, false],
+      [2, 12, true, true, true, false],
+      [2, 13, false, true, false, false],
       [3, 1, false, true, false, false],
       [3, 2, false, false, false, false],
       [3, 3, false, false, false, false],
@@ -333,6 +481,9 @@ export const fallbackPermissions: PermissionsPayload = {
       [3, 8, false, true, false, false],
       [3, 9, false, false, false, false],
       [3, 10, false, true, false, false],
+      [3, 11, false, false, false, false],
+      [3, 12, false, false, false, false],
+      [3, 13, false, false, false, false],
       [4, 1, false, true, false, false],
       [4, 2, false, true, true, false],
       [4, 3, true, true, true, false],
@@ -342,7 +493,10 @@ export const fallbackPermissions: PermissionsPayload = {
       [4, 7, false, true, true, false],
       [4, 8, false, true, false, false],
       [4, 9, false, false, false, false],
-      [4, 10, false, false, false, false]
+      [4, 10, false, false, false, false],
+      [4, 11, false, false, false, false],
+      [4, 12, false, false, false, false],
+      [4, 13, false, false, false, false]
     ].map(([roleId, pageId, canCreate, canRead, canUpdate, canDelete]) => ({
       role_id: Number(roleId),
       page_id: Number(pageId),
