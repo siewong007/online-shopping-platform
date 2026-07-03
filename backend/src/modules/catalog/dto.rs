@@ -1,1 +1,1 @@
-pub use crate::models::{CreateCategoryInput, CreateProductInput};
+pub use crate::models::{CreateCategoryInput, CreateProductInput, UpdateProductInput};

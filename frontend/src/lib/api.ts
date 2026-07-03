@@ -3,7 +3,8 @@ export {
 } from "../modules/dashboard/api/dashboardApi";
 export {
   createCategory,
-  createProduct
+  createProduct,
+  updateProduct
 } from "../modules/catalog/api/catalogApi";
 export {
   createCustomerPortalProfile,

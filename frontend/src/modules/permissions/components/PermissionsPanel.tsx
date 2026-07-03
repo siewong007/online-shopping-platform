@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 
+import { RecordForm, type RecordFormField, RecordModal } from "../../../shared/components/RecordModal";
 import type {
   CreateRoleInput,
   PermissionsPayload,
@@ -10,6 +11,23 @@ import type {
 } from "../types";
 
 type PermissionAction = "create" | "read" | "update" | "delete";
+
+const roleFields: RecordFormField<CreateRoleInput>[] = [
+  {
+    name: "name",
+    label: "Role name",
+    required: true,
+    minLength: 2,
+    placeholder: "Regional Admin"
+  },
+  {
+    name: "description",
+    label: "Description",
+    type: "textarea",
+    placeholder: "Owns regional catalog and fulfillment access.",
+    rows: 4
+  }
+];
 
 type PermissionsPanelProps = {
   activeRoleId: number | null;
@@ -43,6 +61,8 @@ export function PermissionsPanel({
 }: PermissionsPanelProps) {
   const [roleForm, setRoleForm] = useState<CreateRoleInput>({ name: "", description: "" });
   const [editForm, setEditForm] = useState<UpdateRoleInput>({ name: "", description: "" });
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [feedback, setFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
   const [isCreatingRole, setIsCreatingRole] = useState(false);
   const [isSavingRole, setIsSavingRole] = useState(false);
@@ -61,8 +81,7 @@ export function PermissionsPanel({
     setEditForm({ name: activeRole.name, description: activeRole.description });
   }, [activeRole]);
 
-  const handleCreateRole = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleCreateRole = async () => {
     setFeedback(null);
     setIsCreatingRole(true);
 
@@ -72,6 +91,7 @@ export function PermissionsPanel({
         description: roleForm.description.trim()
       });
       setRoleForm({ name: "", description: "" });
+      setIsCreateOpen(false);
       setFeedback({ kind: "success", message: `${role.name} was created.` });
     } catch (error) {
       setFeedback({
@@ -83,9 +103,7 @@ export function PermissionsPanel({
     }
   };
 
-  const handleUpdateRole = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
+  const handleUpdateRole = async () => {
     if (!activeRole || activeRole.is_super_admin) {
       return;
     }
@@ -98,6 +116,7 @@ export function PermissionsPanel({
         name: editForm.name.trim(),
         description: editForm.description.trim()
       });
+      setIsEditOpen(false);
       setFeedback({ kind: "success", message: `${role.name} was updated.` });
     } catch (error) {
       setFeedback({

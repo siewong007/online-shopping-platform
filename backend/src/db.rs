@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use anyhow::{Result, bail};
+use anyhow::{Result, anyhow, bail};
 use sqlx::PgPool;
 
 use crate::models::{
@@ -12,7 +12,7 @@ use crate::models::{
     Product, Promotion, RecordInvoicePaymentInput, Role, RolePagePermission, SalesChannelCount,
     SalesRecord, SalesStatusCount, SalesSummaryPayload, ServiceItem, StorefrontPayload,
     SystemSetting, UpdateCustomerPortalProfileInput, UpdateInvoiceBillingInput, UpdatePaymentInput,
-    UpdateRoleInput, UpdateRolePagePermissionInput, UpdateSalesDetailsInput,
+    UpdateProductInput, UpdateRoleInput, UpdateRolePagePermissionInput, UpdateSalesDetailsInput,
     UpdateSalesStatusInput, UpdateSystemSettingInput,
 };
 
@@ -251,6 +251,70 @@ pub async fn create_product(pool: &PgPool, input: &CreateProductInput) -> Result
     .fetch_one(pool)
     .await
     .map_err(Into::into)
+}
+
+pub async fn update_product(
+    pool: &PgPool,
+    product_id: i32,
+    input: &UpdateProductInput,
+) -> Result<Product> {
+    let name = input.name.trim();
+    let category_slug = input.category_slug.trim();
+    let badge = input.badge.trim();
+    let description = input.description.trim();
+    let tone = input.tone.trim();
+
+    if name.is_empty()
+        || category_slug.is_empty()
+        || badge.is_empty()
+        || description.is_empty()
+        || tone.is_empty()
+    {
+        bail!("Product name, category, badge, tone and description are required.");
+    }
+
+    if input.price_cents < 0 {
+        bail!("Product price must be zero or greater.");
+    }
+
+    let category_exists = sqlx::query_scalar::<_, bool>(
+        r#"
+        SELECT EXISTS(SELECT 1 FROM categories WHERE slug = $1)
+        "#,
+    )
+    .bind(category_slug)
+    .fetch_one(pool)
+    .await?;
+
+    if !category_exists {
+        bail!("Select a valid category before updating a product.");
+    }
+
+    sqlx::query_as::<_, Product>(
+        r#"
+        UPDATE products
+        SET name = $1,
+            category_slug = $2,
+            price_cents = $3,
+            badge = $4,
+            description = $5,
+            tone = $6,
+            featured = $7
+        WHERE id = $8
+        RETURNING id, name, category_slug, price_cents, badge, description, tone, featured
+        "#,
+    )
+    .bind(name)
+    .bind(category_slug)
+    .bind(input.price_cents)
+    .bind(badge)
+    .bind(description)
+    .bind(tone)
+    .bind(input.featured)
+    .bind(product_id)
+    .fetch_optional(pool)
+    .await?
+    .ok_or_else(|| anyhow!("Product not found."))
 }
 
 pub async fn create_order(pool: &PgPool, input: &CreateOrderInput) -> Result<Order> {

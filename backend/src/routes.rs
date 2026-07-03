@@ -121,6 +121,10 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
             "/api/admin/products",
             post(catalog::controller::create_product),
         )
+        .route(
+            "/api/admin/products/{product_id}",
+            put(catalog::controller::update_product),
+        )
         .route("/api/checkout", post(orders::controller::checkout))
         .with_state(state)
         .layer(TraceLayer::new_for_http())
