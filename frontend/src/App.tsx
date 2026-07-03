@@ -28,6 +28,7 @@ import {
   updateCustomerPortalProfile as updateCustomerPortalProfileRequest,
   updateInvoiceBilling as updateInvoiceBillingRequest,
   updatePayment as updatePaymentRequest,
+  updateProduct as updateProductRequest,
   updateRole as updateRoleRequest,
   updateRolePermission as updateRolePermissionRequest,
   updateSalesDetails as updateSalesDetailsRequest,
@@ -41,6 +42,8 @@ import { PaymentManagementPanel } from "./modules/payments/components/PaymentMan
 import { PermissionsPanel } from "./modules/permissions/components/PermissionsPanel";
 import { SalesPanel } from "./modules/sales/components/SalesPanel";
 import { SettingsPanel } from "./modules/settings/components/SettingsPanel";
+import { ManagementTable } from "./shared/components/ManagementTable";
+import { RecordForm, type RecordFormField, RecordModal } from "./shared/components/RecordModal";
 import { currencyFromCents, formatOrderDate } from "./shared/formatters";
 import type {
   ActivityItem,
@@ -72,6 +75,7 @@ import type {
   UpdateCustomerPortalProfileInput,
   UpdateInvoiceBillingInput,
   UpdatePaymentInput,
+  UpdateProductInput,
   UpdateRoleInput,
   UpdateRolePagePermissionInput,
   UpdateSalesDetailsInput,
@@ -80,6 +84,7 @@ import type {
 } from "./types";
 
 const CART_STORAGE_KEY = "depot-cart";
+const ACCOUNT_EMAIL_STORAGE_KEY = "depot-account-email";
 
 type View = "store" | "admin";
 type AdminTab =
@@ -160,6 +165,22 @@ const highValueAccounts = [
   { name: "Northline Renovation", detail: "Kitchen appliance quote waiting on approval" },
   { name: "Summit Install Group", detail: "Bath vanity install calendar nearly full" }
 ];
+
+function readStoredAccountEmail(): string {
+  try {
+    return window.localStorage.getItem(ACCOUNT_EMAIL_STORAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function rememberAccountEmail(email: string) {
+  try {
+    window.localStorage.setItem(ACCOUNT_EMAIL_STORAGE_KEY, email);
+  } catch {
+    return;
+  }
+}
 
 function emptyPermission(roleId: number, pageId: number): RolePagePermission {
   return {
@@ -263,6 +284,57 @@ function customerPortalInputFromForm(
   };
 }
 
+const customerPortalFields: RecordFormField<CustomerPortalFormState>[] = [
+  {
+    name: "customer_name",
+    label: "Customer name",
+    required: true,
+    minLength: 2,
+    placeholder: "Dana Whitfield"
+  },
+  {
+    name: "customer_email",
+    label: "Email",
+    type: "email",
+    required: true,
+    placeholder: "dana@example.com"
+  },
+  {
+    name: "membership_tier",
+    label: "Membership",
+    type: "select",
+    options: membershipTiers.map((tier) => ({ label: tier, value: tier }))
+  },
+  {
+    name: "points_balance",
+    label: "Points",
+    type: "number",
+    required: true,
+    min: 0,
+    step: 1,
+    validate: (value) =>
+      Number.isInteger(Number(value)) ? null : "Points must be a whole number."
+  },
+  {
+    name: "lifetime_purchase",
+    label: "Purchase value",
+    type: "number",
+    required: true,
+    min: 0,
+    step: "0.01"
+  },
+  {
+    name: "total_orders",
+    label: "Orders",
+    type: "number",
+    required: true,
+    min: 0,
+    step: 1,
+    validate: (value) =>
+      Number.isInteger(Number(value)) ? null : "Orders must be a whole number."
+  }
+];
+
 type CustomerPortalPanelProps = {
   canCreate: boolean;
   canDelete: boolean;
@@ -292,6 +364,7 @@ function CustomerPortalPanel({
   const [createForm, setCreateForm] = useState<CustomerPortalFormState>(emptyCustomerPortalForm);
   const [editForm, setEditForm] = useState<CustomerPortalFormState | null>(null);
   const [editingProfileId, setEditingProfileId] = useState<number | null>(null);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [feedback, setFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [savingProfileId, setSavingProfileId] = useState<number | null>(null);
@@ -304,9 +377,7 @@ function CustomerPortalPanel({
   );
   const totalOrders = profiles.reduce((sum, profile) => sum + profile.total_orders, 0);
 
-  const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
+  const handleCreate = async () => {
     if (!canCreate) {
       setFeedback({ kind: "error", message: "The active role cannot create customer profiles." });
       return;
@@ -319,6 +390,7 @@ function CustomerPortalPanel({
       const profile = await onCreateCustomerPortalProfile(customerPortalInputFromForm(createForm));
 
       setCreateForm(emptyCustomerPortalForm);
+      setIsCreateOpen(false);
       setFeedback({ kind: "success", message: `${profile.customer_name} was added.` });
     } catch (error) {
       setFeedback({
@@ -336,9 +408,7 @@ function CustomerPortalPanel({
     setFeedback(null);
   };
 
-  const handleUpdate = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
+  const handleUpdate = async () => {
     if (!editForm || editingProfileId === null) {
       return;
     }
@@ -396,6 +466,106 @@ function CustomerPortalPanel({
     }
   };
 
+  const profileColumns = [
+    {
+      key: "name",
+      label: "Customer",
+      sortValue: (profile: CustomerPortalProfile) => profile.customer_name,
+      render: (profile: CustomerPortalProfile) => (
+        <div className="table-cell-main">
+          <strong>{profile.customer_name}</strong>
+          <span>{profile.customer_email}</span>
+        </div>
+      )
+    },
+    {
+      key: "tier",
+      label: "Tier",
+      sortValue: (profile: CustomerPortalProfile) => profile.membership_tier,
+      render: (profile: CustomerPortalProfile) => profile.membership_tier
+    },
+    {
+      key: "points",
+      label: "Points",
+      align: "right" as const,
+      sortValue: (profile: CustomerPortalProfile) => profile.points_balance,
+      render: (profile: CustomerPortalProfile) => profile.points_balance.toLocaleString()
+    },
+    {
+      key: "lifetime",
+      label: "Lifetime",
+      align: "right" as const,
+      sortValue: (profile: CustomerPortalProfile) => profile.lifetime_purchase_cents,
+      render: (profile: CustomerPortalProfile) =>
+        currencyFromCents(profile.lifetime_purchase_cents)
+    },
+    {
+      key: "orders",
+      label: "Orders",
+      align: "right" as const,
+      sortValue: (profile: CustomerPortalProfile) => profile.total_orders,
+      render: (profile: CustomerPortalProfile) => profile.total_orders.toLocaleString()
+    },
+    {
+      key: "last_purchase",
+      label: "Last purchase",
+      sortValue: (profile: CustomerPortalProfile) => profile.last_purchase_at ?? "",
+      render: (profile: CustomerPortalProfile) =>
+        profile.last_purchase_at ? formatOrderDate(profile.last_purchase_at) : "No purchases"
+    },
+    {
+      key: "linked_orders",
+      label: "Linked",
+      align: "right" as const,
+      sortValue: (profile: CustomerPortalProfile) =>
+        orders.filter(
+          (order) => order.customer_email.toLowerCase() === profile.customer_email.toLowerCase()
+        ).length,
+      render: (profile: CustomerPortalProfile) => {
+        const linkedOrders = orders.filter(
+          (order) => order.customer_email.toLowerCase() === profile.customer_email.toLowerCase()
+        );
+
+        return linkedOrders.length.toLocaleString();
+      }
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (profile: CustomerPortalProfile) => (
+        <div className="management-action-stack">
+          <button
+            className="outline-button table-action"
+            disabled={!canUpdate}
+            onClick={() => startEditing(profile)}
+            type="button"
+          >
+            Edit
+          </button>
+          <button
+            className="outline-button danger-button table-action"
+            disabled={!canDelete || deletingProfileId === profile.id}
+            onClick={() => void handleDelete(profile)}
+            type="button"
+          >
+            {deletingProfileId === profile.id ? "Deleting..." : "Delete"}
+          </button>
+        </div>
+      )
+    }
+  ];
+
+  const editingProfile =
+    editingProfileId === null
+      ? null
+      : profiles.find((profile) => profile.id === editingProfileId) ?? null;
+  const isEditOpen = Boolean(editingProfile && editForm);
+  const closeEdit = () => {
+    setEditingProfileId(null);
+    setEditForm(null);
+    setFeedback(null);
+  };
+
   return (
     <section className="admin-section active">
       <div className="panel-header">
@@ -426,137 +596,92 @@ function CustomerPortalPanel({
         </article>
       </div>
 
-      <div className="customer-portal-grid">
-        <article className="dashboard-panel">
-          <div className="panel-header">
-            <div>
-              <p className="eyebrow">New customer</p>
-              <h3>Create portal profile</h3>
-            </div>
+      {feedback && !isCreateOpen && !isEditOpen ? (
+        <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p>
+      ) : null}
+
+      <article className="dashboard-panel">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">Customer table</p>
+            <h3>Portal profile roster</h3>
           </div>
-          <form className="admin-form" onSubmit={handleCreate}>
-            <CustomerPortalFormFields
+          <div className="admin-actions">
+            <span className="status-pill">{profiles.length} rows</span>
+            <button
+              className="solid-button"
               disabled={!canCreate}
-              form={createForm}
-              onChange={setCreateForm}
-            />
-            {feedback ? <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p> : null}
-            <div className="form-actions">
-              <button className="solid-button" disabled={!canCreate || isCreating} type="submit">
-                {isCreating ? "Creating..." : "Create Customer"}
-              </button>
-            </div>
-          </form>
-        </article>
-
-        <div className="customer-card-grid">
-          {profiles.map((profile) => {
-            const linkedOrders = orders.filter(
-              (order) =>
-                order.customer_email.toLowerCase() === profile.customer_email.toLowerCase()
-            );
-            const isEditing = editingProfileId === profile.id;
-
-            return (
-              <article className="customer-card" key={profile.id}>
-                <div className="panel-header">
-                  <div>
-                    <p className="eyebrow">{profile.membership_tier}</p>
-                    <h3>{profile.customer_name}</h3>
-                  </div>
-                  <span className="status-pill">{profile.points_balance.toLocaleString()} pts</span>
-                </div>
-
-                {isEditing && editForm ? (
-                  <form className="admin-form" onSubmit={handleUpdate}>
-                    <CustomerPortalFormFields
-                      disabled={!canUpdate}
-                      form={editForm}
-                      onChange={setEditForm}
-                    />
-                    <div className="form-actions split-actions">
-                      <button
-                        className="solid-button"
-                        disabled={!canUpdate || savingProfileId === profile.id}
-                        type="submit"
-                      >
-                        {savingProfileId === profile.id ? "Saving..." : "Save"}
-                      </button>
-                      <button
-                        className="outline-button"
-                        onClick={() => {
-                          setEditingProfileId(null);
-                          setEditForm(null);
-                        }}
-                        type="button"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                ) : (
-                  <>
-                    <div className="customer-stat-grid">
-                      <div>
-                        <span>Email</span>
-                        <strong>{profile.customer_email}</strong>
-                      </div>
-                      <div>
-                        <span>Purchase value</span>
-                        <strong>{currencyFromCents(profile.lifetime_purchase_cents)}</strong>
-                      </div>
-                      <div>
-                        <span>Orders</span>
-                        <strong>{profile.total_orders.toLocaleString()}</strong>
-                      </div>
-                      <div>
-                        <span>Last purchase</span>
-                        <strong>
-                          {profile.last_purchase_at
-                            ? formatOrderDate(profile.last_purchase_at)
-                            : "No purchases yet"}
-                        </strong>
-                      </div>
-                    </div>
-
-                    <div className="customer-purchase-list">
-                      {linkedOrders.length === 0 ? (
-                        <p>No linked checkout orders.</p>
-                      ) : (
-                        linkedOrders.slice(0, 3).map((order) => (
-                          <div key={order.id}>
-                            <strong>Order #{order.id}</strong>
-                            <span>{currencyFromCents(order.subtotal_cents)}</span>
-                          </div>
-                        ))
-                      )}
-                    </div>
-
-                    <div className="form-actions split-actions">
-                      <button
-                        className="outline-button"
-                        disabled={!canUpdate}
-                        onClick={() => startEditing(profile)}
-                        type="button"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="outline-button danger-button"
-                        disabled={!canDelete || deletingProfileId === profile.id}
-                        onClick={() => void handleDelete(profile)}
-                        type="button"
-                      >
-                        {deletingProfileId === profile.id ? "Deleting..." : "Delete"}
-                      </button>
-                    </div>
-                  </>
-                )}
-              </article>
-            );
-          })}
+              onClick={() => {
+                setCreateForm(emptyCustomerPortalForm);
+                setFeedback(null);
+                setIsCreateOpen(true);
+              }}
+              type="button"
+            >
+              Create Customer
+            </button>
+          </div>
         </div>
-      </div>
+
+        <ManagementTable
+          columns={profileColumns}
+          emptyMessage="No customer profiles have been created yet."
+          getRowKey={(profile) => profile.id}
+          initialSortKey="name"
+          rows={profiles}
+          tableLabel="Customer profile management table"
+        />
+      </article>
+
+      <RecordModal
+        eyebrow="New customer"
+        isOpen={isCreateOpen}
+        onClose={() => {
+          setIsCreateOpen(false);
+          setFeedback(null);
+        }}
+        statusLabel={canCreate ? "Writable" : "Read only"}
+        statusTone={canCreate ? "live" : undefined}
+        title="Create portal profile"
+      >
+        <RecordForm
+          disabled={!canCreate}
+          feedback={feedback ? <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p> : null}
+          fields={customerPortalFields}
+          isSubmitting={isCreating}
+          onCancel={() => {
+            setIsCreateOpen(false);
+            setFeedback(null);
+          }}
+          onChange={setCreateForm}
+          onSubmit={() => void handleCreate()}
+          submitLabel="Create Customer"
+          values={createForm}
+        />
+      </RecordModal>
+
+      <RecordModal
+        eyebrow="Editing customer"
+        isOpen={isEditOpen}
+        onClose={closeEdit}
+        statusLabel={canUpdate ? "Writable" : "Read only"}
+        statusTone={canUpdate ? "live" : undefined}
+        title={editingProfile?.customer_name ?? "Customer"}
+      >
+        {editForm && editingProfile ? (
+          <RecordForm
+            disabled={!canUpdate}
+            feedback={feedback ? <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p> : null}
+            fields={customerPortalFields}
+            isSubmitting={savingProfileId === editingProfile.id}
+            onCancel={closeEdit}
+            onChange={setEditForm}
+            onSubmit={() => void handleUpdate()}
+            submitLabel="Save Customer"
+            values={editForm}
+          />
+        ) : null}
+      </RecordModal>
     </section>
   );
 }
@@ -697,6 +822,149 @@ function groupedFulfillment(items: FulfillmentItem[]): Record<string, Fulfillmen
   }, {});
 }
 
+function numericText(value: string): number {
+  const parsed = Number(value.replace(/[^0-9.-]+/g, ""));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+type ProductFormState = {
+  badge: string;
+  category_slug: string;
+  description: string;
+  featured: boolean;
+  name: string;
+  price: string;
+  tone: string;
+};
+
+const categoryFields: RecordFormField<CreateCategoryInput>[] = [
+  {
+    name: "name",
+    label: "Category name",
+    required: true,
+    minLength: 2,
+    placeholder: "Ceiling Fans"
+  },
+  {
+    name: "slug",
+    label: "Slug",
+    helpText: "Leave blank to auto-generate it from the category name.",
+    placeholder: "ceiling-fans",
+    validate: (value) => {
+      const slug = String(value).trim();
+      return slug.length === 0 || /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)
+        ? null
+        : "Use lowercase letters, numbers and hyphens only.";
+    }
+  },
+  {
+    name: "teaser",
+    label: "Teaser",
+    type: "textarea",
+    required: true,
+    minLength: 12,
+    placeholder: "Fans, lighting and comfort upgrades for every room.",
+    rows: 4
+  }
+];
+
+function emptyProductForm(categories: Category[]): ProductFormState {
+  return {
+    name: "",
+    category_slug: categories[0]?.slug ?? "all",
+    price: "",
+    badge: "",
+    description: "",
+    tone: "",
+    featured: true
+  };
+}
+
+function productFormFromProduct(product: Product): ProductFormState {
+  return {
+    name: product.name,
+    category_slug: product.category_slug,
+    price: (product.price_cents / 100).toFixed(2),
+    badge: product.badge,
+    description: product.description,
+    tone: product.tone,
+    featured: product.featured
+  };
+}
+
+function productInputFromForm(form: ProductFormState): CreateProductInput {
+  const normalizedPrice = Math.round(Number(form.price) * 100);
+
+  if (!Number.isFinite(normalizedPrice) || normalizedPrice < 0) {
+    throw new Error("Enter a valid product price.");
+  }
+
+  return {
+    name: form.name.trim(),
+    category_slug: form.category_slug,
+    price_cents: normalizedPrice,
+    badge: form.badge.trim(),
+    description: form.description.trim(),
+    tone: form.tone.trim(),
+    featured: form.featured
+  };
+}
+
+function productFields(categories: Category[]): RecordFormField<ProductFormState>[] {
+  return [
+    {
+      name: "name",
+      label: "Product name",
+      required: true,
+      minLength: 2,
+      placeholder: "Home Decorators Ceiling Fan"
+    },
+    {
+      name: "category_slug",
+      label: "Category",
+      type: "select",
+      options: categories.map((category) => ({ label: category.name, value: category.slug }))
+    },
+    {
+      name: "price",
+      label: "Price",
+      type: "number",
+      required: true,
+      min: 0,
+      step: "0.01",
+      placeholder: "249.00",
+      validate: (value) => (Number.isFinite(Number(value)) ? null : "Enter a valid product price.")
+    },
+    {
+      name: "badge",
+      label: "Badge",
+      required: true,
+      placeholder: "New Arrival"
+    },
+    {
+      name: "tone",
+      label: "Brand / tone",
+      required: true,
+      placeholder: "Home Decorators Collection"
+    },
+    {
+      name: "description",
+      label: "Description",
+      type: "textarea",
+      required: true,
+      minLength: 12,
+      placeholder: "Modern finish, integrated light kit and remote control for easy installs.",
+      rows: 4
+    },
+    {
+      name: "featured",
+      label: "Show on storefront",
+      type: "toggle",
+      description: "Turn on to publish this product to shoppers immediately."
+    }
+  ];
+}
+
 function slugify(value: string): string {
   return value
     .toLowerCase()
@@ -730,6 +998,7 @@ export default function App() {
     }
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [adminTab, setAdminTab] = useState<AdminTab>("overview");
   const [selectedCampaign, setSelectedCampaign] = useState<CampaignOption | null>(null);
   const [discount, setDiscount] = useState(25);
@@ -741,6 +1010,7 @@ export default function App() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [systemSettings, setSystemSettings] = useState<SystemSetting[]>([]);
   const [customerProfiles, setCustomerProfiles] = useState<CustomerPortalProfile[]>([]);
+  const [customerAccountEmail, setCustomerAccountEmail] = useState(readStoredAccountEmail);
   const [permissions, setPermissions] = useState<PermissionsPayload | null>(null);
   const [activeRoleId, setActiveRoleId] = useState<number | null>(null);
 
@@ -869,7 +1139,10 @@ export default function App() {
 
   const submitCheckout = async (input: CreateOrderInput): Promise<Order> => {
     const order = await checkoutRequest(input);
+    const checkoutEmail = order.customer_email.trim().toLowerCase();
 
+    setCustomerAccountEmail(checkoutEmail);
+    rememberAccountEmail(checkoutEmail);
     setOrders((current) => [order, ...current]);
     void fetchCustomerPortalProfiles().then(setCustomerProfiles);
     setActivityFeed((current) => [
@@ -1233,6 +1506,44 @@ export default function App() {
     return product;
   };
 
+  const updateProduct = async (
+    productId: number,
+    input: UpdateProductInput
+  ): Promise<Product> => {
+    const product = await updateProductRequest(productId, input, activeRoleForWrite());
+
+    setStorefront((current) => {
+      if (!current) {
+        return current;
+      }
+
+      const exists = current.products.some((item) => item.id === product.id);
+
+      if (!product.featured) {
+        return {
+          ...current,
+          products: current.products.filter((item) => item.id !== product.id)
+        };
+      }
+
+      return {
+        ...current,
+        products: exists
+          ? current.products.map((item) => (item.id === product.id ? product : item))
+          : [...current.products, product]
+      };
+    });
+    setActivityFeed((current) => [
+      {
+        happened_at: "Now",
+        detail: `Product updated: ${product.name}.`
+      },
+      ...current
+    ]);
+
+    return product;
+  };
+
   const createCustomerPortalProfile = async (
     input: CreateCustomerPortalProfileInput
   ): Promise<CustomerPortalProfile> => {
@@ -1295,18 +1606,30 @@ export default function App() {
         <StorefrontView
           cart={cart}
           cartCount={cartCount}
+          customerAccountEmail={customerAccountEmail}
           filteredProducts={filteredProducts}
+          customerProfiles={customerProfiles}
           isCartOpen={isCartOpen}
+          isAccountOpen={isAccountOpen}
           onAddToCart={addToCart}
           onChangeCategory={setSelectedCategory}
           onChangeSearch={setSearchTerm}
           onCheckout={submitCheckout}
+          onCloseAccount={() => setIsAccountOpen(false)}
           onClearCart={clearCart}
           onCloseCart={() => setIsCartOpen(false)}
           onOpenAdmin={() => openView("admin")}
-          onOpenCart={() => setIsCartOpen(true)}
+          onOpenAccount={() => {
+            setIsCartOpen(false);
+            setIsAccountOpen(true);
+          }}
+          onOpenCart={() => {
+            setIsAccountOpen(false);
+            setIsCartOpen(true);
+          }}
           onRemoveFromCart={removeFromCart}
           onUpdateQuantity={updateQuantity}
+          orders={orders}
           searchTerm={searchTerm}
           selectedCategory={selectedCategory}
           storefront={storefront}
@@ -1346,6 +1669,7 @@ export default function App() {
           onUpdateAdminOrder={updateAdminOrder}
           onUpdateInvoiceBilling={updateInvoiceBilling}
           onUpdatePayment={updatePayment}
+          onUpdateProduct={updateProduct}
           onUpdateRole={updateRole}
           onUpdateRolePermission={updateRolePermission}
           onUpdateSalesDetails={updateSalesDetails}
@@ -1372,18 +1696,24 @@ export default function App() {
 type StorefrontViewProps = {
   cart: CartItem[];
   cartCount: number;
+  customerAccountEmail: string;
+  customerProfiles: CustomerPortalProfile[];
   filteredProducts: Product[];
+  isAccountOpen: boolean;
   isCartOpen: boolean;
   onAddToCart: (product: Product) => void;
   onChangeCategory: (slug: string) => void;
   onChangeSearch: (value: string) => void;
   onCheckout: (input: CreateOrderInput) => Promise<Order>;
+  onCloseAccount: () => void;
   onClearCart: () => void;
   onCloseCart: () => void;
   onOpenAdmin: () => void;
+  onOpenAccount: () => void;
   onOpenCart: () => void;
   onRemoveFromCart: (productId: number) => void;
   onUpdateQuantity: (productId: number, quantity: number) => void;
+  orders: Order[];
   searchTerm: string;
   selectedCategory: string;
   storefront: StorefrontPayload;
@@ -1392,18 +1722,24 @@ type StorefrontViewProps = {
 function StorefrontView({
   cart,
   cartCount,
+  customerAccountEmail,
+  customerProfiles,
   filteredProducts,
+  isAccountOpen,
   isCartOpen,
   onAddToCart,
   onChangeCategory,
   onChangeSearch,
   onCheckout,
+  onCloseAccount,
   onClearCart,
   onCloseCart,
   onOpenAdmin,
+  onOpenAccount,
   onOpenCart,
   onRemoveFromCart,
   onUpdateQuantity,
+  orders,
   searchTerm,
   selectedCategory,
   storefront
@@ -1440,8 +1776,9 @@ function StorefrontView({
               onChange={(event) => onChangeSearch(event.target.value)}
             />
           </label>
-          <button className="outline-button">Select Store</button>
-          <button className="outline-button">My Account</button>
+          <button className="outline-button" onClick={onOpenAccount}>
+            My Account
+          </button>
           <button className="solid-button cart-button" onClick={onOpenCart}>
             Cart
             <span>{cartCount}</span>
@@ -1667,7 +2004,143 @@ function StorefrontView({
         onRemoveFromCart={onRemoveFromCart}
         onUpdateQuantity={onUpdateQuantity}
       />
+      <AccountDrawer
+        open={isAccountOpen}
+        customerAccountEmail={customerAccountEmail}
+        orders={orders}
+        profiles={customerProfiles}
+        onClose={onCloseAccount}
+      />
     </>
+  );
+}
+
+type AccountDrawerProps = {
+  open: boolean;
+  customerAccountEmail: string;
+  orders: Order[];
+  profiles: CustomerPortalProfile[];
+  onClose: () => void;
+};
+
+function AccountDrawer({ open, customerAccountEmail, orders, profiles, onClose }: AccountDrawerProps) {
+  if (!open) {
+    return null;
+  }
+
+  const storedEmail = customerAccountEmail.trim().toLowerCase();
+  const storedAccountExists =
+    storedEmail.length > 0 &&
+    (profiles.some((item) => item.customer_email.toLowerCase() === storedEmail) ||
+      orders.some((order) => order.customer_email.toLowerCase() === storedEmail));
+  const fallbackEmail = profiles[0]?.customer_email ?? orders[0]?.customer_email ?? "";
+  const normalizedEmail = storedAccountExists
+    ? storedEmail
+    : fallbackEmail.trim().toLowerCase();
+  const profile =
+    profiles.find((item) => item.customer_email.toLowerCase() === normalizedEmail) ?? null;
+  const accountOrders = orders
+    .filter((order) => order.customer_email.toLowerCase() === normalizedEmail)
+    .sort((first, second) => Date.parse(second.created_at) - Date.parse(first.created_at));
+  const hasAccount = profile !== null || accountOrders.length > 0;
+  const accountName = profile?.customer_name ?? accountOrders[0]?.customer_name ?? "My Account";
+  const lifetimePurchaseCents =
+    profile?.lifetime_purchase_cents ??
+    accountOrders.reduce((sum, order) => sum + order.subtotal_cents, 0);
+  const totalOrders = profile?.total_orders ?? accountOrders.length;
+
+  const close = () => {
+    onClose();
+  };
+
+  return (
+    <div className="cart-overlay" role="dialog" aria-modal="true" aria-label="My account">
+      <button className="cart-scrim" aria-label="Close account" onClick={close} />
+      <aside className="cart-drawer account-drawer">
+        <header className="cart-drawer-head">
+          <h2>My Account</h2>
+          <button className="cart-close" onClick={close} aria-label="Close account">
+            &times;
+          </button>
+        </header>
+
+        {hasAccount ? (
+          <div className="account-content">
+            <section className="account-hero">
+              <p className="eyebrow">{profile?.membership_tier ?? "Online Shopper"}</p>
+              <h3>{accountName}</h3>
+              <p>{normalizedEmail}</p>
+            </section>
+
+            <section className="account-stat-grid" aria-label="Account summary">
+              <div>
+                <span>Points</span>
+                <strong>{(profile?.points_balance ?? 0).toLocaleString()}</strong>
+              </div>
+              <div>
+                <span>Lifetime Spend</span>
+                <strong>{currencyFromCents(lifetimePurchaseCents)}</strong>
+              </div>
+              <div>
+                <span>Orders</span>
+                <strong>{totalOrders.toLocaleString()}</strong>
+              </div>
+              <div>
+                <span>Last Purchase</span>
+                <strong>
+                  {profile?.last_purchase_at
+                    ? formatOrderDate(profile.last_purchase_at)
+                    : accountOrders[0]
+                      ? formatOrderDate(accountOrders[0].created_at)
+                      : "None yet"}
+                </strong>
+              </div>
+            </section>
+
+            <section className="account-section">
+              <div className="account-section-head">
+                <p className="eyebrow">Recent Orders</p>
+                <span className="status-pill">{accountOrders.length} found</span>
+              </div>
+              {accountOrders.length > 0 ? (
+                <div className="account-orders">
+                  {accountOrders.map((order) => (
+                    <article className="account-order" key={order.id}>
+                      <div className="account-order-head">
+                        <div>
+                          <strong>Order #{order.id}</strong>
+                          <span>{formatOrderDate(order.created_at)}</span>
+                        </div>
+                        <strong>{currencyFromCents(order.subtotal_cents)}</strong>
+                      </div>
+                      <ul className="account-line-items">
+                        {order.items.map((item) => (
+                          <li key={`${order.id}-${item.product_id}`}>
+                            <span>{item.product_name}</span>
+                            <strong>
+                              {item.quantity} x {currencyFromCents(item.unit_price_cents)}
+                            </strong>
+                          </li>
+                        ))}
+                      </ul>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <p className="account-empty-note">No storefront orders are attached to this email yet.</p>
+              )}
+            </section>
+          </div>
+        ) : (
+          <div className="cart-empty account-empty">
+            <p>No customer account is active yet.</p>
+            <button className="outline-button" onClick={close}>
+              Continue Shopping
+            </button>
+          </div>
+        )}
+      </aside>
+    </div>
   );
 }
 
@@ -1895,6 +2368,7 @@ type AdminViewProps = {
   ) => Promise<CustomerPortalProfile>;
   onUpdateInvoiceBilling: (invoiceId: number, input: UpdateInvoiceBillingInput) => Promise<Invoice>;
   onUpdatePayment: (paymentId: number, input: UpdatePaymentInput) => Promise<Payment>;
+  onUpdateProduct: (productId: number, input: UpdateProductInput) => Promise<Product>;
   onUpdateRole: (roleId: number, input: UpdateRoleInput) => Promise<Role>;
   onUpdateRolePermission: (input: UpdateRolePagePermissionInput) => Promise<RolePagePermission>;
   onUpdateSalesDetails: (orderId: number, input: UpdateSalesDetailsInput) => Promise<SalesRecord>;
@@ -1946,6 +2420,7 @@ function AdminView({
   onUpdateCustomerPortalProfile,
   onUpdateInvoiceBilling,
   onUpdatePayment,
+  onUpdateProduct,
   onUpdateRole,
   onUpdateRolePermission,
   onUpdateSalesDetails,
@@ -1968,21 +2443,18 @@ function AdminView({
     name: "",
     teaser: ""
   });
-  const [productForm, setProductForm] = useState({
-    name: "",
-    category_slug: categories[0]?.slug ?? "all",
-    price: "",
-    badge: "",
-    description: "",
-    tone: "",
-    featured: true
-  });
+  const [productForm, setProductForm] = useState<ProductFormState>(() => emptyProductForm(categories));
+  const [editingProductId, setEditingProductId] = useState<number | null>(null);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [categoryFeedback, setCategoryFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
   const [productFeedback, setProductFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
+  const [isSavingProduct, setIsSavingProduct] = useState(false);
   const activeRole = permissions?.roles.find((role) => role.id === activeRoleId) ?? null;
   const canCreateCatalog = canAccess(permissions, activeRoleId, "admin-catalog", "create");
+  const canUpdateCatalog = canAccess(permissions, activeRoleId, "admin-catalog", "update");
   const canCreateCustomers = canAccess(permissions, activeRoleId, "admin-customers", "create");
   const canUpdateCustomers = canAccess(permissions, activeRoleId, "admin-customers", "update");
   const canDeleteCustomers = canAccess(permissions, activeRoleId, "admin-customers", "delete");
@@ -2027,9 +2499,7 @@ function AdminView({
     }
   }, [activeRoleId, adminTab, onChangeTab, permissions]);
 
-  const handleCreateCategory = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
+  const handleCreateCategory = async () => {
     if (!canCreateCatalog) {
       setCategoryFeedback({ kind: "error", message: "The active role cannot create catalog records." });
       return;
@@ -2049,6 +2519,7 @@ function AdminView({
 
       setCategoryForm({ slug: "", name: "", teaser: "" });
       setProductForm((current) => ({ ...current, category_slug: category.slug }));
+      setIsCategoryModalOpen(false);
       setCategoryFeedback({ kind: "success", message: `${category.name} is ready for products.` });
     } catch (error) {
       setCategoryFeedback({
@@ -2060,9 +2531,7 @@ function AdminView({
     }
   };
 
-  const handleCreateProduct = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
+  const handleCreateProduct = async () => {
     if (!canCreateCatalog) {
       setProductFeedback({ kind: "error", message: "The active role cannot create catalog records." });
       return;
@@ -2072,31 +2541,10 @@ function AdminView({
     setProductFeedback(null);
 
     try {
-      const normalizedPrice = Math.round(Number(productForm.price) * 100);
+      const product = await onCreateProduct(productInputFromForm(productForm));
 
-      if (Number.isNaN(normalizedPrice)) {
-        throw new Error("Enter a valid product price.");
-      }
-
-      const product = await onCreateProduct({
-        name: productForm.name.trim(),
-        category_slug: productForm.category_slug,
-        price_cents: normalizedPrice,
-        badge: productForm.badge.trim(),
-        description: productForm.description.trim(),
-        tone: productForm.tone.trim(),
-        featured: productForm.featured
-      });
-
-      setProductForm((current) => ({
-        ...current,
-        name: "",
-        price: "",
-        badge: "",
-        description: "",
-        tone: "",
-        featured: true
-      }));
+      setProductForm(emptyProductForm(categories));
+      setIsProductModalOpen(false);
       setProductFeedback({
         kind: "success",
         message: product.featured
@@ -2112,6 +2560,162 @@ function AdminView({
       setIsCreatingProduct(false);
     }
   };
+
+  const startCreateProduct = () => {
+    setEditingProductId(null);
+    setProductForm(emptyProductForm(categories));
+    setProductFeedback(null);
+    setIsProductModalOpen(true);
+  };
+
+  const startEditProduct = (product: Product) => {
+    setEditingProductId(product.id);
+    setProductForm(productFormFromProduct(product));
+    setProductFeedback(null);
+    setIsProductModalOpen(true);
+  };
+
+  const closeProductModal = () => {
+    setIsProductModalOpen(false);
+    setEditingProductId(null);
+    setProductFeedback(null);
+  };
+
+  const handleUpdateProduct = async () => {
+    if (editingProductId === null) {
+      return;
+    }
+
+    if (!canUpdateCatalog) {
+      setProductFeedback({ kind: "error", message: "The active role cannot update catalog records." });
+      return;
+    }
+
+    setIsSavingProduct(true);
+    setProductFeedback(null);
+
+    try {
+      const product = await onUpdateProduct(editingProductId, productInputFromForm(productForm));
+      setIsProductModalOpen(false);
+      setEditingProductId(null);
+      setProductFeedback({ kind: "success", message: `${product.name} was updated.` });
+    } catch (error) {
+      setProductFeedback({
+        kind: "error",
+        message: error instanceof Error ? error.message : "Unable to update product."
+      });
+    } finally {
+      setIsSavingProduct(false);
+    }
+  };
+
+  const inventoryColumns = [
+    {
+      key: "department",
+      label: "Department",
+      sortValue: (item: AdminDashboardPayload["inventory"][number]) => item.department,
+      render: (item: AdminDashboardPayload["inventory"][number]) => (
+        <strong>{item.department}</strong>
+      )
+    },
+    {
+      key: "on_hand",
+      label: "On hand",
+      align: "right" as const,
+      sortValue: (item: AdminDashboardPayload["inventory"][number]) => numericText(item.on_hand),
+      render: (item: AdminDashboardPayload["inventory"][number]) => item.on_hand
+    },
+    {
+      key: "lead_region",
+      label: "Lead region",
+      sortValue: (item: AdminDashboardPayload["inventory"][number]) => item.lead_region,
+      render: (item: AdminDashboardPayload["inventory"][number]) => item.lead_region
+    },
+    {
+      key: "status",
+      label: "Status",
+      sortValue: (item: AdminDashboardPayload["inventory"][number]) => item.status,
+      render: (item: AdminDashboardPayload["inventory"][number]) => (
+        <span
+          className={`status-pill ${
+            item.status === "Healthy" ? "live" : item.status === "Low" ? "warning" : ""
+          }`}
+        >
+          {item.status}
+        </span>
+      )
+    },
+    {
+      key: "note",
+      label: "Notes",
+      sortValue: (item: AdminDashboardPayload["inventory"][number]) => item.note,
+      render: (item: AdminDashboardPayload["inventory"][number]) => item.note
+    }
+  ];
+  const categoryNameBySlug = new Map(categories.map((category) => [category.slug, category.name]));
+  const catalogProductFields = productFields(categories);
+  const editingProduct =
+    editingProductId === null
+      ? null
+      : products.find((product) => product.id === editingProductId) ?? null;
+  const productColumns = [
+    {
+      key: "name",
+      label: "Product",
+      sortValue: (product: Product) => product.name,
+      render: (product: Product) => (
+        <div className="table-cell-main">
+          <strong>{product.name}</strong>
+          <span>{product.tone}</span>
+        </div>
+      )
+    },
+    {
+      key: "category",
+      label: "Category",
+      sortValue: (product: Product) =>
+        categoryNameBySlug.get(product.category_slug) ?? product.category_slug,
+      render: (product: Product) =>
+        categoryNameBySlug.get(product.category_slug) ?? product.category_slug
+    },
+    {
+      key: "price",
+      label: "Price",
+      align: "right" as const,
+      sortValue: (product: Product) => product.price_cents,
+      render: (product: Product) => currencyFromCents(product.price_cents)
+    },
+    {
+      key: "badge",
+      label: "Badge",
+      sortValue: (product: Product) => product.badge,
+      render: (product: Product) => product.badge
+    },
+    {
+      key: "visibility",
+      label: "Visibility",
+      sortValue: (product: Product) => product.featured,
+      render: (product: Product) => (
+        <span className={`status-pill ${product.featured ? "live" : ""}`}>
+          {product.featured ? "Live" : "Hidden"}
+        </span>
+      )
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (product: Product) => (
+        <button
+          className="outline-button table-action"
+          disabled={!canUpdateCatalog}
+          onClick={() => startEditProduct(product)}
+          type="button"
+        >
+          Edit
+        </button>
+      )
+    }
+  ];
 
   return (
     <main className="admin-layout">
@@ -2243,30 +2847,14 @@ function AdminView({
               </div>
               <span className="status-pill warning">Attention</span>
             </div>
-            <div className="inventory-table">
-              <div className="inventory-row inventory-header">
-                <strong>Department</strong>
-                <strong>On Hand</strong>
-                <strong>Lead Region</strong>
-                <strong>Status</strong>
-                <strong>Notes</strong>
-              </div>
-              {dashboard.inventory.map((item) => (
-                <div className="inventory-row" key={item.department}>
-                  <span>{item.department}</span>
-                  <span>{item.on_hand}</span>
-                  <span>{item.lead_region}</span>
-                  <span
-                    className={`status-pill ${
-                      item.status === "Healthy" ? "live" : item.status === "Low" ? "warning" : ""
-                    }`}
-                  >
-                    {item.status}
-                  </span>
-                  <span>{item.note}</span>
-                </div>
-              ))}
-            </div>
+            <ManagementTable
+              columns={inventoryColumns}
+              emptyMessage="No inventory records are available."
+              getRowKey={(item) => item.department}
+              initialSortKey="department"
+              rows={dashboard.inventory}
+              tableLabel="Inventory management table"
+            />
           </section>
         ) : null}
 
@@ -2364,200 +2952,35 @@ function AdminView({
               </span>
             </div>
 
-            <div className="catalog-grid">
-              <article className="dashboard-panel">
-                <div className="panel-header">
-                  <div>
-                    <p className="eyebrow">New category</p>
-                    <h3>Add a department to the storefront</h3>
-                  </div>
-                  <span className="status-pill">{categories.length} total</span>
-                </div>
-
-                <form className="admin-form" onSubmit={handleCreateCategory}>
-                  <div className="admin-form-grid">
-                    <label className="admin-field">
-                      Category name
-                      <input
-                        disabled={!canCreateCatalog}
-                        value={categoryForm.name}
-                        onChange={(event) =>
-                          setCategoryForm((current) => ({ ...current, name: event.target.value }))
-                        }
-                        placeholder="Ceiling Fans"
-                        required
-                      />
-                    </label>
-
-                    <label className="admin-field">
-                      Slug
-                      <input
-                        disabled={!canCreateCatalog}
-                        value={categoryForm.slug}
-                        onChange={(event) =>
-                          setCategoryForm((current) => ({ ...current, slug: event.target.value }))
-                        }
-                        placeholder="Auto-generated if left blank"
-                      />
-                    </label>
-                  </div>
-
-                  <label className="admin-field">
-                    Teaser
-                    <textarea
-                      disabled={!canCreateCatalog}
-                      value={categoryForm.teaser}
-                      onChange={(event) =>
-                        setCategoryForm((current) => ({ ...current, teaser: event.target.value }))
-                      }
-                      placeholder="Fans, lighting and comfort upgrades for every room."
-                      rows={4}
-                      required
-                    />
-                  </label>
-
-                  {categoryFeedback ? (
-                    <p className={`catalog-feedback ${categoryFeedback.kind}`}>{categoryFeedback.message}</p>
-                  ) : null}
-
-                  <div className="form-actions">
-                    <button
-                      className="solid-button"
-                      disabled={!canCreateCatalog || isCreatingCategory}
-                      type="submit"
-                    >
-                      {isCreatingCategory ? "Creating..." : "Create Category"}
-                    </button>
-                  </div>
-                </form>
-              </article>
-
-              <article className="dashboard-panel">
-                <div className="panel-header">
-                  <div>
-                    <p className="eyebrow">New product</p>
-                    <h3>Publish a new storefront item</h3>
-                  </div>
-                  <span className="status-pill">{products.length} featured</span>
-                </div>
-
-                <form className="admin-form" onSubmit={handleCreateProduct}>
-                  <div className="admin-form-grid">
-                    <label className="admin-field">
-                      Product name
-                      <input
-                        disabled={!canCreateCatalog}
-                        value={productForm.name}
-                        onChange={(event) =>
-                          setProductForm((current) => ({ ...current, name: event.target.value }))
-                        }
-                        placeholder="Home Decorators Ceiling Fan"
-                        required
-                      />
-                    </label>
-
-                    <label className="admin-field">
-                      Category
-                      <select
-                        disabled={!canCreateCatalog}
-                        value={productForm.category_slug}
-                        onChange={(event) =>
-                          setProductForm((current) => ({ ...current, category_slug: event.target.value }))
-                        }
-                      >
-                        {categories.map((category) => (
-                          <option key={category.slug} value={category.slug}>
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-
-                    <label className="admin-field">
-                      Price
-                      <input
-                        disabled={!canCreateCatalog}
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={productForm.price}
-                        onChange={(event) =>
-                          setProductForm((current) => ({ ...current, price: event.target.value }))
-                        }
-                        placeholder="249.00"
-                        required
-                      />
-                    </label>
-
-                    <label className="admin-field">
-                      Badge
-                      <input
-                        disabled={!canCreateCatalog}
-                        value={productForm.badge}
-                        onChange={(event) =>
-                          setProductForm((current) => ({ ...current, badge: event.target.value }))
-                        }
-                        placeholder="New Arrival"
-                        required
-                      />
-                    </label>
-
-                    <label className="admin-field">
-                      Brand / tone
-                      <input
-                        disabled={!canCreateCatalog}
-                        value={productForm.tone}
-                        onChange={(event) =>
-                          setProductForm((current) => ({ ...current, tone: event.target.value }))
-                        }
-                        placeholder="Home Decorators Collection"
-                        required
-                      />
-                    </label>
-                  </div>
-
-                  <label className="admin-field">
-                    Description
-                    <textarea
-                      disabled={!canCreateCatalog}
-                      value={productForm.description}
-                      onChange={(event) =>
-                        setProductForm((current) => ({ ...current, description: event.target.value }))
-                      }
-                      placeholder="Modern finish, integrated light kit and remote control for easy installs."
-                      rows={4}
-                      required
-                    />
-                  </label>
-
-                  <label className="checkbox-field">
-                    <input
-                      checked={productForm.featured}
-                      disabled={!canCreateCatalog}
-                      type="checkbox"
-                      onChange={(event) =>
-                        setProductForm((current) => ({ ...current, featured: event.target.checked }))
-                      }
-                    />
-                    Show this product on the storefront immediately
-                  </label>
-
-                  {productFeedback ? (
-                    <p className={`catalog-feedback ${productFeedback.kind}`}>{productFeedback.message}</p>
-                  ) : null}
-
-                  <div className="form-actions">
-                    <button
-                      className="solid-button"
-                      disabled={!canCreateCatalog || isCreatingProduct}
-                      type="submit"
-                    >
-                      {isCreatingProduct ? "Creating..." : "Create Product"}
-                    </button>
-                  </div>
-                </form>
-              </article>
+            <div className="record-toolbar">
+              <button
+                className="outline-button"
+                disabled={!canCreateCatalog}
+                onClick={() => {
+                  setCategoryForm({ slug: "", name: "", teaser: "" });
+                  setCategoryFeedback(null);
+                  setIsCategoryModalOpen(true);
+                }}
+                type="button"
+              >
+                Create Category
+              </button>
+              <button
+                className="solid-button"
+                disabled={!canCreateCatalog}
+                onClick={startCreateProduct}
+                type="button"
+              >
+                Create Product
+              </button>
             </div>
+
+            {categoryFeedback && !isCategoryModalOpen ? (
+              <p className={`catalog-feedback ${categoryFeedback.kind}`}>{categoryFeedback.message}</p>
+            ) : null}
+            {productFeedback && !isProductModalOpen ? (
+              <p className={`catalog-feedback ${productFeedback.kind}`}>{productFeedback.message}</p>
+            ) : null}
 
             <div className="admin-panels two-up">
               <article className="dashboard-panel">
@@ -2581,19 +3004,84 @@ function AdminView({
                 <div className="panel-header">
                   <div>
                     <p className="eyebrow">Storefront products</p>
-                    <h3>Recently merchandised items</h3>
+                    <h3>Product inventory table</h3>
                   </div>
                 </div>
-                <div className="catalog-list">
-                  {products.slice(-6).reverse().map((product) => (
-                    <div key={product.id}>
-                      <strong>{product.name}</strong>
-                      <span>{product.featured ? "Live on storefront" : "Saved as hidden"}</span>
-                    </div>
-                  ))}
-                </div>
+                <ManagementTable
+                  columns={productColumns}
+                  emptyMessage="No products have been merchandised yet."
+                  getRowKey={(product) => product.id}
+                  initialSortKey="name"
+                  rows={products}
+                  tableLabel="Product inventory management table"
+                />
               </article>
             </div>
+
+            <RecordModal
+              eyebrow="New category"
+              isOpen={isCategoryModalOpen}
+              onClose={() => {
+                setIsCategoryModalOpen(false);
+                setCategoryFeedback(null);
+              }}
+              statusLabel={canCreateCatalog ? "Writable" : "Read only"}
+              statusTone={canCreateCatalog ? "live" : undefined}
+              title="Add a department to the storefront"
+            >
+              <RecordForm
+                disabled={!canCreateCatalog}
+                feedback={
+                  categoryFeedback ? (
+                    <p className={`catalog-feedback ${categoryFeedback.kind}`}>{categoryFeedback.message}</p>
+                  ) : null
+                }
+                fields={categoryFields}
+                isSubmitting={isCreatingCategory}
+                onCancel={() => {
+                  setIsCategoryModalOpen(false);
+                  setCategoryFeedback(null);
+                }}
+                onChange={setCategoryForm}
+                onSubmit={() => void handleCreateCategory()}
+                submitLabel="Create Category"
+                values={categoryForm}
+              />
+            </RecordModal>
+
+            <RecordModal
+              eyebrow={editingProductId === null ? "New product" : "Editing product"}
+              isOpen={isProductModalOpen}
+              onClose={closeProductModal}
+              size="wide"
+              statusLabel={editingProductId === null ? (canCreateCatalog ? "Writable" : "Read only") : canUpdateCatalog ? "Writable" : "Read only"}
+              statusTone={editingProductId === null ? (canCreateCatalog ? "live" : undefined) : canUpdateCatalog ? "live" : undefined}
+              title={
+                editingProductId === null
+                  ? "Publish a new storefront item"
+                  : editingProduct?.name ?? "Edit storefront item"
+              }
+            >
+              <RecordForm
+                disabled={editingProductId === null ? !canCreateCatalog : !canUpdateCatalog}
+                feedback={
+                  productFeedback ? (
+                    <p className={`catalog-feedback ${productFeedback.kind}`}>{productFeedback.message}</p>
+                  ) : null
+                }
+                fields={catalogProductFields}
+                isSubmitting={editingProductId === null ? isCreatingProduct : isSavingProduct}
+                onCancel={closeProductModal}
+                onChange={setProductForm}
+                onSubmit={() =>
+                  editingProductId === null
+                    ? void handleCreateProduct()
+                    : void handleUpdateProduct()
+                }
+                submitLabel={editingProductId === null ? "Create Product" : "Save Product"}
+                values={productForm}
+              />
+            </RecordModal>
           </section>
         ) : null}
 

@@ -1,13 +1,13 @@
 use axum::{
     Json,
-    extract::State,
+    extract::{Path, State},
     http::{HeaderMap, StatusCode},
 };
 
 use crate::{app_state::AppState, error, modules::permissions};
 
 use super::{
-    dto::{CreateCategoryInput, CreateProductInput},
+    dto::{CreateCategoryInput, CreateProductInput, UpdateProductInput},
     model::{Category, Product},
     service,
 };
@@ -49,5 +49,26 @@ pub async fn create_product(
     service::create_product(&state.pool, &input)
         .await
         .map(|product| (StatusCode::CREATED, Json(product)))
+        .map_err(error::map_admin_error)
+}
+
+pub async fn update_product(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(product_id): Path<i32>,
+    Json(input): Json<UpdateProductInput>,
+) -> Result<Json<Product>, error::HttpError> {
+    permissions::service::ensure_admin_permission(
+        &state.pool,
+        &headers,
+        permissions::model::ADMIN_CATALOG_PAGE,
+        permissions::model::PermissionAction::Update,
+        "catalog",
+    )
+    .await?;
+
+    service::update_product(&state.pool, product_id, &input)
+        .await
+        .map(Json)
         .map_err(error::map_admin_error)
 }

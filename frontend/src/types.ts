@@ -7,7 +7,8 @@ export type {
   ProStat,
   Promotion,
   ServiceItem,
-  StorefrontPayload
+  StorefrontPayload,
+  UpdateProductInput
 } from "./modules/storefront/types";
 
 export type {

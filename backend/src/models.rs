@@ -38,6 +38,8 @@ pub struct CreateProductInput {
     pub featured: bool,
 }
 
+pub type UpdateProductInput = CreateProductInput;
+
 #[derive(Debug, Clone, Serialize, FromRow)]
 pub struct Promotion {
     pub label: String,

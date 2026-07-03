@@ -1,5 +1,7 @@
 import { type FormEvent, useEffect, useState } from "react";
 
+import { ManagementTable } from "../../../shared/components/ManagementTable";
+import { RecordModal } from "../../../shared/components/RecordModal";
 import { currencyFromCents, formatOrderDate } from "../../../shared/formatters";
 import type { CreateOrderInput, Order } from "../types";
 import type { Product } from "../../storefront/types";
@@ -86,6 +88,7 @@ export function OrderControlPanel({
 }: OrderControlPanelProps) {
   const [editingOrderId, setEditingOrderId] = useState<number | null>(null);
   const [form, setForm] = useState<OrderFormState>(() => emptyOrderForm(products));
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [feedback, setFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingOrderId, setDeletingOrderId] = useState<number | null>(null);
@@ -118,6 +121,7 @@ export function OrderControlPanel({
     setEditingOrderId(null);
     setForm(emptyOrderForm(products));
     setFeedback(null);
+    setIsEditorOpen(false);
   };
 
   const updateLine = (lineKey: string, patch: Partial<OrderFormLine>) => {
@@ -141,6 +145,14 @@ export function OrderControlPanel({
     setEditingOrderId(order.id);
     setForm(orderToForm(order));
     setFeedback(null);
+    setIsEditorOpen(true);
+  };
+
+  const createOrder = () => {
+    setEditingOrderId(null);
+    setForm(emptyOrderForm(products));
+    setFeedback(null);
+    setIsEditorOpen(true);
   };
 
   const handleSubmitOrder = async (event: FormEvent<HTMLFormElement>) => {
@@ -167,6 +179,8 @@ export function OrderControlPanel({
         setForm(orderToForm(order));
       }
 
+      setIsEditorOpen(false);
+      setEditingOrderId(null);
       setFeedback({
         kind: "success",
         message:
@@ -214,6 +228,79 @@ export function OrderControlPanel({
     }
   };
 
+  const orderColumns = [
+    {
+      key: "id",
+      label: "Order",
+      align: "right" as const,
+      sortValue: (order: Order) => order.id,
+      render: (order: Order) => `#${order.id}`
+    },
+    {
+      key: "customer",
+      label: "Customer",
+      sortValue: (order: Order) => order.customer_name,
+      render: (order: Order) => (
+        <div className="table-cell-main">
+          <strong>{order.customer_name}</strong>
+          <span>{order.customer_email}</span>
+        </div>
+      )
+    },
+    {
+      key: "items",
+      label: "Items",
+      sortValue: (order: Order) =>
+        order.items.reduce((sum, item) => sum + item.quantity, 0),
+      render: (order: Order) => (
+        <div className="table-cell-list">
+          {order.items.map((item, index) => (
+            <span key={`${order.id}-${item.product_id}-${index}`}>
+              {item.product_name} x {item.quantity}
+            </span>
+          ))}
+        </div>
+      )
+    },
+    {
+      key: "subtotal",
+      label: "Total",
+      align: "right" as const,
+      sortValue: (order: Order) => order.subtotal_cents,
+      render: (order: Order) => currencyFromCents(order.subtotal_cents)
+    },
+    {
+      key: "created",
+      label: "Created",
+      sortValue: (order: Order) => order.created_at,
+      render: (order: Order) => formatOrderDate(order.created_at)
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (order: Order) => (
+        <div className="management-action-stack">
+          <button
+            className="outline-button table-action"
+            disabled={!canUpdate}
+            onClick={() => editOrder(order)}
+            type="button"
+          >
+            Edit
+          </button>
+          <button
+            className="outline-button danger-button table-action"
+            disabled={!canDelete || deletingOrderId === order.id}
+            onClick={() => void handleDeleteOrder(order)}
+            type="button"
+          >
+            {deletingOrderId === order.id ? "Deleting..." : "Delete"}
+          </button>
+        </div>
+      )
+    }
+  ];
+
   return (
     <section className="admin-section active">
       <div className="panel-header">
@@ -226,175 +313,152 @@ export function OrderControlPanel({
         </span>
       </div>
 
-      <div className="order-control-grid">
-        <article className="dashboard-panel">
-          <div className="panel-header">
-            <div>
-              <p className="eyebrow">{editingOrderId === null ? "New order" : `Order #${editingOrderId}`}</p>
-              <h3>{editingOrderId === null ? "Build customer order" : "Modify order"}</h3>
-            </div>
-            <span className={`status-pill ${canSave ? "live" : ""}`}>
-              {canSave ? "Writable" : "Read only"}
-            </span>
+      {feedback && !isEditorOpen ? (
+        <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p>
+      ) : null}
+
+      <article className="dashboard-panel">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">Order book</p>
+            <h3>Recent checkout orders</h3>
           </div>
-
-          <form className="admin-form" onSubmit={handleSubmitOrder}>
-            <div className="admin-form-grid">
-              <label className="admin-field">
-                Customer name
-                <input
-                  disabled={!canSave}
-                  value={form.customer_name}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, customer_name: event.target.value }))
-                  }
-                  required
-                />
-              </label>
-
-              <label className="admin-field">
-                Customer email
-                <input
-                  disabled={!canSave}
-                  type="email"
-                  value={form.customer_email}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, customer_email: event.target.value }))
-                  }
-                  required
-                />
-              </label>
-            </div>
-
-            <div className="order-line-editor">
-              {form.items.map((item, index) => (
-                <div className="order-line-row" key={item.key}>
-                  <label className="admin-field">
-                    Item {index + 1}
-                    <select
-                      disabled={!canSave}
-                      value={item.product_id}
-                      onChange={(event) => updateLine(item.key, { product_id: event.target.value })}
-                      required
-                    >
-                      {products.map((product) => (
-                        <option key={product.id} value={product.id}>
-                          {product.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className="admin-field">
-                    Qty
-                    <input
-                      disabled={!canSave}
-                      min="1"
-                      step="1"
-                      type="number"
-                      value={item.quantity}
-                      onChange={(event) => updateLine(item.key, { quantity: event.target.value })}
-                      required
-                    />
-                  </label>
-
-                  <button
-                    className="outline-button"
-                    disabled={!canSave || form.items.length === 1}
-                    onClick={() => removeLine(item.key)}
-                    type="button"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <div className="order-form-footer">
-              <button
-                className="outline-button"
-                disabled={!canSave}
-                onClick={() =>
-                  setForm((current) => ({
-                    ...current,
-                    items: [
-                      ...current.items,
-                      newOrderLine(products[0]?.id ? String(products[0].id) : "")
-                    ]
-                  }))
-                }
-                type="button"
-              >
-                Add Item
-              </button>
-              <strong>{currencyFromCents(previewSubtotal)}</strong>
-            </div>
-
-            {feedback ? <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p> : null}
-
-            <div className="form-actions split-actions">
-              <button className="solid-button" disabled={!canSave || isSaving} type="submit">
-                {isSaving ? "Saving..." : editingOrderId === null ? "Create Order" : "Save Order"}
-              </button>
-              <button className="outline-button" onClick={resetForm} type="button">
-                Clear
-              </button>
-            </div>
-          </form>
-        </article>
-
-        <article className="dashboard-panel">
-          <div className="panel-header">
-            <div>
-              <p className="eyebrow">Order book</p>
-              <h3>Recent checkout orders</h3>
-            </div>
+          <div className="admin-actions">
             <span className="status-pill">{orders.length} rows</span>
+            <button className="solid-button" disabled={!canCreate} onClick={createOrder} type="button">
+              Create Order
+            </button>
+          </div>
+        </div>
+
+        {orders.length === 0 ? (
+          <p>No orders have been placed yet.</p>
+        ) : (
+          <ManagementTable
+            columns={orderColumns}
+            emptyMessage="No orders have been placed yet."
+            getRowKey={(order) => order.id}
+            initialSortDirection="desc"
+            initialSortKey="id"
+            rows={orders}
+            tableLabel="Order management table"
+          />
+        )}
+      </article>
+
+      <RecordModal
+        eyebrow={editingOrderId === null ? "New order" : `Order #${editingOrderId}`}
+        isOpen={isEditorOpen}
+        onClose={resetForm}
+        size="wide"
+        statusLabel={canSave ? "Writable" : "Read only"}
+        statusTone={canSave ? "live" : undefined}
+        title={editingOrderId === null ? "Build customer order" : "Modify order"}
+      >
+        <form className="admin-form" onSubmit={handleSubmitOrder}>
+          <div className="admin-form-grid">
+            <label className="admin-field">
+              Customer name
+              <input
+                disabled={!canSave}
+                value={form.customer_name}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, customer_name: event.target.value }))
+                }
+                required
+              />
+            </label>
+
+            <label className="admin-field">
+              Customer email
+              <input
+                disabled={!canSave}
+                type="email"
+                value={form.customer_email}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, customer_email: event.target.value }))
+                }
+                required
+              />
+            </label>
           </div>
 
-          {orders.length === 0 ? (
-            <p>No orders have been placed yet.</p>
-          ) : (
-            <div className="order-list">
-              {orders.map((order) => (
-                <div className="order-row" key={order.id}>
-                  <div className="order-row-top">
-                    <div>
-                      <p className="eyebrow">Order #{order.id}</p>
-                      <h4>{order.customer_name}</h4>
-                      <span>
-                        {order.customer_email} &middot; {formatOrderDate(order.created_at)}
-                      </span>
-                    </div>
-                    <strong>{currencyFromCents(order.subtotal_cents)}</strong>
-                  </div>
-
-                  <div className="order-items">
-                    {order.items.map((item, index) => (
-                      <span key={`${order.id}-${item.product_id}-${index}`}>
-                        {item.product_name} &times; {item.quantity}
-                      </span>
+          <div className="order-line-editor">
+            {form.items.map((item, index) => (
+              <div className="order-line-row" key={item.key}>
+                <label className="admin-field">
+                  Item {index + 1}
+                  <select
+                    disabled={!canSave}
+                    value={item.product_id}
+                    onChange={(event) => updateLine(item.key, { product_id: event.target.value })}
+                    required
+                  >
+                    {products.map((product) => (
+                      <option key={product.id} value={product.id}>
+                        {product.name}
+                      </option>
                     ))}
-                  </div>
+                  </select>
+                </label>
 
-                  <div className="order-actions">
-                    <button className="outline-button" disabled={!canUpdate} onClick={() => editOrder(order)}>
-                      Edit
-                    </button>
-                    <button
-                      className="outline-button danger-button"
-                      disabled={!canDelete || deletingOrderId === order.id}
-                      onClick={() => void handleDeleteOrder(order)}
-                    >
-                      {deletingOrderId === order.id ? "Deleting..." : "Delete"}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </article>
-      </div>
+                <label className="admin-field">
+                  Qty
+                  <input
+                    disabled={!canSave}
+                    min="1"
+                    step="1"
+                    type="number"
+                    value={item.quantity}
+                    onChange={(event) => updateLine(item.key, { quantity: event.target.value })}
+                    required
+                  />
+                </label>
+
+                <button
+                  className="outline-button"
+                  disabled={!canSave || form.items.length === 1}
+                  onClick={() => removeLine(item.key)}
+                  type="button"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="order-form-footer">
+            <button
+              className="outline-button"
+              disabled={!canSave}
+              onClick={() =>
+                setForm((current) => ({
+                  ...current,
+                  items: [
+                    ...current.items,
+                    newOrderLine(products[0]?.id ? String(products[0].id) : "")
+                  ]
+                }))
+              }
+              type="button"
+            >
+              Add Item
+            </button>
+            <strong>{currencyFromCents(previewSubtotal)}</strong>
+          </div>
+
+          {feedback ? <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p> : null}
+
+          <div className="form-actions split-actions">
+            <button className="solid-button" disabled={!canSave || isSaving} type="submit">
+              {isSaving ? "Saving..." : editingOrderId === null ? "Create Order" : "Save Order"}
+            </button>
+            <button className="outline-button" disabled={isSaving} onClick={resetForm} type="button">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </RecordModal>
     </section>
   );
 }

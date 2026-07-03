@@ -2,5 +2,6 @@ export type {
   Category,
   CreateCategoryInput,
   CreateProductInput,
-  Product
+  Product,
+  UpdateProductInput
 } from "../storefront/types";

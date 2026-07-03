@@ -1,5 +1,6 @@
-import { type FormEvent, useState } from "react";
+import { useState } from "react";
 
+import { ManagementTable } from "../../../shared/components/ManagementTable";
 import { currencyFromCents, formatOrderDate } from "../../../shared/formatters";
 import type {
   SalesRecord,
@@ -72,9 +73,7 @@ export function SalesPanel({
       note: ""
     };
 
-  const handleSaveDetails = async (event: FormEvent<HTMLFormElement>, sale: SalesRecord) => {
-    event.preventDefault();
-
+  const saveDetails = async (sale: SalesRecord) => {
     if (!canUpdate) {
       setFeedback({ kind: "error", message: "The active role cannot update sales details." });
       return;
@@ -109,9 +108,7 @@ export function SalesPanel({
     }
   };
 
-  const handleUpdateStatus = async (event: FormEvent<HTMLFormElement>, sale: SalesRecord) => {
-    event.preventDefault();
-
+  const updateStatus = async (sale: SalesRecord) => {
     if (!canUpdate) {
       setFeedback({ kind: "error", message: "The active role cannot change sales status." });
       return;
@@ -146,6 +143,231 @@ export function SalesPanel({
     }
   };
 
+  const salesColumns = [
+    {
+      key: "order",
+      label: "Order",
+      align: "right" as const,
+      sortValue: (sale: SalesRecord) => sale.order_id,
+      render: (sale: SalesRecord) => `#${sale.order_id}`
+    },
+    {
+      key: "customer",
+      label: "Customer",
+      sortValue: (sale: SalesRecord) => sale.customer_name,
+      render: (sale: SalesRecord) => (
+        <div className="table-cell-main">
+          <strong>{sale.customer_name}</strong>
+          <span>{sale.customer_email}</span>
+        </div>
+      )
+    },
+    {
+      key: "status",
+      label: "Status",
+      sortValue: (sale: SalesRecord) => sale.status,
+      render: (sale: SalesRecord) => (
+        <span className={`status-pill ${statusPillClass(sale.status)}`}>{sale.status}</span>
+      )
+    },
+    {
+      key: "payment",
+      label: "Payment",
+      sortValue: (sale: SalesRecord) => sale.payment_status,
+      render: (sale: SalesRecord) => sale.payment_status
+    },
+    {
+      key: "channel",
+      label: "Channel",
+      sortValue: (sale: SalesRecord) => sale.channel,
+      render: (sale: SalesRecord) => {
+        const draft = draftFor(sale);
+
+        return (
+          <select
+            className="table-select"
+            disabled={!canUpdate}
+            onChange={(event) =>
+              setDetailsDrafts((current) => ({
+                ...current,
+                [sale.order_id]: { ...draft, channel: event.target.value }
+              }))
+            }
+            value={draft.channel}
+          >
+            {salesChannels.map((channel) => (
+              <option key={channel} value={channel}>
+                {channel}
+              </option>
+            ))}
+          </select>
+        );
+      }
+    },
+    {
+      key: "sales_rep",
+      label: "Sales rep",
+      sortValue: (sale: SalesRecord) => sale.sales_rep,
+      render: (sale: SalesRecord) => {
+        const draft = draftFor(sale);
+
+        return (
+          <input
+            className="table-input"
+            disabled={!canUpdate}
+            onChange={(event) =>
+              setDetailsDrafts((current) => ({
+                ...current,
+                [sale.order_id]: { ...draft, sales_rep: event.target.value }
+              }))
+            }
+            placeholder="Optional"
+            value={draft.sales_rep}
+          />
+        );
+      }
+    },
+    {
+      key: "discount",
+      label: "Discount",
+      align: "right" as const,
+      sortValue: (sale: SalesRecord) => sale.discount_cents,
+      render: (sale: SalesRecord) => {
+        const draft = draftFor(sale);
+
+        return (
+          <input
+            className="table-input table-money-input"
+            disabled={!canUpdate}
+            min="0"
+            onChange={(event) =>
+              setDetailsDrafts((current) => ({
+                ...current,
+                [sale.order_id]: { ...draft, discount: event.target.value }
+              }))
+            }
+            step="0.01"
+            type="number"
+            value={draft.discount}
+          />
+        );
+      }
+    },
+    {
+      key: "subtotal",
+      label: "Subtotal",
+      align: "right" as const,
+      sortValue: (sale: SalesRecord) => sale.subtotal_cents,
+      render: (sale: SalesRecord) => currencyFromCents(sale.subtotal_cents)
+    },
+    {
+      key: "tax",
+      label: "Tax",
+      align: "right" as const,
+      sortValue: (sale: SalesRecord) => sale.tax_cents,
+      render: (sale: SalesRecord) => currencyFromCents(sale.tax_cents)
+    },
+    {
+      key: "total",
+      label: "Total",
+      align: "right" as const,
+      sortValue: (sale: SalesRecord) => sale.total_cents,
+      render: (sale: SalesRecord) => currencyFromCents(sale.total_cents)
+    },
+    {
+      key: "updated",
+      label: "Updated",
+      sortValue: (sale: SalesRecord) => sale.updated_at,
+      render: (sale: SalesRecord) => formatOrderDate(sale.updated_at)
+    },
+    {
+      key: "save",
+      label: "Details",
+      render: (sale: SalesRecord) => {
+        const isSaving = savingOrderId === sale.order_id;
+
+        return (
+          <button
+            className="outline-button table-action"
+            disabled={!canUpdate || isSaving}
+            onClick={() => void saveDetails(sale)}
+            type="button"
+          >
+            {isSaving ? "Saving..." : "Save"}
+          </button>
+        );
+      }
+    },
+    {
+      key: "move_to",
+      label: "Move to",
+      render: (sale: SalesRecord) => {
+        const allowedNextStatuses = salesTransitions[sale.status];
+        const statusDraft = statusDraftFor(sale);
+
+        if (allowedNextStatuses.length === 0) {
+          return <span className="table-muted">Final</span>;
+        }
+
+        return (
+          <div className="table-control-stack">
+            <select
+              className="table-select"
+              disabled={!canUpdate}
+              onChange={(event) =>
+                setStatusDrafts((current) => ({
+                  ...current,
+                  [sale.order_id]: { ...statusDraft, status: event.target.value }
+                }))
+              }
+              value={statusDraft.status}
+            >
+              {allowedNextStatuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+            <input
+              className="table-input"
+              disabled={!canUpdate}
+              onChange={(event) =>
+                setStatusDrafts((current) => ({
+                  ...current,
+                  [sale.order_id]: { ...statusDraft, note: event.target.value }
+                }))
+              }
+              placeholder="Note"
+              value={statusDraft.note}
+            />
+          </div>
+        );
+      }
+    },
+    {
+      key: "status_action",
+      label: "Status action",
+      render: (sale: SalesRecord) => {
+        const isSaving = savingOrderId === sale.order_id;
+
+        if (salesTransitions[sale.status].length === 0) {
+          return null;
+        }
+
+        return (
+          <button
+            className="solid-button table-action"
+            disabled={!canUpdate || isSaving}
+            onClick={() => void updateStatus(sale)}
+            type="button"
+          >
+            {isSaving ? "Saving..." : "Update"}
+          </button>
+        );
+      }
+    }
+  ];
+
   return (
     <section className="admin-section active">
       <div className="panel-header">
@@ -178,154 +400,15 @@ export function SalesPanel({
       {sales.length === 0 ? (
         <p>No sales have been recorded yet.</p>
       ) : (
-        <div className="sales-list">
-          {sales.map((sale) => {
-            const draft = draftFor(sale);
-            const statusDraft = statusDraftFor(sale);
-            const allowedNextStatuses = salesTransitions[sale.status];
-            const isSaving = savingOrderId === sale.order_id;
-
-            return (
-              <article className="dashboard-panel sales-row" key={sale.order_id}>
-                <div className="panel-header">
-                  <div>
-                    <p className="eyebrow">Order #{sale.order_id}</p>
-                    <h4>{sale.customer_name}</h4>
-                    <span>{sale.customer_email}</span>
-                  </div>
-                  <span className={`status-pill ${statusPillClass(sale.status)}`}>{sale.status}</span>
-                </div>
-
-                <div className="sales-detail-grid">
-                  <div>
-                    <span>Subtotal</span>
-                    <strong>{currencyFromCents(sale.subtotal_cents)}</strong>
-                  </div>
-                  <div>
-                    <span>Tax</span>
-                    <strong>{currencyFromCents(sale.tax_cents)}</strong>
-                  </div>
-                  <div>
-                    <span>Total</span>
-                    <strong>{currencyFromCents(sale.total_cents)}</strong>
-                  </div>
-                  <div>
-                    <span>Payment</span>
-                    <strong>{sale.payment_status}</strong>
-                  </div>
-                  <div>
-                    <span>Updated</span>
-                    <strong>{formatOrderDate(sale.updated_at)}</strong>
-                  </div>
-                </div>
-
-                <form
-                  className="admin-form-grid sales-inline-form"
-                  onSubmit={(event) => void handleSaveDetails(event, sale)}
-                >
-                  <label className="admin-field">
-                    Channel
-                    <select
-                      disabled={!canUpdate}
-                      onChange={(event) =>
-                        setDetailsDrafts((current) => ({
-                          ...current,
-                          [sale.order_id]: { ...draft, channel: event.target.value }
-                        }))
-                      }
-                      value={draft.channel}
-                    >
-                      {salesChannels.map((channel) => (
-                        <option key={channel} value={channel}>
-                          {channel}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="admin-field">
-                    Sales rep
-                    <input
-                      disabled={!canUpdate}
-                      onChange={(event) =>
-                        setDetailsDrafts((current) => ({
-                          ...current,
-                          [sale.order_id]: { ...draft, sales_rep: event.target.value }
-                        }))
-                      }
-                      placeholder="Optional"
-                      value={draft.sales_rep}
-                    />
-                  </label>
-                  <label className="admin-field">
-                    Discount
-                    <input
-                      disabled={!canUpdate}
-                      min="0"
-                      onChange={(event) =>
-                        setDetailsDrafts((current) => ({
-                          ...current,
-                          [sale.order_id]: { ...draft, discount: event.target.value }
-                        }))
-                      }
-                      step="0.01"
-                      type="number"
-                      value={draft.discount}
-                    />
-                  </label>
-                  <button className="outline-button" disabled={!canUpdate || isSaving} type="submit">
-                    Save details
-                  </button>
-                </form>
-
-                {allowedNextStatuses.length > 0 ? (
-                  <form
-                    className="admin-form-grid sales-inline-form"
-                    onSubmit={(event) => void handleUpdateStatus(event, sale)}
-                  >
-                    <label className="admin-field">
-                      Move to
-                      <select
-                        disabled={!canUpdate}
-                        onChange={(event) =>
-                          setStatusDrafts((current) => ({
-                            ...current,
-                            [sale.order_id]: { ...statusDraft, status: event.target.value }
-                          }))
-                        }
-                        value={statusDraft.status}
-                      >
-                        {allowedNextStatuses.map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="admin-field">
-                      Note
-                      <input
-                        disabled={!canUpdate}
-                        onChange={(event) =>
-                          setStatusDrafts((current) => ({
-                            ...current,
-                            [sale.order_id]: { ...statusDraft, note: event.target.value }
-                          }))
-                        }
-                        placeholder="Optional"
-                        value={statusDraft.note}
-                      />
-                    </label>
-                    <button className="solid-button" disabled={!canUpdate || isSaving} type="submit">
-                      {isSaving ? "Saving..." : "Update status"}
-                    </button>
-                  </form>
-                ) : (
-                  <p className="sales-terminal-note">This sale has reached a final status.</p>
-                )}
-              </article>
-            );
-          })}
-        </div>
+        <ManagementTable
+          columns={salesColumns}
+          emptyMessage="No sales have been recorded yet."
+          getRowKey={(sale) => sale.order_id}
+          initialSortDirection="desc"
+          initialSortKey="updated"
+          rows={sales}
+          tableLabel="Sales management table"
+        />
       )}
     </section>
   );

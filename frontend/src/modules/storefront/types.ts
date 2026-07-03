@@ -31,6 +31,8 @@ export type CreateProductInput = {
   featured: boolean;
 };
 
+export type UpdateProductInput = CreateProductInput;
+
 export type Promotion = {
   label: string;
   title: string;
