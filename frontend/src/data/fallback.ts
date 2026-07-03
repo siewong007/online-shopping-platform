@@ -157,6 +157,13 @@ export const fallbackAdminDashboard: AdminDashboardPayload = {
     { label: "Low-stock spring SKUs", value: "94", detail: "12 require urgent replenishment" },
     { label: "Install consultations", value: "231", detail: "Bath and appliance demand are leading" }
   ],
+  live_metrics: {
+    revenue_today_cents: 48240000,
+    revenue_yesterday_cents: 40810000,
+    orders_awaiting_fulfillment: 37,
+    unpaid_invoice_count: 6,
+    unpaid_invoice_amount_cents: 1284500
+  },
   inventory: [
     { department: "Cordless Tools", on_hand: "412 units", lead_region: "South", status: "Healthy", note: "Promo inventory stable" },
     { department: "Deck Boards", on_hand: "88 bundles", lead_region: "Northeast", status: "Low", note: "Rush transfer queued" },

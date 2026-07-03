@@ -22,6 +22,10 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
     Router::new()
         .route("/api/health", get(health::controller::health))
         .route("/api/storefront", get(storefront::controller::storefront))
+        .route(
+            "/api/customer-portal/lookup",
+            get(customer_portal::controller::lookup_customer_portal),
+        )
         .route("/api/admin/login", post(auth::controller::login))
         .route("/api/admin/logout", post(auth::controller::logout))
         .route("/api/admin/me", get(auth::controller::me))

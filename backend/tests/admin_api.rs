@@ -1,8 +1,44 @@
 mod common;
 
-use axum::http::{Method, StatusCode};
-use serde_json::json;
+use axum::{
+    Router,
+    http::{Method, StatusCode},
+};
+use serde_json::{Value, json};
 use sqlx::PgPool;
+
+async fn create_checkout_order(
+    app: &Router,
+    customer_name: &str,
+    customer_email: &str,
+    product_id: i32,
+) -> i64 {
+    let (status, body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/checkout",
+        None,
+        Some(json!({
+            "customer_name": customer_name,
+            "customer_email": customer_email,
+            "items": [{ "product_id": product_id, "quantity": 1 }]
+        })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CREATED, "{body}");
+    body["id"].as_i64().expect("order id")
+}
+
+async fn lookup_customer(app: &Router, email: &str, token: Option<&str>) -> (StatusCode, Value) {
+    common::request(
+        app.clone(),
+        Method::GET,
+        &format!("/api/customer-portal/lookup?email={email}"),
+        token,
+        None,
+    )
+    .await
+}
 
 #[sqlx::test]
 async fn login_returns_token_bad_password_fails_and_me_reports_role(pool: PgPool) {
@@ -340,7 +376,10 @@ async fn fulfillment_status_flow_writes_history_and_advances_sales(pool: PgPool)
     .fetch_one(&pool)
     .await
     .expect("sales meta should load");
-    assert_eq!(sales_status, ("fulfilled".to_string(), "paid".to_string()));
+    assert_eq!(
+        sales_status,
+        ("fulfilled".to_string(), "unpaid".to_string())
+    );
 
     let (terminal_status, _) = common::request(
         app.clone(),
@@ -381,6 +420,19 @@ async fn fulfillment_status_flow_writes_history_and_advances_sales(pool: PgPool)
     .await;
     assert_eq!(cancel_status, StatusCode::OK, "{cancel_body}");
 
+    let cancel_sales_status = sqlx::query_scalar::<_, String>(
+        r#"
+        SELECT status
+        FROM order_sales_meta
+        WHERE order_id = $1
+        "#,
+    )
+    .bind(cancel_order_id as i32)
+    .fetch_one(&pool)
+    .await
+    .expect("sales meta should load");
+    assert_eq!(cancel_sales_status, "cancelled");
+
     let (canceled_terminal_status, _) = common::request(
         app,
         Method::PUT,
@@ -390,6 +442,180 @@ async fn fulfillment_status_flow_writes_history_and_advances_sales(pool: PgPool)
     )
     .await;
     assert_eq!(canceled_terminal_status, StatusCode::BAD_REQUEST);
+}
+
+#[sqlx::test]
+async fn public_customer_lookup_scopes_orders_by_email_case_insensitively(pool: PgPool) {
+    let app = common::app(pool);
+
+    let matching_order_id =
+        create_checkout_order(&app, "Case Buyer", "CaseCustomer@example.com", 1).await;
+    let other_order_id =
+        create_checkout_order(&app, "Other Buyer", "other-buyer@example.com", 2).await;
+
+    let (lookup_status, lookup_body) =
+        lookup_customer(&app, "casecustomer@example.com", None).await;
+    assert_eq!(lookup_status, StatusCode::OK, "{lookup_body}");
+    assert_eq!(
+        lookup_body["profile"]["customer_email"],
+        "casecustomer@example.com"
+    );
+    assert_eq!(lookup_body["profile"]["membership_tier"], "Bronze");
+
+    let orders = lookup_body["orders"]
+        .as_array()
+        .expect("orders should be an array");
+    assert_eq!(orders.len(), 1);
+    assert_eq!(orders[0]["id"], matching_order_id);
+    assert_ne!(orders[0]["id"], other_order_id);
+    assert_eq!(orders[0]["fulfillment_status"], "received");
+    assert!(orders[0]["customer_name"].is_null());
+    assert!(orders[0]["customer_email"].is_null());
+    assert!(orders[0]["fulfillment_history"].is_null());
+    assert_eq!(
+        orders[0]["items"][0]["product_name"],
+        "Milwaukee M18 9-Tool Combo Kit"
+    );
+    assert!(orders[0]["items"][0]["product_id"].is_null());
+}
+
+#[sqlx::test]
+async fn public_customer_lookup_rejects_missing_blank_and_invalid_email(pool: PgPool) {
+    let app = common::app(pool);
+
+    let (missing_status, _) = common::request(
+        app.clone(),
+        Method::GET,
+        "/api/customer-portal/lookup",
+        None,
+        None,
+    )
+    .await;
+    assert_eq!(missing_status, StatusCode::BAD_REQUEST);
+
+    let (blank_status, blank_body) = lookup_customer(&app, "%20%20", None).await;
+    assert_eq!(blank_status, StatusCode::BAD_REQUEST);
+    assert_eq!(blank_body, "Email is required.");
+
+    let (invalid_status, invalid_body) = lookup_customer(&app, "not-an-email", None).await;
+    assert_eq!(invalid_status, StatusCode::BAD_REQUEST);
+    assert_eq!(invalid_body, "Email must be a valid address.");
+}
+
+#[sqlx::test]
+async fn public_customer_lookup_returns_empty_payload_for_unknown_email(pool: PgPool) {
+    let app = common::app(pool);
+
+    let (status, body) = lookup_customer(&app, "missing-customer@example.com", None).await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+    assert!(body["profile"].is_null());
+    assert_eq!(body["orders"].as_array().expect("orders array").len(), 0);
+}
+
+#[sqlx::test]
+async fn public_customer_lookup_supports_profile_only_customers(pool: PgPool) {
+    let app = common::app(pool.clone());
+
+    sqlx::query(
+        r#"
+        INSERT INTO customer_portal_profiles
+            (customer_name, customer_email, membership_tier, points_balance, lifetime_purchase_cents, total_orders)
+        VALUES ('Profile Only', 'profile-only@example.com', 'Gold', 250, 25000, 0)
+        "#,
+    )
+    .execute(&pool)
+    .await
+    .expect("profile should insert");
+
+    let (status, body) = lookup_customer(&app, "profile-only@example.com", None).await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+    assert_eq!(body["profile"]["customer_name"], "Profile Only");
+    assert_eq!(body["profile"]["membership_tier"], "Gold");
+    assert_eq!(body["profile"]["points_balance"], 250);
+    assert_eq!(body["orders"].as_array().expect("orders array").len(), 0);
+}
+
+#[sqlx::test]
+async fn public_customer_lookup_supports_order_without_profile(pool: PgPool) {
+    let app = common::app(pool.clone());
+    let order_id = create_checkout_order(&app, "Order Only", "order-only@example.com", 1).await;
+
+    sqlx::query(
+        r#"
+        DELETE FROM customer_portal_profiles
+        WHERE customer_email = 'order-only@example.com'
+        "#,
+    )
+    .execute(&pool)
+    .await
+    .expect("profile should delete");
+
+    let (status, body) = lookup_customer(&app, "order-only@example.com", None).await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+    assert!(body["profile"].is_null());
+
+    let orders = body["orders"].as_array().expect("orders array");
+    assert_eq!(orders.len(), 1);
+    assert_eq!(orders[0]["id"], order_id);
+}
+
+#[sqlx::test]
+async fn public_customer_lookup_caps_orders_at_twenty_newest_first(pool: PgPool) {
+    let app = common::app(pool);
+    let mut created_order_ids = Vec::new();
+
+    for index in 0..22 {
+        let order_id = create_checkout_order(
+            &app,
+            "Limit Buyer",
+            "limit-buyer@example.com",
+            if index % 2 == 0 { 1 } else { 2 },
+        )
+        .await;
+        created_order_ids.push(order_id);
+    }
+
+    let (status, body) = lookup_customer(&app, "limit-buyer@example.com", None).await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+    assert_eq!(body["profile"]["total_orders"], 22);
+
+    let orders = body["orders"].as_array().expect("orders array");
+    assert_eq!(orders.len(), 20);
+
+    let returned_ids = orders
+        .iter()
+        .map(|order| order["id"].as_i64().expect("order id"))
+        .collect::<Vec<_>>();
+    let expected_ids = created_order_ids
+        .iter()
+        .rev()
+        .take(20)
+        .copied()
+        .collect::<Vec<_>>();
+
+    assert_eq!(returned_ids, expected_ids);
+    assert!(!returned_ids.contains(&created_order_ids[0]));
+    assert!(!returned_ids.contains(&created_order_ids[1]));
+}
+
+#[sqlx::test]
+async fn public_customer_lookup_ignores_admin_token_for_scope(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "lookup-admin", "secret123").await;
+    let app = common::app(pool);
+    let token = common::login(app.clone(), "lookup-admin", "secret123").await;
+
+    let requested_order_id =
+        create_checkout_order(&app, "Requested Buyer", "requested@example.com", 1).await;
+    let other_order_id =
+        create_checkout_order(&app, "Private Buyer", "private@example.com", 2).await;
+
+    let (status, body) = lookup_customer(&app, "requested@example.com", Some(&token)).await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+
+    let orders = body["orders"].as_array().expect("orders array");
+    assert_eq!(orders.len(), 1);
+    assert_eq!(orders[0]["id"], requested_order_id);
+    assert_ne!(orders[0]["id"], other_order_id);
 }
 
 #[sqlx::test]
@@ -422,4 +648,51 @@ async fn settings_update_roundtrip(pool: PgPool) {
         })
         .expect("updated setting should be present");
     assert_eq!(setting["value"], "Project Depot Test");
+}
+
+#[sqlx::test]
+async fn dashboard_live_metrics_reflect_orders_and_unpaid_invoices(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "metrics-admin", "secret123").await;
+    let app = common::app(pool);
+    let token = common::login(app.clone(), "metrics-admin", "secret123").await;
+
+    let (order_status, order_body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/checkout",
+        None,
+        Some(json!({
+            "customer_name": "Metrics Buyer",
+            "customer_email": "metrics-buyer@example.com",
+            "items": [{ "product_id": 1, "quantity": 1 }]
+        })),
+    )
+    .await;
+    assert_eq!(order_status, StatusCode::CREATED, "{order_body}");
+    let order_id = order_body["id"].as_i64().expect("order id");
+    let order_subtotal = order_body["subtotal_cents"].as_i64().expect("subtotal");
+
+    let (invoice_status, invoice_body) = common::request(
+        app.clone(),
+        Method::POST,
+        &format!("/api/admin/invoices/from-order/{order_id}"),
+        Some(&token),
+        Some(json!({ "discount_cents": 0 })),
+    )
+    .await;
+    assert_eq!(invoice_status, StatusCode::CREATED, "{invoice_body}");
+    let invoice_total = invoice_body["total_cents"].as_i64().expect("invoice total");
+
+    let (status, body) =
+        common::request(app, Method::GET, "/api/admin/dashboard", Some(&token), None).await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+
+    let live = &body["live_metrics"];
+    assert_eq!(live["revenue_today_cents"].as_i64(), Some(order_subtotal));
+    assert_eq!(live["orders_awaiting_fulfillment"].as_i64(), Some(1));
+    assert_eq!(live["unpaid_invoice_count"].as_i64(), Some(1));
+    assert_eq!(
+        live["unpaid_invoice_amount_cents"].as_i64(),
+        Some(invoice_total)
+    );
 }

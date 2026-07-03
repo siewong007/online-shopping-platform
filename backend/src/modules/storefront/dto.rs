@@ -1,1 +1,1 @@
-pub use crate::models::StorefrontPayload;
+pub use crate::models::{StorefrontPayload, StorefrontQuery};

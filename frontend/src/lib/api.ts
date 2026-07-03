@@ -27,6 +27,7 @@ export {
   createCustomerPortalProfile,
   deleteCustomerPortalProfile,
   fetchCustomerPortalProfiles,
+  lookupCustomer,
   updateCustomerPortalProfile
 } from "../modules/customer/api/customerApi";
 export {

@@ -1,1 +1,4 @@
-pub use crate::models::{CreateCustomerPortalProfileInput, UpdateCustomerPortalProfileInput};
+pub use crate::models::{
+    CreateCustomerPortalProfileInput, CustomerLookupPayload, CustomerLookupQuery,
+    UpdateCustomerPortalProfileInput,
+};

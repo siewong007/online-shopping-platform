@@ -80,6 +80,15 @@ pub struct StorefrontPayload {
     pub pro_stats: Vec<ProStat>,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct StorefrontQuery {
+    pub q: Option<String>,
+    pub category: Option<String>,
+    pub min_price_cents: Option<i32>,
+    pub max_price_cents: Option<i32>,
+    pub sort: Option<String>,
+}
+
 #[derive(Debug, Clone, Serialize, FromRow)]
 pub struct AdminMetric {
     pub label: String,
@@ -115,9 +124,19 @@ pub struct ActivityItem {
     pub detail: String,
 }
 
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct LiveDashboardMetrics {
+    pub revenue_today_cents: i64,
+    pub revenue_yesterday_cents: i64,
+    pub orders_awaiting_fulfillment: i64,
+    pub unpaid_invoice_count: i64,
+    pub unpaid_invoice_amount_cents: i64,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct AdminDashboardPayload {
     pub metrics: Vec<AdminMetric>,
+    pub live_metrics: LiveDashboardMetrics,
     pub inventory: Vec<InventoryItem>,
     pub fulfillment: Vec<FulfillmentItem>,
     pub campaigns: Vec<CampaignOption>,
@@ -226,6 +245,44 @@ pub struct CustomerPortalProfile {
     pub last_purchase_at: Option<String>,
     pub created_at: String,
     pub updated_at: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct CustomerLookupQuery {
+    pub email: String,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct CustomerLookupProfile {
+    pub customer_name: String,
+    pub customer_email: String,
+    pub membership_tier: String,
+    pub points_balance: i32,
+    pub lifetime_purchase_cents: i32,
+    pub total_orders: i32,
+    pub last_purchase_at: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CustomerLookupOrderItem {
+    pub product_name: String,
+    pub unit_price_cents: i32,
+    pub quantity: i32,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CustomerLookupOrder {
+    pub id: i32,
+    pub subtotal_cents: i32,
+    pub fulfillment_status: String,
+    pub created_at: String,
+    pub items: Vec<CustomerLookupOrderItem>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CustomerLookupPayload {
+    pub profile: Option<CustomerLookupProfile>,
+    pub orders: Vec<CustomerLookupOrder>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -511,4 +568,21 @@ pub struct RecordInvoicePaymentInput {
     pub amount_cents: i32,
     pub method: String,
     pub note: String,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct AuditEvent {
+    pub id: i32,
+    pub actor: String,
+    pub action: String,
+    pub entity_type: String,
+    pub entity_id: String,
+    pub detail: String,
+    pub happened_at: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct AuditEventQuery {
+    pub limit: Option<i64>,
+    pub before: Option<i32>,
 }

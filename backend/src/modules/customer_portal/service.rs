@@ -2,13 +2,19 @@ use anyhow::Result;
 use sqlx::PgPool;
 
 use super::{
-    dto::{CreateCustomerPortalProfileInput, UpdateCustomerPortalProfileInput},
+    dto::{
+        CreateCustomerPortalProfileInput, CustomerLookupPayload, UpdateCustomerPortalProfileInput,
+    },
     model::CustomerPortalProfile,
     repository,
 };
 
 pub async fn fetch_customer_portal_profiles(pool: &PgPool) -> Result<Vec<CustomerPortalProfile>> {
     repository::fetch_customer_portal_profiles(pool).await
+}
+
+pub async fn lookup_customer_portal(pool: &PgPool, email: &str) -> Result<CustomerLookupPayload> {
+    repository::lookup_customer_portal(pool, email).await
 }
 
 pub async fn create_customer_portal_profile(

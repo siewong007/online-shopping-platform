@@ -61,3 +61,13 @@ export type CartItem = {
   product: Product;
   quantity: number;
 };
+
+export type StorefrontSort = "featured" | "price_asc" | "price_desc" | "name";
+
+export type StorefrontQueryParams = {
+  q?: string;
+  category?: string;
+  minPriceCents?: number;
+  maxPriceCents?: number;
+  sort?: StorefrontSort;
+};

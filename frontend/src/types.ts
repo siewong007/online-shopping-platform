@@ -8,6 +8,8 @@ export type {
   Promotion,
   ServiceItem,
   StorefrontPayload,
+  StorefrontQueryParams,
+  StorefrontSort,
   UpdateProductInput
 } from "./modules/storefront/types";
 
@@ -29,7 +31,8 @@ export type {
   AdminMetric,
   CampaignOption,
   FulfillmentItem,
-  InventoryItem
+  InventoryItem,
+  LiveDashboardMetrics
 } from "./modules/dashboard/types";
 
 export type {
@@ -53,6 +56,10 @@ export type {
 
 export type {
   CreateCustomerPortalProfileInput,
+  CustomerLookupOrder,
+  CustomerLookupOrderItem,
+  CustomerLookupPayload,
+  CustomerLookupProfile,
   CustomerPortalProfile,
   UpdateCustomerPortalProfileInput
 } from "./modules/customer/types";

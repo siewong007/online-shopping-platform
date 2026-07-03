@@ -10,6 +10,13 @@ pub async fn fetch_customer_portal_profiles(pool: &PgPool) -> Result<Vec<Custome
     crate::db::fetch_customer_portal_profiles(pool).await
 }
 
+pub async fn lookup_customer_portal(
+    pool: &PgPool,
+    email: &str,
+) -> Result<crate::models::CustomerLookupPayload> {
+    crate::db::lookup_customer_portal(pool, email).await
+}
+
 pub async fn create_customer_portal_profile(
     pool: &PgPool,
     input: &CreateCustomerPortalProfileInput,

@@ -28,8 +28,17 @@ export type ActivityItem = {
   detail: string;
 };
 
+export type LiveDashboardMetrics = {
+  revenue_today_cents: number;
+  revenue_yesterday_cents: number;
+  orders_awaiting_fulfillment: number;
+  unpaid_invoice_count: number;
+  unpaid_invoice_amount_cents: number;
+};
+
 export type AdminDashboardPayload = {
   metrics: AdminMetric[];
+  live_metrics: LiveDashboardMetrics;
   inventory: InventoryItem[];
   fulfillment: FulfillmentItem[];
   campaigns: CampaignOption[];

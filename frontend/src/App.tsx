@@ -1,4 +1,4 @@
-import { type FormEvent, startTransition, useDeferredValue, useEffect, useState } from "react";
+import { type FormEvent, startTransition, useEffect, useRef, useState } from "react";
 
 import {
   changeOwnPassword as changeOwnPasswordRequest,
@@ -31,6 +31,7 @@ import {
   fetchStorefront,
   fetchSystemSettings,
   login as loginRequest,
+  lookupCustomer as lookupCustomerRequest,
   logout as logoutRequest,
   recordInvoicePayment as recordInvoicePaymentRequest,
   resetAdminUserPassword as resetAdminUserPasswordRequest,
@@ -71,6 +72,7 @@ import type {
   AdminDashboardPayload,
   AdminLoginInput,
   AdminMePayload,
+  AdminMetric,
   AdminResetPasswordInput,
   AdminUser,
   CampaignOption,
@@ -85,10 +87,12 @@ import type {
   CreatePaymentInput,
   CreateProductInput,
   CreateRoleInput,
+  CustomerLookupPayload,
   CustomerPortalProfile,
   FulfillmentMethod,
   FulfillmentStatus,
   Invoice,
+  LiveDashboardMetrics,
   Order,
   Payment,
   PermissionsPayload,
@@ -100,6 +104,7 @@ import type {
   SalesSummaryPayload,
   SetAdminUserActiveInput,
   StorefrontPayload,
+  StorefrontSort,
   SystemSetting,
   UpdateAdminUserProfileInput,
   UpdateCategoryInput,
@@ -215,6 +220,38 @@ const highValueAccounts = [
   { name: "Northline Renovation", detail: "Kitchen appliance quote waiting on approval" },
   { name: "Summit Install Group", detail: "Bath vanity install calendar nearly full" }
 ];
+
+// Derives the Overview KPI cards from live aggregates. Only cards backed by a
+// real number are emitted — low-stock stays out until inventory (§3) exists.
+function buildLiveMetricCards(live: LiveDashboardMetrics): AdminMetric[] {
+  const revenueDelta =
+    live.revenue_yesterday_cents > 0
+      ? ((live.revenue_today_cents - live.revenue_yesterday_cents) /
+          live.revenue_yesterday_cents) *
+        100
+      : null;
+
+  return [
+    {
+      label: "Revenue today",
+      value: currencyFromCents(live.revenue_today_cents),
+      detail:
+        revenueDelta === null
+          ? "No sales recorded yesterday"
+          : `${revenueDelta >= 0 ? "+" : ""}${revenueDelta.toFixed(1)}% vs yesterday`
+    },
+    {
+      label: "Orders awaiting fulfillment",
+      value: live.orders_awaiting_fulfillment.toLocaleString(),
+      detail: "In the pick, pack and ship pipeline"
+    },
+    {
+      label: "Unpaid invoices",
+      value: live.unpaid_invoice_count.toLocaleString(),
+      detail: `${currencyFromCents(live.unpaid_invoice_amount_cents)} outstanding`
+    }
+  ];
+}
 
 function readStoredAccountEmail(): string {
   try {
@@ -925,6 +962,9 @@ export default function App() {
   const [dashboard, setDashboard] = useState<AdminDashboardPayload | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [minPriceCents, setMinPriceCents] = useState<number | null>(null);
+  const [maxPriceCents, setMaxPriceCents] = useState<number | null>(null);
+  const [sortOption, setSortOption] = useState<StorefrontSort>("featured");
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
       const stored = window.localStorage.getItem(CART_STORAGE_KEY);
@@ -957,7 +997,7 @@ export default function App() {
   const [adminCatalog, setAdminCatalog] = useState<AdminCatalogPayload | null>(null);
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
 
-  const deferredSearchTerm = useDeferredValue(searchTerm);
+  const isInitialStorefrontFilter = useRef(true);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   useEffect(() => {
@@ -969,6 +1009,25 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (isInitialStorefrontFilter.current) {
+      isInitialStorefrontFilter.current = false;
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      void fetchStorefront({
+        q: searchTerm,
+        category: selectedCategory,
+        minPriceCents: minPriceCents ?? undefined,
+        maxPriceCents: maxPriceCents ?? undefined,
+        sort: sortOption
+      }).then(setStorefront);
+    }, 300);
+
+    return () => window.clearTimeout(timeout);
+  }, [searchTerm, selectedCategory, minPriceCents, maxPriceCents, sortOption]);
+
+  useEffect(() => {
     const onPopState = () => {
       setView(window.location.pathname === "/admin" ? "admin" : "store");
     };
@@ -977,22 +1036,7 @@ export default function App() {
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
-  const filteredProducts = !storefront
-    ? []
-    : storefront.products.filter((product) => {
-        const matchesCategory =
-          selectedCategory === "all" || product.category_slug === selectedCategory;
-
-        const search = deferredSearchTerm.trim().toLowerCase();
-        const matchesSearch =
-          search.length === 0 ||
-          product.name.toLowerCase().includes(search) ||
-          product.description.toLowerCase().includes(search) ||
-          product.badge.toLowerCase().includes(search) ||
-          product.tone.toLowerCase().includes(search);
-
-        return matchesCategory && matchesSearch;
-      });
+  const filteredProducts = storefront?.products ?? [];
 
   const fulfillmentByStage = groupedFulfillment(orders);
 
@@ -1246,6 +1290,18 @@ export default function App() {
   };
 
   const clearCart = () => setCart([]);
+
+  const lookupCustomer = async (email: string): Promise<CustomerLookupPayload> => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const payload = await lookupCustomerRequest(normalizedEmail);
+
+    if (payload.profile !== null || payload.orders.length > 0) {
+      setCustomerAccountEmail(normalizedEmail);
+      rememberAccountEmail(normalizedEmail);
+    }
+
+    return payload;
+  };
 
   const submitCheckout = async (input: CreateOrderInput): Promise<Order> => {
     const order = await checkoutRequest(input);
@@ -1900,16 +1956,21 @@ export default function App() {
           cartCount={cartCount}
           customerAccountEmail={customerAccountEmail}
           filteredProducts={filteredProducts}
-          customerProfiles={customerProfiles}
           isCartOpen={isCartOpen}
           isAccountOpen={isAccountOpen}
+          maxPriceCents={maxPriceCents}
+          minPriceCents={minPriceCents}
           onAddToCart={addToCart}
           onChangeCategory={setSelectedCategory}
+          onChangeMaxPrice={setMaxPriceCents}
+          onChangeMinPrice={setMinPriceCents}
           onChangeSearch={setSearchTerm}
+          onChangeSort={setSortOption}
           onCheckout={submitCheckout}
           onCloseAccount={() => setIsAccountOpen(false)}
           onClearCart={clearCart}
           onCloseCart={() => setIsCartOpen(false)}
+          onLookupCustomer={lookupCustomer}
           onOpenAdmin={() => openView("admin")}
           onOpenAccount={() => {
             setIsCartOpen(false);
@@ -1921,9 +1982,9 @@ export default function App() {
           }}
           onRemoveFromCart={removeFromCart}
           onUpdateQuantity={updateQuantity}
-          orders={orders}
           searchTerm={searchTerm}
           selectedCategory={selectedCategory}
+          sortOption={sortOption}
           storefront={storefront}
         />
       ) : adminAuth === "unauthenticated" ? (
@@ -2011,25 +2072,30 @@ type StorefrontViewProps = {
   cart: CartItem[];
   cartCount: number;
   customerAccountEmail: string;
-  customerProfiles: CustomerPortalProfile[];
   filteredProducts: Product[];
   isAccountOpen: boolean;
   isCartOpen: boolean;
+  maxPriceCents: number | null;
+  minPriceCents: number | null;
   onAddToCart: (product: Product) => void;
   onChangeCategory: (slug: string) => void;
+  onChangeMaxPrice: (value: number | null) => void;
+  onChangeMinPrice: (value: number | null) => void;
   onChangeSearch: (value: string) => void;
+  onChangeSort: (value: StorefrontSort) => void;
   onCheckout: (input: CreateOrderInput) => Promise<Order>;
   onCloseAccount: () => void;
   onClearCart: () => void;
   onCloseCart: () => void;
+  onLookupCustomer: (email: string) => Promise<CustomerLookupPayload>;
   onOpenAdmin: () => void;
   onOpenAccount: () => void;
   onOpenCart: () => void;
   onRemoveFromCart: (productId: number) => void;
   onUpdateQuantity: (productId: number, quantity: number) => void;
-  orders: Order[];
   searchTerm: string;
   selectedCategory: string;
+  sortOption: StorefrontSort;
   storefront: StorefrontPayload;
 };
 
@@ -2037,25 +2103,30 @@ function StorefrontView({
   cart,
   cartCount,
   customerAccountEmail,
-  customerProfiles,
   filteredProducts,
   isAccountOpen,
   isCartOpen,
+  maxPriceCents,
+  minPriceCents,
   onAddToCart,
   onChangeCategory,
+  onChangeMaxPrice,
+  onChangeMinPrice,
   onChangeSearch,
+  onChangeSort,
   onCheckout,
   onCloseAccount,
   onClearCart,
   onCloseCart,
+  onLookupCustomer,
   onOpenAdmin,
   onOpenAccount,
   onOpenCart,
   onRemoveFromCart,
   onUpdateQuantity,
-  orders,
   searchTerm,
   selectedCategory,
+  sortOption,
   storefront
 }: StorefrontViewProps) {
   const activeCategory =
@@ -2212,6 +2283,47 @@ function StorefrontView({
               </button>
             ))}
           </div>
+
+          <div className="filter-bar">
+            <label className="filter-field">
+              <span>Min price</span>
+              <input
+                type="number"
+                min="0"
+                placeholder="$0"
+                value={minPriceCents == null ? "" : minPriceCents / 100}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  onChangeMinPrice(value === "" ? null : Math.round(Number(value) * 100));
+                }}
+              />
+            </label>
+            <label className="filter-field">
+              <span>Max price</span>
+              <input
+                type="number"
+                min="0"
+                placeholder="Any"
+                value={maxPriceCents == null ? "" : maxPriceCents / 100}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  onChangeMaxPrice(value === "" ? null : Math.round(Number(value) * 100));
+                }}
+              />
+            </label>
+            <label className="filter-field">
+              <span>Sort by</span>
+              <select
+                value={sortOption}
+                onChange={(event) => onChangeSort(event.target.value as StorefrontSort)}
+              >
+                <option value="featured">Featured</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+                <option value="name">Name A-Z</option>
+              </select>
+            </label>
+          </div>
         </section>
 
         <section className="savings-band">
@@ -2321,8 +2433,7 @@ function StorefrontView({
       <AccountDrawer
         open={isAccountOpen}
         customerAccountEmail={customerAccountEmail}
-        orders={orders}
-        profiles={customerProfiles}
+        onLookupCustomer={onLookupCustomer}
         onClose={onCloseAccount}
       />
     </>
@@ -2332,36 +2443,104 @@ function StorefrontView({
 type AccountDrawerProps = {
   open: boolean;
   customerAccountEmail: string;
-  orders: Order[];
-  profiles: CustomerPortalProfile[];
+  onLookupCustomer: (email: string) => Promise<CustomerLookupPayload>;
   onClose: () => void;
 };
 
-function AccountDrawer({ open, customerAccountEmail, orders, profiles, onClose }: AccountDrawerProps) {
+type AccountLookupStatus = "idle" | "loading" | "success" | "error";
+
+const emptyCustomerLookupPayload: CustomerLookupPayload = {
+  profile: null,
+  orders: []
+};
+
+function AccountDrawer({
+  open,
+  customerAccountEmail,
+  onLookupCustomer,
+  onClose
+}: AccountDrawerProps) {
+  const [lookupEmail, setLookupEmail] = useState(customerAccountEmail);
+  const [lookupPayload, setLookupPayload] = useState<CustomerLookupPayload>(
+    emptyCustomerLookupPayload
+  );
+  const [lookupStatus, setLookupStatus] = useState<AccountLookupStatus>("idle");
+  const [lookupError, setLookupError] = useState("");
+  const lastAutoLookupEmailRef = useRef<string | null>(null);
+
+  const runLookup = async (email: string) => {
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail) {
+      setLookupPayload(emptyCustomerLookupPayload);
+      setLookupStatus("idle");
+      setLookupError("");
+      return;
+    }
+
+    setLookupStatus("loading");
+    setLookupError("");
+
+    try {
+      const payload = await onLookupCustomer(trimmedEmail);
+      setLookupPayload(payload);
+      setLookupStatus("success");
+    } catch (error) {
+      setLookupStatus("error");
+      setLookupError(error instanceof Error ? error.message : "Unable to look up orders.");
+    }
+  };
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const storedEmail = customerAccountEmail.trim().toLowerCase();
+
+    // Skip when this is the email a manual submit (or a prior run of this
+    // effect) already fetched, so a successful lookupCustomer call that
+    // updates customerAccountEmail doesn't trigger a second request.
+    if (storedEmail === (lastAutoLookupEmailRef.current ?? "")) {
+      return;
+    }
+
+    lastAutoLookupEmailRef.current = storedEmail;
+    setLookupEmail(storedEmail);
+
+    if (storedEmail) {
+      void runLookup(storedEmail);
+      return;
+    }
+
+    setLookupPayload(emptyCustomerLookupPayload);
+    setLookupStatus("idle");
+    setLookupError("");
+  }, [open, customerAccountEmail]);
+
   if (!open) {
     return null;
   }
 
-  const storedEmail = customerAccountEmail.trim().toLowerCase();
-  const storedAccountExists =
-    storedEmail.length > 0 &&
-    (profiles.some((item) => item.customer_email.toLowerCase() === storedEmail) ||
-      orders.some((order) => order.customer_email.toLowerCase() === storedEmail));
-  const fallbackEmail = profiles[0]?.customer_email ?? orders[0]?.customer_email ?? "";
-  const normalizedEmail = storedAccountExists
-    ? storedEmail
-    : fallbackEmail.trim().toLowerCase();
-  const profile =
-    profiles.find((item) => item.customer_email.toLowerCase() === normalizedEmail) ?? null;
-  const accountOrders = orders
-    .filter((order) => order.customer_email.toLowerCase() === normalizedEmail)
-    .sort((first, second) => Date.parse(second.created_at) - Date.parse(first.created_at));
+  const normalizedEmail =
+    lookupPayload.profile?.customer_email ?? lookupEmail.trim().toLowerCase();
+  const profile = lookupPayload.profile;
+  const accountOrders = [...lookupPayload.orders].sort(
+    (first, second) => Date.parse(second.created_at) - Date.parse(first.created_at)
+  );
   const hasAccount = profile !== null || accountOrders.length > 0;
-  const accountName = profile?.customer_name ?? accountOrders[0]?.customer_name ?? "My Account";
+  const accountName = profile?.customer_name ?? "My Account";
   const lifetimePurchaseCents =
     profile?.lifetime_purchase_cents ??
     accountOrders.reduce((sum, order) => sum + order.subtotal_cents, 0);
   const totalOrders = profile?.total_orders ?? accountOrders.length;
+  const isSearching = lookupStatus === "loading";
+
+  const submitLookup = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    lastAutoLookupEmailRef.current = lookupEmail.trim().toLowerCase();
+    void runLookup(lookupEmail);
+  };
 
   const close = () => {
     onClose();
@@ -2378,7 +2557,28 @@ function AccountDrawer({ open, customerAccountEmail, orders, profiles, onClose }
           </button>
         </header>
 
-        {hasAccount ? (
+        <form className="account-lookup-form" onSubmit={submitLookup}>
+          <label>
+            <span>Email address</span>
+            <input
+              type="email"
+              value={lookupEmail}
+              onChange={(event) => setLookupEmail(event.target.value)}
+              placeholder="orders@example.com"
+              required
+            />
+          </label>
+          <button className="solid-button" disabled={isSearching}>
+            {isSearching ? "Searching..." : "Find my orders"}
+          </button>
+          {lookupStatus === "error" ? <p className="cart-feedback">{lookupError}</p> : null}
+        </form>
+
+        {isSearching && !hasAccount ? (
+          <div className="cart-empty account-empty">
+            <p>Looking up recent orders...</p>
+          </div>
+        ) : hasAccount ? (
           <div className="account-content">
             <section className="account-hero">
               <p className="eyebrow">{profile?.membership_tier ?? "Online Shopper"}</p>
@@ -2425,11 +2625,14 @@ function AccountDrawer({ open, customerAccountEmail, orders, profiles, onClose }
                           <strong>Order #{order.id}</strong>
                           <span>{formatOrderDate(order.created_at)}</span>
                         </div>
-                        <strong>{currencyFromCents(order.subtotal_cents)}</strong>
+                        <div className="account-order-total">
+                          <strong>{currencyFromCents(order.subtotal_cents)}</strong>
+                          <span>{fulfillmentLabel(order.fulfillment_status)}</span>
+                        </div>
                       </div>
                       <ul className="account-line-items">
-                        {order.items.map((item) => (
-                          <li key={`${order.id}-${item.product_id}`}>
+                        {order.items.map((item, index) => (
+                          <li key={`${order.id}-${index}-${item.product_name}`}>
                             <span>{item.product_name}</span>
                             <strong>
                               {item.quantity} x {currencyFromCents(item.unit_price_cents)}
@@ -2447,7 +2650,11 @@ function AccountDrawer({ open, customerAccountEmail, orders, profiles, onClose }
           </div>
         ) : (
           <div className="cart-empty account-empty">
-            <p>No customer account is active yet.</p>
+            <p>
+              {lookupStatus === "success"
+                ? "No orders found for this email."
+                : "No customer account is active yet."}
+            </p>
             <button className="outline-button" onClick={close}>
               Continue Shopping
             </button>
@@ -3005,7 +3212,7 @@ function AdminView({
         {adminTab === "overview" ? (
           <section className="admin-section active">
             <div className="metric-grid">
-              {dashboard.metrics.map((metric) => (
+              {buildLiveMetricCards(dashboard.live_metrics).map((metric) => (
                 <article className="metric-card" key={metric.label}>
                   <p>{metric.label}</p>
                   <strong>{metric.value}</strong>
