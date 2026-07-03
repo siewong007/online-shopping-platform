@@ -1,10 +1,10 @@
 use axum::{
     Json,
     extract::{Path, State},
-    http::{HeaderMap, StatusCode},
+    http::StatusCode,
 };
 
-use crate::{app_state::AppState, error};
+use crate::{app_state::AppState, error, modules::auth::model::AdminIdentity};
 
 use super::{
     dto::{CreateRoleInput, PermissionsPayload, UpdateRoleInput, UpdateRolePagePermissionInput},
@@ -14,21 +14,31 @@ use super::{
 
 pub async fn admin_permissions(
     State(state): State<AppState>,
-) -> Result<Json<PermissionsPayload>, StatusCode> {
+    identity: AdminIdentity,
+) -> Result<Json<PermissionsPayload>, error::HttpError> {
+    service::ensure_permission(
+        &state.pool,
+        &identity,
+        model::ADMIN_PERMISSIONS_PAGE,
+        PermissionAction::Read,
+        "permission",
+    )
+    .await?;
+
     service::fetch_permissions(&state.pool)
         .await
         .map(Json)
-        .map_err(|error| error::map_query_error("permissions query failed", error))
+        .map_err(|error| error::map_admin_query_error("permissions query failed", error))
 }
 
 pub async fn create_role(
     State(state): State<AppState>,
-    headers: HeaderMap,
+    identity: AdminIdentity,
     Json(input): Json<CreateRoleInput>,
 ) -> Result<(StatusCode, Json<Role>), error::HttpError> {
-    service::ensure_admin_permission(
+    service::ensure_permission(
         &state.pool,
-        &headers,
+        &identity,
         model::ADMIN_PERMISSIONS_PAGE,
         PermissionAction::Create,
         "permission",
@@ -44,12 +54,12 @@ pub async fn create_role(
 pub async fn update_role(
     State(state): State<AppState>,
     Path(role_id): Path<i32>,
-    headers: HeaderMap,
+    identity: AdminIdentity,
     Json(input): Json<UpdateRoleInput>,
 ) -> Result<Json<Role>, error::HttpError> {
-    service::ensure_admin_permission(
+    service::ensure_permission(
         &state.pool,
-        &headers,
+        &identity,
         model::ADMIN_PERMISSIONS_PAGE,
         PermissionAction::Update,
         "permission",
@@ -65,11 +75,11 @@ pub async fn update_role(
 pub async fn delete_role(
     State(state): State<AppState>,
     Path(role_id): Path<i32>,
-    headers: HeaderMap,
+    identity: AdminIdentity,
 ) -> Result<StatusCode, error::HttpError> {
-    service::ensure_admin_permission(
+    service::ensure_permission(
         &state.pool,
-        &headers,
+        &identity,
         model::ADMIN_PERMISSIONS_PAGE,
         PermissionAction::Delete,
         "permission",
@@ -84,12 +94,12 @@ pub async fn delete_role(
 
 pub async fn update_role_permission(
     State(state): State<AppState>,
-    headers: HeaderMap,
+    identity: AdminIdentity,
     Json(input): Json<UpdateRolePagePermissionInput>,
 ) -> Result<Json<RolePagePermission>, error::HttpError> {
-    service::ensure_admin_permission(
+    service::ensure_permission(
         &state.pool,
-        &headers,
+        &identity,
         model::ADMIN_PERMISSIONS_PAGE,
         PermissionAction::Update,
         "permission",

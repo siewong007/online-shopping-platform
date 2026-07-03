@@ -1,28 +1,44 @@
 use axum::{
     Json,
     extract::{Path, State},
-    http::{HeaderMap, StatusCode},
+    http::StatusCode,
 };
 
-use crate::{app_state::AppState, error, modules::permissions};
+use crate::{
+    app_state::AppState,
+    error,
+    modules::{auth::model::AdminIdentity, permissions},
+};
 
 use super::{dto::CreateOrderInput, model::Order, service};
 
-pub async fn admin_orders(State(state): State<AppState>) -> Result<Json<Vec<Order>>, StatusCode> {
+pub async fn admin_orders(
+    State(state): State<AppState>,
+    identity: AdminIdentity,
+) -> Result<Json<Vec<Order>>, error::HttpError> {
+    permissions::service::ensure_permission(
+        &state.pool,
+        &identity,
+        permissions::model::ADMIN_ORDERS_PAGE,
+        permissions::model::PermissionAction::Read,
+        "order",
+    )
+    .await?;
+
     service::fetch_orders(&state.pool)
         .await
         .map(Json)
-        .map_err(|error| error::map_query_error("admin orders query failed", error))
+        .map_err(|error| error::map_admin_query_error("admin orders query failed", error))
 }
 
 pub async fn admin_create_order(
     State(state): State<AppState>,
-    headers: HeaderMap,
+    identity: AdminIdentity,
     Json(input): Json<CreateOrderInput>,
 ) -> Result<(StatusCode, Json<Order>), error::HttpError> {
-    permissions::service::ensure_admin_permission(
+    permissions::service::ensure_permission(
         &state.pool,
-        &headers,
+        &identity,
         permissions::model::ADMIN_ORDERS_PAGE,
         permissions::model::PermissionAction::Create,
         "order",
@@ -38,12 +54,12 @@ pub async fn admin_create_order(
 pub async fn admin_update_order(
     State(state): State<AppState>,
     Path(order_id): Path<i32>,
-    headers: HeaderMap,
+    identity: AdminIdentity,
     Json(input): Json<CreateOrderInput>,
 ) -> Result<Json<Order>, error::HttpError> {
-    permissions::service::ensure_admin_permission(
+    permissions::service::ensure_permission(
         &state.pool,
-        &headers,
+        &identity,
         permissions::model::ADMIN_ORDERS_PAGE,
         permissions::model::PermissionAction::Update,
         "order",
@@ -59,11 +75,11 @@ pub async fn admin_update_order(
 pub async fn admin_delete_order(
     State(state): State<AppState>,
     Path(order_id): Path<i32>,
-    headers: HeaderMap,
+    identity: AdminIdentity,
 ) -> Result<StatusCode, error::HttpError> {
-    permissions::service::ensure_admin_permission(
+    permissions::service::ensure_permission(
         &state.pool,
-        &headers,
+        &identity,
         permissions::model::ADMIN_ORDERS_PAGE,
         permissions::model::PermissionAction::Delete,
         "order",

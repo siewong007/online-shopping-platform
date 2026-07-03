@@ -17,24 +17,17 @@ export function fetchSalesSummary(): Promise<SalesSummaryPayload> {
 
 export function updateSalesDetails(
   orderId: number,
-  input: UpdateSalesDetailsInput,
-  adminRoleId: number
+  input: UpdateSalesDetailsInput
 ): Promise<SalesRecord> {
-  return putJson<UpdateSalesDetailsInput, SalesRecord>(
-    `/api/admin/sales/${orderId}`,
-    input,
-    adminRoleId
-  );
+  return putJson<UpdateSalesDetailsInput, SalesRecord>(`/api/admin/sales/${orderId}`, input);
 }
 
 export function updateSalesStatus(
   orderId: number,
-  input: UpdateSalesStatusInput,
-  adminRoleId: number
+  input: UpdateSalesStatusInput
 ): Promise<SalesRecord> {
   return putJson<UpdateSalesStatusInput, SalesRecord>(
     `/api/admin/sales/${orderId}/status`,
-    input,
-    adminRoleId
+    input
   );
 }

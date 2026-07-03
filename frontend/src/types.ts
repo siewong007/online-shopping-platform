@@ -11,6 +11,10 @@ export type {
   UpdateProductInput
 } from "./modules/storefront/types";
 
+export type { AdminCatalogPayload, UpdateCategoryInput } from "./modules/catalog/types";
+
+export type { AdminAuthPayload, AdminLoginInput, AdminMePayload, AdminUser } from "./modules/auth/types";
+
 export type {
   ActivityItem,
   AdminDashboardPayload,

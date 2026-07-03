@@ -1,31 +1,44 @@
 use axum::{
     Json,
     extract::{Path, State},
-    http::HeaderMap,
 };
 
-use crate::{app_state::AppState, error, modules::permissions};
+use crate::{
+    app_state::AppState,
+    error,
+    modules::{auth::model::AdminIdentity, permissions},
+};
 
 use super::{dto::UpdateSystemSettingInput, model::SystemSetting, service};
 
 pub async fn admin_settings(
     State(state): State<AppState>,
-) -> Result<Json<Vec<SystemSetting>>, axum::http::StatusCode> {
+    identity: AdminIdentity,
+) -> Result<Json<Vec<SystemSetting>>, error::HttpError> {
+    permissions::service::ensure_permission(
+        &state.pool,
+        &identity,
+        permissions::model::ADMIN_SETTINGS_PAGE,
+        permissions::model::PermissionAction::Read,
+        "setting",
+    )
+    .await?;
+
     service::fetch_system_settings(&state.pool)
         .await
         .map(Json)
-        .map_err(|error| error::map_query_error("admin settings query failed", error))
+        .map_err(|error| error::map_admin_query_error("admin settings query failed", error))
 }
 
 pub async fn admin_update_setting(
     State(state): State<AppState>,
     Path(key): Path<String>,
-    headers: HeaderMap,
+    identity: AdminIdentity,
     Json(input): Json<UpdateSystemSettingInput>,
 ) -> Result<Json<SystemSetting>, error::HttpError> {
-    permissions::service::ensure_admin_permission(
+    permissions::service::ensure_permission(
         &state.pool,
-        &headers,
+        &identity,
         permissions::model::ADMIN_SETTINGS_PAGE,
         permissions::model::PermissionAction::Update,
         "setting",

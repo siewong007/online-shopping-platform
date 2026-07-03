@@ -1,1 +1,4 @@
-pub use crate::models::{CreateCategoryInput, CreateProductInput, UpdateProductInput};
+pub use crate::models::{
+    AdminCatalogPayload, CreateCategoryInput, CreateProductInput, UpdateCategoryInput,
+    UpdateProductInput,
+};

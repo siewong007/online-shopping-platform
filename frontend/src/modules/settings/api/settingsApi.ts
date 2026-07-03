@@ -8,12 +8,10 @@ export function fetchSystemSettings(): Promise<SystemSetting[]> {
 
 export function updateSystemSetting(
   key: string,
-  input: UpdateSystemSettingInput,
-  adminRoleId: number
+  input: UpdateSystemSettingInput
 ): Promise<SystemSetting> {
   return putJson<UpdateSystemSettingInput, SystemSetting>(
     `/api/admin/settings/${encodeURIComponent(key)}`,
-    input,
-    adminRoleId
+    input
   );
 }

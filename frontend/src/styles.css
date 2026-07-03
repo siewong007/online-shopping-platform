@@ -657,6 +657,23 @@ ul {
   padding: 1rem 0;
 }
 
+.admin-login-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.admin-login-panel {
+  width: min(28rem, 100%);
+  display: grid;
+  gap: 1.25rem;
+  padding: 1.35rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
 .admin-sidebar {
   display: grid;
   align-content: start;
@@ -692,6 +709,15 @@ ul {
 .admin-main {
   padding: 1.25rem;
   background: rgba(255, 255, 255, 0.72);
+}
+
+.admin-demo-banner {
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(186, 111, 18, 0.28);
+  background: rgba(186, 111, 18, 0.1);
+  color: var(--warning);
+  font-weight: 800;
 }
 
 .admin-actions {

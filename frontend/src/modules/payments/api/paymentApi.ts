@@ -6,25 +6,17 @@ export function fetchPayments(): Promise<Payment[]> {
   return fetchJson("/api/admin/payments", fallbackPayments);
 }
 
-export function createPayment(
-  input: CreatePaymentInput,
-  adminRoleId: number
-): Promise<Payment> {
-  return postJson<CreatePaymentInput, Payment>("/api/admin/payments", input, adminRoleId);
+export function createPayment(input: CreatePaymentInput): Promise<Payment> {
+  return postJson<CreatePaymentInput, Payment>("/api/admin/payments", input);
 }
 
 export function updatePayment(
   paymentId: number,
-  input: UpdatePaymentInput,
-  adminRoleId: number
+  input: UpdatePaymentInput
 ): Promise<Payment> {
-  return putJson<UpdatePaymentInput, Payment>(
-    `/api/admin/payments/${paymentId}`,
-    input,
-    adminRoleId
-  );
+  return putJson<UpdatePaymentInput, Payment>(`/api/admin/payments/${paymentId}`, input);
 }
 
-export function deletePayment(paymentId: number, adminRoleId: number): Promise<void> {
-  return deleteJson(`/api/admin/payments/${paymentId}`, adminRoleId);
+export function deletePayment(paymentId: number): Promise<void> {
+  return deleteJson(`/api/admin/payments/${paymentId}`);
 }

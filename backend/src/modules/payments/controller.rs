@@ -1,10 +1,14 @@
 use axum::{
     Json,
     extract::{Path, State},
-    http::{HeaderMap, StatusCode},
+    http::StatusCode,
 };
 
-use crate::{app_state::AppState, error, modules::permissions};
+use crate::{
+    app_state::AppState,
+    error,
+    modules::{auth::model::AdminIdentity, permissions},
+};
 
 use super::{
     dto::{CreatePaymentInput, UpdatePaymentInput},
@@ -14,21 +18,31 @@ use super::{
 
 pub async fn admin_payments(
     State(state): State<AppState>,
-) -> Result<Json<Vec<Payment>>, StatusCode> {
+    identity: AdminIdentity,
+) -> Result<Json<Vec<Payment>>, error::HttpError> {
+    permissions::service::ensure_permission(
+        &state.pool,
+        &identity,
+        permissions::model::ADMIN_PAYMENTS_PAGE,
+        permissions::model::PermissionAction::Read,
+        "payment",
+    )
+    .await?;
+
     service::fetch_payments(&state.pool)
         .await
         .map(Json)
-        .map_err(|error| error::map_query_error("admin payments query failed", error))
+        .map_err(|error| error::map_admin_query_error("admin payments query failed", error))
 }
 
 pub async fn admin_create_payment(
     State(state): State<AppState>,
-    headers: HeaderMap,
+    identity: AdminIdentity,
     Json(input): Json<CreatePaymentInput>,
 ) -> Result<(StatusCode, Json<Payment>), error::HttpError> {
-    permissions::service::ensure_admin_permission(
+    permissions::service::ensure_permission(
         &state.pool,
-        &headers,
+        &identity,
         permissions::model::ADMIN_PAYMENTS_PAGE,
         permissions::model::PermissionAction::Create,
         "payment",
@@ -44,12 +58,12 @@ pub async fn admin_create_payment(
 pub async fn admin_update_payment(
     State(state): State<AppState>,
     Path(payment_id): Path<i32>,
-    headers: HeaderMap,
+    identity: AdminIdentity,
     Json(input): Json<UpdatePaymentInput>,
 ) -> Result<Json<Payment>, error::HttpError> {
-    permissions::service::ensure_admin_permission(
+    permissions::service::ensure_permission(
         &state.pool,
-        &headers,
+        &identity,
         permissions::model::ADMIN_PAYMENTS_PAGE,
         permissions::model::PermissionAction::Update,
         "payment",
@@ -65,11 +79,11 @@ pub async fn admin_update_payment(
 pub async fn admin_delete_payment(
     State(state): State<AppState>,
     Path(payment_id): Path<i32>,
-    headers: HeaderMap,
+    identity: AdminIdentity,
 ) -> Result<StatusCode, error::HttpError> {
-    permissions::service::ensure_admin_permission(
+    permissions::service::ensure_permission(
         &state.pool,
-        &headers,
+        &identity,
         permissions::model::ADMIN_PAYMENTS_PAGE,
         permissions::model::PermissionAction::Delete,
         "payment",

@@ -1,4 +1,5 @@
 import type {
+  AdminCatalogPayload,
   AdminDashboardPayload,
   CustomerPortalProfile,
   Invoice,
@@ -141,6 +142,11 @@ export const fallbackStorefront: StorefrontPayload = {
     { label: "rental and service touchpoints", value: "1,300+" },
     { label: "pro quote turnaround", value: "30 min" }
   ]
+};
+
+export const fallbackCatalog: AdminCatalogPayload = {
+  categories: fallbackStorefront.categories,
+  products: fallbackStorefront.products
 };
 
 export const fallbackAdminDashboard: AdminDashboardPayload = {

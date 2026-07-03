@@ -1,9 +1,18 @@
 export {
+  fetchMe,
+  login,
+  logout
+} from "../modules/auth/api/authApi";
+export {
   fetchAdminDashboard
 } from "../modules/dashboard/api/dashboardApi";
 export {
+  deleteCategory,
+  deleteProduct,
+  fetchAdminCatalog,
   createCategory,
   createProduct,
+  updateCategory,
   updateProduct
 } from "../modules/catalog/api/catalogApi";
 export {

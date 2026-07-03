@@ -1,13 +1,7 @@
-mod app_state;
-mod db;
-mod error;
-mod models;
-mod modules;
-mod routes;
-
 use std::{env, net::SocketAddr};
 
 use anyhow::Context;
+use home_depot_clone_api::{app_state::AppState, modules::auth, routes};
 use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -37,7 +31,11 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("failed to connect to PostgreSQL")?;
 
-    let app = routes::build_router(app_state::AppState::new(pool), frontend_origin);
+    auth::service::ensure_seed_admin(&pool)
+        .await
+        .context("failed to ensure seed admin user")?;
+
+    let app = routes::build_router(AppState::new(pool), frontend_origin);
 
     let address: SocketAddr = format!("{app_host}:{app_port}").parse()?;
     let listener = TcpListener::bind(address).await?;

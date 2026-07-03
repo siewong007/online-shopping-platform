@@ -28,6 +28,12 @@ pub struct CreateCategoryInput {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+pub struct UpdateCategoryInput {
+    pub name: String,
+    pub teaser: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct CreateProductInput {
     pub name: String,
     pub category_slug: String,
@@ -39,6 +45,12 @@ pub struct CreateProductInput {
 }
 
 pub type UpdateProductInput = CreateProductInput;
+
+#[derive(Debug, Clone, Serialize)]
+pub struct AdminCatalogPayload {
+    pub categories: Vec<Category>,
+    pub products: Vec<Product>,
+}
 
 #[derive(Debug, Clone, Serialize, FromRow)]
 pub struct Promotion {
@@ -268,6 +280,63 @@ pub struct UpdateRolePagePermissionInput {
 pub struct PermissionsPayload {
     pub roles: Vec<Role>,
     pub pages: Vec<PermissionPage>,
+    pub permissions: Vec<RolePagePermission>,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct AdminUser {
+    pub id: i32,
+    pub username: String,
+    pub display_name: String,
+    pub role_id: i32,
+    pub is_active: bool,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Clone, FromRow)]
+pub struct AdminUserCredentials {
+    pub id: i32,
+    pub username: String,
+    pub display_name: String,
+    pub password_hash: String,
+    pub role_id: i32,
+    pub role_name: String,
+    pub role_description: String,
+    pub is_super_admin: bool,
+    pub is_active: bool,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct AdminIdentity {
+    pub user_id: i32,
+    pub username: String,
+    pub display_name: String,
+    pub role_id: i32,
+    pub role_name: String,
+    pub is_super_admin: bool,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct AdminLoginInput {
+    pub username: String,
+    pub password: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct AdminAuthPayload {
+    pub token: String,
+    pub user: AdminUser,
+    pub role: Role,
+    pub permissions: Vec<RolePagePermission>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct AdminMePayload {
+    pub user: AdminUser,
+    pub role: Role,
     pub permissions: Vec<RolePagePermission>,
 }
 
