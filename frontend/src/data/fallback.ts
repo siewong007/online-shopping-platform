@@ -1,6 +1,7 @@
 import type {
   AdminCatalogPayload,
   AdminDashboardPayload,
+  AdminUser,
   CustomerPortalProfile,
   Invoice,
   Order,
@@ -190,10 +191,32 @@ export const fallbackOrders: Order[] = [
     customer_name: "Falcon Builders",
     customer_email: "ap@falconbuilders.com",
     subtotal_cents: 119800,
+    fulfillment_status: "packed",
+    fulfillment_method: "pickup",
     created_at: "2026-06-29 08:42:00+00",
     items: [
       { product_id: 1, product_name: "Milwaukee M18 9-Tool Combo Kit", unit_price_cents: 64900, quantity: 1 },
       { product_id: 2, product_name: "Pressure-Treated Decking Starter Pack", unit_price_cents: 54900, quantity: 1 }
+    ],
+    fulfillment_history: [
+      {
+        id: 1,
+        order_id: 1042,
+        from_status: "received",
+        to_status: "picking",
+        note: "Queued for pro desk pickup.",
+        changed_by: "demo-manager",
+        happened_at: "2026-06-29 08:50:00+00"
+      },
+      {
+        id: 2,
+        order_id: 1042,
+        from_status: "picking",
+        to_status: "packed",
+        note: "Large-format materials staged together.",
+        changed_by: "demo-manager",
+        happened_at: "2026-06-29 09:14:00+00"
+      }
     ]
   },
   {
@@ -201,10 +224,13 @@ export const fallbackOrders: Order[] = [
     customer_name: "Dana Whitfield",
     customer_email: "dana.w@example.com",
     subtotal_cents: 64900,
+    fulfillment_status: "received",
+    fulfillment_method: "delivery",
     created_at: "2026-06-29 07:15:00+00",
     items: [
       { product_id: 1, product_name: "Milwaukee M18 9-Tool Combo Kit", unit_price_cents: 64900, quantity: 1 }
-    ]
+    ],
+    fulfillment_history: []
   }
 ];
 
@@ -513,3 +539,24 @@ export const fallbackPermissions: PermissionsPayload = {
     }))
   ]
 };
+
+export const fallbackAdminUsers: AdminUser[] = [
+  {
+    id: 1,
+    username: "admin",
+    display_name: "Admin",
+    role_id: 1,
+    is_active: true,
+    created_at: "2026-06-29 08:00:00+00",
+    updated_at: "2026-06-29 08:00:00+00"
+  },
+  {
+    id: 2,
+    username: "j.rivera",
+    display_name: "Jordan Rivera",
+    role_id: 3,
+    is_active: false,
+    created_at: "2026-06-30 09:30:00+00",
+    updated_at: "2026-07-02 14:00:00+00"
+  }
+];

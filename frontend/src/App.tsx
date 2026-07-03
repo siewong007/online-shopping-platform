@@ -1,8 +1,10 @@
 import { type FormEvent, startTransition, useDeferredValue, useEffect, useState } from "react";
 
 import {
+  changeOwnPassword as changeOwnPasswordRequest,
   checkout as checkoutRequest,
   createAdminOrder as createAdminOrderRequest,
+  createAdminUser as createAdminUserRequest,
   createCategory as createCategoryRequest,
   createCustomerPortalProfile as createCustomerPortalProfileRequest,
   createInvoiceFromOrder as createInvoiceFromOrderRequest,
@@ -17,6 +19,7 @@ import {
   deleteRole as deleteRoleRequest,
   fetchAdminCatalog,
   fetchAdminDashboard,
+  fetchAdminUsers,
   fetchCustomerPortalProfiles,
   fetchInvoices,
   fetchMe,
@@ -30,12 +33,16 @@ import {
   login as loginRequest,
   logout as logoutRequest,
   recordInvoicePayment as recordInvoicePaymentRequest,
+  resetAdminUserPassword as resetAdminUserPasswordRequest,
+  setAdminUserActive as setAdminUserActiveRequest,
   updateAdminOrder as updateAdminOrderRequest,
+  updateAdminUserProfile as updateAdminUserProfileRequest,
   updateCategory as updateCategoryRequest,
   updateCustomerPortalProfile as updateCustomerPortalProfileRequest,
   updateInvoiceBilling as updateInvoiceBillingRequest,
   updatePayment as updatePaymentRequest,
   updateProduct as updateProductRequest,
+  updateOrderFulfillment as updateOrderFulfillmentRequest,
   updateRole as updateRoleRequest,
   updateRolePermission as updateRolePermissionRequest,
   updateSalesDetails as updateSalesDetailsRequest,
@@ -43,6 +50,7 @@ import {
   updateSystemSetting as updateSystemSettingRequest,
   voidInvoice as voidInvoiceRequest
 } from "./lib/api";
+import { TeamPanel } from "./modules/admin_users/components/TeamPanel";
 import { AdminLoginScreen } from "./modules/auth/components/AdminLoginScreen";
 import { CatalogPanel } from "./modules/catalog/components/CatalogPanel";
 import { InvoicesPanel } from "./modules/invoices/components/InvoicesPanel";
@@ -63,9 +71,13 @@ import type {
   AdminDashboardPayload,
   AdminLoginInput,
   AdminMePayload,
+  AdminResetPasswordInput,
+  AdminUser,
   CampaignOption,
   CartItem,
   Category,
+  ChangeOwnPasswordInput,
+  CreateAdminUserInput,
   CreateCategoryInput,
   CreateCustomerPortalProfileInput,
   CreateInvoiceFromOrderInput,
@@ -74,7 +86,8 @@ import type {
   CreateProductInput,
   CreateRoleInput,
   CustomerPortalProfile,
-  FulfillmentItem,
+  FulfillmentMethod,
+  FulfillmentStatus,
   Invoice,
   Order,
   Payment,
@@ -85,13 +98,16 @@ import type {
   RolePagePermission,
   SalesRecord,
   SalesSummaryPayload,
+  SetAdminUserActiveInput,
   StorefrontPayload,
   SystemSetting,
+  UpdateAdminUserProfileInput,
   UpdateCategoryInput,
   UpdateCustomerPortalProfileInput,
   UpdateInvoiceBillingInput,
   UpdatePaymentInput,
   UpdateProductInput,
+  UpdateOrderFulfillmentInput,
   UpdateRoleInput,
   UpdateRolePagePermissionInput,
   UpdateSalesDetailsInput,
@@ -134,6 +150,22 @@ const adminTabs: { tab: AdminTab; label: string; pageSlug: string }[] = [
   { tab: "invoices", label: "Invoices", pageSlug: "admin-invoices" },
   { tab: "settings", label: "Settings", pageSlug: "admin-settings" },
   { tab: "permissions", label: "Permissions", pageSlug: "admin-permissions" }
+];
+
+const changePasswordFields: RecordFormField<ChangeOwnPasswordInput>[] = [
+  {
+    name: "current_password",
+    label: "Current password",
+    type: "password",
+    required: true
+  },
+  {
+    name: "new_password",
+    label: "New password",
+    type: "password",
+    required: true,
+    minLength: 8
+  }
 ];
 
 const membershipTiers = ["Bronze", "Silver", "Gold", "Pro Xtra", "VIP"];
@@ -841,11 +873,35 @@ function applyPermissionUpdate(
   };
 }
 
-function groupedFulfillment(items: FulfillmentItem[]): Record<string, FulfillmentItem[]> {
-  return items.reduce<Record<string, FulfillmentItem[]>>((groups, item) => {
-    groups[item.stage] = groups[item.stage] ? [...groups[item.stage], item] : [item];
-    return groups;
-  }, {});
+const fulfillmentBoardStages: FulfillmentStatus[] = [
+  "received",
+  "picking",
+  "packed",
+  "ready_for_pickup",
+  "out_for_delivery",
+  "completed",
+  "delivered",
+  "canceled"
+];
+
+function fulfillmentLabel(value: string): string {
+  return value
+    .split("_")
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(" ");
+}
+
+function groupedFulfillment(orders: Order[]): Record<FulfillmentStatus, Order[]> {
+  const groups = fulfillmentBoardStages.reduce(
+    (accumulator, stage) => ({ ...accumulator, [stage]: [] }),
+    {} as Record<FulfillmentStatus, Order[]>
+  );
+
+  for (const order of orders) {
+    groups[order.fulfillment_status] = [...groups[order.fulfillment_status], order];
+  }
+
+  return groups;
 }
 
 function numericText(value: string): number {
@@ -879,6 +935,7 @@ export default function App() {
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [adminTab, setAdminTab] = useState<AdminTab>("overview");
   const [selectedCampaign, setSelectedCampaign] = useState<CampaignOption | null>(null);
   const [discount, setDiscount] = useState(25);
@@ -898,6 +955,7 @@ export default function App() {
   );
   const [currentAdmin, setCurrentAdmin] = useState<AdminMePayload | null>(null);
   const [adminCatalog, setAdminCatalog] = useState<AdminCatalogPayload | null>(null);
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
 
   const deferredSearchTerm = useDeferredValue(searchTerm);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -936,7 +994,7 @@ export default function App() {
         return matchesCategory && matchesSearch;
       });
 
-  const fulfillmentByStage = groupedFulfillment(dashboard?.fulfillment ?? []);
+  const fulfillmentByStage = groupedFulfillment(orders);
 
   const openView = (nextView: View) => {
     startTransition(() => {
@@ -947,6 +1005,7 @@ export default function App() {
   };
 
   const applyAdminData = ({
+    adminUsersData,
     catalogData,
     dashboardData,
     invoicesData,
@@ -958,6 +1017,7 @@ export default function App() {
     systemSettingsData,
     customerProfileData
   }: {
+    adminUsersData: AdminUser[];
     catalogData: AdminCatalogPayload;
     dashboardData: AdminDashboardPayload;
     invoicesData: Invoice[];
@@ -969,6 +1029,7 @@ export default function App() {
     systemSettingsData: SystemSetting[];
     customerProfileData: CustomerPortalProfile[];
   }) => {
+    setAdminUsers(adminUsersData);
     setAdminCatalog(catalogData);
     setDashboard(dashboardData);
     setSelectedCampaign(dashboardData.campaigns[0] ?? null);
@@ -1002,6 +1063,7 @@ export default function App() {
     setActiveRoleId(roleId);
 
     const [
+      adminUsersData,
       catalogData,
       dashboardData,
       ordersData,
@@ -1013,6 +1075,7 @@ export default function App() {
       customerProfileData,
       permissionsData
     ] = await Promise.all([
+      fetchAdminUsers(),
       fetchAdminCatalog(),
       fetchAdminDashboard(),
       fetchOrders(),
@@ -1026,6 +1089,7 @@ export default function App() {
     ]);
 
     applyAdminData({
+      adminUsersData,
       catalogData,
       dashboardData,
       ordersData,
@@ -1041,6 +1105,7 @@ export default function App() {
 
   const loadDemoAdminData = async () => {
     const [
+      adminUsersData,
       catalogData,
       dashboardData,
       ordersData,
@@ -1051,6 +1116,7 @@ export default function App() {
       systemSettingsData,
       customerProfileData
     ] = await Promise.all([
+      fetchAdminUsers(),
       fetchAdminCatalog(),
       fetchAdminDashboard(),
       fetchOrders(),
@@ -1065,6 +1131,7 @@ export default function App() {
     setCurrentAdmin(null);
     setActiveRoleId(null);
     applyAdminData({
+      adminUsersData,
       catalogData,
       dashboardData,
       ordersData,
@@ -1223,6 +1290,28 @@ export default function App() {
       {
         happened_at: "Now",
         detail: `Order #${order.id} updated for ${order.customer_name}.`
+      },
+      ...current
+    ]);
+
+    return order;
+  };
+
+  const updateOrderFulfillment = async (
+    orderId: number,
+    input: UpdateOrderFulfillmentInput
+  ): Promise<Order> => {
+    const order = await updateOrderFulfillmentRequest(orderId, input);
+
+    setOrders((current) => current.map((item) => (item.id === order.id ? order : item)));
+    if (order.fulfillment_status === "completed" || order.fulfillment_status === "delivered") {
+      void fetchSales().then(setSales);
+      void fetchSalesSummary().then(setSalesSummary);
+    }
+    setActivityFeed((current) => [
+      {
+        happened_at: "Now",
+        detail: `Order #${order.id} moved to ${fulfillmentLabel(order.fulfillment_status)}.`
       },
       ...current
     ]);
@@ -1458,6 +1547,52 @@ export default function App() {
     setPermissions((current) => (current ? applyPermissionUpdate(current, permission) : current));
 
     return permission;
+  };
+
+  const createAdminUser = async (input: CreateAdminUserInput): Promise<AdminUser> => {
+    const user = await createAdminUserRequest(input);
+
+    setAdminUsers((current) => [...current, user]);
+    setActivityFeed((current) => [
+      { happened_at: "Now", detail: `${user.display_name} was added as an admin user.` },
+      ...current
+    ]);
+
+    return user;
+  };
+
+  const updateAdminUserProfile = async (
+    userId: number,
+    input: UpdateAdminUserProfileInput
+  ): Promise<AdminUser> => {
+    const user = await updateAdminUserProfileRequest(userId, input);
+
+    setAdminUsers((current) => current.map((item) => (item.id === user.id ? user : item)));
+
+    return user;
+  };
+
+  const setAdminUserActive = async (
+    userId: number,
+    input: SetAdminUserActiveInput
+  ): Promise<AdminUser> => {
+    const user = await setAdminUserActiveRequest(userId, input);
+
+    setAdminUsers((current) => current.map((item) => (item.id === user.id ? user : item)));
+
+    return user;
+  };
+
+  const resetAdminUserPassword = async (
+    userId: number,
+    input: AdminResetPasswordInput
+  ): Promise<void> => {
+    await resetAdminUserPasswordRequest(userId, input);
+  };
+
+  const changeOwnPassword = async (input: ChangeOwnPasswordInput): Promise<void> => {
+    await changeOwnPasswordRequest(input);
+    await handleAdminLogout();
   };
 
   const applyCampaign = () => {
@@ -1803,6 +1938,7 @@ export default function App() {
           activityFeed={activityFeed}
           activeRoleId={activeRoleId}
           adminTab={adminTab}
+          adminUsers={adminUsers}
           categories={adminCatalog.categories}
           currentAdmin={currentAdmin}
           customerProfiles={customerProfiles}
@@ -1811,11 +1947,15 @@ export default function App() {
           discount={discount}
           fulfillmentByStage={fulfillmentByStage}
           highValueAccounts={highValueAccounts}
+          isChangePasswordOpen={isChangePasswordOpen}
           onApplyCampaign={applyCampaign}
           onBackToStore={() => openView("store")}
           onChangeDiscount={setDiscount}
+          onChangeOwnPassword={changeOwnPassword}
           onChangeTab={setAdminTab}
+          onCloseChangePassword={() => setIsChangePasswordOpen(false)}
           onCreateAdminOrder={createAdminOrder}
+          onCreateAdminUser={createAdminUser}
           onCreateCategory={createCategory}
           onCreateCustomerPortalProfile={createCustomerPortalProfile}
           onCreateInvoiceFromOrder={createInvoiceFromOrder}
@@ -1829,13 +1969,18 @@ export default function App() {
           onDeleteProduct={deleteProduct}
           onDeleteRole={deleteRole}
           onLogout={() => void handleAdminLogout()}
+          onOpenChangePassword={() => setIsChangePasswordOpen(true)}
           onRecordInvoicePayment={recordInvoicePayment}
+          onResetAdminUserPassword={resetAdminUserPassword}
           onRunSync={runSupplierSync}
           onSelectCampaign={(name) =>
             setSelectedCampaign(dashboard.campaigns.find((item) => item.name === name) ?? null)
           }
+          onSetAdminUserActive={setAdminUserActive}
           onUpdateAdminOrder={updateAdminOrder}
+          onUpdateAdminUserProfile={updateAdminUserProfile}
           onUpdateCategory={updateCategory}
+          onUpdateOrderFulfillment={updateOrderFulfillment}
           onUpdateInvoiceBilling={updateInvoiceBilling}
           onUpdatePayment={updatePayment}
           onUpdateProduct={updateProduct}
@@ -2333,7 +2478,11 @@ function CartDrawer({
   onUpdateQuantity
 }: CartDrawerProps) {
   const [stage, setStage] = useState<"cart" | "checkout">("cart");
-  const [form, setForm] = useState({ customer_name: "", customer_email: "" });
+  const [form, setForm] = useState<{
+    customer_name: string;
+    customer_email: string;
+    fulfillment_method: FulfillmentMethod;
+  }>({ customer_name: "", customer_email: "", fulfillment_method: "pickup" });
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null);
@@ -2346,7 +2495,7 @@ function CartDrawer({
 
   const close = () => {
     setStage("cart");
-    setForm({ customer_name: "", customer_email: "" });
+    setForm({ customer_name: "", customer_email: "", fulfillment_method: "pickup" });
     setFeedback(null);
     setConfirmedOrder(null);
     onClose();
@@ -2361,6 +2510,7 @@ function CartDrawer({
       const order = await onCheckout({
         customer_name: form.customer_name,
         customer_email: form.customer_email,
+        fulfillment_method: form.fulfillment_method,
         items: cart.map((item) => ({ product_id: item.product.id, quantity: item.quantity }))
       });
       setConfirmedOrder(order);
@@ -2398,6 +2548,7 @@ function CartDrawer({
               {confirmedOrder.customer_email}.
             </p>
             <p className="cart-confirm-total">{currencyFromCents(confirmedOrder.subtotal_cents)} total</p>
+            <p>{fulfillmentLabel(confirmedOrder.fulfillment_method)} order</p>
             <button className="solid-button" onClick={close}>
               Continue Shopping
             </button>
@@ -2473,6 +2624,21 @@ function CartDrawer({
                 required
               />
             </label>
+            <label>
+              <span>Fulfillment</span>
+              <select
+                value={form.fulfillment_method}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    fulfillment_method: event.target.value as FulfillmentMethod
+                  }))
+                }
+              >
+                <option value="pickup">Pickup</option>
+                <option value="delivery">Delivery</option>
+              </select>
+            </label>
             {feedback ? <p className="cart-feedback">{feedback}</p> : null}
             <div className="cart-subtotal">
               <span>Subtotal</span>
@@ -2497,19 +2663,24 @@ type AdminViewProps = {
   activityFeed: ActivityItem[];
   activeRoleId: number | null;
   adminTab: AdminTab;
+  adminUsers: AdminUser[];
   categories: Category[];
   currentAdmin: AdminMePayload | null;
   customerProfiles: CustomerPortalProfile[];
   dashboard: AdminDashboardPayload;
   demoMode: boolean;
   discount: number;
-  fulfillmentByStage: Record<string, FulfillmentItem[]>;
+  fulfillmentByStage: Record<FulfillmentStatus, Order[]>;
   highValueAccounts: { name: string; detail: string }[];
+  isChangePasswordOpen: boolean;
   onApplyCampaign: () => void;
   onBackToStore: () => void;
   onChangeDiscount: (value: number) => void;
+  onChangeOwnPassword: (input: ChangeOwnPasswordInput) => Promise<void>;
   onChangeTab: (tab: AdminTab) => void;
+  onCloseChangePassword: () => void;
   onCreateAdminOrder: (input: CreateOrderInput) => Promise<Order>;
+  onCreateAdminUser: (input: CreateAdminUserInput) => Promise<AdminUser>;
   onCreateCategory: (input: CreateCategoryInput) => Promise<Category>;
   onCreateCustomerPortalProfile: (
     input: CreateCustomerPortalProfileInput
@@ -2528,13 +2699,20 @@ type AdminViewProps = {
   onDeleteProduct: (productId: number) => Promise<void>;
   onDeleteRole: (roleId: number) => Promise<void>;
   onLogout: () => void;
+  onOpenChangePassword: () => void;
   onRecordInvoicePayment: (
     invoiceId: number,
     input: RecordInvoicePaymentInput
   ) => Promise<Invoice>;
+  onResetAdminUserPassword: (userId: number, input: AdminResetPasswordInput) => Promise<void>;
   onRunSync: () => void;
   onSelectCampaign: (name: string) => void;
+  onSetAdminUserActive: (userId: number, input: SetAdminUserActiveInput) => Promise<AdminUser>;
   onUpdateAdminOrder: (orderId: number, input: CreateOrderInput) => Promise<Order>;
+  onUpdateAdminUserProfile: (
+    userId: number,
+    input: UpdateAdminUserProfileInput
+  ) => Promise<AdminUser>;
   onUpdateCategory: (slug: string, input: UpdateCategoryInput) => Promise<Category>;
   onUpdateCustomerPortalProfile: (
     profileId: number,
@@ -2543,6 +2721,10 @@ type AdminViewProps = {
   onUpdateInvoiceBilling: (invoiceId: number, input: UpdateInvoiceBillingInput) => Promise<Invoice>;
   onUpdatePayment: (paymentId: number, input: UpdatePaymentInput) => Promise<Payment>;
   onUpdateProduct: (productId: number, input: UpdateProductInput) => Promise<Product>;
+  onUpdateOrderFulfillment: (
+    orderId: number,
+    input: UpdateOrderFulfillmentInput
+  ) => Promise<Order>;
   onUpdateRole: (roleId: number, input: UpdateRoleInput) => Promise<Role>;
   onUpdateRolePermission: (input: UpdateRolePagePermissionInput) => Promise<RolePagePermission>;
   onUpdateSalesDetails: (orderId: number, input: UpdateSalesDetailsInput) => Promise<SalesRecord>;
@@ -2565,6 +2747,7 @@ function AdminView({
   activityFeed,
   activeRoleId,
   adminTab,
+  adminUsers,
   categories,
   currentAdmin,
   customerProfiles,
@@ -2573,11 +2756,15 @@ function AdminView({
   discount,
   fulfillmentByStage,
   highValueAccounts,
+  isChangePasswordOpen,
   onApplyCampaign,
   onBackToStore,
   onChangeDiscount,
+  onChangeOwnPassword,
   onChangeTab,
+  onCloseChangePassword,
   onCreateAdminOrder,
+  onCreateAdminUser,
   onCreateCategory,
   onCreateCustomerPortalProfile,
   onCreateInvoiceFromOrder,
@@ -2591,15 +2778,20 @@ function AdminView({
   onDeleteProduct,
   onDeleteRole,
   onLogout,
+  onOpenChangePassword,
   onRecordInvoicePayment,
+  onResetAdminUserPassword,
   onRunSync,
   onSelectCampaign,
+  onSetAdminUserActive,
   onUpdateAdminOrder,
+  onUpdateAdminUserProfile,
   onUpdateCategory,
   onUpdateCustomerPortalProfile,
   onUpdateInvoiceBilling,
   onUpdatePayment,
   onUpdateProduct,
+  onUpdateOrderFulfillment,
   onUpdateRole,
   onUpdateRolePermission,
   onUpdateSalesDetails,
@@ -2618,6 +2810,15 @@ function AdminView({
   storeClusterBars
 }: AdminViewProps) {
   const [permissionEditorRoleId, setPermissionEditorRoleId] = useState<number | null>(activeRoleId);
+  const [changePasswordForm, setChangePasswordForm] = useState<ChangeOwnPasswordInput>({
+    current_password: "",
+    new_password: ""
+  });
+  const [changePasswordFeedback, setChangePasswordFeedback] = useState<{
+    kind: "success" | "error";
+    message: string;
+  } | null>(null);
+  const [isSavingChangePassword, setIsSavingChangePassword] = useState(false);
   const activeRole = currentAdmin?.role ?? permissions?.roles.find((role) => role.id === activeRoleId) ?? null;
   const canCreateCatalog = canAccess(permissions, activeRoleId, "admin-catalog", "create");
   const canUpdateCatalog = canAccess(permissions, activeRoleId, "admin-catalog", "update");
@@ -2637,6 +2838,26 @@ function AdminView({
   const canUpdateSettings = canAccess(permissions, activeRoleId, "admin-settings", "update");
   const canUpdateCampaigns = canAccess(permissions, activeRoleId, "admin-campaigns", "update");
   const canRunOperationsSync = canAccess(permissions, activeRoleId, "admin-overview", "update");
+  const canCreateAdminUsers = canAccess(permissions, activeRoleId, "admin-permissions", "create");
+  const canUpdateAdminUsers = canAccess(permissions, activeRoleId, "admin-permissions", "update");
+
+  const handleChangeOwnPassword = async () => {
+    setIsSavingChangePassword(true);
+    setChangePasswordFeedback(null);
+
+    try {
+      await onChangeOwnPassword(changePasswordForm);
+      setChangePasswordForm({ current_password: "", new_password: "" });
+      onCloseChangePassword();
+    } catch (error) {
+      setChangePasswordFeedback({
+        kind: "error",
+        message: error instanceof Error ? error.message : "Unable to change password."
+      });
+    } finally {
+      setIsSavingChangePassword(false);
+    }
+  };
 
   useEffect(() => {
     if (!permissions || permissions.roles.length === 0) {
@@ -2745,6 +2966,11 @@ function AdminView({
           <p>{activeRole?.description ?? "The API is unreachable, so live writes are disabled."}</p>
           {activeRole?.is_super_admin ? <span className="status-pill live">Ultimate access</span> : null}
           {demoMode ? <span className="status-pill warning">Fallback</span> : null}
+          {!demoMode ? (
+            <button className="outline-button" onClick={onOpenChangePassword}>
+              Change Password
+            </button>
+          ) : null}
         </div>
 
         <button className="outline-button" onClick={onBackToStore}>
@@ -2855,20 +3081,33 @@ function AdminView({
                 <p className="eyebrow">Fulfillment board</p>
                 <h3>Order flow by stage</h3>
               </div>
-              <span className="status-pill live">Real time</span>
+              <span className="status-pill live">{orders.length} orders</span>
             </div>
             <div className="fulfillment-grid">
-              {Object.entries(fulfillmentByStage).map(([stage, items]) => (
+              {fulfillmentBoardStages.map((stage) => {
+                const stageOrders = fulfillmentByStage[stage];
+
+                return (
                 <article className="fulfillment-column" key={stage}>
-                  <h4>{stage}</h4>
-                  {items.map((item) => (
-                    <div className="task-card" key={item.title}>
-                      <strong>{item.title}</strong>
-                      <span>{item.detail}</span>
-                    </div>
-                  ))}
+                  <div className="fulfillment-column-head">
+                    <h4>{fulfillmentLabel(stage)}</h4>
+                    <span className="status-pill">{stageOrders.length}</span>
+                  </div>
+                  {stageOrders.length === 0 ? (
+                    <p className="table-muted">No orders</p>
+                  ) : (
+                    stageOrders.map((order) => (
+                      <div className="task-card fulfillment-order-card" key={order.id}>
+                        <strong>#{order.id} {order.customer_name}</strong>
+                        <span>{fulfillmentLabel(order.fulfillment_method)}</span>
+                        <span>{currencyFromCents(order.subtotal_cents)}</span>
+                        <small>{formatOrderDate(order.created_at)}</small>
+                      </div>
+                    ))
+                  )}
                 </article>
-              ))}
+                );
+              })}
             </div>
           </section>
         ) : null}
@@ -2967,6 +3206,7 @@ function AdminView({
             onCreateOrder={onCreateAdminOrder}
             onDeleteOrder={onDeleteAdminOrder}
             onUpdateOrder={onUpdateAdminOrder}
+            onUpdateFulfillment={onUpdateOrderFulfillment}
             orders={orders}
             products={products}
           />
@@ -3018,15 +3258,28 @@ function AdminView({
         ) : null}
 
         {adminTab === "permissions" ? (
-          <PermissionsPanel
-            activeRoleId={permissionEditorRoleId}
-            onChangeRole={setPermissionEditorRoleId}
-            onCreateRole={onCreateRole}
-            onDeleteRole={onDeleteRole}
-            onUpdateRole={onUpdateRole}
-            onUpdateRolePermission={onUpdateRolePermission}
-            permissions={permissions}
-          />
+          <>
+            <PermissionsPanel
+              activeRoleId={permissionEditorRoleId}
+              onChangeRole={setPermissionEditorRoleId}
+              onCreateRole={onCreateRole}
+              onDeleteRole={onDeleteRole}
+              onUpdateRole={onUpdateRole}
+              onUpdateRolePermission={onUpdateRolePermission}
+              permissions={permissions}
+            />
+            <TeamPanel
+              canCreate={canCreateAdminUsers}
+              canUpdate={canUpdateAdminUsers}
+              currentUserId={currentAdmin?.user.id ?? -1}
+              onCreateUser={onCreateAdminUser}
+              onResetUserPassword={onResetAdminUserPassword}
+              onSetUserActive={onSetAdminUserActive}
+              onUpdateUserProfile={onUpdateAdminUserProfile}
+              roles={permissions?.roles ?? []}
+              users={adminUsers}
+            />
+          </>
         ) : null}
 
         <section className="dashboard-panel activity-feed">
@@ -3047,6 +3300,36 @@ function AdminView({
           </div>
         </section>
       </section>
+
+      <RecordModal
+        eyebrow="Account security"
+        isOpen={isChangePasswordOpen}
+        onClose={() => {
+          onCloseChangePassword();
+          setChangePasswordFeedback(null);
+        }}
+        title="Change Password"
+      >
+        <RecordForm
+          feedback={
+            changePasswordFeedback ? (
+              <p className={`catalog-feedback ${changePasswordFeedback.kind}`}>
+                {changePasswordFeedback.message}
+              </p>
+            ) : null
+          }
+          fields={changePasswordFields}
+          isSubmitting={isSavingChangePassword}
+          onCancel={() => {
+            onCloseChangePassword();
+            setChangePasswordFeedback(null);
+          }}
+          onChange={setChangePasswordForm}
+          onSubmit={() => void handleChangeOwnPassword()}
+          submitLabel="Change Password"
+          values={changePasswordForm}
+        />
+      </RecordModal>
     </main>
   );
 }

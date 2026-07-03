@@ -8,7 +8,7 @@ type AdminLoginScreenProps = {
 };
 
 export function AdminLoginScreen({ onBackToStore, onLogin }: AdminLoginScreenProps) {
-  const [form, setForm] = useState<AdminLoginInput>({ username: "admin", password: "" });
+  const [form, setForm] = useState<AdminLoginInput>({ username: "", password: "" });
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 

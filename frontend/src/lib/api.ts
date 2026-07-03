@@ -4,6 +4,14 @@ export {
   logout
 } from "../modules/auth/api/authApi";
 export {
+  changeOwnPassword,
+  createAdminUser,
+  fetchAdminUsers,
+  resetAdminUserPassword,
+  setAdminUserActive,
+  updateAdminUserProfile
+} from "../modules/admin_users/api/adminUsersApi";
+export {
   fetchAdminDashboard
 } from "../modules/dashboard/api/dashboardApi";
 export {
@@ -26,7 +34,8 @@ export {
   createAdminOrder,
   deleteAdminOrder,
   fetchOrders,
-  updateAdminOrder
+  updateAdminOrder,
+  updateOrderFulfillment
 } from "../modules/orders/api/orderApi";
 export {
   createPayment,

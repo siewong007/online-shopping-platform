@@ -53,3 +53,7 @@ pub async fn authenticate_admin_session(
 ) -> Result<Option<AdminIdentity>> {
     crate::db::authenticate_admin_session(pool, token).await
 }
+
+pub async fn delete_expired_admin_sessions(pool: &PgPool) -> Result<()> {
+    crate::db::delete_expired_admin_sessions(pool).await
+}

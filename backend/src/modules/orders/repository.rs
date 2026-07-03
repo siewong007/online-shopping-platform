@@ -1,7 +1,10 @@
 use anyhow::Result;
 use sqlx::PgPool;
 
-use super::{dto::CreateOrderInput, model::Order};
+use super::{
+    dto::{CreateOrderInput, UpdateOrderFulfillmentInput},
+    model::Order,
+};
 
 pub async fn create_order(pool: &PgPool, input: &CreateOrderInput) -> Result<Order> {
     crate::db::create_order(pool, input).await
@@ -17,4 +20,13 @@ pub async fn update_order(pool: &PgPool, order_id: i32, input: &CreateOrderInput
 
 pub async fn delete_order(pool: &PgPool, order_id: i32) -> Result<()> {
     crate::db::delete_order(pool, order_id).await
+}
+
+pub async fn update_order_fulfillment(
+    pool: &PgPool,
+    order_id: i32,
+    input: &UpdateOrderFulfillmentInput,
+    changed_by: &str,
+) -> Result<Order> {
+    crate::db::update_order_fulfillment(pool, order_id, input, changed_by).await
 }

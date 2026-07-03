@@ -1,7 +1,11 @@
 use anyhow::Result;
 use sqlx::PgPool;
 
-use super::{dto::CreateOrderInput, model::Order, repository};
+use super::{
+    dto::{CreateOrderInput, UpdateOrderFulfillmentInput},
+    model::Order,
+    repository,
+};
 
 pub async fn fetch_orders(pool: &PgPool) -> Result<Vec<Order>> {
     repository::fetch_orders(pool).await
@@ -17,4 +21,13 @@ pub async fn update_order(pool: &PgPool, order_id: i32, input: &CreateOrderInput
 
 pub async fn delete_order(pool: &PgPool, order_id: i32) -> Result<()> {
     repository::delete_order(pool, order_id).await
+}
+
+pub async fn update_order_fulfillment(
+    pool: &PgPool,
+    order_id: i32,
+    input: &UpdateOrderFulfillmentInput,
+    changed_by: &str,
+) -> Result<Order> {
+    repository::update_order_fulfillment(pool, order_id, input, changed_by).await
 }

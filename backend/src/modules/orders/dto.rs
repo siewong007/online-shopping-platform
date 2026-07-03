@@ -1,1 +1,1 @@
-pub use crate::models::CreateOrderInput;
+pub use crate::models::{CreateOrderInput, UpdateOrderFulfillmentInput};

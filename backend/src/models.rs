@@ -134,6 +134,7 @@ pub struct CreateOrderItemInput {
 pub struct CreateOrderInput {
     pub customer_name: String,
     pub customer_email: String,
+    pub fulfillment_method: Option<String>,
     pub items: Vec<CreateOrderItemInput>,
 }
 
@@ -145,14 +146,34 @@ pub struct OrderItem {
     pub quantity: i32,
 }
 
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct OrderFulfillmentHistory {
+    pub id: i32,
+    pub order_id: i32,
+    pub from_status: Option<String>,
+    pub to_status: String,
+    pub note: String,
+    pub changed_by: String,
+    pub happened_at: String,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct Order {
     pub id: i32,
     pub customer_name: String,
     pub customer_email: String,
     pub subtotal_cents: i32,
+    pub fulfillment_status: String,
+    pub fulfillment_method: String,
     pub created_at: String,
     pub items: Vec<OrderItem>,
+    pub fulfillment_history: Vec<OrderFulfillmentHistory>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct UpdateOrderFulfillmentInput {
+    pub to_status: String,
+    pub note: String,
 }
 
 #[derive(Debug, Clone, Serialize, FromRow)]
@@ -338,6 +359,36 @@ pub struct AdminMePayload {
     pub user: AdminUser,
     pub role: Role,
     pub permissions: Vec<RolePagePermission>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct CreateAdminUserInput {
+    pub username: String,
+    pub display_name: String,
+    pub password: String,
+    pub role_id: i32,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct UpdateAdminUserProfileInput {
+    pub display_name: String,
+    pub role_id: i32,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct SetAdminUserActiveInput {
+    pub is_active: bool,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct AdminResetPasswordInput {
+    pub new_password: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct ChangeOwnPasswordInput {
+    pub current_password: String,
+    pub new_password: String,
 }
 
 #[derive(Debug, Clone, Serialize, FromRow)]

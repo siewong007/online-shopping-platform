@@ -16,6 +16,14 @@ export type { AdminCatalogPayload, UpdateCategoryInput } from "./modules/catalog
 export type { AdminAuthPayload, AdminLoginInput, AdminMePayload, AdminUser } from "./modules/auth/types";
 
 export type {
+  AdminResetPasswordInput,
+  ChangeOwnPasswordInput,
+  CreateAdminUserInput,
+  SetAdminUserActiveInput,
+  UpdateAdminUserProfileInput
+} from "./modules/admin_users/types";
+
+export type {
   ActivityItem,
   AdminDashboardPayload,
   AdminMetric,
@@ -27,9 +35,13 @@ export type {
 export type {
   CreateOrderInput,
   CreateOrderItemInput,
+  FulfillmentMethod,
+  FulfillmentStatus,
   Order,
   OrderControlProduct,
-  OrderItem
+  OrderFulfillmentHistory,
+  OrderItem,
+  UpdateOrderFulfillmentInput
 } from "./modules/orders/types";
 
 export type {
