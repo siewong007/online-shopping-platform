@@ -10,12 +10,16 @@ import {
   createProduct as createProductRequest,
   createRole as createRoleRequest,
   deleteAdminOrder as deleteAdminOrderRequest,
+  deleteCategory as deleteCategoryRequest,
   deleteCustomerPortalProfile as deleteCustomerPortalProfileRequest,
   deletePayment as deletePaymentRequest,
+  deleteProduct as deleteProductRequest,
   deleteRole as deleteRoleRequest,
+  fetchAdminCatalog,
   fetchAdminDashboard,
   fetchCustomerPortalProfiles,
   fetchInvoices,
+  fetchMe,
   fetchOrders,
   fetchPayments,
   fetchPermissions,
@@ -23,8 +27,11 @@ import {
   fetchSalesSummary,
   fetchStorefront,
   fetchSystemSettings,
+  login as loginRequest,
+  logout as logoutRequest,
   recordInvoicePayment as recordInvoicePaymentRequest,
   updateAdminOrder as updateAdminOrderRequest,
+  updateCategory as updateCategoryRequest,
   updateCustomerPortalProfile as updateCustomerPortalProfileRequest,
   updateInvoiceBilling as updateInvoiceBillingRequest,
   updatePayment as updatePaymentRequest,
@@ -36,18 +43,26 @@ import {
   updateSystemSetting as updateSystemSettingRequest,
   voidInvoice as voidInvoiceRequest
 } from "./lib/api";
+import { AdminLoginScreen } from "./modules/auth/components/AdminLoginScreen";
+import { CatalogPanel } from "./modules/catalog/components/CatalogPanel";
 import { InvoicesPanel } from "./modules/invoices/components/InvoicesPanel";
 import { OrderControlPanel } from "./modules/orders/components/OrderControlPanel";
 import { PaymentManagementPanel } from "./modules/payments/components/PaymentManagementPanel";
 import { PermissionsPanel } from "./modules/permissions/components/PermissionsPanel";
 import { SalesPanel } from "./modules/sales/components/SalesPanel";
 import { SettingsPanel } from "./modules/settings/components/SettingsPanel";
+import { fallbackPermissions } from "./data/fallback";
+import { ApiError, getAuthToken, setAuthToken, setOnApiUnavailable, setOnUnauthorized } from "./shared/api/http";
 import { ManagementTable } from "./shared/components/ManagementTable";
 import { RecordForm, type RecordFormField, RecordModal } from "./shared/components/RecordModal";
 import { currencyFromCents, formatOrderDate } from "./shared/formatters";
 import type {
   ActivityItem,
+  AdminAuthPayload,
+  AdminCatalogPayload,
   AdminDashboardPayload,
+  AdminLoginInput,
+  AdminMePayload,
   CampaignOption,
   CartItem,
   Category,
@@ -72,6 +87,7 @@ import type {
   SalesSummaryPayload,
   StorefrontPayload,
   SystemSetting,
+  UpdateCategoryInput,
   UpdateCustomerPortalProfileInput,
   UpdateInvoiceBillingInput,
   UpdatePaymentInput,
@@ -87,6 +103,7 @@ const CART_STORAGE_KEY = "depot-cart";
 const ACCOUNT_EMAIL_STORAGE_KEY = "depot-account-email";
 
 type View = "store" | "admin";
+type AdminAuthState = "checking" | "unauthenticated" | "authenticated" | "demo";
 type AdminTab =
   | "overview"
   | "inventory"
@@ -102,6 +119,7 @@ type AdminTab =
   | "permissions";
 
 type PermissionAction = "create" | "read" | "update" | "delete";
+type AdminAuthSnapshot = AdminAuthPayload | AdminMePayload;
 
 const adminTabs: { tab: AdminTab; label: string; pageSlug: string }[] = [
   { tab: "overview", label: "Overview", pageSlug: "admin-overview" },
@@ -224,6 +242,14 @@ function getRolePermission(
     permissions.permissions.find((item) => item.role_id === role.id && item.page_id === page.id) ??
     emptyPermission(role.id, page.id)
   );
+}
+
+function permissionsFromAuth(auth: AdminAuthSnapshot): PermissionsPayload {
+  return {
+    roles: [auth.role],
+    pages: fallbackPermissions.pages,
+    permissions: auth.permissions
+  };
 }
 
 type CustomerPortalFormState = {
@@ -777,7 +803,7 @@ function canAccess(
   const permission = getRolePermission(permissions, roleId, pageSlug);
 
   if (!permission) {
-    return true;
+    return action === "read";
   }
 
   if (action === "create") {
@@ -827,152 +853,6 @@ function numericText(value: string): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-type ProductFormState = {
-  badge: string;
-  category_slug: string;
-  description: string;
-  featured: boolean;
-  name: string;
-  price: string;
-  tone: string;
-};
-
-const categoryFields: RecordFormField<CreateCategoryInput>[] = [
-  {
-    name: "name",
-    label: "Category name",
-    required: true,
-    minLength: 2,
-    placeholder: "Ceiling Fans"
-  },
-  {
-    name: "slug",
-    label: "Slug",
-    helpText: "Leave blank to auto-generate it from the category name.",
-    placeholder: "ceiling-fans",
-    validate: (value) => {
-      const slug = String(value).trim();
-      return slug.length === 0 || /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)
-        ? null
-        : "Use lowercase letters, numbers and hyphens only.";
-    }
-  },
-  {
-    name: "teaser",
-    label: "Teaser",
-    type: "textarea",
-    required: true,
-    minLength: 12,
-    placeholder: "Fans, lighting and comfort upgrades for every room.",
-    rows: 4
-  }
-];
-
-function emptyProductForm(categories: Category[]): ProductFormState {
-  return {
-    name: "",
-    category_slug: categories[0]?.slug ?? "all",
-    price: "",
-    badge: "",
-    description: "",
-    tone: "",
-    featured: true
-  };
-}
-
-function productFormFromProduct(product: Product): ProductFormState {
-  return {
-    name: product.name,
-    category_slug: product.category_slug,
-    price: (product.price_cents / 100).toFixed(2),
-    badge: product.badge,
-    description: product.description,
-    tone: product.tone,
-    featured: product.featured
-  };
-}
-
-function productInputFromForm(form: ProductFormState): CreateProductInput {
-  const normalizedPrice = Math.round(Number(form.price) * 100);
-
-  if (!Number.isFinite(normalizedPrice) || normalizedPrice < 0) {
-    throw new Error("Enter a valid product price.");
-  }
-
-  return {
-    name: form.name.trim(),
-    category_slug: form.category_slug,
-    price_cents: normalizedPrice,
-    badge: form.badge.trim(),
-    description: form.description.trim(),
-    tone: form.tone.trim(),
-    featured: form.featured
-  };
-}
-
-function productFields(categories: Category[]): RecordFormField<ProductFormState>[] {
-  return [
-    {
-      name: "name",
-      label: "Product name",
-      required: true,
-      minLength: 2,
-      placeholder: "Home Decorators Ceiling Fan"
-    },
-    {
-      name: "category_slug",
-      label: "Category",
-      type: "select",
-      options: categories.map((category) => ({ label: category.name, value: category.slug }))
-    },
-    {
-      name: "price",
-      label: "Price",
-      type: "number",
-      required: true,
-      min: 0,
-      step: "0.01",
-      placeholder: "249.00",
-      validate: (value) => (Number.isFinite(Number(value)) ? null : "Enter a valid product price.")
-    },
-    {
-      name: "badge",
-      label: "Badge",
-      required: true,
-      placeholder: "New Arrival"
-    },
-    {
-      name: "tone",
-      label: "Brand / tone",
-      required: true,
-      placeholder: "Home Decorators Collection"
-    },
-    {
-      name: "description",
-      label: "Description",
-      type: "textarea",
-      required: true,
-      minLength: 12,
-      placeholder: "Modern finish, integrated light kit and remote control for easy installs.",
-      rows: 4
-    },
-    {
-      name: "featured",
-      label: "Show on storefront",
-      type: "toggle",
-      description: "Turn on to publish this product to shoppers immediately."
-    }
-  ];
-}
-
-function slugify(value: string): string {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
 function DepotMark({ compact = false }: { compact?: boolean }) {
   return (
     <div className={`depot-mark ${compact ? "compact" : ""}`} aria-hidden="true">
@@ -1013,6 +893,11 @@ export default function App() {
   const [customerAccountEmail, setCustomerAccountEmail] = useState(readStoredAccountEmail);
   const [permissions, setPermissions] = useState<PermissionsPayload | null>(null);
   const [activeRoleId, setActiveRoleId] = useState<number | null>(null);
+  const [adminAuth, setAdminAuth] = useState<AdminAuthState>(() =>
+    getAuthToken() ? "checking" : "unauthenticated"
+  );
+  const [currentAdmin, setCurrentAdmin] = useState<AdminMePayload | null>(null);
+  const [adminCatalog, setAdminCatalog] = useState<AdminCatalogPayload | null>(null);
 
   const deferredSearchTerm = useDeferredValue(searchTerm);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -1022,45 +907,7 @@ export default function App() {
   }, [cart]);
 
   useEffect(() => {
-    void Promise.all([
-      fetchStorefront(),
-      fetchAdminDashboard(),
-      fetchOrders(),
-      fetchPayments(),
-      fetchSales(),
-      fetchSalesSummary(),
-      fetchInvoices(),
-      fetchSystemSettings(),
-      fetchCustomerPortalProfiles(),
-      fetchPermissions()
-    ]).then(
-      ([
-        storefrontData,
-        dashboardData,
-        ordersData,
-        paymentsData,
-        salesData,
-        salesSummaryData,
-        invoicesData,
-        systemSettingsData,
-        customerProfileData,
-        permissionsData
-      ]) => {
-        setStorefront(storefrontData);
-        setDashboard(dashboardData);
-        setSelectedCampaign(dashboardData.campaigns[0] ?? null);
-        setActivityFeed(dashboardData.activity);
-        setOrders(ordersData);
-        setPayments(paymentsData);
-        setSales(salesData);
-        setSalesSummary(salesSummaryData);
-        setInvoices(invoicesData);
-        setSystemSettings(systemSettingsData);
-        setCustomerProfiles(customerProfileData);
-        setPermissions(permissionsData);
-        setActiveRoleId(permissionsData.roles.find((role) => role.is_super_admin)?.id ?? permissionsData.roles[0]?.id ?? null);
-      }
-    );
+    void fetchStorefront().then(setStorefront);
   }, []);
 
   useEffect(() => {
@@ -1098,6 +945,202 @@ export default function App() {
       setView(nextView);
     });
   };
+
+  const applyAdminData = ({
+    catalogData,
+    dashboardData,
+    invoicesData,
+    ordersData,
+    paymentsData,
+    permissionsData,
+    salesData,
+    salesSummaryData,
+    systemSettingsData,
+    customerProfileData
+  }: {
+    catalogData: AdminCatalogPayload;
+    dashboardData: AdminDashboardPayload;
+    invoicesData: Invoice[];
+    ordersData: Order[];
+    paymentsData: Payment[];
+    permissionsData: PermissionsPayload;
+    salesData: SalesRecord[];
+    salesSummaryData: SalesSummaryPayload;
+    systemSettingsData: SystemSetting[];
+    customerProfileData: CustomerPortalProfile[];
+  }) => {
+    setAdminCatalog(catalogData);
+    setDashboard(dashboardData);
+    setSelectedCampaign(dashboardData.campaigns[0] ?? null);
+    setActivityFeed(dashboardData.activity);
+    setOrders(ordersData);
+    setPayments(paymentsData);
+    setSales(salesData);
+    setSalesSummary(salesSummaryData);
+    setInvoices(invoicesData);
+    setSystemSettings(systemSettingsData);
+    setCustomerProfiles(customerProfileData);
+    setPermissions(permissionsData);
+  };
+
+  const loadAdminData = async (auth: AdminAuthSnapshot) => {
+    const ownPermissions = permissionsFromAuth(auth);
+    const roleId = auth.role.id;
+    const canReadPermissionMatrix = canAccess(
+      ownPermissions,
+      roleId,
+      "admin-permissions",
+      "read"
+    );
+
+    setCurrentAdmin({
+      user: auth.user,
+      role: auth.role,
+      permissions: auth.permissions
+    });
+    setPermissions(ownPermissions);
+    setActiveRoleId(roleId);
+
+    const [
+      catalogData,
+      dashboardData,
+      ordersData,
+      paymentsData,
+      salesData,
+      salesSummaryData,
+      invoicesData,
+      systemSettingsData,
+      customerProfileData,
+      permissionsData
+    ] = await Promise.all([
+      fetchAdminCatalog(),
+      fetchAdminDashboard(),
+      fetchOrders(),
+      fetchPayments(),
+      fetchSales(),
+      fetchSalesSummary(),
+      fetchInvoices(),
+      fetchSystemSettings(),
+      fetchCustomerPortalProfiles(),
+      canReadPermissionMatrix ? fetchPermissions() : Promise.resolve(ownPermissions)
+    ]);
+
+    applyAdminData({
+      catalogData,
+      dashboardData,
+      ordersData,
+      paymentsData,
+      salesData,
+      salesSummaryData,
+      invoicesData,
+      systemSettingsData,
+      customerProfileData,
+      permissionsData
+    });
+  };
+
+  const loadDemoAdminData = async () => {
+    const [
+      catalogData,
+      dashboardData,
+      ordersData,
+      paymentsData,
+      salesData,
+      salesSummaryData,
+      invoicesData,
+      systemSettingsData,
+      customerProfileData
+    ] = await Promise.all([
+      fetchAdminCatalog(),
+      fetchAdminDashboard(),
+      fetchOrders(),
+      fetchPayments(),
+      fetchSales(),
+      fetchSalesSummary(),
+      fetchInvoices(),
+      fetchSystemSettings(),
+      fetchCustomerPortalProfiles()
+    ]);
+
+    setCurrentAdmin(null);
+    setActiveRoleId(null);
+    applyAdminData({
+      catalogData,
+      dashboardData,
+      ordersData,
+      paymentsData,
+      salesData,
+      salesSummaryData,
+      invoicesData,
+      systemSettingsData,
+      customerProfileData,
+      permissionsData: fallbackPermissions
+    });
+  };
+
+  const resetAdminSession = () => {
+    setAuthToken(null);
+    setCurrentAdmin(null);
+    setActiveRoleId(null);
+    setAdminAuth("unauthenticated");
+  };
+
+  const restoreAdminSession = async () => {
+    if (!getAuthToken()) {
+      resetAdminSession();
+      return;
+    }
+
+    setAdminAuth("checking");
+
+    try {
+      const me = await fetchMe();
+      await loadAdminData(me);
+      setAdminAuth("authenticated");
+    } catch (error) {
+      if (error instanceof ApiError && error.isNetworkError) {
+        await loadDemoAdminData();
+        setAdminAuth("demo");
+        return;
+      }
+
+      resetAdminSession();
+    }
+  };
+
+  const handleAdminLogin = async (input: AdminLoginInput): Promise<AdminAuthPayload> => {
+    const payload = await loginRequest(input);
+    await loadAdminData(payload);
+    setAdminAuth("authenticated");
+    return payload;
+  };
+
+  const handleAdminLogout = async () => {
+    try {
+      await logoutRequest();
+    } catch (error) {
+      console.warn("Unable to notify the API about logout.", error);
+      setAuthToken(null);
+    } finally {
+      resetAdminSession();
+    }
+  };
+
+  useEffect(() => {
+    setOnUnauthorized(() => {
+      resetAdminSession();
+    });
+    setOnApiUnavailable(() => null);
+
+    return () => {
+      setOnUnauthorized(null);
+      setOnApiUnavailable(null);
+    };
+  }, []);
+
+  useEffect(() => {
+    void restoreAdminSession();
+  }, []);
 
   const addToCart = (product: Product) => {
     setCart((current) => {
@@ -1156,16 +1199,8 @@ export default function App() {
     return order;
   };
 
-  const activeRoleForWrite = (): number => {
-    if (activeRoleId === null) {
-      throw new Error("Select an admin role before making this change.");
-    }
-
-    return activeRoleId;
-  };
-
   const createAdminOrder = async (input: CreateOrderInput): Promise<Order> => {
-    const order = await createAdminOrderRequest(input, activeRoleForWrite());
+    const order = await createAdminOrderRequest(input);
 
     setOrders((current) => [order, ...current]);
     void fetchCustomerPortalProfiles().then(setCustomerProfiles);
@@ -1181,7 +1216,7 @@ export default function App() {
   };
 
   const updateAdminOrder = async (orderId: number, input: CreateOrderInput): Promise<Order> => {
-    const order = await updateAdminOrderRequest(orderId, input, activeRoleForWrite());
+    const order = await updateAdminOrderRequest(orderId, input);
 
     setOrders((current) => current.map((item) => (item.id === order.id ? order : item)));
     setActivityFeed((current) => [
@@ -1196,7 +1231,7 @@ export default function App() {
   };
 
   const deleteAdminOrder = async (orderId: number): Promise<void> => {
-    await deleteAdminOrderRequest(orderId, activeRoleForWrite());
+    await deleteAdminOrderRequest(orderId);
 
     setOrders((current) => current.filter((order) => order.id !== orderId));
     setPayments((current) => current.filter((payment) => payment.order_id !== orderId));
@@ -1210,7 +1245,7 @@ export default function App() {
   };
 
   const createPayment = async (input: CreatePaymentInput): Promise<Payment> => {
-    const payment = await createPaymentRequest(input, activeRoleForWrite());
+    const payment = await createPaymentRequest(input);
 
     setPayments((current) => {
       const exists = current.some((item) => item.id === payment.id);
@@ -1233,7 +1268,7 @@ export default function App() {
     paymentId: number,
     input: UpdatePaymentInput
   ): Promise<Payment> => {
-    const payment = await updatePaymentRequest(paymentId, input, activeRoleForWrite());
+    const payment = await updatePaymentRequest(paymentId, input);
 
     setPayments((current) => current.map((item) => (item.id === payment.id ? payment : item)));
     setActivityFeed((current) => [
@@ -1248,7 +1283,7 @@ export default function App() {
   };
 
   const deletePayment = async (paymentId: number): Promise<void> => {
-    await deletePaymentRequest(paymentId, activeRoleForWrite());
+    await deletePaymentRequest(paymentId);
 
     setPayments((current) => current.filter((payment) => payment.id !== paymentId));
     setActivityFeed((current) => [
@@ -1264,7 +1299,7 @@ export default function App() {
     orderId: number,
     input: UpdateSalesDetailsInput
   ): Promise<SalesRecord> => {
-    const sale = await updateSalesDetailsRequest(orderId, input, activeRoleForWrite());
+    const sale = await updateSalesDetailsRequest(orderId, input);
 
     setSales((current) => current.map((item) => (item.order_id === sale.order_id ? sale : item)));
     void fetchSalesSummary().then(setSalesSummary);
@@ -1276,7 +1311,7 @@ export default function App() {
     orderId: number,
     input: UpdateSalesStatusInput
   ): Promise<SalesRecord> => {
-    const sale = await updateSalesStatusRequest(orderId, input, activeRoleForWrite());
+    const sale = await updateSalesStatusRequest(orderId, input);
 
     setSales((current) => current.map((item) => (item.order_id === sale.order_id ? sale : item)));
     void fetchSalesSummary().then(setSalesSummary);
@@ -1295,7 +1330,7 @@ export default function App() {
     orderId: number,
     input: CreateInvoiceFromOrderInput
   ): Promise<Invoice> => {
-    const invoice = await createInvoiceFromOrderRequest(orderId, input, activeRoleForWrite());
+    const invoice = await createInvoiceFromOrderRequest(orderId, input);
 
     setInvoices((current) => [invoice, ...current]);
     setActivityFeed((current) => [
@@ -1313,7 +1348,7 @@ export default function App() {
     invoiceId: number,
     input: UpdateInvoiceBillingInput
   ): Promise<Invoice> => {
-    const invoice = await updateInvoiceBillingRequest(invoiceId, input, activeRoleForWrite());
+    const invoice = await updateInvoiceBillingRequest(invoiceId, input);
 
     setInvoices((current) => current.map((item) => (item.id === invoice.id ? invoice : item)));
 
@@ -1321,7 +1356,7 @@ export default function App() {
   };
 
   const voidInvoice = async (invoiceId: number): Promise<Invoice> => {
-    const invoice = await voidInvoiceRequest(invoiceId, activeRoleForWrite());
+    const invoice = await voidInvoiceRequest(invoiceId);
 
     setInvoices((current) => current.map((item) => (item.id === invoice.id ? invoice : item)));
     setActivityFeed((current) => [
@@ -1336,7 +1371,7 @@ export default function App() {
     invoiceId: number,
     input: RecordInvoicePaymentInput
   ): Promise<Invoice> => {
-    const invoice = await recordInvoicePaymentRequest(invoiceId, input, activeRoleForWrite());
+    const invoice = await recordInvoicePaymentRequest(invoiceId, input);
 
     setInvoices((current) => current.map((item) => (item.id === invoice.id ? invoice : item)));
     setActivityFeed((current) => [
@@ -1354,7 +1389,7 @@ export default function App() {
     key: string,
     input: UpdateSystemSettingInput
   ): Promise<SystemSetting> => {
-    const setting = await updateSystemSettingRequest(key, input, activeRoleForWrite());
+    const setting = await updateSystemSettingRequest(key, input);
 
     setSystemSettings((current) =>
       current.map((item) => (item.key === setting.key ? setting : item))
@@ -1364,7 +1399,7 @@ export default function App() {
   };
 
   const createRole = async (input: CreateRoleInput): Promise<Role> => {
-    const role = await createRoleRequest(input, activeRoleForWrite());
+    const role = await createRoleRequest(input);
 
     setPermissions((current) =>
       current
@@ -1374,7 +1409,6 @@ export default function App() {
           }
         : current
     );
-    setActiveRoleId(role.id);
     setActivityFeed((current) => [
       { happened_at: "Now", detail: `${role.name} role was added to the permission matrix.` },
       ...current
@@ -1384,7 +1418,7 @@ export default function App() {
   };
 
   const updateRole = async (roleId: number, input: UpdateRoleInput): Promise<Role> => {
-    const role = await updateRoleRequest(roleId, input, activeRoleForWrite());
+    const role = await updateRoleRequest(roleId, input);
 
     setPermissions((current) =>
       current
@@ -1399,10 +1433,7 @@ export default function App() {
   };
 
   const deleteRole = async (roleId: number): Promise<void> => {
-    await deleteRoleRequest(roleId, activeRoleForWrite());
-
-    const remainingRoles = permissions?.roles.filter((role) => role.id !== roleId) ?? [];
-    const nextRoleId = remainingRoles.find((role) => role.is_super_admin)?.id ?? remainingRoles[0]?.id ?? null;
+    await deleteRoleRequest(roleId);
 
     setPermissions((current) => {
       if (!current) {
@@ -1417,13 +1448,12 @@ export default function App() {
         permissions: current.permissions.filter((permission) => permission.role_id !== roleId)
       };
     });
-    setActiveRoleId((selectedRoleId) => (selectedRoleId === roleId ? nextRoleId : selectedRoleId));
   };
 
   const updateRolePermission = async (
     input: UpdateRolePagePermissionInput
   ): Promise<RolePagePermission> => {
-    const permission = await updateRolePermissionRequest(input, activeRoleForWrite());
+    const permission = await updateRolePermissionRequest(input);
 
     setPermissions((current) => (current ? applyPermissionUpdate(current, permission) : current));
 
@@ -1455,8 +1485,18 @@ export default function App() {
   };
 
   const createCategory = async (input: CreateCategoryInput): Promise<Category> => {
-    const category = await createCategoryRequest(input, activeRoleForWrite());
+    const category = await createCategoryRequest(input);
 
+    setAdminCatalog((current) =>
+      current
+        ? {
+            ...current,
+            categories: current.categories.some((item) => item.slug === category.slug)
+              ? current.categories
+              : [...current.categories, category]
+          }
+        : current
+    );
     setStorefront((current) => {
       if (!current || current.categories.some((item) => item.slug === category.slug)) {
         return current;
@@ -1479,9 +1519,87 @@ export default function App() {
     return category;
   };
 
-  const createProduct = async (input: CreateProductInput): Promise<Product> => {
-    const product = await createProductRequest(input, activeRoleForWrite());
+  const updateCategory = async (
+    slug: string,
+    input: UpdateCategoryInput
+  ): Promise<Category> => {
+    const category = await updateCategoryRequest(slug, input);
 
+    setAdminCatalog((current) =>
+      current
+        ? {
+            ...current,
+            categories: current.categories.map((item) =>
+              item.slug === category.slug ? category : item
+            )
+          }
+        : current
+    );
+    setStorefront((current) =>
+      current
+        ? {
+            ...current,
+            categories: current.categories.map((item) =>
+              item.slug === category.slug ? category : item
+            )
+          }
+        : current
+    );
+    setActivityFeed((current) => [
+      {
+        happened_at: "Now",
+        detail: `Category updated: ${category.name}.`
+      },
+      ...current
+    ]);
+
+    return category;
+  };
+
+  const deleteCategory = async (slug: string): Promise<void> => {
+    const category = adminCatalog?.categories.find((item) => item.slug === slug);
+
+    await deleteCategoryRequest(slug);
+
+    setAdminCatalog((current) =>
+      current
+        ? {
+            ...current,
+            categories: current.categories.filter((item) => item.slug !== slug)
+          }
+        : current
+    );
+    setStorefront((current) =>
+      current
+        ? {
+            ...current,
+            categories: current.categories.filter((item) => item.slug !== slug)
+          }
+        : current
+    );
+    setSelectedCategory((current) => (current === slug ? "all" : current));
+    setActivityFeed((current) => [
+      {
+        happened_at: "Now",
+        detail: `Category deleted: ${category?.name ?? slug}.`
+      },
+      ...current
+    ]);
+  };
+
+  const createProduct = async (input: CreateProductInput): Promise<Product> => {
+    const product = await createProductRequest(input);
+
+    setAdminCatalog((current) =>
+      current
+        ? {
+            ...current,
+            products: current.products.some((item) => item.id === product.id)
+              ? current.products.map((item) => (item.id === product.id ? product : item))
+              : [...current.products, product]
+          }
+        : current
+    );
     if (product.featured) {
       setStorefront((current) => {
         if (!current || current.products.some((item) => item.id === product.id)) {
@@ -1510,8 +1628,16 @@ export default function App() {
     productId: number,
     input: UpdateProductInput
   ): Promise<Product> => {
-    const product = await updateProductRequest(productId, input, activeRoleForWrite());
+    const product = await updateProductRequest(productId, input);
 
+    setAdminCatalog((current) =>
+      current
+        ? {
+            ...current,
+            products: current.products.map((item) => (item.id === product.id ? product : item))
+          }
+        : current
+    );
     setStorefront((current) => {
       if (!current) {
         return current;
@@ -1544,10 +1670,41 @@ export default function App() {
     return product;
   };
 
+  const deleteProduct = async (productId: number): Promise<void> => {
+    const product = adminCatalog?.products.find((item) => item.id === productId);
+
+    await deleteProductRequest(productId);
+
+    setAdminCatalog((current) =>
+      current
+        ? {
+            ...current,
+            products: current.products.filter((item) => item.id !== productId)
+          }
+        : current
+    );
+    setStorefront((current) =>
+      current
+        ? {
+            ...current,
+            products: current.products.filter((item) => item.id !== productId)
+          }
+        : current
+    );
+    setCart((current) => current.filter((item) => item.product.id !== productId));
+    setActivityFeed((current) => [
+      {
+        happened_at: "Now",
+        detail: `Product deleted: ${product?.name ?? `#${productId}`}.`
+      },
+      ...current
+    ]);
+  };
+
   const createCustomerPortalProfile = async (
     input: CreateCustomerPortalProfileInput
   ): Promise<CustomerPortalProfile> => {
-    const profile = await createCustomerPortalProfileRequest(input, activeRoleForWrite());
+    const profile = await createCustomerPortalProfileRequest(input);
 
     setCustomerProfiles((current) => [profile, ...current]);
     setActivityFeed((current) => [
@@ -1565,7 +1722,7 @@ export default function App() {
     profileId: number,
     input: UpdateCustomerPortalProfileInput
   ): Promise<CustomerPortalProfile> => {
-    const profile = await updateCustomerPortalProfileRequest(profileId, input, activeRoleForWrite());
+    const profile = await updateCustomerPortalProfileRequest(profileId, input);
 
     setCustomerProfiles((current) =>
       current.map((item) => (item.id === profile.id ? profile : item))
@@ -1584,7 +1741,7 @@ export default function App() {
   const deleteCustomerPortalProfile = async (profileId: number): Promise<void> => {
     const profile = customerProfiles.find((item) => item.id === profileId);
 
-    await deleteCustomerPortalProfileRequest(profileId, activeRoleForWrite());
+    await deleteCustomerPortalProfileRequest(profileId);
 
     setCustomerProfiles((current) => current.filter((item) => item.id !== profileId));
     setActivityFeed((current) => [
@@ -1596,7 +1753,7 @@ export default function App() {
     ]);
   };
 
-  if (!storefront || !dashboard) {
+  if (!storefront) {
     return <main className="loading-shell">Loading Home Depot storefront...</main>;
   }
 
@@ -1634,21 +1791,29 @@ export default function App() {
           selectedCategory={selectedCategory}
           storefront={storefront}
         />
+      ) : adminAuth === "unauthenticated" ? (
+        <AdminLoginScreen
+          onBackToStore={() => openView("store")}
+          onLogin={handleAdminLogin}
+        />
+      ) : adminAuth === "checking" || !dashboard || !adminCatalog ? (
+        <main className="loading-shell">Loading admin console...</main>
       ) : (
         <AdminView
           activityFeed={activityFeed}
           activeRoleId={activeRoleId}
           adminTab={adminTab}
-          categories={storefront.categories}
+          categories={adminCatalog.categories}
+          currentAdmin={currentAdmin}
           customerProfiles={customerProfiles}
           dashboard={dashboard}
+          demoMode={adminAuth === "demo"}
           discount={discount}
           fulfillmentByStage={fulfillmentByStage}
           highValueAccounts={highValueAccounts}
           onApplyCampaign={applyCampaign}
           onBackToStore={() => openView("store")}
           onChangeDiscount={setDiscount}
-          onChangeRole={setActiveRoleId}
           onChangeTab={setAdminTab}
           onCreateAdminOrder={createAdminOrder}
           onCreateCategory={createCategory}
@@ -1658,15 +1823,19 @@ export default function App() {
           onCreateProduct={createProduct}
           onCreateRole={createRole}
           onDeleteAdminOrder={deleteAdminOrder}
+          onDeleteCategory={deleteCategory}
           onDeleteCustomerPortalProfile={deleteCustomerPortalProfile}
           onDeletePayment={deletePayment}
+          onDeleteProduct={deleteProduct}
           onDeleteRole={deleteRole}
+          onLogout={() => void handleAdminLogout()}
           onRecordInvoicePayment={recordInvoicePayment}
           onRunSync={runSupplierSync}
           onSelectCampaign={(name) =>
             setSelectedCampaign(dashboard.campaigns.find((item) => item.name === name) ?? null)
           }
           onUpdateAdminOrder={updateAdminOrder}
+          onUpdateCategory={updateCategory}
           onUpdateInvoiceBilling={updateInvoiceBilling}
           onUpdatePayment={updatePayment}
           onUpdateProduct={updateProduct}
@@ -1683,7 +1852,7 @@ export default function App() {
           salesSummary={salesSummary}
           systemSettings={systemSettings}
           permissions={permissions}
-          products={storefront.products}
+          products={adminCatalog.products}
           selectedCampaign={selectedCampaign}
           storeClusterBars={storeClusterBars}
           onUpdateCustomerPortalProfile={updateCustomerPortalProfile}
@@ -2329,15 +2498,16 @@ type AdminViewProps = {
   activeRoleId: number | null;
   adminTab: AdminTab;
   categories: Category[];
+  currentAdmin: AdminMePayload | null;
   customerProfiles: CustomerPortalProfile[];
   dashboard: AdminDashboardPayload;
+  demoMode: boolean;
   discount: number;
   fulfillmentByStage: Record<string, FulfillmentItem[]>;
   highValueAccounts: { name: string; detail: string }[];
   onApplyCampaign: () => void;
   onBackToStore: () => void;
   onChangeDiscount: (value: number) => void;
-  onChangeRole: (roleId: number) => void;
   onChangeTab: (tab: AdminTab) => void;
   onCreateAdminOrder: (input: CreateOrderInput) => Promise<Order>;
   onCreateCategory: (input: CreateCategoryInput) => Promise<Category>;
@@ -2352,9 +2522,12 @@ type AdminViewProps = {
   onCreateProduct: (input: CreateProductInput) => Promise<Product>;
   onCreateRole: (input: CreateRoleInput) => Promise<Role>;
   onDeleteAdminOrder: (orderId: number) => Promise<void>;
+  onDeleteCategory: (slug: string) => Promise<void>;
   onDeleteCustomerPortalProfile: (profileId: number) => Promise<void>;
   onDeletePayment: (paymentId: number) => Promise<void>;
+  onDeleteProduct: (productId: number) => Promise<void>;
   onDeleteRole: (roleId: number) => Promise<void>;
+  onLogout: () => void;
   onRecordInvoicePayment: (
     invoiceId: number,
     input: RecordInvoicePaymentInput
@@ -2362,6 +2535,7 @@ type AdminViewProps = {
   onRunSync: () => void;
   onSelectCampaign: (name: string) => void;
   onUpdateAdminOrder: (orderId: number, input: CreateOrderInput) => Promise<Order>;
+  onUpdateCategory: (slug: string, input: UpdateCategoryInput) => Promise<Category>;
   onUpdateCustomerPortalProfile: (
     profileId: number,
     input: UpdateCustomerPortalProfileInput
@@ -2392,15 +2566,16 @@ function AdminView({
   activeRoleId,
   adminTab,
   categories,
+  currentAdmin,
   customerProfiles,
   dashboard,
+  demoMode,
   discount,
   fulfillmentByStage,
   highValueAccounts,
   onApplyCampaign,
   onBackToStore,
   onChangeDiscount,
-  onChangeRole,
   onChangeTab,
   onCreateAdminOrder,
   onCreateCategory,
@@ -2410,13 +2585,17 @@ function AdminView({
   onCreateProduct,
   onCreateRole,
   onDeleteAdminOrder,
+  onDeleteCategory,
   onDeleteCustomerPortalProfile,
   onDeletePayment,
+  onDeleteProduct,
   onDeleteRole,
+  onLogout,
   onRecordInvoicePayment,
   onRunSync,
   onSelectCampaign,
   onUpdateAdminOrder,
+  onUpdateCategory,
   onUpdateCustomerPortalProfile,
   onUpdateInvoiceBilling,
   onUpdatePayment,
@@ -2438,23 +2617,11 @@ function AdminView({
   selectedCampaign,
   storeClusterBars
 }: AdminViewProps) {
-  const [categoryForm, setCategoryForm] = useState<CreateCategoryInput>({
-    slug: "",
-    name: "",
-    teaser: ""
-  });
-  const [productForm, setProductForm] = useState<ProductFormState>(() => emptyProductForm(categories));
-  const [editingProductId, setEditingProductId] = useState<number | null>(null);
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
-  const [categoryFeedback, setCategoryFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
-  const [productFeedback, setProductFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
-  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
-  const [isCreatingProduct, setIsCreatingProduct] = useState(false);
-  const [isSavingProduct, setIsSavingProduct] = useState(false);
-  const activeRole = permissions?.roles.find((role) => role.id === activeRoleId) ?? null;
+  const [permissionEditorRoleId, setPermissionEditorRoleId] = useState<number | null>(activeRoleId);
+  const activeRole = currentAdmin?.role ?? permissions?.roles.find((role) => role.id === activeRoleId) ?? null;
   const canCreateCatalog = canAccess(permissions, activeRoleId, "admin-catalog", "create");
   const canUpdateCatalog = canAccess(permissions, activeRoleId, "admin-catalog", "update");
+  const canDeleteCatalog = canAccess(permissions, activeRoleId, "admin-catalog", "delete");
   const canCreateCustomers = canAccess(permissions, activeRoleId, "admin-customers", "create");
   const canUpdateCustomers = canAccess(permissions, activeRoleId, "admin-customers", "update");
   const canDeleteCustomers = canAccess(permissions, activeRoleId, "admin-customers", "delete");
@@ -2472,16 +2639,16 @@ function AdminView({
   const canRunOperationsSync = canAccess(permissions, activeRoleId, "admin-overview", "update");
 
   useEffect(() => {
-    if (categories.length === 0) {
+    if (!permissions || permissions.roles.length === 0) {
       return;
     }
 
-    setProductForm((current) =>
-      categories.some((category) => category.slug === current.category_slug)
+    setPermissionEditorRoleId((current) =>
+      current !== null && permissions.roles.some((role) => role.id === current)
         ? current
-        : { ...current, category_slug: categories[0].slug }
+        : permissions.roles[0].id
     );
-  }, [categories]);
+  }, [permissions]);
 
   useEffect(() => {
     const currentTab = adminTabs.find((item) => item.tab === adminTab);
@@ -2498,116 +2665,6 @@ function AdminView({
       onChangeTab(nextTab.tab);
     }
   }, [activeRoleId, adminTab, onChangeTab, permissions]);
-
-  const handleCreateCategory = async () => {
-    if (!canCreateCatalog) {
-      setCategoryFeedback({ kind: "error", message: "The active role cannot create catalog records." });
-      return;
-    }
-
-    setIsCreatingCategory(true);
-    setCategoryFeedback(null);
-
-    try {
-      const payload: CreateCategoryInput = {
-        slug: slugify(categoryForm.slug || categoryForm.name),
-        name: categoryForm.name.trim(),
-        teaser: categoryForm.teaser.trim()
-      };
-
-      const category = await onCreateCategory(payload);
-
-      setCategoryForm({ slug: "", name: "", teaser: "" });
-      setProductForm((current) => ({ ...current, category_slug: category.slug }));
-      setIsCategoryModalOpen(false);
-      setCategoryFeedback({ kind: "success", message: `${category.name} is ready for products.` });
-    } catch (error) {
-      setCategoryFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to create category."
-      });
-    } finally {
-      setIsCreatingCategory(false);
-    }
-  };
-
-  const handleCreateProduct = async () => {
-    if (!canCreateCatalog) {
-      setProductFeedback({ kind: "error", message: "The active role cannot create catalog records." });
-      return;
-    }
-
-    setIsCreatingProduct(true);
-    setProductFeedback(null);
-
-    try {
-      const product = await onCreateProduct(productInputFromForm(productForm));
-
-      setProductForm(emptyProductForm(categories));
-      setIsProductModalOpen(false);
-      setProductFeedback({
-        kind: "success",
-        message: product.featured
-          ? `${product.name} is live on the storefront.`
-          : `${product.name} was created and saved as hidden.`
-      });
-    } catch (error) {
-      setProductFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to create product."
-      });
-    } finally {
-      setIsCreatingProduct(false);
-    }
-  };
-
-  const startCreateProduct = () => {
-    setEditingProductId(null);
-    setProductForm(emptyProductForm(categories));
-    setProductFeedback(null);
-    setIsProductModalOpen(true);
-  };
-
-  const startEditProduct = (product: Product) => {
-    setEditingProductId(product.id);
-    setProductForm(productFormFromProduct(product));
-    setProductFeedback(null);
-    setIsProductModalOpen(true);
-  };
-
-  const closeProductModal = () => {
-    setIsProductModalOpen(false);
-    setEditingProductId(null);
-    setProductFeedback(null);
-  };
-
-  const handleUpdateProduct = async () => {
-    if (editingProductId === null) {
-      return;
-    }
-
-    if (!canUpdateCatalog) {
-      setProductFeedback({ kind: "error", message: "The active role cannot update catalog records." });
-      return;
-    }
-
-    setIsSavingProduct(true);
-    setProductFeedback(null);
-
-    try {
-      const product = await onUpdateProduct(editingProductId, productInputFromForm(productForm));
-      setIsProductModalOpen(false);
-      setEditingProductId(null);
-      setProductFeedback({ kind: "success", message: `${product.name} was updated.` });
-    } catch (error) {
-      setProductFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to update product."
-      });
-    } finally {
-      setIsSavingProduct(false);
-    }
-  };
 
   const inventoryColumns = [
     {
@@ -2652,71 +2709,6 @@ function AdminView({
       render: (item: AdminDashboardPayload["inventory"][number]) => item.note
     }
   ];
-  const categoryNameBySlug = new Map(categories.map((category) => [category.slug, category.name]));
-  const catalogProductFields = productFields(categories);
-  const editingProduct =
-    editingProductId === null
-      ? null
-      : products.find((product) => product.id === editingProductId) ?? null;
-  const productColumns = [
-    {
-      key: "name",
-      label: "Product",
-      sortValue: (product: Product) => product.name,
-      render: (product: Product) => (
-        <div className="table-cell-main">
-          <strong>{product.name}</strong>
-          <span>{product.tone}</span>
-        </div>
-      )
-    },
-    {
-      key: "category",
-      label: "Category",
-      sortValue: (product: Product) =>
-        categoryNameBySlug.get(product.category_slug) ?? product.category_slug,
-      render: (product: Product) =>
-        categoryNameBySlug.get(product.category_slug) ?? product.category_slug
-    },
-    {
-      key: "price",
-      label: "Price",
-      align: "right" as const,
-      sortValue: (product: Product) => product.price_cents,
-      render: (product: Product) => currencyFromCents(product.price_cents)
-    },
-    {
-      key: "badge",
-      label: "Badge",
-      sortValue: (product: Product) => product.badge,
-      render: (product: Product) => product.badge
-    },
-    {
-      key: "visibility",
-      label: "Visibility",
-      sortValue: (product: Product) => product.featured,
-      render: (product: Product) => (
-        <span className={`status-pill ${product.featured ? "live" : ""}`}>
-          {product.featured ? "Live" : "Hidden"}
-        </span>
-      )
-    },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (product: Product) => (
-        <button
-          className="outline-button table-action"
-          disabled={!canUpdateCatalog}
-          onClick={() => startEditProduct(product)}
-          type="button"
-        >
-          Edit
-        </button>
-      )
-    }
-  ];
-
   return (
     <main className="admin-layout">
       <aside className="admin-sidebar">
@@ -2747,30 +2739,22 @@ function AdminView({
         </nav>
 
         <div className="sidebar-card">
-          <p className="eyebrow">Active role</p>
-          <h3>{activeRole?.name ?? "Loading roles"}</h3>
-          {permissions ? (
-            <label className="role-switcher">
-              Role
-              <select
-                value={activeRoleId ?? ""}
-                onChange={(event) => onChangeRole(Number(event.target.value))}
-              >
-                {permissions.roles.map((role) => (
-                  <option key={role.id} value={role.id}>
-                    {role.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
-          <p>{activeRole?.description ?? "Permission data is loading."}</p>
+          <p className="eyebrow">{demoMode ? "Demo mode" : "Signed in"}</p>
+          <h3>{currentAdmin?.user.display_name ?? "Read-only demo"}</h3>
+          <p>{activeRole?.name ?? "Fallback data"} access</p>
+          <p>{activeRole?.description ?? "The API is unreachable, so live writes are disabled."}</p>
           {activeRole?.is_super_admin ? <span className="status-pill live">Ultimate access</span> : null}
+          {demoMode ? <span className="status-pill warning">Fallback</span> : null}
         </div>
 
         <button className="outline-button" onClick={onBackToStore}>
           Back to Storefront
         </button>
+        {!demoMode ? (
+          <button className="outline-button" onClick={onLogout}>
+            Logout
+          </button>
+        ) : null}
       </aside>
 
       <section className="admin-main">
@@ -2785,6 +2769,12 @@ function AdminView({
             </button>
           </div>
         </header>
+
+        {demoMode ? (
+          <p className="admin-demo-banner">
+            API unreachable. Showing fallback admin data with write controls disabled.
+          </p>
+        ) : null}
 
         {adminTab === "overview" ? (
           <section className="admin-section active">
@@ -2941,148 +2931,19 @@ function AdminView({
         ) : null}
 
         {adminTab === "catalog" ? (
-          <section className="admin-section active">
-            <div className="panel-header">
-              <div>
-                <p className="eyebrow">Catalog manager</p>
-                <h3>Create categories and products</h3>
-              </div>
-              <span className={`status-pill ${canCreateCatalog ? "live" : ""}`}>
-                {canCreateCatalog ? "Writable" : "Read only"}
-              </span>
-            </div>
-
-            <div className="record-toolbar">
-              <button
-                className="outline-button"
-                disabled={!canCreateCatalog}
-                onClick={() => {
-                  setCategoryForm({ slug: "", name: "", teaser: "" });
-                  setCategoryFeedback(null);
-                  setIsCategoryModalOpen(true);
-                }}
-                type="button"
-              >
-                Create Category
-              </button>
-              <button
-                className="solid-button"
-                disabled={!canCreateCatalog}
-                onClick={startCreateProduct}
-                type="button"
-              >
-                Create Product
-              </button>
-            </div>
-
-            {categoryFeedback && !isCategoryModalOpen ? (
-              <p className={`catalog-feedback ${categoryFeedback.kind}`}>{categoryFeedback.message}</p>
-            ) : null}
-            {productFeedback && !isProductModalOpen ? (
-              <p className={`catalog-feedback ${productFeedback.kind}`}>{productFeedback.message}</p>
-            ) : null}
-
-            <div className="admin-panels two-up">
-              <article className="dashboard-panel">
-                <div className="panel-header">
-                  <div>
-                    <p className="eyebrow">Current categories</p>
-                    <h3>Available department slugs</h3>
-                  </div>
-                </div>
-                <div className="catalog-list">
-                  {categories.map((category) => (
-                    <div key={category.slug}>
-                      <strong>{category.name}</strong>
-                      <span>{category.slug}</span>
-                    </div>
-                  ))}
-                </div>
-              </article>
-
-              <article className="dashboard-panel">
-                <div className="panel-header">
-                  <div>
-                    <p className="eyebrow">Storefront products</p>
-                    <h3>Product inventory table</h3>
-                  </div>
-                </div>
-                <ManagementTable
-                  columns={productColumns}
-                  emptyMessage="No products have been merchandised yet."
-                  getRowKey={(product) => product.id}
-                  initialSortKey="name"
-                  rows={products}
-                  tableLabel="Product inventory management table"
-                />
-              </article>
-            </div>
-
-            <RecordModal
-              eyebrow="New category"
-              isOpen={isCategoryModalOpen}
-              onClose={() => {
-                setIsCategoryModalOpen(false);
-                setCategoryFeedback(null);
-              }}
-              statusLabel={canCreateCatalog ? "Writable" : "Read only"}
-              statusTone={canCreateCatalog ? "live" : undefined}
-              title="Add a department to the storefront"
-            >
-              <RecordForm
-                disabled={!canCreateCatalog}
-                feedback={
-                  categoryFeedback ? (
-                    <p className={`catalog-feedback ${categoryFeedback.kind}`}>{categoryFeedback.message}</p>
-                  ) : null
-                }
-                fields={categoryFields}
-                isSubmitting={isCreatingCategory}
-                onCancel={() => {
-                  setIsCategoryModalOpen(false);
-                  setCategoryFeedback(null);
-                }}
-                onChange={setCategoryForm}
-                onSubmit={() => void handleCreateCategory()}
-                submitLabel="Create Category"
-                values={categoryForm}
-              />
-            </RecordModal>
-
-            <RecordModal
-              eyebrow={editingProductId === null ? "New product" : "Editing product"}
-              isOpen={isProductModalOpen}
-              onClose={closeProductModal}
-              size="wide"
-              statusLabel={editingProductId === null ? (canCreateCatalog ? "Writable" : "Read only") : canUpdateCatalog ? "Writable" : "Read only"}
-              statusTone={editingProductId === null ? (canCreateCatalog ? "live" : undefined) : canUpdateCatalog ? "live" : undefined}
-              title={
-                editingProductId === null
-                  ? "Publish a new storefront item"
-                  : editingProduct?.name ?? "Edit storefront item"
-              }
-            >
-              <RecordForm
-                disabled={editingProductId === null ? !canCreateCatalog : !canUpdateCatalog}
-                feedback={
-                  productFeedback ? (
-                    <p className={`catalog-feedback ${productFeedback.kind}`}>{productFeedback.message}</p>
-                  ) : null
-                }
-                fields={catalogProductFields}
-                isSubmitting={editingProductId === null ? isCreatingProduct : isSavingProduct}
-                onCancel={closeProductModal}
-                onChange={setProductForm}
-                onSubmit={() =>
-                  editingProductId === null
-                    ? void handleCreateProduct()
-                    : void handleUpdateProduct()
-                }
-                submitLabel={editingProductId === null ? "Create Product" : "Save Product"}
-                values={productForm}
-              />
-            </RecordModal>
-          </section>
+          <CatalogPanel
+            canCreate={canCreateCatalog}
+            canDelete={canDeleteCatalog}
+            canUpdate={canUpdateCatalog}
+            categories={categories}
+            onCreateCategory={onCreateCategory}
+            onCreateProduct={onCreateProduct}
+            onDeleteCategory={onDeleteCategory}
+            onDeleteProduct={onDeleteProduct}
+            onUpdateCategory={onUpdateCategory}
+            onUpdateProduct={onUpdateProduct}
+            products={products}
+          />
         ) : null}
 
         {adminTab === "customers" ? (
@@ -3158,8 +3019,8 @@ function AdminView({
 
         {adminTab === "permissions" ? (
           <PermissionsPanel
-            activeRoleId={activeRoleId}
-            onChangeRole={onChangeRole}
+            activeRoleId={permissionEditorRoleId}
+            onChangeRole={setPermissionEditorRoleId}
             onCreateRole={onCreateRole}
             onDeleteRole={onDeleteRole}
             onUpdateRole={onUpdateRole}

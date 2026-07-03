@@ -13,44 +13,37 @@ export function fetchInvoices(): Promise<Invoice[]> {
 
 export function createInvoiceFromOrder(
   orderId: number,
-  input: CreateInvoiceFromOrderInput,
-  adminRoleId: number
+  input: CreateInvoiceFromOrderInput
 ): Promise<Invoice> {
   return postJson<CreateInvoiceFromOrderInput, Invoice>(
     `/api/admin/invoices/from-order/${orderId}`,
-    input,
-    adminRoleId
+    input
   );
 }
 
 export function updateInvoiceBilling(
   invoiceId: number,
-  input: UpdateInvoiceBillingInput,
-  adminRoleId: number
+  input: UpdateInvoiceBillingInput
 ): Promise<Invoice> {
   return putJson<UpdateInvoiceBillingInput, Invoice>(
     `/api/admin/invoices/${invoiceId}`,
-    input,
-    adminRoleId
+    input
   );
 }
 
-export function voidInvoice(invoiceId: number, adminRoleId: number): Promise<Invoice> {
+export function voidInvoice(invoiceId: number): Promise<Invoice> {
   return postJson<Record<string, never>, Invoice>(
     `/api/admin/invoices/${invoiceId}/void`,
-    {},
-    adminRoleId
+    {}
   );
 }
 
 export function recordInvoicePayment(
   invoiceId: number,
-  input: RecordInvoicePaymentInput,
-  adminRoleId: number
+  input: RecordInvoicePaymentInput
 ): Promise<Invoice> {
   return postJson<RecordInvoicePaymentInput, Invoice>(
     `/api/admin/invoices/${invoiceId}/payments`,
-    input,
-    adminRoleId
+    input
   );
 }

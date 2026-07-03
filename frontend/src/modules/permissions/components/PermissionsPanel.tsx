@@ -92,6 +92,7 @@ export function PermissionsPanel({
       });
       setRoleForm({ name: "", description: "" });
       setIsCreateOpen(false);
+      onChangeRole(role.id);
       setFeedback({ kind: "success", message: `${role.name} was created.` });
     } catch (error) {
       setFeedback({
@@ -104,7 +105,7 @@ export function PermissionsPanel({
   };
 
   const handleUpdateRole = async () => {
-    if (!activeRole || activeRole.is_super_admin) {
+    if (!permissions || !activeRole || activeRole.is_super_admin) {
       return;
     }
 
@@ -129,7 +130,7 @@ export function PermissionsPanel({
   };
 
   const handleDeleteRole = async () => {
-    if (!activeRole || activeRole.is_super_admin) {
+    if (!permissions || !activeRole || activeRole.is_super_admin) {
       return;
     }
 
@@ -142,7 +143,12 @@ export function PermissionsPanel({
     setIsDeletingRole(true);
 
     try {
+      const nextRoleId =
+        permissions.roles.find((role) => role.id !== activeRole.id)?.id ?? null;
       await onDeleteRole(activeRole.id);
+      if (nextRoleId !== null) {
+        onChangeRole(nextRoleId);
+      }
       setFeedback({ kind: "success", message: `${activeRole.name} was deleted.` });
     } catch (error) {
       setFeedback({

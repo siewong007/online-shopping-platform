@@ -1,3 +1,4 @@
+pub mod auth;
 pub mod catalog;
 pub mod customer_portal;
 pub mod dashboard;

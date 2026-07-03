@@ -4,21 +4,23 @@ use anyhow::{Result, anyhow, bail};
 use sqlx::PgPool;
 
 use crate::models::{
-    ActivityItem, AdminDashboardPayload, AdminMetric, CampaignOption, Category,
-    CreateCategoryInput, CreateCustomerPortalProfileInput, CreateInvoiceFromOrderInput,
-    CreateOrderInput, CreatePaymentInput, CreateProductInput, CreateRoleInput,
-    CustomerPortalProfile, FulfillmentItem, InventoryItem, Invoice, InvoiceLineItem,
-    InvoicePayment, Order, OrderItem, Payment, PermissionPage, PermissionsPayload, ProStat,
-    Product, Promotion, RecordInvoicePaymentInput, Role, RolePagePermission, SalesChannelCount,
-    SalesRecord, SalesStatusCount, SalesSummaryPayload, ServiceItem, StorefrontPayload,
-    SystemSetting, UpdateCustomerPortalProfileInput, UpdateInvoiceBillingInput, UpdatePaymentInput,
-    UpdateProductInput, UpdateRoleInput, UpdateRolePagePermissionInput, UpdateSalesDetailsInput,
-    UpdateSalesStatusInput, UpdateSystemSettingInput,
+    ActivityItem, AdminCatalogPayload, AdminDashboardPayload, AdminIdentity, AdminMetric,
+    AdminUser, AdminUserCredentials, CampaignOption, Category, CreateCategoryInput,
+    CreateCustomerPortalProfileInput, CreateInvoiceFromOrderInput, CreateOrderInput,
+    CreatePaymentInput, CreateProductInput, CreateRoleInput, CustomerPortalProfile,
+    FulfillmentItem, InventoryItem, Invoice, InvoiceLineItem, InvoicePayment, Order, OrderItem,
+    Payment, PermissionPage, PermissionsPayload, ProStat, Product, Promotion,
+    RecordInvoicePaymentInput, Role, RolePagePermission, SalesChannelCount, SalesRecord,
+    SalesStatusCount, SalesSummaryPayload, ServiceItem, StorefrontPayload, SystemSetting,
+    UpdateCategoryInput, UpdateCustomerPortalProfileInput, UpdateInvoiceBillingInput,
+    UpdatePaymentInput, UpdateProductInput, UpdateRoleInput, UpdateRolePagePermissionInput,
+    UpdateSalesDetailsInput, UpdateSalesStatusInput, UpdateSystemSettingInput,
 };
 
 #[derive(Debug, Clone, Copy)]
 pub enum PermissionAction {
     Create,
+    Read,
     Update,
     Delete,
 }
@@ -144,6 +146,33 @@ pub async fn fetch_admin_dashboard(pool: &PgPool) -> Result<AdminDashboardPayloa
     })
 }
 
+pub async fn fetch_admin_catalog(pool: &PgPool) -> Result<AdminCatalogPayload> {
+    let categories = sqlx::query_as::<_, Category>(
+        r#"
+        SELECT slug, name, teaser
+        FROM categories
+        ORDER BY sort_order
+        "#,
+    )
+    .fetch_all(pool)
+    .await?;
+
+    let products = sqlx::query_as::<_, Product>(
+        r#"
+        SELECT id, name, category_slug, price_cents, badge, description, tone, featured
+        FROM products
+        ORDER BY sort_order
+        "#,
+    )
+    .fetch_all(pool)
+    .await?;
+
+    Ok(AdminCatalogPayload {
+        categories,
+        products,
+    })
+}
+
 pub async fn create_category(pool: &PgPool, input: &CreateCategoryInput) -> Result<Category> {
     let slug = input.slug.trim();
     let name = input.name.trim();
@@ -189,6 +218,68 @@ pub async fn create_category(pool: &PgPool, input: &CreateCategoryInput) -> Resu
     .fetch_one(pool)
     .await
     .map_err(Into::into)
+}
+
+pub async fn update_category(
+    pool: &PgPool,
+    slug: &str,
+    input: &UpdateCategoryInput,
+) -> Result<Category> {
+    let name = input.name.trim();
+    let teaser = input.teaser.trim();
+
+    if name.is_empty() || teaser.is_empty() {
+        bail!("Category name and teaser are required.");
+    }
+
+    sqlx::query_as::<_, Category>(
+        r#"
+        UPDATE categories
+        SET name = $1,
+            teaser = $2
+        WHERE slug = $3
+        RETURNING slug, name, teaser
+        "#,
+    )
+    .bind(name)
+    .bind(teaser)
+    .bind(slug)
+    .fetch_optional(pool)
+    .await?
+    .ok_or_else(|| anyhow!("Category not found."))
+}
+
+pub async fn delete_category(pool: &PgPool, slug: &str) -> Result<()> {
+    let product_count = sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT COUNT(*)
+        FROM products
+        WHERE category_slug = $1
+        "#,
+    )
+    .bind(slug)
+    .fetch_one(pool)
+    .await?;
+
+    if product_count > 0 {
+        bail!("Reassign {product_count} product(s) out of this category first.");
+    }
+
+    let result = sqlx::query(
+        r#"
+        DELETE FROM categories
+        WHERE slug = $1
+        "#,
+    )
+    .bind(slug)
+    .execute(pool)
+    .await?;
+
+    if result.rows_affected() == 0 {
+        bail!("Category not found.");
+    }
+
+    Ok(())
 }
 
 pub async fn create_product(pool: &PgPool, input: &CreateProductInput) -> Result<Product> {
@@ -315,6 +406,24 @@ pub async fn update_product(
     .fetch_optional(pool)
     .await?
     .ok_or_else(|| anyhow!("Product not found."))
+}
+
+pub async fn delete_product(pool: &PgPool, product_id: i32) -> Result<()> {
+    let result = sqlx::query(
+        r#"
+        DELETE FROM products
+        WHERE id = $1
+        "#,
+    )
+    .bind(product_id)
+    .execute(pool)
+    .await?;
+
+    if result.rows_affected() == 0 {
+        bail!("Product not found.");
+    }
+
+    Ok(())
 }
 
 pub async fn create_order(pool: &PgPool, input: &CreateOrderInput) -> Result<Order> {
@@ -1234,11 +1343,227 @@ pub async fn role_has_page_permission(
     Ok(match permission {
         Some(permission) => match action {
             PermissionAction::Create => permission.can_create,
+            PermissionAction::Read => permission.can_read,
             PermissionAction::Update => permission.can_update,
             PermissionAction::Delete => permission.can_delete,
         },
         None => false,
     })
+}
+
+pub async fn fetch_role(pool: &PgPool, role_id: i32) -> Result<Role> {
+    sqlx::query_as::<_, Role>(
+        r#"
+        SELECT id, name, description, is_super_admin, created_at::text AS created_at
+        FROM roles
+        WHERE id = $1
+        "#,
+    )
+    .bind(role_id)
+    .fetch_optional(pool)
+    .await?
+    .ok_or_else(|| anyhow!("Role not found."))
+}
+
+pub async fn fetch_super_admin_role(pool: &PgPool) -> Result<Role> {
+    sqlx::query_as::<_, Role>(
+        r#"
+        SELECT id, name, description, is_super_admin, created_at::text AS created_at
+        FROM roles
+        WHERE is_super_admin = TRUE
+        ORDER BY id
+        LIMIT 1
+        "#,
+    )
+    .fetch_optional(pool)
+    .await?
+    .ok_or_else(|| anyhow!("Super Admin role not found."))
+}
+
+pub async fn fetch_role_page_permissions(
+    pool: &PgPool,
+    role_id: i32,
+) -> Result<Vec<RolePagePermission>> {
+    let role = fetch_role(pool, role_id).await?;
+    let pages = sqlx::query_as::<_, PermissionPage>(
+        r#"
+        SELECT id, slug, name, description
+        FROM permission_pages
+        ORDER BY sort_order
+        "#,
+    )
+    .fetch_all(pool)
+    .await?;
+
+    if role.is_super_admin {
+        return Ok(pages
+            .into_iter()
+            .map(|page| RolePagePermission {
+                role_id,
+                page_id: page.id,
+                can_create: true,
+                can_read: true,
+                can_update: true,
+                can_delete: true,
+            })
+            .collect());
+    }
+
+    let permission_rows = sqlx::query_as::<_, RolePagePermission>(
+        r#"
+        SELECT role_id, page_id, can_create, can_read, can_update, can_delete
+        FROM role_page_permissions
+        WHERE role_id = $1
+        "#,
+    )
+    .bind(role_id)
+    .fetch_all(pool)
+    .await?;
+
+    let mut permission_map: HashMap<i32, RolePagePermission> = permission_rows
+        .into_iter()
+        .map(|permission| (permission.page_id, permission))
+        .collect();
+
+    Ok(pages
+        .into_iter()
+        .map(|page| {
+            permission_map
+                .remove(&page.id)
+                .unwrap_or(RolePagePermission {
+                    role_id,
+                    page_id: page.id,
+                    can_create: false,
+                    can_read: false,
+                    can_update: false,
+                    can_delete: false,
+                })
+        })
+        .collect())
+}
+
+pub async fn count_admin_users(pool: &PgPool) -> Result<i64> {
+    sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT COUNT(*)
+        FROM admin_users
+        "#,
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(Into::into)
+}
+
+pub async fn create_admin_user(
+    pool: &PgPool,
+    username: &str,
+    display_name: &str,
+    password_hash: &str,
+    role_id: i32,
+) -> Result<AdminUser> {
+    sqlx::query_as::<_, AdminUser>(
+        r#"
+        INSERT INTO admin_users (username, display_name, password_hash, role_id)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id,
+                  username,
+                  display_name,
+                  role_id,
+                  is_active,
+                  created_at::text AS created_at,
+                  updated_at::text AS updated_at
+        "#,
+    )
+    .bind(username)
+    .bind(display_name)
+    .bind(password_hash)
+    .bind(role_id)
+    .fetch_one(pool)
+    .await
+    .map_err(Into::into)
+}
+
+pub async fn fetch_admin_user_by_username(
+    pool: &PgPool,
+    username: &str,
+) -> Result<Option<AdminUserCredentials>> {
+    sqlx::query_as::<_, AdminUserCredentials>(
+        r#"
+        SELECT admin_users.id,
+               admin_users.username,
+               admin_users.display_name,
+               admin_users.password_hash,
+               admin_users.role_id,
+               roles.name AS role_name,
+               roles.description AS role_description,
+               roles.is_super_admin,
+               admin_users.is_active,
+               admin_users.created_at::text AS created_at,
+               admin_users.updated_at::text AS updated_at
+        FROM admin_users
+        JOIN roles ON roles.id = admin_users.role_id
+        WHERE lower(admin_users.username) = lower($1)
+        "#,
+    )
+    .bind(username)
+    .fetch_optional(pool)
+    .await
+    .map_err(Into::into)
+}
+
+pub async fn insert_admin_session(pool: &PgPool, admin_user_id: i32, token: &str) -> Result<()> {
+    sqlx::query(
+        r#"
+        INSERT INTO admin_sessions (token, admin_user_id, expires_at)
+        VALUES ($1, $2, now() + interval '7 days')
+        "#,
+    )
+    .bind(token)
+    .bind(admin_user_id)
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+pub async fn delete_admin_session(pool: &PgPool, token: &str) -> Result<()> {
+    sqlx::query(
+        r#"
+        DELETE FROM admin_sessions
+        WHERE token = $1
+        "#,
+    )
+    .bind(token)
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+pub async fn authenticate_admin_session(
+    pool: &PgPool,
+    token: &str,
+) -> Result<Option<AdminIdentity>> {
+    sqlx::query_as::<_, AdminIdentity>(
+        r#"
+        SELECT admin_users.id AS user_id,
+               admin_users.username,
+               admin_users.display_name,
+               admin_users.role_id,
+               roles.name AS role_name,
+               roles.is_super_admin
+        FROM admin_sessions
+        JOIN admin_users ON admin_users.id = admin_sessions.admin_user_id
+        JOIN roles ON roles.id = admin_users.role_id
+        WHERE admin_sessions.token = $1
+          AND admin_sessions.expires_at > now()
+          AND admin_users.is_active = TRUE
+        "#,
+    )
+    .bind(token)
+    .fetch_optional(pool)
+    .await
+    .map_err(Into::into)
 }
 
 pub async fn create_role(pool: &PgPool, input: &CreateRoleInput) -> Result<Role> {

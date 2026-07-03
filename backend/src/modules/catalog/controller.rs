@@ -1,25 +1,48 @@
 use axum::{
     Json,
     extract::{Path, State},
-    http::{HeaderMap, StatusCode},
+    http::StatusCode,
 };
 
-use crate::{app_state::AppState, error, modules::permissions};
+use crate::{
+    app_state::AppState,
+    error,
+    modules::{auth::model::AdminIdentity, permissions},
+};
 
 use super::{
-    dto::{CreateCategoryInput, CreateProductInput, UpdateProductInput},
-    model::{Category, Product},
+    dto::{CreateCategoryInput, CreateProductInput, UpdateCategoryInput, UpdateProductInput},
+    model::{AdminCatalogPayload, Category, Product},
     service,
 };
 
+pub async fn admin_catalog(
+    State(state): State<AppState>,
+    identity: AdminIdentity,
+) -> Result<Json<AdminCatalogPayload>, error::HttpError> {
+    permissions::service::ensure_permission(
+        &state.pool,
+        &identity,
+        permissions::model::ADMIN_CATALOG_PAGE,
+        permissions::model::PermissionAction::Read,
+        "catalog",
+    )
+    .await?;
+
+    service::fetch_admin_catalog(&state.pool)
+        .await
+        .map(Json)
+        .map_err(|error| error::map_admin_query_error("admin catalog query failed", error))
+}
+
 pub async fn create_category(
     State(state): State<AppState>,
-    headers: HeaderMap,
+    identity: AdminIdentity,
     Json(input): Json<CreateCategoryInput>,
 ) -> Result<(StatusCode, Json<Category>), error::HttpError> {
-    permissions::service::ensure_admin_permission(
+    permissions::service::ensure_permission(
         &state.pool,
-        &headers,
+        &identity,
         permissions::model::ADMIN_CATALOG_PAGE,
         permissions::model::PermissionAction::Create,
         "catalog",
@@ -32,14 +55,55 @@ pub async fn create_category(
         .map_err(error::map_admin_error)
 }
 
+pub async fn update_category(
+    State(state): State<AppState>,
+    identity: AdminIdentity,
+    Path(slug): Path<String>,
+    Json(input): Json<UpdateCategoryInput>,
+) -> Result<Json<Category>, error::HttpError> {
+    permissions::service::ensure_permission(
+        &state.pool,
+        &identity,
+        permissions::model::ADMIN_CATALOG_PAGE,
+        permissions::model::PermissionAction::Update,
+        "catalog",
+    )
+    .await?;
+
+    service::update_category(&state.pool, &slug, &input)
+        .await
+        .map(Json)
+        .map_err(error::map_admin_error)
+}
+
+pub async fn delete_category(
+    State(state): State<AppState>,
+    identity: AdminIdentity,
+    Path(slug): Path<String>,
+) -> Result<StatusCode, error::HttpError> {
+    permissions::service::ensure_permission(
+        &state.pool,
+        &identity,
+        permissions::model::ADMIN_CATALOG_PAGE,
+        permissions::model::PermissionAction::Delete,
+        "catalog",
+    )
+    .await?;
+
+    service::delete_category(&state.pool, &slug)
+        .await
+        .map(|()| StatusCode::NO_CONTENT)
+        .map_err(error::map_admin_error)
+}
+
 pub async fn create_product(
     State(state): State<AppState>,
-    headers: HeaderMap,
+    identity: AdminIdentity,
     Json(input): Json<CreateProductInput>,
 ) -> Result<(StatusCode, Json<Product>), error::HttpError> {
-    permissions::service::ensure_admin_permission(
+    permissions::service::ensure_permission(
         &state.pool,
-        &headers,
+        &identity,
         permissions::model::ADMIN_CATALOG_PAGE,
         permissions::model::PermissionAction::Create,
         "catalog",
@@ -54,13 +118,13 @@ pub async fn create_product(
 
 pub async fn update_product(
     State(state): State<AppState>,
-    headers: HeaderMap,
+    identity: AdminIdentity,
     Path(product_id): Path<i32>,
     Json(input): Json<UpdateProductInput>,
 ) -> Result<Json<Product>, error::HttpError> {
-    permissions::service::ensure_admin_permission(
+    permissions::service::ensure_permission(
         &state.pool,
-        &headers,
+        &identity,
         permissions::model::ADMIN_CATALOG_PAGE,
         permissions::model::PermissionAction::Update,
         "catalog",
@@ -70,5 +134,25 @@ pub async fn update_product(
     service::update_product(&state.pool, product_id, &input)
         .await
         .map(Json)
+        .map_err(error::map_admin_error)
+}
+
+pub async fn delete_product(
+    State(state): State<AppState>,
+    identity: AdminIdentity,
+    Path(product_id): Path<i32>,
+) -> Result<StatusCode, error::HttpError> {
+    permissions::service::ensure_permission(
+        &state.pool,
+        &identity,
+        permissions::model::ADMIN_CATALOG_PAGE,
+        permissions::model::PermissionAction::Delete,
+        "catalog",
+    )
+    .await?;
+
+    service::delete_product(&state.pool, product_id)
+        .await
+        .map(|()| StatusCode::NO_CONTENT)
         .map_err(error::map_admin_error)
 }

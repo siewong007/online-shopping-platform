@@ -1,12 +1,12 @@
 use anyhow::Result;
-use axum::http::{HeaderMap, StatusCode};
+use axum::http::StatusCode;
 use sqlx::PgPool;
 
-use crate::error::HttpError;
+use crate::{error::HttpError, modules::auth::model::AdminIdentity};
 
 use super::{
     dto::{CreateRoleInput, PermissionsPayload, UpdateRoleInput, UpdateRolePagePermissionInput},
-    model::{self, PermissionAction, Role, RolePagePermission},
+    model::{PermissionAction, Role, RolePagePermission},
     repository,
 };
 
@@ -23,25 +23,18 @@ pub async fn role_has_page_permission(
     repository::role_has_page_permission(pool, role_id, page_slug, action).await
 }
 
-pub async fn ensure_admin_permission(
+pub async fn ensure_permission(
     pool: &PgPool,
-    headers: &HeaderMap,
+    identity: &AdminIdentity,
     page_slug: &str,
     action: PermissionAction,
     resource_name: &str,
 ) -> Result<(), HttpError> {
-    let role_id = headers
-        .get(model::ADMIN_ROLE_HEADER)
-        .and_then(|value| value.to_str().ok())
-        .and_then(|value| value.parse::<i32>().ok())
-        .ok_or_else(|| {
-            (
-                StatusCode::FORBIDDEN,
-                format!("Select an admin role before changing {resource_name} records."),
-            )
-        })?;
+    if identity.is_super_admin {
+        return Ok(());
+    }
 
-    let is_allowed = role_has_page_permission(pool, role_id, page_slug, action)
+    let is_allowed = role_has_page_permission(pool, identity.role_id, page_slug, action)
         .await
         .map_err(|error| {
             tracing::error!("permission lookup failed: {error:?}");

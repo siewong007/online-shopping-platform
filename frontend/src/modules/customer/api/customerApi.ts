@@ -11,28 +11,24 @@ export function fetchCustomerPortalProfiles(): Promise<CustomerPortalProfile[]> 
 }
 
 export function createCustomerPortalProfile(
-  input: CreateCustomerPortalProfileInput,
-  adminRoleId: number
+  input: CreateCustomerPortalProfileInput
 ): Promise<CustomerPortalProfile> {
   return postJson<CreateCustomerPortalProfileInput, CustomerPortalProfile>(
     "/api/admin/customer-portal",
-    input,
-    adminRoleId
+    input
   );
 }
 
 export function updateCustomerPortalProfile(
   profileId: number,
-  input: UpdateCustomerPortalProfileInput,
-  adminRoleId: number
+  input: UpdateCustomerPortalProfileInput
 ): Promise<CustomerPortalProfile> {
   return putJson<UpdateCustomerPortalProfileInput, CustomerPortalProfile>(
     `/api/admin/customer-portal/${profileId}`,
-    input,
-    adminRoleId
+    input
   );
 }
 
-export function deleteCustomerPortalProfile(profileId: number, adminRoleId: number): Promise<void> {
-  return deleteJson(`/api/admin/customer-portal/${profileId}`, adminRoleId);
+export function deleteCustomerPortalProfile(profileId: number): Promise<void> {
+  return deleteJson(`/api/admin/customer-portal/${profileId}`);
 }

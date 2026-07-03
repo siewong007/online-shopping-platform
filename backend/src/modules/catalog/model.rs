@@ -1,1 +1,1 @@
-pub use crate::models::{Category, Product};
+pub use crate::models::{AdminCatalogPayload, Category, Product};

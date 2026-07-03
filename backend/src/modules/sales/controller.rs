@@ -1,10 +1,13 @@
 use axum::{
     Json,
     extract::{Path, State},
-    http::{HeaderMap, StatusCode},
 };
 
-use crate::{app_state::AppState, error, modules::permissions};
+use crate::{
+    app_state::AppState,
+    error,
+    modules::{auth::model::AdminIdentity, permissions},
+};
 
 use super::{
     dto::{UpdateSalesDetailsInput, UpdateSalesStatusInput},
@@ -14,31 +17,51 @@ use super::{
 
 pub async fn admin_sales(
     State(state): State<AppState>,
-) -> Result<Json<Vec<SalesRecord>>, StatusCode> {
+    identity: AdminIdentity,
+) -> Result<Json<Vec<SalesRecord>>, error::HttpError> {
+    permissions::service::ensure_permission(
+        &state.pool,
+        &identity,
+        permissions::model::ADMIN_SALES_PAGE,
+        permissions::model::PermissionAction::Read,
+        "sale",
+    )
+    .await?;
+
     service::fetch_sales(&state.pool)
         .await
         .map(Json)
-        .map_err(|error| error::map_query_error("admin sales query failed", error))
+        .map_err(|error| error::map_admin_query_error("admin sales query failed", error))
 }
 
 pub async fn admin_sales_summary(
     State(state): State<AppState>,
-) -> Result<Json<SalesSummaryPayload>, StatusCode> {
+    identity: AdminIdentity,
+) -> Result<Json<SalesSummaryPayload>, error::HttpError> {
+    permissions::service::ensure_permission(
+        &state.pool,
+        &identity,
+        permissions::model::ADMIN_SALES_PAGE,
+        permissions::model::PermissionAction::Read,
+        "sale",
+    )
+    .await?;
+
     service::fetch_sales_summary(&state.pool)
         .await
         .map(Json)
-        .map_err(|error| error::map_query_error("admin sales summary query failed", error))
+        .map_err(|error| error::map_admin_query_error("admin sales summary query failed", error))
 }
 
 pub async fn admin_update_sales_details(
     State(state): State<AppState>,
     Path(order_id): Path<i32>,
-    headers: HeaderMap,
+    identity: AdminIdentity,
     Json(input): Json<UpdateSalesDetailsInput>,
 ) -> Result<Json<SalesRecord>, error::HttpError> {
-    permissions::service::ensure_admin_permission(
+    permissions::service::ensure_permission(
         &state.pool,
-        &headers,
+        &identity,
         permissions::model::ADMIN_SALES_PAGE,
         permissions::model::PermissionAction::Update,
         "sale",
@@ -54,12 +77,12 @@ pub async fn admin_update_sales_details(
 pub async fn admin_update_sales_status(
     State(state): State<AppState>,
     Path(order_id): Path<i32>,
-    headers: HeaderMap,
+    identity: AdminIdentity,
     Json(input): Json<UpdateSalesStatusInput>,
 ) -> Result<Json<SalesRecord>, error::HttpError> {
-    permissions::service::ensure_admin_permission(
+    permissions::service::ensure_permission(
         &state.pool,
-        &headers,
+        &identity,
         permissions::model::ADMIN_SALES_PAGE,
         permissions::model::PermissionAction::Update,
         "sale",

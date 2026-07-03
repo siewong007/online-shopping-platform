@@ -1,10 +1,14 @@
 use axum::{
     Json,
     extract::{Path, State},
-    http::{HeaderMap, StatusCode},
+    http::StatusCode,
 };
 
-use crate::{app_state::AppState, error, modules::permissions};
+use crate::{
+    app_state::AppState,
+    error,
+    modules::{auth::model::AdminIdentity, permissions},
+};
 
 use super::{
     dto::{CreateCustomerPortalProfileInput, UpdateCustomerPortalProfileInput},
@@ -14,21 +18,31 @@ use super::{
 
 pub async fn customer_portal_profiles(
     State(state): State<AppState>,
-) -> Result<Json<Vec<CustomerPortalProfile>>, StatusCode> {
+    identity: AdminIdentity,
+) -> Result<Json<Vec<CustomerPortalProfile>>, error::HttpError> {
+    permissions::service::ensure_permission(
+        &state.pool,
+        &identity,
+        permissions::model::ADMIN_CUSTOMERS_PAGE,
+        permissions::model::PermissionAction::Read,
+        "customer",
+    )
+    .await?;
+
     service::fetch_customer_portal_profiles(&state.pool)
         .await
         .map(Json)
-        .map_err(|error| error::map_query_error("customer portal query failed", error))
+        .map_err(|error| error::map_admin_query_error("customer portal query failed", error))
 }
 
 pub async fn create_customer_portal_profile(
     State(state): State<AppState>,
-    headers: HeaderMap,
+    identity: AdminIdentity,
     Json(input): Json<CreateCustomerPortalProfileInput>,
 ) -> Result<(StatusCode, Json<CustomerPortalProfile>), error::HttpError> {
-    permissions::service::ensure_admin_permission(
+    permissions::service::ensure_permission(
         &state.pool,
-        &headers,
+        &identity,
         permissions::model::ADMIN_CUSTOMERS_PAGE,
         permissions::model::PermissionAction::Create,
         "customer",
@@ -44,12 +58,12 @@ pub async fn create_customer_portal_profile(
 pub async fn update_customer_portal_profile(
     State(state): State<AppState>,
     Path(profile_id): Path<i32>,
-    headers: HeaderMap,
+    identity: AdminIdentity,
     Json(input): Json<UpdateCustomerPortalProfileInput>,
 ) -> Result<Json<CustomerPortalProfile>, error::HttpError> {
-    permissions::service::ensure_admin_permission(
+    permissions::service::ensure_permission(
         &state.pool,
-        &headers,
+        &identity,
         permissions::model::ADMIN_CUSTOMERS_PAGE,
         permissions::model::PermissionAction::Update,
         "customer",
@@ -65,11 +79,11 @@ pub async fn update_customer_portal_profile(
 pub async fn delete_customer_portal_profile(
     State(state): State<AppState>,
     Path(profile_id): Path<i32>,
-    headers: HeaderMap,
+    identity: AdminIdentity,
 ) -> Result<StatusCode, error::HttpError> {
-    permissions::service::ensure_admin_permission(
+    permissions::service::ensure_permission(
         &state.pool,
-        &headers,
+        &identity,
         permissions::model::ADMIN_CUSTOMERS_PAGE,
         permissions::model::PermissionAction::Delete,
         "customer",

@@ -10,18 +10,17 @@ export function checkout(input: CreateOrderInput): Promise<Order> {
   return postJson<CreateOrderInput, Order>("/api/checkout", input);
 }
 
-export function createAdminOrder(input: CreateOrderInput, adminRoleId: number): Promise<Order> {
-  return postJson<CreateOrderInput, Order>("/api/admin/orders", input, adminRoleId);
+export function createAdminOrder(input: CreateOrderInput): Promise<Order> {
+  return postJson<CreateOrderInput, Order>("/api/admin/orders", input);
 }
 
 export function updateAdminOrder(
   orderId: number,
-  input: CreateOrderInput,
-  adminRoleId: number
+  input: CreateOrderInput
 ): Promise<Order> {
-  return putJson<CreateOrderInput, Order>(`/api/admin/orders/${orderId}`, input, adminRoleId);
+  return putJson<CreateOrderInput, Order>(`/api/admin/orders/${orderId}`, input);
 }
 
-export function deleteAdminOrder(orderId: number, adminRoleId: number): Promise<void> {
-  return deleteJson(`/api/admin/orders/${orderId}`, adminRoleId);
+export function deleteAdminOrder(orderId: number): Promise<void> {
+  return deleteJson(`/api/admin/orders/${orderId}`);
 }

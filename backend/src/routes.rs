@@ -1,6 +1,6 @@
 use axum::{
     Router,
-    http::{HeaderName, HeaderValue, Method, header::CONTENT_TYPE},
+    http::{HeaderValue, Method, header::AUTHORIZATION, header::CONTENT_TYPE},
     routing::{get, post, put},
 };
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
@@ -8,21 +8,23 @@ use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use crate::{
     app_state::AppState,
     modules::{
-        catalog, customer_portal, dashboard, health, invoices, orders, payments, permissions,
+        auth, catalog, customer_portal, dashboard, health, invoices, orders, payments, permissions,
         sales, settings, storefront,
     },
 };
 
 pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
-    let admin_role_header = HeaderName::from_static(permissions::model::ADMIN_ROLE_HEADER);
     let cors = CorsLayer::new()
         .allow_origin(frontend_origin)
         .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
-        .allow_headers([CONTENT_TYPE, admin_role_header]);
+        .allow_headers([CONTENT_TYPE, AUTHORIZATION]);
 
     Router::new()
         .route("/api/health", get(health::controller::health))
         .route("/api/storefront", get(storefront::controller::storefront))
+        .route("/api/admin/login", post(auth::controller::login))
+        .route("/api/admin/logout", post(auth::controller::logout))
+        .route("/api/admin/me", get(auth::controller::me))
         .route(
             "/api/admin/dashboard",
             get(dashboard::controller::admin_dashboard),
@@ -118,12 +120,20 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
             post(catalog::controller::create_category),
         )
         .route(
+            "/api/admin/categories/{slug}",
+            put(catalog::controller::update_category).delete(catalog::controller::delete_category),
+        )
+        .route(
+            "/api/admin/catalog",
+            get(catalog::controller::admin_catalog),
+        )
+        .route(
             "/api/admin/products",
             post(catalog::controller::create_product),
         )
         .route(
             "/api/admin/products/{product_id}",
-            put(catalog::controller::update_product),
+            put(catalog::controller::update_product).delete(catalog::controller::delete_product),
         )
         .route("/api/checkout", post(orders::controller::checkout))
         .with_state(state)
