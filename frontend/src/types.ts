@@ -53,6 +53,10 @@ export type {
 
 export type {
   CreateCustomerPortalProfileInput,
+  CustomerLookupOrder,
+  CustomerLookupOrderItem,
+  CustomerLookupPayload,
+  CustomerLookupProfile,
   CustomerPortalProfile,
   UpdateCustomerPortalProfileInput
 } from "./modules/customer/types";

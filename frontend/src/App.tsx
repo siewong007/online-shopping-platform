@@ -31,6 +31,7 @@ import {
   fetchStorefront,
   fetchSystemSettings,
   login as loginRequest,
+  lookupCustomer as lookupCustomerRequest,
   logout as logoutRequest,
   recordInvoicePayment as recordInvoicePaymentRequest,
   resetAdminUserPassword as resetAdminUserPasswordRequest,
@@ -85,6 +86,7 @@ import type {
   CreatePaymentInput,
   CreateProductInput,
   CreateRoleInput,
+  CustomerLookupPayload,
   CustomerPortalProfile,
   FulfillmentMethod,
   FulfillmentStatus,
@@ -1247,6 +1249,16 @@ export default function App() {
 
   const clearCart = () => setCart([]);
 
+  const lookupCustomer = async (email: string): Promise<CustomerLookupPayload> => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const payload = await lookupCustomerRequest(normalizedEmail);
+
+    setCustomerAccountEmail(normalizedEmail);
+    rememberAccountEmail(normalizedEmail);
+
+    return payload;
+  };
+
   const submitCheckout = async (input: CreateOrderInput): Promise<Order> => {
     const order = await checkoutRequest(input);
     const checkoutEmail = order.customer_email.trim().toLowerCase();
@@ -1900,7 +1912,6 @@ export default function App() {
           cartCount={cartCount}
           customerAccountEmail={customerAccountEmail}
           filteredProducts={filteredProducts}
-          customerProfiles={customerProfiles}
           isCartOpen={isCartOpen}
           isAccountOpen={isAccountOpen}
           onAddToCart={addToCart}
@@ -1910,6 +1921,7 @@ export default function App() {
           onCloseAccount={() => setIsAccountOpen(false)}
           onClearCart={clearCart}
           onCloseCart={() => setIsCartOpen(false)}
+          onLookupCustomer={lookupCustomer}
           onOpenAdmin={() => openView("admin")}
           onOpenAccount={() => {
             setIsCartOpen(false);
@@ -1921,7 +1933,6 @@ export default function App() {
           }}
           onRemoveFromCart={removeFromCart}
           onUpdateQuantity={updateQuantity}
-          orders={orders}
           searchTerm={searchTerm}
           selectedCategory={selectedCategory}
           storefront={storefront}
@@ -2011,7 +2022,6 @@ type StorefrontViewProps = {
   cart: CartItem[];
   cartCount: number;
   customerAccountEmail: string;
-  customerProfiles: CustomerPortalProfile[];
   filteredProducts: Product[];
   isAccountOpen: boolean;
   isCartOpen: boolean;
@@ -2022,12 +2032,12 @@ type StorefrontViewProps = {
   onCloseAccount: () => void;
   onClearCart: () => void;
   onCloseCart: () => void;
+  onLookupCustomer: (email: string) => Promise<CustomerLookupPayload>;
   onOpenAdmin: () => void;
   onOpenAccount: () => void;
   onOpenCart: () => void;
   onRemoveFromCart: (productId: number) => void;
   onUpdateQuantity: (productId: number, quantity: number) => void;
-  orders: Order[];
   searchTerm: string;
   selectedCategory: string;
   storefront: StorefrontPayload;
@@ -2037,7 +2047,6 @@ function StorefrontView({
   cart,
   cartCount,
   customerAccountEmail,
-  customerProfiles,
   filteredProducts,
   isAccountOpen,
   isCartOpen,
@@ -2048,12 +2057,12 @@ function StorefrontView({
   onCloseAccount,
   onClearCart,
   onCloseCart,
+  onLookupCustomer,
   onOpenAdmin,
   onOpenAccount,
   onOpenCart,
   onRemoveFromCart,
   onUpdateQuantity,
-  orders,
   searchTerm,
   selectedCategory,
   storefront
@@ -2321,8 +2330,7 @@ function StorefrontView({
       <AccountDrawer
         open={isAccountOpen}
         customerAccountEmail={customerAccountEmail}
-        orders={orders}
-        profiles={customerProfiles}
+        onLookupCustomer={onLookupCustomer}
         onClose={onCloseAccount}
       />
     </>
@@ -2332,36 +2340,93 @@ function StorefrontView({
 type AccountDrawerProps = {
   open: boolean;
   customerAccountEmail: string;
-  orders: Order[];
-  profiles: CustomerPortalProfile[];
+  onLookupCustomer: (email: string) => Promise<CustomerLookupPayload>;
   onClose: () => void;
 };
 
-function AccountDrawer({ open, customerAccountEmail, orders, profiles, onClose }: AccountDrawerProps) {
+type AccountLookupStatus = "idle" | "loading" | "success" | "error";
+
+const emptyCustomerLookupPayload: CustomerLookupPayload = {
+  profile: null,
+  orders: []
+};
+
+function AccountDrawer({
+  open,
+  customerAccountEmail,
+  onLookupCustomer,
+  onClose
+}: AccountDrawerProps) {
+  const [lookupEmail, setLookupEmail] = useState(customerAccountEmail);
+  const [lookupPayload, setLookupPayload] = useState<CustomerLookupPayload>(
+    emptyCustomerLookupPayload
+  );
+  const [lookupStatus, setLookupStatus] = useState<AccountLookupStatus>("idle");
+  const [lookupError, setLookupError] = useState("");
+
+  const runLookup = async (email: string) => {
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail) {
+      setLookupPayload(emptyCustomerLookupPayload);
+      setLookupStatus("idle");
+      setLookupError("");
+      return;
+    }
+
+    setLookupStatus("loading");
+    setLookupError("");
+
+    try {
+      const payload = await onLookupCustomer(trimmedEmail);
+      setLookupPayload(payload);
+      setLookupStatus("success");
+    } catch (error) {
+      setLookupStatus("error");
+      setLookupError(error instanceof Error ? error.message : "Unable to look up orders.");
+    }
+  };
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const storedEmail = customerAccountEmail.trim().toLowerCase();
+    setLookupEmail(storedEmail);
+
+    if (storedEmail) {
+      void runLookup(storedEmail);
+      return;
+    }
+
+    setLookupPayload(emptyCustomerLookupPayload);
+    setLookupStatus("idle");
+    setLookupError("");
+  }, [open, customerAccountEmail]);
+
   if (!open) {
     return null;
   }
 
-  const storedEmail = customerAccountEmail.trim().toLowerCase();
-  const storedAccountExists =
-    storedEmail.length > 0 &&
-    (profiles.some((item) => item.customer_email.toLowerCase() === storedEmail) ||
-      orders.some((order) => order.customer_email.toLowerCase() === storedEmail));
-  const fallbackEmail = profiles[0]?.customer_email ?? orders[0]?.customer_email ?? "";
-  const normalizedEmail = storedAccountExists
-    ? storedEmail
-    : fallbackEmail.trim().toLowerCase();
-  const profile =
-    profiles.find((item) => item.customer_email.toLowerCase() === normalizedEmail) ?? null;
-  const accountOrders = orders
-    .filter((order) => order.customer_email.toLowerCase() === normalizedEmail)
-    .sort((first, second) => Date.parse(second.created_at) - Date.parse(first.created_at));
+  const normalizedEmail =
+    lookupPayload.profile?.customer_email ?? lookupEmail.trim().toLowerCase();
+  const profile = lookupPayload.profile;
+  const accountOrders = [...lookupPayload.orders].sort(
+    (first, second) => Date.parse(second.created_at) - Date.parse(first.created_at)
+  );
   const hasAccount = profile !== null || accountOrders.length > 0;
-  const accountName = profile?.customer_name ?? accountOrders[0]?.customer_name ?? "My Account";
+  const accountName = profile?.customer_name ?? "My Account";
   const lifetimePurchaseCents =
     profile?.lifetime_purchase_cents ??
     accountOrders.reduce((sum, order) => sum + order.subtotal_cents, 0);
   const totalOrders = profile?.total_orders ?? accountOrders.length;
+  const isSearching = lookupStatus === "loading";
+
+  const submitLookup = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void runLookup(lookupEmail);
+  };
 
   const close = () => {
     onClose();
@@ -2378,7 +2443,28 @@ function AccountDrawer({ open, customerAccountEmail, orders, profiles, onClose }
           </button>
         </header>
 
-        {hasAccount ? (
+        <form className="account-lookup-form" onSubmit={submitLookup}>
+          <label>
+            <span>Email address</span>
+            <input
+              type="email"
+              value={lookupEmail}
+              onChange={(event) => setLookupEmail(event.target.value)}
+              placeholder="orders@example.com"
+              required
+            />
+          </label>
+          <button className="solid-button" disabled={isSearching}>
+            {isSearching ? "Searching..." : "Find my orders"}
+          </button>
+          {lookupStatus === "error" ? <p className="cart-feedback">{lookupError}</p> : null}
+        </form>
+
+        {isSearching && !hasAccount ? (
+          <div className="cart-empty account-empty">
+            <p>Looking up recent orders...</p>
+          </div>
+        ) : hasAccount ? (
           <div className="account-content">
             <section className="account-hero">
               <p className="eyebrow">{profile?.membership_tier ?? "Online Shopper"}</p>
@@ -2425,11 +2511,14 @@ function AccountDrawer({ open, customerAccountEmail, orders, profiles, onClose }
                           <strong>Order #{order.id}</strong>
                           <span>{formatOrderDate(order.created_at)}</span>
                         </div>
-                        <strong>{currencyFromCents(order.subtotal_cents)}</strong>
+                        <div className="account-order-total">
+                          <strong>{currencyFromCents(order.subtotal_cents)}</strong>
+                          <span>{fulfillmentLabel(order.fulfillment_status)}</span>
+                        </div>
                       </div>
                       <ul className="account-line-items">
-                        {order.items.map((item) => (
-                          <li key={`${order.id}-${item.product_id}`}>
+                        {order.items.map((item, index) => (
+                          <li key={`${order.id}-${index}-${item.product_name}`}>
                             <span>{item.product_name}</span>
                             <strong>
                               {item.quantity} x {currencyFromCents(item.unit_price_cents)}
@@ -2447,7 +2536,11 @@ function AccountDrawer({ open, customerAccountEmail, orders, profiles, onClose }
           </div>
         ) : (
           <div className="cart-empty account-empty">
-            <p>No customer account is active yet.</p>
+            <p>
+              {lookupStatus === "success"
+                ? "No orders found for this email."
+                : "No customer account is active yet."}
+            </p>
             <button className="outline-button" onClick={close}>
               Continue Shopping
             </button>

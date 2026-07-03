@@ -19,3 +19,11 @@ pub fn map_admin_query_error(context: &str, error: anyhow::Error) -> HttpError {
         "Unable to load admin records.".to_string(),
     )
 }
+
+pub fn map_public_query_error(context: &str, error: anyhow::Error) -> HttpError {
+    tracing::error!("{context}: {error:?}");
+    (
+        StatusCode::INTERNAL_SERVER_ERROR,
+        "Unable to load customer records.".to_string(),
+    )
+}

@@ -1,1 +1,3 @@
-pub use crate::models::CustomerPortalProfile;
+pub use crate::models::{
+    CustomerLookupOrder, CustomerLookupOrderItem, CustomerLookupProfile, CustomerPortalProfile,
+};

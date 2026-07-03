@@ -7,12 +7,13 @@ use crate::models::{
     ActivityItem, AdminCatalogPayload, AdminDashboardPayload, AdminIdentity, AdminMetric,
     AdminUser, AdminUserCredentials, CampaignOption, Category, CreateCategoryInput,
     CreateCustomerPortalProfileInput, CreateInvoiceFromOrderInput, CreateOrderInput,
-    CreatePaymentInput, CreateProductInput, CreateRoleInput, CustomerPortalProfile,
+    CreatePaymentInput, CreateProductInput, CreateRoleInput, CustomerLookupOrder,
+    CustomerLookupOrderItem, CustomerLookupPayload, CustomerLookupProfile, CustomerPortalProfile,
     FulfillmentItem, InventoryItem, Invoice, InvoiceLineItem, InvoicePayment, Order,
     OrderFulfillmentHistory, OrderItem, Payment, PermissionPage, PermissionsPayload, ProStat,
     Product, Promotion, RecordInvoicePaymentInput, Role, RolePagePermission, SalesChannelCount,
     SalesRecord, SalesStatusCount, SalesSummaryPayload, ServiceItem, StorefrontPayload,
-    SystemSetting, UpdateCategoryInput, UpdateCustomerPortalProfileInput,
+    StorefrontQuery, SystemSetting, UpdateCategoryInput, UpdateCustomerPortalProfileInput,
     UpdateInvoiceBillingInput, UpdateOrderFulfillmentInput, UpdatePaymentInput, UpdateProductInput,
     UpdateRoleInput, UpdateRolePagePermissionInput, UpdateSalesDetailsInput,
     UpdateSalesStatusInput, UpdateSystemSettingInput,
@@ -1396,6 +1397,88 @@ pub async fn fetch_customer_portal_profiles(pool: &PgPool) -> Result<Vec<Custome
     .fetch_all(pool)
     .await
     .map_err(Into::into)
+}
+
+pub async fn lookup_customer_portal(pool: &PgPool, email: &str) -> Result<CustomerLookupPayload> {
+    let email = email.trim();
+    let profile = sqlx::query_as::<_, CustomerLookupProfile>(
+        r#"
+        SELECT
+            customer_name,
+            customer_email,
+            membership_tier,
+            points_balance,
+            lifetime_purchase_cents,
+            total_orders,
+            last_purchase_at::text AS last_purchase_at
+        FROM customer_portal_profiles
+        WHERE lower(customer_email) = lower($1)
+        "#,
+    )
+    .bind(email)
+    .fetch_optional(pool)
+    .await?;
+
+    let order_rows = sqlx::query_as::<_, (i32, i32, String, String)>(
+        r#"
+        SELECT
+            id,
+            subtotal_cents,
+            fulfillment_status,
+            created_at::text AS created_at
+        FROM orders
+        WHERE lower(customer_email) = lower($1)
+        ORDER BY created_at DESC, id DESC
+        LIMIT 20
+        "#,
+    )
+    .bind(email)
+    .fetch_all(pool)
+    .await?;
+
+    let order_ids = order_rows.iter().map(|(id, ..)| *id).collect::<Vec<_>>();
+    let item_rows = if order_ids.is_empty() {
+        Vec::new()
+    } else {
+        sqlx::query_as::<_, (i32, String, i32, i32)>(
+            r#"
+            SELECT order_id, product_name, unit_price_cents, quantity
+            FROM order_items
+            WHERE order_id = ANY($1)
+            ORDER BY order_id, id
+            "#,
+        )
+        .bind(order_ids.as_slice())
+        .fetch_all(pool)
+        .await?
+    };
+
+    let mut items_by_order: HashMap<i32, Vec<CustomerLookupOrderItem>> = HashMap::new();
+    for (order_id, product_name, unit_price_cents, quantity) in item_rows {
+        items_by_order
+            .entry(order_id)
+            .or_default()
+            .push(CustomerLookupOrderItem {
+                product_name,
+                unit_price_cents,
+                quantity,
+            });
+    }
+
+    let orders = order_rows
+        .into_iter()
+        .map(
+            |(id, subtotal_cents, fulfillment_status, created_at)| CustomerLookupOrder {
+                id,
+                subtotal_cents,
+                fulfillment_status,
+                created_at,
+                items: items_by_order.remove(&id).unwrap_or_default(),
+            },
+        )
+        .collect();
+
+    Ok(CustomerLookupPayload { profile, orders })
 }
 
 pub async fn create_customer_portal_profile(

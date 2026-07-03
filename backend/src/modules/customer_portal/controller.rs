@@ -1,6 +1,6 @@
 use axum::{
     Json,
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
 };
 
@@ -11,10 +11,34 @@ use crate::{
 };
 
 use super::{
-    dto::{CreateCustomerPortalProfileInput, UpdateCustomerPortalProfileInput},
+    dto::{
+        CreateCustomerPortalProfileInput, CustomerLookupQuery, UpdateCustomerPortalProfileInput,
+    },
     model::CustomerPortalProfile,
     service,
 };
+
+pub async fn lookup_customer_portal(
+    State(state): State<AppState>,
+    Query(query): Query<CustomerLookupQuery>,
+) -> Result<Json<super::dto::CustomerLookupPayload>, error::HttpError> {
+    let email = query.email.trim();
+    if email.is_empty() {
+        return Err((StatusCode::BAD_REQUEST, "Email is required.".to_string()));
+    }
+
+    if !email.contains('@') {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Email must be a valid address.".to_string(),
+        ));
+    }
+
+    service::lookup_customer_portal(&state.pool, email)
+        .await
+        .map(Json)
+        .map_err(|error| error::map_public_query_error("customer lookup query failed", error))
+}
 
 pub async fn customer_portal_profiles(
     State(state): State<AppState>,
