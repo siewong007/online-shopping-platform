@@ -376,7 +376,10 @@ async fn fulfillment_status_flow_writes_history_and_advances_sales(pool: PgPool)
     .fetch_one(&pool)
     .await
     .expect("sales meta should load");
-    assert_eq!(sales_status, ("fulfilled".to_string(), "paid".to_string()));
+    assert_eq!(
+        sales_status,
+        ("fulfilled".to_string(), "unpaid".to_string())
+    );
 
     let (terminal_status, _) = common::request(
         app.clone(),
@@ -416,6 +419,19 @@ async fn fulfillment_status_flow_writes_history_and_advances_sales(pool: PgPool)
     )
     .await;
     assert_eq!(cancel_status, StatusCode::OK, "{cancel_body}");
+
+    let cancel_sales_status = sqlx::query_scalar::<_, String>(
+        r#"
+        SELECT status
+        FROM order_sales_meta
+        WHERE order_id = $1
+        "#,
+    )
+    .bind(cancel_order_id as i32)
+    .fetch_one(&pool)
+    .await
+    .expect("sales meta should load");
+    assert_eq!(cancel_sales_status, "cancelled");
 
     let (canceled_terminal_status, _) = common::request(
         app,
@@ -632,4 +648,51 @@ async fn settings_update_roundtrip(pool: PgPool) {
         })
         .expect("updated setting should be present");
     assert_eq!(setting["value"], "Project Depot Test");
+}
+
+#[sqlx::test]
+async fn dashboard_live_metrics_reflect_orders_and_unpaid_invoices(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "metrics-admin", "secret123").await;
+    let app = common::app(pool);
+    let token = common::login(app.clone(), "metrics-admin", "secret123").await;
+
+    let (order_status, order_body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/checkout",
+        None,
+        Some(json!({
+            "customer_name": "Metrics Buyer",
+            "customer_email": "metrics-buyer@example.com",
+            "items": [{ "product_id": 1, "quantity": 1 }]
+        })),
+    )
+    .await;
+    assert_eq!(order_status, StatusCode::CREATED, "{order_body}");
+    let order_id = order_body["id"].as_i64().expect("order id");
+    let order_subtotal = order_body["subtotal_cents"].as_i64().expect("subtotal");
+
+    let (invoice_status, invoice_body) = common::request(
+        app.clone(),
+        Method::POST,
+        &format!("/api/admin/invoices/from-order/{order_id}"),
+        Some(&token),
+        Some(json!({ "discount_cents": 0 })),
+    )
+    .await;
+    assert_eq!(invoice_status, StatusCode::CREATED, "{invoice_body}");
+    let invoice_total = invoice_body["total_cents"].as_i64().expect("invoice total");
+
+    let (status, body) =
+        common::request(app, Method::GET, "/api/admin/dashboard", Some(&token), None).await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+
+    let live = &body["live_metrics"];
+    assert_eq!(live["revenue_today_cents"].as_i64(), Some(order_subtotal));
+    assert_eq!(live["orders_awaiting_fulfillment"].as_i64(), Some(1));
+    assert_eq!(live["unpaid_invoice_count"].as_i64(), Some(1));
+    assert_eq!(
+        live["unpaid_invoice_amount_cents"].as_i64(),
+        Some(invoice_total)
+    );
 }

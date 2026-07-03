@@ -1,4 +1,4 @@
-import { type FormEvent, startTransition, useDeferredValue, useEffect, useState } from "react";
+import { type FormEvent, startTransition, useEffect, useRef, useState } from "react";
 
 import {
   changeOwnPassword as changeOwnPasswordRequest,
@@ -72,6 +72,7 @@ import type {
   AdminDashboardPayload,
   AdminLoginInput,
   AdminMePayload,
+  AdminMetric,
   AdminResetPasswordInput,
   AdminUser,
   CampaignOption,
@@ -91,6 +92,7 @@ import type {
   FulfillmentMethod,
   FulfillmentStatus,
   Invoice,
+  LiveDashboardMetrics,
   Order,
   Payment,
   PermissionsPayload,
@@ -102,6 +104,7 @@ import type {
   SalesSummaryPayload,
   SetAdminUserActiveInput,
   StorefrontPayload,
+  StorefrontSort,
   SystemSetting,
   UpdateAdminUserProfileInput,
   UpdateCategoryInput,
@@ -217,6 +220,38 @@ const highValueAccounts = [
   { name: "Northline Renovation", detail: "Kitchen appliance quote waiting on approval" },
   { name: "Summit Install Group", detail: "Bath vanity install calendar nearly full" }
 ];
+
+// Derives the Overview KPI cards from live aggregates. Only cards backed by a
+// real number are emitted — low-stock stays out until inventory (§3) exists.
+function buildLiveMetricCards(live: LiveDashboardMetrics): AdminMetric[] {
+  const revenueDelta =
+    live.revenue_yesterday_cents > 0
+      ? ((live.revenue_today_cents - live.revenue_yesterday_cents) /
+          live.revenue_yesterday_cents) *
+        100
+      : null;
+
+  return [
+    {
+      label: "Revenue today",
+      value: currencyFromCents(live.revenue_today_cents),
+      detail:
+        revenueDelta === null
+          ? "No sales recorded yesterday"
+          : `${revenueDelta >= 0 ? "+" : ""}${revenueDelta.toFixed(1)}% vs yesterday`
+    },
+    {
+      label: "Orders awaiting fulfillment",
+      value: live.orders_awaiting_fulfillment.toLocaleString(),
+      detail: "In the pick, pack and ship pipeline"
+    },
+    {
+      label: "Unpaid invoices",
+      value: live.unpaid_invoice_count.toLocaleString(),
+      detail: `${currencyFromCents(live.unpaid_invoice_amount_cents)} outstanding`
+    }
+  ];
+}
 
 function readStoredAccountEmail(): string {
   try {
@@ -927,6 +962,9 @@ export default function App() {
   const [dashboard, setDashboard] = useState<AdminDashboardPayload | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [minPriceCents, setMinPriceCents] = useState<number | null>(null);
+  const [maxPriceCents, setMaxPriceCents] = useState<number | null>(null);
+  const [sortOption, setSortOption] = useState<StorefrontSort>("featured");
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
       const stored = window.localStorage.getItem(CART_STORAGE_KEY);
@@ -959,7 +997,7 @@ export default function App() {
   const [adminCatalog, setAdminCatalog] = useState<AdminCatalogPayload | null>(null);
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
 
-  const deferredSearchTerm = useDeferredValue(searchTerm);
+  const isInitialStorefrontFilter = useRef(true);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   useEffect(() => {
@@ -971,6 +1009,25 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (isInitialStorefrontFilter.current) {
+      isInitialStorefrontFilter.current = false;
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      void fetchStorefront({
+        q: searchTerm,
+        category: selectedCategory,
+        minPriceCents: minPriceCents ?? undefined,
+        maxPriceCents: maxPriceCents ?? undefined,
+        sort: sortOption
+      }).then(setStorefront);
+    }, 300);
+
+    return () => window.clearTimeout(timeout);
+  }, [searchTerm, selectedCategory, minPriceCents, maxPriceCents, sortOption]);
+
+  useEffect(() => {
     const onPopState = () => {
       setView(window.location.pathname === "/admin" ? "admin" : "store");
     };
@@ -979,22 +1036,7 @@ export default function App() {
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
-  const filteredProducts = !storefront
-    ? []
-    : storefront.products.filter((product) => {
-        const matchesCategory =
-          selectedCategory === "all" || product.category_slug === selectedCategory;
-
-        const search = deferredSearchTerm.trim().toLowerCase();
-        const matchesSearch =
-          search.length === 0 ||
-          product.name.toLowerCase().includes(search) ||
-          product.description.toLowerCase().includes(search) ||
-          product.badge.toLowerCase().includes(search) ||
-          product.tone.toLowerCase().includes(search);
-
-        return matchesCategory && matchesSearch;
-      });
+  const filteredProducts = storefront?.products ?? [];
 
   const fulfillmentByStage = groupedFulfillment(orders);
 
@@ -1253,8 +1295,10 @@ export default function App() {
     const normalizedEmail = email.trim().toLowerCase();
     const payload = await lookupCustomerRequest(normalizedEmail);
 
-    setCustomerAccountEmail(normalizedEmail);
-    rememberAccountEmail(normalizedEmail);
+    if (payload.profile !== null || payload.orders.length > 0) {
+      setCustomerAccountEmail(normalizedEmail);
+      rememberAccountEmail(normalizedEmail);
+    }
 
     return payload;
   };
@@ -1914,9 +1958,14 @@ export default function App() {
           filteredProducts={filteredProducts}
           isCartOpen={isCartOpen}
           isAccountOpen={isAccountOpen}
+          maxPriceCents={maxPriceCents}
+          minPriceCents={minPriceCents}
           onAddToCart={addToCart}
           onChangeCategory={setSelectedCategory}
+          onChangeMaxPrice={setMaxPriceCents}
+          onChangeMinPrice={setMinPriceCents}
           onChangeSearch={setSearchTerm}
+          onChangeSort={setSortOption}
           onCheckout={submitCheckout}
           onCloseAccount={() => setIsAccountOpen(false)}
           onClearCart={clearCart}
@@ -1935,6 +1984,7 @@ export default function App() {
           onUpdateQuantity={updateQuantity}
           searchTerm={searchTerm}
           selectedCategory={selectedCategory}
+          sortOption={sortOption}
           storefront={storefront}
         />
       ) : adminAuth === "unauthenticated" ? (
@@ -2025,9 +2075,14 @@ type StorefrontViewProps = {
   filteredProducts: Product[];
   isAccountOpen: boolean;
   isCartOpen: boolean;
+  maxPriceCents: number | null;
+  minPriceCents: number | null;
   onAddToCart: (product: Product) => void;
   onChangeCategory: (slug: string) => void;
+  onChangeMaxPrice: (value: number | null) => void;
+  onChangeMinPrice: (value: number | null) => void;
   onChangeSearch: (value: string) => void;
+  onChangeSort: (value: StorefrontSort) => void;
   onCheckout: (input: CreateOrderInput) => Promise<Order>;
   onCloseAccount: () => void;
   onClearCart: () => void;
@@ -2040,6 +2095,7 @@ type StorefrontViewProps = {
   onUpdateQuantity: (productId: number, quantity: number) => void;
   searchTerm: string;
   selectedCategory: string;
+  sortOption: StorefrontSort;
   storefront: StorefrontPayload;
 };
 
@@ -2050,9 +2106,14 @@ function StorefrontView({
   filteredProducts,
   isAccountOpen,
   isCartOpen,
+  maxPriceCents,
+  minPriceCents,
   onAddToCart,
   onChangeCategory,
+  onChangeMaxPrice,
+  onChangeMinPrice,
   onChangeSearch,
+  onChangeSort,
   onCheckout,
   onCloseAccount,
   onClearCart,
@@ -2065,6 +2126,7 @@ function StorefrontView({
   onUpdateQuantity,
   searchTerm,
   selectedCategory,
+  sortOption,
   storefront
 }: StorefrontViewProps) {
   const activeCategory =
@@ -2221,6 +2283,47 @@ function StorefrontView({
               </button>
             ))}
           </div>
+
+          <div className="filter-bar">
+            <label className="filter-field">
+              <span>Min price</span>
+              <input
+                type="number"
+                min="0"
+                placeholder="$0"
+                value={minPriceCents == null ? "" : minPriceCents / 100}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  onChangeMinPrice(value === "" ? null : Math.round(Number(value) * 100));
+                }}
+              />
+            </label>
+            <label className="filter-field">
+              <span>Max price</span>
+              <input
+                type="number"
+                min="0"
+                placeholder="Any"
+                value={maxPriceCents == null ? "" : maxPriceCents / 100}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  onChangeMaxPrice(value === "" ? null : Math.round(Number(value) * 100));
+                }}
+              />
+            </label>
+            <label className="filter-field">
+              <span>Sort by</span>
+              <select
+                value={sortOption}
+                onChange={(event) => onChangeSort(event.target.value as StorefrontSort)}
+              >
+                <option value="featured">Featured</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+                <option value="name">Name A-Z</option>
+              </select>
+            </label>
+          </div>
         </section>
 
         <section className="savings-band">
@@ -2363,6 +2466,7 @@ function AccountDrawer({
   );
   const [lookupStatus, setLookupStatus] = useState<AccountLookupStatus>("idle");
   const [lookupError, setLookupError] = useState("");
+  const lastAutoLookupEmailRef = useRef<string | null>(null);
 
   const runLookup = async (email: string) => {
     const trimmedEmail = email.trim();
@@ -2393,6 +2497,15 @@ function AccountDrawer({
     }
 
     const storedEmail = customerAccountEmail.trim().toLowerCase();
+
+    // Skip when this is the email a manual submit (or a prior run of this
+    // effect) already fetched, so a successful lookupCustomer call that
+    // updates customerAccountEmail doesn't trigger a second request.
+    if (storedEmail === (lastAutoLookupEmailRef.current ?? "")) {
+      return;
+    }
+
+    lastAutoLookupEmailRef.current = storedEmail;
     setLookupEmail(storedEmail);
 
     if (storedEmail) {
@@ -2425,6 +2538,7 @@ function AccountDrawer({
 
   const submitLookup = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    lastAutoLookupEmailRef.current = lookupEmail.trim().toLowerCase();
     void runLookup(lookupEmail);
   };
 
@@ -3098,7 +3212,7 @@ function AdminView({
         {adminTab === "overview" ? (
           <section className="admin-section active">
             <div className="metric-grid">
-              {dashboard.metrics.map((metric) => (
+              {buildLiveMetricCards(dashboard.live_metrics).map((metric) => (
                 <article className="metric-card" key={metric.label}>
                   <p>{metric.label}</p>
                   <strong>{metric.value}</strong>

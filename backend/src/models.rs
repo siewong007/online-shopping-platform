@@ -124,9 +124,19 @@ pub struct ActivityItem {
     pub detail: String,
 }
 
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct LiveDashboardMetrics {
+    pub revenue_today_cents: i64,
+    pub revenue_yesterday_cents: i64,
+    pub orders_awaiting_fulfillment: i64,
+    pub unpaid_invoice_count: i64,
+    pub unpaid_invoice_amount_cents: i64,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct AdminDashboardPayload {
     pub metrics: Vec<AdminMetric>,
+    pub live_metrics: LiveDashboardMetrics,
     pub inventory: Vec<InventoryItem>,
     pub fulfillment: Vec<FulfillmentItem>,
     pub campaigns: Vec<CampaignOption>,
@@ -558,4 +568,21 @@ pub struct RecordInvoicePaymentInput {
     pub amount_cents: i32,
     pub method: String,
     pub note: String,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct AuditEvent {
+    pub id: i32,
+    pub actor: String,
+    pub action: String,
+    pub entity_type: String,
+    pub entity_id: String,
+    pub detail: String,
+    pub happened_at: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct AuditEventQuery {
+    pub limit: Option<i64>,
+    pub before: Option<i32>,
 }

@@ -8,6 +8,8 @@ export type {
   Promotion,
   ServiceItem,
   StorefrontPayload,
+  StorefrontQueryParams,
+  StorefrontSort,
   UpdateProductInput
 } from "./modules/storefront/types";
 
@@ -29,7 +31,8 @@ export type {
   AdminMetric,
   CampaignOption,
   FulfillmentItem,
-  InventoryItem
+  InventoryItem,
+  LiveDashboardMetrics
 } from "./modules/dashboard/types";
 
 export type {

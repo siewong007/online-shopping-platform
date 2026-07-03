@@ -531,6 +531,36 @@ ul {
   color: rgba(255, 255, 255, 0.8);
 }
 
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-top: 1.15rem;
+}
+
+.filter-field {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.65rem 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.filter-field span {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.filter-field input,
+.filter-field select {
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+}
+
 .savings-band,
 .pro-section,
 .admin-topbar {
