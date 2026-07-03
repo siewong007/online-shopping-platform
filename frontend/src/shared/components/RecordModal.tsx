@@ -13,7 +13,15 @@ type RecordModalProps = {
   title: string;
 };
 
-type RecordFormControl = "checkbox" | "email" | "number" | "select" | "text" | "textarea" | "toggle";
+type RecordFormControl =
+  | "checkbox"
+  | "email"
+  | "number"
+  | "password"
+  | "select"
+  | "text"
+  | "textarea"
+  | "toggle";
 
 type RecordFormOption = {
   label: string;

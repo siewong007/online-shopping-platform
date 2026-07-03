@@ -10,7 +10,11 @@ use crate::{
     modules::{auth::model::AdminIdentity, permissions},
 };
 
-use super::{dto::CreateOrderInput, model::Order, service};
+use super::{
+    dto::{CreateOrderInput, UpdateOrderFulfillmentInput},
+    model::Order,
+    service,
+};
 
 pub async fn admin_orders(
     State(state): State<AppState>,
@@ -89,6 +93,27 @@ pub async fn admin_delete_order(
     service::delete_order(&state.pool, order_id)
         .await
         .map(|()| StatusCode::NO_CONTENT)
+        .map_err(error::map_admin_error)
+}
+
+pub async fn admin_update_order_fulfillment(
+    State(state): State<AppState>,
+    Path(order_id): Path<i32>,
+    identity: AdminIdentity,
+    Json(input): Json<UpdateOrderFulfillmentInput>,
+) -> Result<Json<Order>, error::HttpError> {
+    permissions::service::ensure_permission(
+        &state.pool,
+        &identity,
+        permissions::model::ADMIN_ORDERS_PAGE,
+        permissions::model::PermissionAction::Update,
+        "order",
+    )
+    .await?;
+
+    service::update_order_fulfillment(&state.pool, order_id, &input, &identity.username)
+        .await
+        .map(Json)
         .map_err(error::map_admin_error)
 }
 

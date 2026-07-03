@@ -103,6 +103,10 @@ pub async fn login(pool: &PgPool, input: &AdminLoginInput) -> Result<AdminAuthPa
         ));
     }
 
+    if let Err(error) = repository::delete_expired_admin_sessions(pool).await {
+        tracing::warn!("failed to purge expired admin sessions: {error:?}");
+    }
+
     let token = generate_session_token();
     repository::insert_admin_session(pool, admin_user.id, &token)
         .await

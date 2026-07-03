@@ -8,8 +8,8 @@ use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use crate::{
     app_state::AppState,
     modules::{
-        auth, catalog, customer_portal, dashboard, health, invoices, orders, payments, permissions,
-        sales, settings, storefront,
+        admin_users, auth, catalog, customer_portal, dashboard, health, invoices, orders, payments,
+        permissions, sales, settings, storefront,
     },
 };
 
@@ -26,6 +26,26 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
         .route("/api/admin/logout", post(auth::controller::logout))
         .route("/api/admin/me", get(auth::controller::me))
         .route(
+            "/api/admin/me/password",
+            put(admin_users::controller::change_own_password),
+        )
+        .route(
+            "/api/admin/users",
+            get(admin_users::controller::list_users).post(admin_users::controller::create_user),
+        )
+        .route(
+            "/api/admin/users/{user_id}",
+            put(admin_users::controller::update_profile),
+        )
+        .route(
+            "/api/admin/users/{user_id}/status",
+            put(admin_users::controller::set_active),
+        )
+        .route(
+            "/api/admin/users/{user_id}/password",
+            put(admin_users::controller::admin_reset_password),
+        )
+        .route(
             "/api/admin/dashboard",
             get(dashboard::controller::admin_dashboard),
         )
@@ -37,6 +57,10 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
             "/api/admin/orders/{order_id}",
             put(orders::controller::admin_update_order)
                 .delete(orders::controller::admin_delete_order),
+        )
+        .route(
+            "/api/admin/orders/{order_id}/fulfillment",
+            put(orders::controller::admin_update_order_fulfillment),
         )
         .route(
             "/api/admin/payments",

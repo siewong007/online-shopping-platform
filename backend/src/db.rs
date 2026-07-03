@@ -8,14 +8,17 @@ use crate::models::{
     AdminUser, AdminUserCredentials, CampaignOption, Category, CreateCategoryInput,
     CreateCustomerPortalProfileInput, CreateInvoiceFromOrderInput, CreateOrderInput,
     CreatePaymentInput, CreateProductInput, CreateRoleInput, CustomerPortalProfile,
-    FulfillmentItem, InventoryItem, Invoice, InvoiceLineItem, InvoicePayment, Order, OrderItem,
-    Payment, PermissionPage, PermissionsPayload, ProStat, Product, Promotion,
-    RecordInvoicePaymentInput, Role, RolePagePermission, SalesChannelCount, SalesRecord,
-    SalesStatusCount, SalesSummaryPayload, ServiceItem, StorefrontPayload, SystemSetting,
-    UpdateCategoryInput, UpdateCustomerPortalProfileInput, UpdateInvoiceBillingInput,
-    UpdatePaymentInput, UpdateProductInput, UpdateRoleInput, UpdateRolePagePermissionInput,
-    UpdateSalesDetailsInput, UpdateSalesStatusInput, UpdateSystemSettingInput,
+    FulfillmentItem, InventoryItem, Invoice, InvoiceLineItem, InvoicePayment, Order,
+    OrderFulfillmentHistory, OrderItem, Payment, PermissionPage, PermissionsPayload, ProStat,
+    Product, Promotion, RecordInvoicePaymentInput, Role, RolePagePermission, SalesChannelCount,
+    SalesRecord, SalesStatusCount, SalesSummaryPayload, ServiceItem, StorefrontPayload,
+    SystemSetting, UpdateCategoryInput, UpdateCustomerPortalProfileInput,
+    UpdateInvoiceBillingInput, UpdateOrderFulfillmentInput, UpdatePaymentInput, UpdateProductInput,
+    UpdateRoleInput, UpdateRolePagePermissionInput, UpdateSalesDetailsInput,
+    UpdateSalesStatusInput, UpdateSystemSettingInput,
 };
+
+const LAST_SUPER_ADMIN_MESSAGE: &str = "Cannot deactivate or demote the only active Super Admin.";
 
 #[derive(Debug, Clone, Copy)]
 pub enum PermissionAction {
@@ -23,6 +26,77 @@ pub enum PermissionAction {
     Read,
     Update,
     Delete,
+}
+
+const FULFILLMENT_METHODS: &[&str] = &["pickup", "delivery"];
+const FULFILLMENT_STATUSES: &[&str] = &[
+    "received",
+    "picking",
+    "packed",
+    "ready_for_pickup",
+    "out_for_delivery",
+    "completed",
+    "delivered",
+    "canceled",
+];
+const FULFILLMENT_PICKUP_TRANSITIONS: &[(&str, &[&str])] = &[
+    ("received", &["picking", "canceled"]),
+    ("picking", &["packed", "canceled"]),
+    ("packed", &["ready_for_pickup", "canceled"]),
+    ("ready_for_pickup", &["completed", "canceled"]),
+    ("completed", &[]),
+    ("canceled", &[]),
+];
+const FULFILLMENT_DELIVERY_TRANSITIONS: &[(&str, &[&str])] = &[
+    ("received", &["picking", "canceled"]),
+    ("picking", &["packed", "canceled"]),
+    ("packed", &["out_for_delivery", "canceled"]),
+    ("out_for_delivery", &["delivered", "canceled"]),
+    ("delivered", &[]),
+    ("canceled", &[]),
+];
+
+fn normalize_fulfillment_method(method: Option<&str>) -> Result<String> {
+    let method = method.unwrap_or("pickup").trim().to_lowercase();
+
+    if !FULFILLMENT_METHODS.contains(&method.as_str()) {
+        bail!("Unknown fulfillment method {method}.");
+    }
+
+    Ok(method)
+}
+
+fn ensure_fulfillment_status_matches_method(status: &str, method: &str) -> Result<()> {
+    let valid_for_method = match method {
+        "pickup" => !matches!(status, "out_for_delivery" | "delivered"),
+        "delivery" => !matches!(status, "ready_for_pickup" | "completed"),
+        _ => false,
+    };
+
+    if !valid_for_method {
+        bail!("Fulfillment status {status} is not valid for {method} orders.");
+    }
+
+    Ok(())
+}
+
+fn ensure_valid_fulfillment_transition(from: &str, to: &str, method: &str) -> Result<()> {
+    let transitions = match method {
+        "pickup" => FULFILLMENT_PICKUP_TRANSITIONS,
+        "delivery" => FULFILLMENT_DELIVERY_TRANSITIONS,
+        _ => &[][..],
+    };
+    let allowed = transitions
+        .iter()
+        .find(|(status, _)| *status == from)
+        .map(|(_, next)| *next)
+        .unwrap_or(&[]);
+
+    if !allowed.contains(&to) {
+        bail!("Cannot move from {from} to {to}.");
+    }
+
+    Ok(())
 }
 
 pub async fn fetch_storefront(pool: &PgPool) -> Result<StorefrontPayload> {
@@ -429,6 +503,7 @@ pub async fn delete_product(pool: &PgPool, product_id: i32) -> Result<()> {
 pub async fn create_order(pool: &PgPool, input: &CreateOrderInput) -> Result<Order> {
     let customer_name = input.customer_name.trim();
     let customer_email = input.customer_email.trim();
+    let fulfillment_method = normalize_fulfillment_method(input.fulfillment_method.as_deref())?;
 
     if customer_name.is_empty() || customer_email.is_empty() {
         bail!("Customer name and email are required.");
@@ -479,18 +554,20 @@ pub async fn create_order(pool: &PgPool, input: &CreateOrderInput) -> Result<Ord
     let subtotal_cents = i32::try_from(subtotal_cents)
         .map_err(|_| anyhow::anyhow!("Order subtotal exceeds the supported maximum."))?;
 
-    let (order_id, created_at) = sqlx::query_as::<_, (i32, String)>(
-        r#"
-        INSERT INTO orders (customer_name, customer_email, subtotal_cents)
-        VALUES ($1, $2, $3)
-        RETURNING id, created_at::text
+    let (order_id, fulfillment_status, fulfillment_method, created_at) =
+        sqlx::query_as::<_, (i32, String, String, String)>(
+            r#"
+        INSERT INTO orders (customer_name, customer_email, subtotal_cents, fulfillment_method)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id, fulfillment_status, fulfillment_method, created_at::text
         "#,
-    )
-    .bind(customer_name)
-    .bind(customer_email)
-    .bind(subtotal_cents)
-    .fetch_one(&mut *tx)
-    .await?;
+        )
+        .bind(customer_name)
+        .bind(customer_email)
+        .bind(subtotal_cents)
+        .bind(&fulfillment_method)
+        .fetch_one(&mut *tx)
+        .await?;
 
     for item in &line_items {
         sqlx::query(
@@ -551,15 +628,25 @@ pub async fn create_order(pool: &PgPool, input: &CreateOrderInput) -> Result<Ord
         customer_name: customer_name.to_string(),
         customer_email: customer_email.to_string(),
         subtotal_cents,
+        fulfillment_status,
+        fulfillment_method,
         created_at,
         items: line_items,
+        fulfillment_history: Vec::new(),
     })
 }
 
 pub async fn fetch_orders(pool: &PgPool) -> Result<Vec<Order>> {
-    let orders = sqlx::query_as::<_, (i32, String, String, i32, String)>(
+    let orders = sqlx::query_as::<_, (i32, String, String, i32, String, String, String)>(
         r#"
-        SELECT id, customer_name, customer_email, subtotal_cents, created_at::text
+        SELECT
+            id,
+            customer_name,
+            customer_email,
+            subtotal_cents,
+            fulfillment_status,
+            fulfillment_method,
+            created_at::text
         FROM orders
         ORDER BY created_at DESC
         "#,
@@ -587,19 +674,81 @@ pub async fn fetch_orders(pool: &PgPool) -> Result<Vec<Order>> {
         });
     }
 
+    let order_ids = orders.iter().map(|(id, ..)| *id).collect::<Vec<_>>();
+    let mut histories_by_order = fetch_fulfillment_histories_for_orders(pool, &order_ids).await?;
+
     Ok(orders
         .into_iter()
         .map(
-            |(id, customer_name, customer_email, subtotal_cents, created_at)| Order {
+            |(
                 id,
                 customer_name,
                 customer_email,
                 subtotal_cents,
+                fulfillment_status,
+                fulfillment_method,
+                created_at,
+            )| Order {
+                id,
+                customer_name,
+                customer_email,
+                subtotal_cents,
+                fulfillment_status,
+                fulfillment_method,
                 created_at,
                 items: items_by_order.remove(&id).unwrap_or_default(),
+                fulfillment_history: histories_by_order.remove(&id).unwrap_or_default(),
             },
         )
         .collect())
+}
+
+async fn fetch_fulfillment_histories_for_orders(
+    pool: &PgPool,
+    order_ids: &[i32],
+) -> Result<HashMap<i32, Vec<OrderFulfillmentHistory>>> {
+    if order_ids.is_empty() {
+        return Ok(HashMap::new());
+    }
+
+    let rows = sqlx::query_as::<_, OrderFulfillmentHistory>(
+        r#"
+        SELECT
+            id,
+            order_id,
+            from_status,
+            to_status,
+            note,
+            changed_by,
+            happened_at::text AS happened_at
+        FROM order_fulfillment_history
+        WHERE order_id = ANY($1)
+        ORDER BY order_id, happened_at, id
+        "#,
+    )
+    .bind(order_ids)
+    .fetch_all(pool)
+    .await?;
+
+    let mut histories_by_order: HashMap<i32, Vec<OrderFulfillmentHistory>> = HashMap::new();
+    for row in rows {
+        histories_by_order
+            .entry(row.order_id)
+            .or_default()
+            .push(row);
+    }
+
+    Ok(histories_by_order)
+}
+
+async fn fetch_fulfillment_history_for_order(
+    pool: &PgPool,
+    order_id: i32,
+) -> Result<Vec<OrderFulfillmentHistory>> {
+    Ok(fetch_fulfillment_histories_for_orders(pool, &[order_id])
+        .await?
+        .remove(&order_id)
+        .unwrap_or_default())
 }
 
 fn validate_order_input(input: &CreateOrderInput) -> Result<(&str, &str)> {
@@ -666,29 +815,37 @@ async fn resolve_order_line_items(
 pub async fn update_order(pool: &PgPool, order_id: i32, input: &CreateOrderInput) -> Result<Order> {
     let (customer_name, customer_email) = validate_order_input(input)?;
     let (subtotal_cents, line_items) = resolve_order_line_items(pool, input).await?;
+    let fulfillment_method = input
+        .fulfillment_method
+        .as_deref()
+        .map(|method| normalize_fulfillment_method(Some(method)))
+        .transpose()?;
     let tax_rate_bps = fetch_setting_int(pool, "sales.default_tax_rate_bps", 0).await?;
     let mut tx = pool.begin().await?;
 
-    let created_at = sqlx::query_scalar::<_, String>(
+    let order_state = sqlx::query_as::<_, (String, String, String)>(
         r#"
         UPDATE orders
         SET customer_name = $1,
             customer_email = $2,
-            subtotal_cents = $3
-        WHERE id = $4
-        RETURNING created_at::text
+            subtotal_cents = $3,
+            fulfillment_method = COALESCE($4, fulfillment_method)
+        WHERE id = $5
+        RETURNING fulfillment_status, fulfillment_method, created_at::text
         "#,
     )
     .bind(customer_name)
     .bind(customer_email)
     .bind(subtotal_cents)
+    .bind(fulfillment_method.as_deref())
     .bind(order_id)
     .fetch_optional(&mut *tx)
     .await?;
 
-    let Some(created_at) = created_at else {
+    let Some((fulfillment_status, fulfillment_method, created_at)) = order_state else {
         bail!("Order {order_id} does not exist.");
     };
+    ensure_fulfillment_status_matches_method(&fulfillment_status, &fulfillment_method)?;
 
     sqlx::query(
         r#"
@@ -750,8 +907,11 @@ pub async fn update_order(pool: &PgPool, order_id: i32, input: &CreateOrderInput
         customer_name: customer_name.to_string(),
         customer_email: customer_email.to_string(),
         subtotal_cents,
+        fulfillment_status,
+        fulfillment_method,
         created_at,
         items: line_items,
+        fulfillment_history: fetch_fulfillment_history_for_order(pool, order_id).await?,
     })
 }
 
@@ -774,9 +934,16 @@ pub async fn delete_order(pool: &PgPool, order_id: i32) -> Result<()> {
 }
 
 pub async fn fetch_order_by_id(pool: &PgPool, order_id: i32) -> Result<Option<Order>> {
-    let order = sqlx::query_as::<_, (i32, String, String, i32, String)>(
+    let order = sqlx::query_as::<_, (i32, String, String, i32, String, String, String)>(
         r#"
-        SELECT id, customer_name, customer_email, subtotal_cents, created_at::text
+        SELECT
+            id,
+            customer_name,
+            customer_email,
+            subtotal_cents,
+            fulfillment_status,
+            fulfillment_method,
+            created_at::text
         FROM orders
         WHERE id = $1
         "#,
@@ -785,7 +952,16 @@ pub async fn fetch_order_by_id(pool: &PgPool, order_id: i32) -> Result<Option<Or
     .fetch_optional(pool)
     .await?;
 
-    let Some((id, customer_name, customer_email, subtotal_cents, created_at)) = order else {
+    let Some((
+        id,
+        customer_name,
+        customer_email,
+        subtotal_cents,
+        fulfillment_status,
+        fulfillment_method,
+        created_at,
+    )) = order
+    else {
         return Ok(None);
     };
 
@@ -806,6 +982,8 @@ pub async fn fetch_order_by_id(pool: &PgPool, order_id: i32) -> Result<Option<Or
         customer_name,
         customer_email,
         subtotal_cents,
+        fulfillment_status,
+        fulfillment_method,
         created_at,
         items: items
             .into_iter()
@@ -818,7 +996,148 @@ pub async fn fetch_order_by_id(pool: &PgPool, order_id: i32) -> Result<Option<Or
                 },
             )
             .collect(),
+        fulfillment_history: fetch_fulfillment_history_for_order(pool, order_id).await?,
     }))
+}
+
+pub async fn update_order_fulfillment(
+    pool: &PgPool,
+    order_id: i32,
+    input: &UpdateOrderFulfillmentInput,
+    changed_by: &str,
+) -> Result<Order> {
+    let to_status = input.to_status.trim().to_lowercase();
+    if !FULFILLMENT_STATUSES.contains(&to_status.as_str()) {
+        bail!("Unknown fulfillment status {to_status}.");
+    }
+
+    let changed_by = match changed_by.trim() {
+        "" => "system",
+        value => value,
+    };
+    let note = input.note.trim();
+    let mut tx = pool.begin().await?;
+
+    let order_state = sqlx::query_as::<_, (String, String)>(
+        r#"
+        SELECT fulfillment_status, fulfillment_method
+        FROM orders
+        WHERE id = $1
+        FOR UPDATE
+        "#,
+    )
+    .bind(order_id)
+    .fetch_optional(&mut *tx)
+    .await?;
+
+    let Some((current_status, fulfillment_method)) = order_state else {
+        bail!("Order {order_id} does not exist.");
+    };
+
+    ensure_fulfillment_status_matches_method(&current_status, &fulfillment_method)?;
+    ensure_valid_fulfillment_transition(&current_status, &to_status, &fulfillment_method)?;
+
+    sqlx::query(
+        r#"
+        UPDATE orders
+        SET fulfillment_status = $1
+        WHERE id = $2
+        "#,
+    )
+    .bind(&to_status)
+    .bind(order_id)
+    .execute(&mut *tx)
+    .await?;
+
+    sqlx::query(
+        r#"
+        INSERT INTO order_fulfillment_history
+            (order_id, from_status, to_status, note, changed_by)
+        VALUES ($1, $2, $3, $4, $5)
+        "#,
+    )
+    .bind(order_id)
+    .bind(&current_status)
+    .bind(&to_status)
+    .bind(note)
+    .bind(changed_by)
+    .execute(&mut *tx)
+    .await?;
+
+    if matches!(to_status.as_str(), "completed" | "delivered") {
+        let sales_status = sqlx::query_scalar::<_, String>(
+            r#"
+            SELECT status
+            FROM order_sales_meta
+            WHERE order_id = $1
+            FOR UPDATE
+            "#,
+        )
+        .bind(order_id)
+        .fetch_optional(&mut *tx)
+        .await?;
+
+        match sales_status {
+            Some(from_status) if !matches!(from_status.as_str(), "fulfilled" | "cancelled") => {
+                sqlx::query(
+                    r#"
+                    UPDATE order_sales_meta
+                    SET status = 'fulfilled',
+                        payment_status = 'paid',
+                        updated_at = now()
+                    WHERE order_id = $1
+                    "#,
+                )
+                .bind(order_id)
+                .execute(&mut *tx)
+                .await?;
+
+                sqlx::query(
+                    r#"
+                    INSERT INTO sales_status_history (order_id, from_status, to_status, note)
+                    VALUES ($1, $2, 'fulfilled', $3)
+                    "#,
+                )
+                .bind(order_id)
+                .bind(&from_status)
+                .bind(format!("Fulfillment moved to {to_status}."))
+                .execute(&mut *tx)
+                .await?;
+            }
+            None => {
+                sqlx::query(
+                    r#"
+                    INSERT INTO order_sales_meta
+                        (order_id, status, payment_status, channel, total_cents)
+                    SELECT id, 'fulfilled', 'paid', 'web', subtotal_cents
+                    FROM orders
+                    WHERE id = $1
+                    "#,
+                )
+                .bind(order_id)
+                .execute(&mut *tx)
+                .await?;
+
+                sqlx::query(
+                    r#"
+                    INSERT INTO sales_status_history (order_id, from_status, to_status, note)
+                    VALUES ($1, NULL, 'fulfilled', $2)
+                    "#,
+                )
+                .bind(order_id)
+                .bind(format!("Fulfillment moved to {to_status}."))
+                .execute(&mut *tx)
+                .await?;
+            }
+            _ => {}
+        }
+    }
+
+    tx.commit().await?;
+
+    fetch_order_by_id(pool, order_id)
+        .await?
+        .ok_or_else(|| anyhow!("Order {order_id} does not exist."))
 }
 
 pub async fn fetch_payments(pool: &PgPool) -> Result<Vec<Payment>> {
@@ -1461,6 +1780,13 @@ pub async fn create_admin_user(
     password_hash: &str,
     role_id: i32,
 ) -> Result<AdminUser> {
+    let username = username.trim();
+    let display_name = display_name.trim();
+
+    if username.is_empty() || display_name.is_empty() {
+        bail!("Username and display name are required.");
+    }
+
     sqlx::query_as::<_, AdminUser>(
         r#"
         INSERT INTO admin_users (username, display_name, password_hash, role_id)
@@ -1564,6 +1890,248 @@ pub async fn authenticate_admin_session(
     .fetch_optional(pool)
     .await
     .map_err(Into::into)
+}
+
+pub async fn fetch_admin_users(pool: &PgPool) -> Result<Vec<AdminUser>> {
+    sqlx::query_as::<_, AdminUser>(
+        r#"
+        SELECT id,
+               username,
+               display_name,
+               role_id,
+               is_active,
+               created_at::text AS created_at,
+               updated_at::text AS updated_at
+        FROM admin_users
+        ORDER BY username
+        "#,
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(Into::into)
+}
+
+pub async fn fetch_admin_user_by_id(
+    pool: &PgPool,
+    admin_user_id: i32,
+) -> Result<Option<AdminUserCredentials>> {
+    sqlx::query_as::<_, AdminUserCredentials>(
+        r#"
+        SELECT admin_users.id,
+               admin_users.username,
+               admin_users.display_name,
+               admin_users.password_hash,
+               admin_users.role_id,
+               roles.name AS role_name,
+               roles.description AS role_description,
+               roles.is_super_admin,
+               admin_users.is_active,
+               admin_users.created_at::text AS created_at,
+               admin_users.updated_at::text AS updated_at
+        FROM admin_users
+        JOIN roles ON roles.id = admin_users.role_id
+        WHERE admin_users.id = $1
+        "#,
+    )
+    .bind(admin_user_id)
+    .fetch_optional(pool)
+    .await
+    .map_err(Into::into)
+}
+
+pub async fn update_admin_user_profile(
+    pool: &PgPool,
+    admin_user_id: i32,
+    display_name: &str,
+    role_id: i32,
+) -> Result<AdminUser> {
+    let display_name = display_name.trim();
+
+    if display_name.is_empty() {
+        bail!("Display name is required.");
+    }
+
+    ensure_not_sole_active_super_admin(pool, admin_user_id, Some(role_id)).await?;
+
+    sqlx::query_as::<_, AdminUser>(
+        r#"
+        UPDATE admin_users
+        SET display_name = $1,
+            role_id = $2,
+            updated_at = now()
+        WHERE id = $3
+        RETURNING id,
+                  username,
+                  display_name,
+                  role_id,
+                  is_active,
+                  created_at::text AS created_at,
+                  updated_at::text AS updated_at
+        "#,
+    )
+    .bind(display_name)
+    .bind(role_id)
+    .bind(admin_user_id)
+    .fetch_optional(pool)
+    .await?
+    .ok_or_else(|| anyhow!("Admin user not found."))
+}
+
+pub async fn set_admin_user_active(
+    pool: &PgPool,
+    admin_user_id: i32,
+    is_active: bool,
+) -> Result<AdminUser> {
+    if !is_active {
+        ensure_not_sole_active_super_admin(pool, admin_user_id, None).await?;
+    }
+
+    let user = sqlx::query_as::<_, AdminUser>(
+        r#"
+        UPDATE admin_users
+        SET is_active = $1,
+            updated_at = now()
+        WHERE id = $2
+        RETURNING id,
+                  username,
+                  display_name,
+                  role_id,
+                  is_active,
+                  created_at::text AS created_at,
+                  updated_at::text AS updated_at
+        "#,
+    )
+    .bind(is_active)
+    .bind(admin_user_id)
+    .fetch_optional(pool)
+    .await?
+    .ok_or_else(|| anyhow!("Admin user not found."))?;
+
+    if !is_active {
+        delete_admin_sessions_for_user(pool, admin_user_id).await?;
+    }
+
+    Ok(user)
+}
+
+pub async fn update_admin_user_password(
+    pool: &PgPool,
+    admin_user_id: i32,
+    password_hash: &str,
+) -> Result<()> {
+    let result = sqlx::query(
+        r#"
+        UPDATE admin_users
+        SET password_hash = $1,
+            updated_at = now()
+        WHERE id = $2
+        "#,
+    )
+    .bind(password_hash)
+    .bind(admin_user_id)
+    .execute(pool)
+    .await?;
+
+    if result.rows_affected() == 0 {
+        bail!("Admin user not found.");
+    }
+
+    Ok(())
+}
+
+pub async fn delete_admin_sessions_for_user(pool: &PgPool, admin_user_id: i32) -> Result<()> {
+    sqlx::query(
+        r#"
+        DELETE FROM admin_sessions
+        WHERE admin_user_id = $1
+        "#,
+    )
+    .bind(admin_user_id)
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+pub async fn delete_expired_admin_sessions(pool: &PgPool) -> Result<()> {
+    sqlx::query(
+        r#"
+        DELETE FROM admin_sessions
+        WHERE expires_at <= now()
+        "#,
+    )
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+async fn count_active_super_admins_excluding(pool: &PgPool, exclude_user_id: i32) -> Result<i64> {
+    sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT COUNT(*)
+        FROM admin_users
+        JOIN roles ON roles.id = admin_users.role_id
+        WHERE roles.is_super_admin = TRUE
+          AND admin_users.is_active = TRUE
+          AND admin_users.id != $1
+        "#,
+    )
+    .bind(exclude_user_id)
+    .fetch_one(pool)
+    .await
+    .map_err(Into::into)
+}
+
+async fn ensure_not_sole_active_super_admin(
+    pool: &PgPool,
+    admin_user_id: i32,
+    demote_to_role_id: Option<i32>,
+) -> Result<()> {
+    let current = sqlx::query_as::<_, (bool, bool)>(
+        r#"
+        SELECT admin_users.is_active, roles.is_super_admin
+        FROM admin_users
+        JOIN roles ON roles.id = admin_users.role_id
+        WHERE admin_users.id = $1
+        "#,
+    )
+    .bind(admin_user_id)
+    .fetch_optional(pool)
+    .await?;
+
+    let Some((is_active, is_super_admin)) = current else {
+        bail!("Admin user not found.");
+    };
+
+    if !is_active || !is_super_admin {
+        return Ok(());
+    }
+
+    if let Some(role_id) = demote_to_role_id {
+        let still_super_admin = sqlx::query_scalar::<_, bool>(
+            r#"
+            SELECT is_super_admin
+            FROM roles
+            WHERE id = $1
+            "#,
+        )
+        .bind(role_id)
+        .fetch_optional(pool)
+        .await?
+        .ok_or_else(|| anyhow!("Role not found."))?;
+
+        if still_super_admin {
+            return Ok(());
+        }
+    }
+
+    let remaining = count_active_super_admins_excluding(pool, admin_user_id).await?;
+    if remaining == 0 {
+        bail!(LAST_SUPER_ADMIN_MESSAGE);
+    }
+
+    Ok(())
 }
 
 pub async fn create_role(pool: &PgPool, input: &CreateRoleInput) -> Result<Role> {
@@ -2859,6 +3427,7 @@ mod order_and_customer_tests {
         CreateOrderInput {
             customer_name: customer_name.to_string(),
             customer_email: customer_email.to_string(),
+            fulfillment_method: None,
             items: vec![CreateOrderItemInput {
                 product_id: 1,
                 quantity: 2,
