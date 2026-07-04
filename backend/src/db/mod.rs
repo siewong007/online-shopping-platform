@@ -1,6 +1,7 @@
 mod admin;
 mod audit;
 mod catalog;
+mod customer_auth;
 mod customer_portal;
 mod dashboard;
 mod invoices;
@@ -14,6 +15,7 @@ mod storefront;
 pub use admin::*;
 pub use audit::*;
 pub use catalog::*;
+pub use customer_auth::*;
 pub use customer_portal::*;
 pub use dashboard::*;
 pub use invoices::*;

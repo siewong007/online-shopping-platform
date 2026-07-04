@@ -10,7 +10,9 @@ export type {
   StorefrontPayload,
   StorefrontQueryParams,
   StorefrontSort,
-  UpdateProductInput
+  UpdateProductInput,
+  UpdateProductStockInput,
+  ProductRestockResult
 } from "./modules/storefront/types";
 
 export type { AdminCatalogPayload, UpdateCategoryInput } from "./modules/catalog/types";
@@ -34,6 +36,8 @@ export type {
   InventoryItem,
   LiveDashboardMetrics
 } from "./modules/dashboard/types";
+
+export type { AuditEvent } from "./modules/audit/types";
 
 export type {
   CreateOrderInput,
@@ -63,6 +67,14 @@ export type {
   CustomerPortalProfile,
   UpdateCustomerPortalProfileInput
 } from "./modules/customer/types";
+
+export type {
+  CustomerAccount,
+  CustomerAuthPayload,
+  CustomerLoginInput,
+  CustomerMePayload,
+  CustomerRegisterInput
+} from "./modules/customer_auth/types";
 
 export type {
   CreateRoleInput,

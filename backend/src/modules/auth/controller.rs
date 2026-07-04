@@ -21,10 +21,10 @@ pub async fn login(
 
 pub async fn logout(
     State(state): State<AppState>,
-    _identity: AdminIdentity,
+    identity: AdminIdentity,
     headers: HeaderMap,
 ) -> Result<StatusCode, error::HttpError> {
-    service::logout(&state.pool, &headers)
+    service::logout(&state.pool, &identity, &headers)
         .await
         .map(|()| StatusCode::NO_CONTENT)
 }

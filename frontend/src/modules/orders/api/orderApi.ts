@@ -7,7 +7,7 @@ export function fetchOrders(): Promise<Order[]> {
 }
 
 export function checkout(input: CreateOrderInput): Promise<Order> {
-  return postJson<CreateOrderInput, Order>("/api/checkout", input);
+  return postJson<CreateOrderInput, Order>("/api/checkout", input, "customer");
 }
 
 export function createAdminOrder(input: CreateOrderInput): Promise<Order> {

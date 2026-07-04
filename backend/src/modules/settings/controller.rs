@@ -45,7 +45,7 @@ pub async fn admin_update_setting(
     )
     .await?;
 
-    service::update_system_setting(&state.pool, &key, &input)
+    service::update_system_setting(&state.pool, &identity, &key, &input)
         .await
         .map(Json)
         .map_err(error::map_admin_error)

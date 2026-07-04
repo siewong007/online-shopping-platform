@@ -6,8 +6,12 @@ use super::{
     model::Order,
 };
 
-pub async fn create_order(pool: &PgPool, input: &CreateOrderInput) -> Result<Order> {
-    crate::db::create_order(pool, input).await
+pub async fn create_order(
+    pool: &PgPool,
+    input: &CreateOrderInput,
+    customer_account_id: Option<i32>,
+) -> Result<Order> {
+    crate::db::create_order(pool, input, customer_account_id).await
 }
 
 pub async fn fetch_orders(pool: &PgPool) -> Result<Vec<Order>> {

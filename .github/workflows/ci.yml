@@ -51,7 +51,7 @@ jobs:
         run: |
           for file in migrations/*.sql; do
             echo "Applying $file"
-            PGPASSWORD=project_depot psql -h localhost -U project_depot -d project_depot -f "$file"
+            PGPASSWORD=project_depot psql -v ON_ERROR_STOP=1 -h localhost -U project_depot -d project_depot -f "$file"
           done
 
       - name: Run tests

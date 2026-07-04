@@ -68,7 +68,7 @@ pub async fn admin_update_sales_details(
     )
     .await?;
 
-    service::update_sales_details(&state.pool, order_id, &input)
+    service::update_sales_details(&state.pool, &identity, order_id, &input)
         .await
         .map(Json)
         .map_err(error::map_admin_error)
@@ -89,7 +89,7 @@ pub async fn admin_update_sales_status(
     )
     .await?;
 
-    service::update_sales_status(&state.pool, order_id, &input)
+    service::update_sales_status(&state.pool, &identity, order_id, &input)
         .await
         .map(Json)
         .map_err(error::map_admin_error)

@@ -15,11 +15,13 @@ import {
   deleteCategory as deleteCategoryRequest,
   deleteCustomerPortalProfile as deleteCustomerPortalProfileRequest,
   deletePayment as deletePaymentRequest,
+  AUDIT_EVENTS_PAGE_SIZE,
   deleteProduct as deleteProductRequest,
   deleteRole as deleteRoleRequest,
   fetchAdminCatalog,
   fetchAdminDashboard,
   fetchAdminUsers,
+  fetchAuditEvents,
   fetchCustomerPortalProfiles,
   fetchInvoices,
   fetchMe,
@@ -29,13 +31,18 @@ import {
   fetchSales,
   fetchSalesSummary,
   fetchStorefront,
+  fetchCustomerMe,
   fetchSystemSettings,
   login as loginRequest,
+  loginCustomer,
+  logoutCustomer,
   lookupCustomer as lookupCustomerRequest,
   logout as logoutRequest,
+  registerCustomer,
   recordInvoicePayment as recordInvoicePaymentRequest,
   resetAdminUserPassword as resetAdminUserPasswordRequest,
   setAdminUserActive as setAdminUserActiveRequest,
+  supplierSync,
   updateAdminOrder as updateAdminOrderRequest,
   updateAdminUserProfile as updateAdminUserProfileRequest,
   updateCategory as updateCategoryRequest,
@@ -61,10 +68,18 @@ import { PermissionsPanel } from "./modules/permissions/components/PermissionsPa
 import { SalesPanel } from "./modules/sales/components/SalesPanel";
 import { SettingsPanel } from "./modules/settings/components/SettingsPanel";
 import { fallbackPermissions } from "./data/fallback";
-import { ApiError, getAuthToken, setAuthToken, setOnApiUnavailable, setOnUnauthorized } from "./shared/api/http";
+import {
+  ApiError,
+  getAuthToken,
+  getCustomerAuthToken,
+  setAuthToken,
+  setCustomerAuthToken,
+  setOnApiUnavailable,
+  setOnUnauthorized
+} from "./shared/api/http";
 import { ManagementTable } from "./shared/components/ManagementTable";
 import { RecordForm, type RecordFormField, RecordModal } from "./shared/components/RecordModal";
-import { currencyFromCents, formatOrderDate } from "./shared/formatters";
+import { currencyFromCents, formatOrderDate, formatRelativeTime } from "./shared/formatters";
 import type {
   ActivityItem,
   AdminAuthPayload,
@@ -75,6 +90,7 @@ import type {
   AdminMetric,
   AdminResetPasswordInput,
   AdminUser,
+  AuditEvent,
   CampaignOption,
   CartItem,
   Category,
@@ -87,8 +103,11 @@ import type {
   CreatePaymentInput,
   CreateProductInput,
   CreateRoleInput,
+  CustomerLoginInput,
   CustomerLookupPayload,
+  CustomerMePayload,
   CustomerPortalProfile,
+  CustomerRegisterInput,
   FulfillmentMethod,
   FulfillmentStatus,
   Invoice,
@@ -928,6 +947,17 @@ function fulfillmentLabel(value: string): string {
     .join(" ");
 }
 
+function auditEventToActivityItem(event: AuditEvent): ActivityItem {
+  const action = fulfillmentLabel(event.action).toLowerCase();
+  const entity = fulfillmentLabel(event.entity_type).toLowerCase();
+  const summary = `${event.actor} ${action} ${entity}`.trim();
+
+  return {
+    happened_at: formatRelativeTime(event.happened_at),
+    detail: event.detail ? `${summary} — ${event.detail}` : summary
+  };
+}
+
 function groupedFulfillment(orders: Order[]): Record<FulfillmentStatus, Order[]> {
   const groups = fulfillmentBoardStages.reduce(
     (accumulator, stage) => ({ ...accumulator, [stage]: [] }),
@@ -935,7 +965,7 @@ function groupedFulfillment(orders: Order[]): Record<FulfillmentStatus, Order[]>
   );
 
   for (const order of orders) {
-    groups[order.fulfillment_status] = [...groups[order.fulfillment_status], order];
+    groups[order.fulfillment_status]?.push(order);
   }
 
   return groups;
@@ -944,6 +974,15 @@ function groupedFulfillment(orders: Order[]): Record<FulfillmentStatus, Order[]>
 function numericText(value: string): number {
   const parsed = Number(value.replace(/[^0-9.-]+/g, ""));
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function priceInputToCents(value: string): number | null {
+  if (value === "") {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? Math.round(parsed * 100) : null;
 }
 
 function DepotMark({ compact = false }: { compact?: boolean }) {
@@ -980,6 +1019,9 @@ export default function App() {
   const [selectedCampaign, setSelectedCampaign] = useState<CampaignOption | null>(null);
   const [discount, setDiscount] = useState(25);
   const [activityFeed, setActivityFeed] = useState<ActivityItem[]>([]);
+  const [oldestAuditEventId, setOldestAuditEventId] = useState<number | null>(null);
+  const [hasMoreActivity, setHasMoreActivity] = useState(false);
+  const [isLoadingMoreActivity, setIsLoadingMoreActivity] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [sales, setSales] = useState<SalesRecord[]>([]);
@@ -1014,6 +1056,8 @@ export default function App() {
       return;
     }
 
+    let cancelled = false;
+
     const timeout = window.setTimeout(() => {
       void fetchStorefront({
         q: searchTerm,
@@ -1021,10 +1065,17 @@ export default function App() {
         minPriceCents: minPriceCents ?? undefined,
         maxPriceCents: maxPriceCents ?? undefined,
         sort: sortOption
-      }).then(setStorefront);
+      }).then((payload) => {
+        if (!cancelled) {
+          setStorefront(payload);
+        }
+      });
     }, 300);
 
-    return () => window.clearTimeout(timeout);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
   }, [searchTerm, selectedCategory, minPriceCents, maxPriceCents, sortOption]);
 
   useEffect(() => {
@@ -1050,6 +1101,7 @@ export default function App() {
 
   const applyAdminData = ({
     adminUsersData,
+    auditEventsData,
     catalogData,
     dashboardData,
     invoicesData,
@@ -1062,6 +1114,7 @@ export default function App() {
     customerProfileData
   }: {
     adminUsersData: AdminUser[];
+    auditEventsData: AuditEvent[];
     catalogData: AdminCatalogPayload;
     dashboardData: AdminDashboardPayload;
     invoicesData: Invoice[];
@@ -1077,7 +1130,13 @@ export default function App() {
     setAdminCatalog(catalogData);
     setDashboard(dashboardData);
     setSelectedCampaign(dashboardData.campaigns[0] ?? null);
-    setActivityFeed(dashboardData.activity);
+    setActivityFeed(auditEventsData.map(auditEventToActivityItem));
+    setOldestAuditEventId(
+      auditEventsData.length > 0
+        ? auditEventsData[auditEventsData.length - 1].id
+        : null
+    );
+    setHasMoreActivity(auditEventsData.length >= AUDIT_EVENTS_PAGE_SIZE);
     setOrders(ordersData);
     setPayments(paymentsData);
     setSales(salesData);
@@ -1108,6 +1167,7 @@ export default function App() {
 
     const [
       adminUsersData,
+      auditEventsData,
       catalogData,
       dashboardData,
       ordersData,
@@ -1120,6 +1180,7 @@ export default function App() {
       permissionsData
     ] = await Promise.all([
       fetchAdminUsers(),
+      fetchAuditEvents(),
       fetchAdminCatalog(),
       fetchAdminDashboard(),
       fetchOrders(),
@@ -1134,6 +1195,7 @@ export default function App() {
 
     applyAdminData({
       adminUsersData,
+      auditEventsData,
       catalogData,
       dashboardData,
       ordersData,
@@ -1150,6 +1212,7 @@ export default function App() {
   const loadDemoAdminData = async () => {
     const [
       adminUsersData,
+      auditEventsData,
       catalogData,
       dashboardData,
       ordersData,
@@ -1161,6 +1224,7 @@ export default function App() {
       customerProfileData
     ] = await Promise.all([
       fetchAdminUsers(),
+      fetchAuditEvents(),
       fetchAdminCatalog(),
       fetchAdminDashboard(),
       fetchOrders(),
@@ -1176,6 +1240,7 @@ export default function App() {
     setActiveRoleId(null);
     applyAdminData({
       adminUsersData,
+      auditEventsData,
       catalogData,
       dashboardData,
       ordersData,
@@ -1265,13 +1330,6 @@ export default function App() {
       return [...current, { product, quantity: 1 }];
     });
     setIsCartOpen(true);
-    setActivityFeed((current) => [
-      {
-        happened_at: "Now",
-        detail: `${product.name} added to cart from the storefront.`
-      },
-      ...current
-    ]);
   };
 
   const removeFromCart = (productId: number) => {
@@ -1655,24 +1713,33 @@ export default function App() {
     if (!selectedCampaign) {
       return;
     }
+  };
 
+  const runSupplierSync = async () => {
+    const restocked = await supplierSync();
     setActivityFeed((current) => [
       {
         happened_at: "Now",
-        detail: `Campaign updated: ${selectedCampaign.name} set to ${discount}% off.`
+        detail: `Supplier sync restocked ${restocked.length} product(s).`
       },
       ...current
     ]);
   };
 
-  const runSupplierSync = () => {
-    setActivityFeed((current) => [
-      {
-        happened_at: "Now",
-        detail: "Supplier and pricing sync completed for all monitored merchandising feeds."
-      },
-      ...current
-    ]);
+  const loadMoreActivity = async () => {
+    if (oldestAuditEventId === null || isLoadingMoreActivity) {
+      return;
+    }
+
+    setIsLoadingMoreActivity(true);
+    try {
+      const events = await fetchAuditEvents(oldestAuditEventId);
+      setActivityFeed((current) => [...current, ...events.map(auditEventToActivityItem)]);
+      setOldestAuditEventId(events.length > 0 ? events[events.length - 1].id : null);
+      setHasMoreActivity(events.length >= AUDIT_EVENTS_PAGE_SIZE);
+    } finally {
+      setIsLoadingMoreActivity(false);
+    }
   };
 
   const createCategory = async (input: CreateCategoryInput): Promise<Category> => {
@@ -2007,9 +2074,12 @@ export default function App() {
           demoMode={adminAuth === "demo"}
           discount={discount}
           fulfillmentByStage={fulfillmentByStage}
+          hasMoreActivity={hasMoreActivity}
           highValueAccounts={highValueAccounts}
           isChangePasswordOpen={isChangePasswordOpen}
+          isLoadingMoreActivity={isLoadingMoreActivity}
           onApplyCampaign={applyCampaign}
+          onLoadMoreActivity={() => void loadMoreActivity()}
           onBackToStore={() => openView("store")}
           onChangeDiscount={setDiscount}
           onChangeOwnPassword={changeOwnPassword}
@@ -2290,11 +2360,11 @@ function StorefrontView({
               <input
                 type="number"
                 min="0"
+                step="0.01"
                 placeholder="$0"
                 value={minPriceCents == null ? "" : minPriceCents / 100}
                 onChange={(event) => {
-                  const value = event.target.value;
-                  onChangeMinPrice(value === "" ? null : Math.round(Number(value) * 100));
+                  onChangeMinPrice(priceInputToCents(event.target.value));
                 }}
               />
             </label>
@@ -2303,11 +2373,11 @@ function StorefrontView({
               <input
                 type="number"
                 min="0"
+                step="0.01"
                 placeholder="Any"
                 value={maxPriceCents == null ? "" : maxPriceCents / 100}
                 onChange={(event) => {
-                  const value = event.target.value;
-                  onChangeMaxPrice(value === "" ? null : Math.round(Number(value) * 100));
+                  onChangeMaxPrice(priceInputToCents(event.target.value));
                 }}
               />
             </label>
@@ -2346,41 +2416,57 @@ function StorefrontView({
             <h2>Featured products with Home Depot-style density and hierarchy</h2>
           </div>
 
-          <div className="product-grid">
-            {filteredProducts.map((product) => {
-              const categoryName =
-                storefront.categories.find((category) => category.slug === product.category_slug)?.name ??
-                product.category_slug;
+           <div className="product-grid">
+             {filteredProducts.map((product) => {
+               const categoryName =
+                 storefront.categories.find((category) => category.slug === product.category_slug)?.name ??
+                 product.category_slug;
 
-              return (
-                <article className="product-card" key={product.id}>
-                  <div className="product-topline">
-                    <span className="badge-chip">{product.badge}</span>
-                    <span className="tone-chip">{product.tone}</span>
-                  </div>
+               return (
+                 <article className="product-card" key={product.id}>
+                   <div className="product-topline">
+                     <span className="badge-chip">{product.badge}</span>
+                     <span className="tone-chip">{product.tone}</span>
+                   </div>
 
-                  <div className="product-visual">
-                    <span>{categoryName}</span>
-                    <strong>{product.tone}</strong>
-                  </div>
+                   <div
+                     className={
+                       "product-visual" + (product.image_url ? "" : " tone-fallback")
+                     }
+                   >
+                     {product.image_url ? (
+                       <img
+                         src={product.image_url}
+                         alt={product.name}
+                         loading="lazy"
+                         onError={(event) => {
+                           event.currentTarget.style.display = "none";
+                           const parent = event.currentTarget.parentElement;
+                           if (parent) parent.classList.add("tone-fallback");
+                         }}
+                       />
+                     ) : null}
+                     <span>{categoryName}</span>
+                     <strong>{product.tone}</strong>
+                   </div>
 
-                  <div className="product-meta">
-                    <h3>{product.name}</h3>
-                    <p>{product.description}</p>
-                  </div>
+                   <div className="product-meta">
+                     <h3>{product.name}</h3>
+                     <p>{product.description}</p>
+                   </div>
 
-                  <footer>
-                    <div>
-                      <p className="price-label">From</p>
-                      <strong>{currencyFromCents(product.price_cents)}</strong>
-                      <p>{categoryName}</p>
-                    </div>
-                    <button onClick={() => onAddToCart(product)}>Add to Cart</button>
-                  </footer>
-                </article>
-              );
-            })}
-          </div>
+                   <footer>
+                     <div>
+                       <p className="price-label">From</p>
+                       <strong>{currencyFromCents(product.price_cents)}</strong>
+                       <p>{categoryName}</p>
+                     </div>
+                     <button onClick={() => onAddToCart(product)}>Add to Cart</button>
+                   </footer>
+                 </article>
+               );
+             })}
+           </div>
         </section>
 
         <section className="services-section" id="services">
@@ -2448,10 +2534,17 @@ type AccountDrawerProps = {
 };
 
 type AccountLookupStatus = "idle" | "loading" | "success" | "error";
+type AccountAuthView = "login" | "register" | "guest";
 
 const emptyCustomerLookupPayload: CustomerLookupPayload = {
   profile: null,
   orders: []
+};
+
+const emptyCustomerAuthForm: CustomerRegisterInput = {
+  email: "",
+  password: "",
+  display_name: ""
 };
 
 function AccountDrawer({
@@ -2467,6 +2560,93 @@ function AccountDrawer({
   const [lookupStatus, setLookupStatus] = useState<AccountLookupStatus>("idle");
   const [lookupError, setLookupError] = useState("");
   const lastAutoLookupEmailRef = useRef<string | null>(null);
+
+  const [session, setSession] = useState<CustomerMePayload | null>(null);
+  const [authView, setAuthView] = useState<AccountAuthView>("login");
+  const [authForm, setAuthForm] = useState<CustomerRegisterInput>(emptyCustomerAuthForm);
+  const [authStatus, setAuthStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [authError, setAuthError] = useState("");
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    if (!getCustomerAuthToken()) {
+      setSession(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const payload = await fetchCustomerMe();
+        if (!cancelled) {
+          setSession(payload);
+        }
+      } catch (error) {
+        // Only a real 401 means the session is invalid — a network/API-down error should
+        // leave the stored token alone so the drawer can recover once the API is back.
+        if (error instanceof ApiError && !error.isNetworkError && error.status === 401) {
+          setCustomerAuthToken(null);
+        }
+        if (!cancelled) {
+          setSession(null);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+
+  const submitLogin = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setAuthStatus("loading");
+    setAuthError("");
+
+    try {
+      const input: CustomerLoginInput = { email: authForm.email, password: authForm.password };
+      await loginCustomer(input);
+      const payload = await fetchCustomerMe();
+      setSession(payload);
+      setAuthForm(emptyCustomerAuthForm);
+      setAuthStatus("idle");
+    } catch (error) {
+      setAuthStatus("error");
+      setAuthError(error instanceof Error ? error.message : "Unable to sign in.");
+    }
+  };
+
+  const submitRegister = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setAuthStatus("loading");
+    setAuthError("");
+
+    try {
+      await registerCustomer(authForm);
+      const payload = await fetchCustomerMe();
+      setSession(payload);
+      setAuthForm(emptyCustomerAuthForm);
+      setAuthStatus("idle");
+    } catch (error) {
+      setAuthStatus("error");
+      setAuthError(error instanceof Error ? error.message : "Unable to register.");
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logoutCustomer();
+    } catch {
+      setCustomerAuthToken(null);
+    } finally {
+      setSession(null);
+      setAuthView("login");
+    }
+  };
 
   const runLookup = async (email: string) => {
     const trimmedEmail = email.trim();
@@ -2546,66 +2726,54 @@ function AccountDrawer({
     onClose();
   };
 
-  return (
-    <div className="cart-overlay" role="dialog" aria-modal="true" aria-label="My account">
-      <button className="cart-scrim" aria-label="Close account" onClick={close} />
-      <aside className="cart-drawer account-drawer">
-        <header className="cart-drawer-head">
-          <h2>My Account</h2>
-          <button className="cart-close" onClick={close} aria-label="Close account">
-            &times;
-          </button>
-        </header>
+  if (session) {
+    const sessionProfile = session.profile;
+    const sessionOrders = [...session.orders].sort(
+      (first, second) => Date.parse(second.created_at) - Date.parse(first.created_at)
+    );
+    const sessionLifetimeCents =
+      sessionProfile?.lifetime_purchase_cents ??
+      sessionOrders.reduce((sum, order) => sum + order.subtotal_cents, 0);
+    const sessionTotalOrders = sessionProfile?.total_orders ?? sessionOrders.length;
 
-        <form className="account-lookup-form" onSubmit={submitLookup}>
-          <label>
-            <span>Email address</span>
-            <input
-              type="email"
-              value={lookupEmail}
-              onChange={(event) => setLookupEmail(event.target.value)}
-              placeholder="orders@example.com"
-              required
-            />
-          </label>
-          <button className="solid-button" disabled={isSearching}>
-            {isSearching ? "Searching..." : "Find my orders"}
-          </button>
-          {lookupStatus === "error" ? <p className="cart-feedback">{lookupError}</p> : null}
-        </form>
+    return (
+      <div className="cart-overlay" role="dialog" aria-modal="true" aria-label="My account">
+        <button className="cart-scrim" aria-label="Close account" onClick={close} />
+        <aside className="cart-drawer account-drawer">
+          <header className="cart-drawer-head">
+            <h2>My Account</h2>
+            <button className="cart-close" onClick={close} aria-label="Close account">
+              &times;
+            </button>
+          </header>
 
-        {isSearching && !hasAccount ? (
-          <div className="cart-empty account-empty">
-            <p>Looking up recent orders...</p>
-          </div>
-        ) : hasAccount ? (
           <div className="account-content">
             <section className="account-hero">
-              <p className="eyebrow">{profile?.membership_tier ?? "Online Shopper"}</p>
-              <h3>{accountName}</h3>
-              <p>{normalizedEmail}</p>
+              <p className="eyebrow">{sessionProfile?.membership_tier ?? "Online Shopper"}</p>
+              <h3>{sessionProfile?.customer_name ?? session.account.display_name}</h3>
+              <p>{session.account.email}</p>
             </section>
 
             <section className="account-stat-grid" aria-label="Account summary">
               <div>
                 <span>Points</span>
-                <strong>{(profile?.points_balance ?? 0).toLocaleString()}</strong>
+                <strong>{(sessionProfile?.points_balance ?? 0).toLocaleString()}</strong>
               </div>
               <div>
                 <span>Lifetime Spend</span>
-                <strong>{currencyFromCents(lifetimePurchaseCents)}</strong>
+                <strong>{currencyFromCents(sessionLifetimeCents)}</strong>
               </div>
               <div>
                 <span>Orders</span>
-                <strong>{totalOrders.toLocaleString()}</strong>
+                <strong>{sessionTotalOrders.toLocaleString()}</strong>
               </div>
               <div>
                 <span>Last Purchase</span>
                 <strong>
-                  {profile?.last_purchase_at
-                    ? formatOrderDate(profile.last_purchase_at)
-                    : accountOrders[0]
-                      ? formatOrderDate(accountOrders[0].created_at)
+                  {sessionProfile?.last_purchase_at
+                    ? formatOrderDate(sessionProfile.last_purchase_at)
+                    : sessionOrders[0]
+                      ? formatOrderDate(sessionOrders[0].created_at)
                       : "None yet"}
                 </strong>
               </div>
@@ -2614,11 +2782,11 @@ function AccountDrawer({
             <section className="account-section">
               <div className="account-section-head">
                 <p className="eyebrow">Recent Orders</p>
-                <span className="status-pill">{accountOrders.length} found</span>
+                <span className="status-pill">{sessionOrders.length} found</span>
               </div>
-              {accountOrders.length > 0 ? (
+              {sessionOrders.length > 0 ? (
                 <div className="account-orders">
-                  {accountOrders.map((order) => (
+                  {sessionOrders.map((order) => (
                     <article className="account-order" key={order.id}>
                       <div className="account-order-head">
                         <div>
@@ -2644,21 +2812,234 @@ function AccountDrawer({
                   ))}
                 </div>
               ) : (
-                <p className="account-empty-note">No storefront orders are attached to this email yet.</p>
+                <p className="account-empty-note">No storefront orders are attached to this account yet.</p>
               )}
             </section>
-          </div>
-        ) : (
-          <div className="cart-empty account-empty">
-            <p>
-              {lookupStatus === "success"
-                ? "No orders found for this email."
-                : "No customer account is active yet."}
-            </p>
-            <button className="outline-button" onClick={close}>
-              Continue Shopping
+
+            <button className="outline-button" onClick={() => void handleLogout()}>
+              Log out
             </button>
           </div>
+        </aside>
+      </div>
+    );
+  }
+
+  return (
+    <div className="cart-overlay" role="dialog" aria-modal="true" aria-label="My account">
+      <button className="cart-scrim" aria-label="Close account" onClick={close} />
+      <aside className="cart-drawer account-drawer">
+        <header className="cart-drawer-head">
+          <h2>My Account</h2>
+          <button className="cart-close" onClick={close} aria-label="Close account">
+            &times;
+          </button>
+        </header>
+
+        <div className="account-auth-tabs">
+          <button
+            className={`text-link${authView === "login" ? " active" : ""}`}
+            onClick={() => {
+              setAuthView("login");
+              setAuthError("");
+            }}
+          >
+            Sign in
+          </button>
+          <button
+            className={`text-link${authView === "register" ? " active" : ""}`}
+            onClick={() => {
+              setAuthView("register");
+              setAuthError("");
+            }}
+          >
+            Create account
+          </button>
+          <button
+            className={`text-link${authView === "guest" ? " active" : ""}`}
+            onClick={() => {
+              setAuthView("guest");
+              setAuthError("");
+            }}
+          >
+            Look up a guest order
+          </button>
+        </div>
+
+        {authView === "login" ? (
+          <form className="account-lookup-form" onSubmit={(event) => void submitLogin(event)}>
+            <label>
+              <span>Email address</span>
+              <input
+                type="email"
+                value={authForm.email}
+                onChange={(event) => setAuthForm((current) => ({ ...current, email: event.target.value }))}
+                placeholder="you@example.com"
+                required
+              />
+            </label>
+            <label>
+              <span>Password</span>
+              <input
+                type="password"
+                value={authForm.password}
+                onChange={(event) =>
+                  setAuthForm((current) => ({ ...current, password: event.target.value }))
+                }
+                required
+              />
+            </label>
+            <button className="solid-button" disabled={authStatus === "loading"}>
+              {authStatus === "loading" ? "Signing in..." : "Sign in"}
+            </button>
+            {authStatus === "error" ? <p className="cart-feedback">{authError}</p> : null}
+          </form>
+        ) : authView === "register" ? (
+          <form className="account-lookup-form" onSubmit={(event) => void submitRegister(event)}>
+            <label>
+              <span>Name</span>
+              <input
+                type="text"
+                value={authForm.display_name}
+                onChange={(event) =>
+                  setAuthForm((current) => ({ ...current, display_name: event.target.value }))
+                }
+                required
+              />
+            </label>
+            <label>
+              <span>Email address</span>
+              <input
+                type="email"
+                value={authForm.email}
+                onChange={(event) => setAuthForm((current) => ({ ...current, email: event.target.value }))}
+                placeholder="you@example.com"
+                required
+              />
+            </label>
+            <label>
+              <span>Password</span>
+              <input
+                type="password"
+                value={authForm.password}
+                onChange={(event) =>
+                  setAuthForm((current) => ({ ...current, password: event.target.value }))
+                }
+                minLength={8}
+                required
+              />
+            </label>
+            <button className="solid-button" disabled={authStatus === "loading"}>
+              {authStatus === "loading" ? "Creating account..." : "Create account"}
+            </button>
+            {authStatus === "error" ? <p className="cart-feedback">{authError}</p> : null}
+          </form>
+        ) : (
+          <>
+            <form className="account-lookup-form" onSubmit={submitLookup}>
+              <label>
+                <span>Email address</span>
+                <input
+                  type="email"
+                  value={lookupEmail}
+                  onChange={(event) => setLookupEmail(event.target.value)}
+                  placeholder="orders@example.com"
+                  required
+                />
+              </label>
+              <button className="solid-button" disabled={isSearching}>
+                {isSearching ? "Searching..." : "Find my orders"}
+              </button>
+              {lookupStatus === "error" ? <p className="cart-feedback">{lookupError}</p> : null}
+            </form>
+
+            {isSearching && !hasAccount ? (
+              <div className="cart-empty account-empty">
+                <p>Looking up recent orders...</p>
+              </div>
+            ) : hasAccount ? (
+              <div className="account-content">
+                <section className="account-hero">
+                  <p className="eyebrow">{profile?.membership_tier ?? "Online Shopper"}</p>
+                  <h3>{accountName}</h3>
+                  <p>{normalizedEmail}</p>
+                </section>
+
+                <section className="account-stat-grid" aria-label="Account summary">
+                  <div>
+                    <span>Points</span>
+                    <strong>{(profile?.points_balance ?? 0).toLocaleString()}</strong>
+                  </div>
+                  <div>
+                    <span>Lifetime Spend</span>
+                    <strong>{currencyFromCents(lifetimePurchaseCents)}</strong>
+                  </div>
+                  <div>
+                    <span>Orders</span>
+                    <strong>{totalOrders.toLocaleString()}</strong>
+                  </div>
+                  <div>
+                    <span>Last Purchase</span>
+                    <strong>
+                      {profile?.last_purchase_at
+                        ? formatOrderDate(profile.last_purchase_at)
+                        : accountOrders[0]
+                          ? formatOrderDate(accountOrders[0].created_at)
+                          : "None yet"}
+                    </strong>
+                  </div>
+                </section>
+
+                <section className="account-section">
+                  <div className="account-section-head">
+                    <p className="eyebrow">Recent Orders</p>
+                    <span className="status-pill">{accountOrders.length} found</span>
+                  </div>
+                  {accountOrders.length > 0 ? (
+                    <div className="account-orders">
+                      {accountOrders.map((order) => (
+                        <article className="account-order" key={order.id}>
+                          <div className="account-order-head">
+                            <div>
+                              <strong>Order #{order.id}</strong>
+                              <span>{formatOrderDate(order.created_at)}</span>
+                            </div>
+                            <div className="account-order-total">
+                              <strong>{currencyFromCents(order.subtotal_cents)}</strong>
+                              <span>{fulfillmentLabel(order.fulfillment_status)}</span>
+                            </div>
+                          </div>
+                          <ul className="account-line-items">
+                            {order.items.map((item, index) => (
+                              <li key={`${order.id}-${index}-${item.product_name}`}>
+                                <span>{item.product_name}</span>
+                                <strong>
+                                  {item.quantity} x {currencyFromCents(item.unit_price_cents)}
+                                </strong>
+                              </li>
+                            ))}
+                          </ul>
+                        </article>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="account-empty-note">No storefront orders are attached to this email yet.</p>
+                  )}
+                </section>
+              </div>
+            ) : (
+              <div className="cart-empty account-empty">
+                <p>
+                  {lookupStatus === "success"
+                    ? "No orders found for this email."
+                    : "No customer account is active yet."}
+                </p>
+                <button className="outline-button" onClick={close}>
+                  Continue Shopping
+                </button>
+              </div>
+            )}
+          </>
         )}
       </aside>
     </div>
@@ -2772,30 +3153,50 @@ function CartDrawer({
             <ul className="cart-lines">
               {cart.map((item) => (
                 <li className="cart-line" key={item.product.id}>
-                  <div className="cart-line-info">
-                    <strong>{item.product.name}</strong>
-                    <span>{currencyFromCents(item.product.price_cents)} each</span>
+                  <div
+                    className={"cart-line-visual" + (item.product.image_url ? "" : " tone-fallback")}
+                  >
+                    {item.product.image_url ? (
+                      <img
+                        src={item.product.image_url}
+                        alt={item.product.name}
+                        loading="lazy"
+                        onError={(event) => {
+                          event.currentTarget.style.display = "none";
+                          const parent = event.currentTarget.parentElement;
+                          if (parent) parent.classList.add("tone-fallback");
+                        }}
+                      />
+                    ) : (
+                      <span>{item.product.tone}</span>
+                    )}
                   </div>
-                  <div className="cart-line-controls">
-                    <div className="qty-stepper">
-                      <button
-                        onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}
-                        aria-label={`Decrease ${item.product.name} quantity`}
-                      >
-                        &minus;
-                      </button>
-                      <span>{item.quantity}</span>
-                      <button
-                        onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
-                        aria-label={`Increase ${item.product.name} quantity`}
-                      >
-                        +
+                  <div className="cart-line-body">
+                    <div className="cart-line-info">
+                      <strong>{item.product.name}</strong>
+                      <span>{currencyFromCents(item.product.price_cents)} each</span>
+                    </div>
+                    <div className="cart-line-controls">
+                      <div className="qty-stepper">
+                        <button
+                          onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}
+                          aria-label={`Decrease ${item.product.name} quantity`}
+                        >
+                          &minus;
+                        </button>
+                        <span>{item.quantity}</span>
+                        <button
+                          onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
+                          aria-label={`Increase ${item.product.name} quantity`}
+                        >
+                          +
+                        </button>
+                      </div>
+                      <strong>{currencyFromCents(item.product.price_cents * item.quantity)}</strong>
+                      <button className="cart-remove" onClick={() => onRemoveFromCart(item.product.id)}>
+                        Remove
                       </button>
                     </div>
-                    <strong>{currencyFromCents(item.product.price_cents * item.quantity)}</strong>
-                    <button className="cart-remove" onClick={() => onRemoveFromCart(item.product.id)}>
-                      Remove
-                    </button>
                   </div>
                 </li>
               ))}
@@ -2878,14 +3279,17 @@ type AdminViewProps = {
   demoMode: boolean;
   discount: number;
   fulfillmentByStage: Record<FulfillmentStatus, Order[]>;
+  hasMoreActivity: boolean;
   highValueAccounts: { name: string; detail: string }[];
   isChangePasswordOpen: boolean;
+  isLoadingMoreActivity: boolean;
   onApplyCampaign: () => void;
   onBackToStore: () => void;
   onChangeDiscount: (value: number) => void;
   onChangeOwnPassword: (input: ChangeOwnPasswordInput) => Promise<void>;
   onChangeTab: (tab: AdminTab) => void;
   onCloseChangePassword: () => void;
+  onLoadMoreActivity: () => void;
   onCreateAdminOrder: (input: CreateOrderInput) => Promise<Order>;
   onCreateAdminUser: (input: CreateAdminUserInput) => Promise<AdminUser>;
   onCreateCategory: (input: CreateCategoryInput) => Promise<Category>;
@@ -2962,14 +3366,17 @@ function AdminView({
   demoMode,
   discount,
   fulfillmentByStage,
+  hasMoreActivity,
   highValueAccounts,
   isChangePasswordOpen,
+  isLoadingMoreActivity,
   onApplyCampaign,
   onBackToStore,
   onChangeDiscount,
   onChangeOwnPassword,
   onChangeTab,
   onCloseChangePassword,
+  onLoadMoreActivity,
   onCreateAdminOrder,
   onCreateAdminUser,
   onCreateCategory,
@@ -3505,6 +3912,16 @@ function AdminView({
               </div>
             ))}
           </div>
+          {hasMoreActivity ? (
+            <button
+              type="button"
+              className="outline-button"
+              disabled={isLoadingMoreActivity}
+              onClick={onLoadMoreActivity}
+            >
+              {isLoadingMoreActivity ? "Loading..." : "Load more"}
+            </button>
+          ) : null}
         </section>
       </section>
 

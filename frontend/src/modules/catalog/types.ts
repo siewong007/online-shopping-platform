@@ -1,4 +1,4 @@
-import type { Category, Product } from "../storefront/types";
+import type { Category, Product, UpdateProductStockInput, ProductRestockResult } from "../storefront/types";
 
 export type {
   Category,
@@ -7,6 +7,8 @@ export type {
   Product,
   UpdateProductInput
 } from "../storefront/types";
+
+export type { UpdateProductStockInput, ProductRestockResult };
 
 export type UpdateCategoryInput = {
   name: string;

@@ -7,7 +7,9 @@ import type {
   CreateProductInput,
   Product,
   UpdateCategoryInput,
-  UpdateProductInput
+  UpdateProductInput,
+  UpdateProductStockInput,
+  ProductRestockResult
 } from "../types";
 
 export function fetchAdminCatalog(): Promise<AdminCatalogPayload> {
@@ -45,4 +47,18 @@ export function updateProduct(
 
 export function deleteProduct(productId: number): Promise<void> {
   return deleteJson(`/api/admin/products/${productId}`);
+}
+
+export function updateProductStock(
+  productId: number,
+  input: UpdateProductStockInput
+): Promise<Product> {
+  return putJson<UpdateProductStockInput, Product>(
+    `/api/admin/products/${productId}/stock`,
+    input
+  );
+}
+
+export function supplierSync(): Promise<ProductRestockResult[]> {
+  return postJson<undefined, ProductRestockResult[]>("/api/admin/inventory/supplier-sync", undefined);
 }

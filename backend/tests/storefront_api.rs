@@ -6,13 +6,36 @@ use sqlx::PgPool;
 #[sqlx::test]
 async fn storefront_search_matches_name_and_description_case_insensitively(pool: PgPool) {
     let app = common::app(pool);
-    let (status, body) =
-        common::request(app, Method::GET, "/api/storefront?q=MILWAUKEE", None, None).await;
+    let (status, body) = common::request(
+        app.clone(),
+        Method::GET,
+        "/api/storefront?q=MILWAUKEE",
+        None,
+        None,
+    )
+    .await;
 
     assert_eq!(status, StatusCode::OK, "{body}");
     let products = body["products"].as_array().expect("products array");
     assert_eq!(products.len(), 1);
     assert_eq!(products[0]["name"], "Milwaukee M18 9-Tool Combo Kit");
+
+    let (status, body) = common::request(
+        app,
+        Method::GET,
+        "/api/storefront?q=WASHABILITY",
+        None,
+        None,
+    )
+    .await;
+
+    assert_eq!(status, StatusCode::OK, "{body}");
+    let products = body["products"].as_array().expect("products array");
+    assert_eq!(products.len(), 1);
+    assert_eq!(
+        products[0]["name"],
+        "BEHR Ultra Scuff Defense Interior Paint"
+    );
 }
 
 #[sqlx::test]
@@ -99,4 +122,19 @@ async fn storefront_without_params_matches_previous_shape(pool: PgPool) {
     assert_eq!(body["products"].as_array().unwrap().len(), 8);
     assert!(body["categories"].as_array().is_some());
     assert!(body["promotions"].as_array().is_some());
+}
+
+#[sqlx::test]
+async fn storefront_payload_includes_image_url(pool: PgPool) {
+    let app = common::app(pool);
+    let (status, body) = common::request(app, Method::GET, "/api/storefront", None, None).await;
+
+    assert_eq!(status, StatusCode::OK, "{body}");
+    let products = body["products"].as_array().expect("products array");
+    assert!(!products.is_empty());
+    assert!(products.iter().all(|product| {
+        product
+            .get("image_url")
+            .is_some_and(|value| value.is_string())
+    }));
 }

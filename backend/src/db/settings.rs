@@ -48,6 +48,55 @@ pub async fn fetch_system_settings(pool: &PgPool) -> Result<Vec<SystemSetting>> 
     .map_err(Into::into)
 }
 
+fn validate_setting_value(
+    key: &str,
+    value_type: &str,
+    current_value: &str,
+    value: &str,
+) -> Result<()> {
+    match key {
+        "sales.default_tax_rate_bps" => {
+            let parsed: i64 = value
+                .parse()
+                .map_err(|_| anyhow::anyhow!("Tax rate must be a whole number."))?;
+            if !(0..=10000).contains(&parsed) {
+                bail!("Tax rate must be between 0 and 10000 basis points.");
+            }
+        }
+        "invoicing.payment_terms_days" => {
+            let parsed: i64 = value
+                .parse()
+                .map_err(|_| anyhow::anyhow!("Payment terms must be a whole number of days."))?;
+            if !(0..=365).contains(&parsed) {
+                bail!("Payment terms must be between 0 and 365 days.");
+            }
+        }
+        "invoicing.next_sequence" => {
+            let parsed: i64 = value
+                .parse()
+                .map_err(|_| anyhow::anyhow!("Next sequence must be a whole number."))?;
+            let current: i64 = current_value.parse().unwrap_or(0);
+            if parsed <= current {
+                bail!("Next sequence must be greater than the current value ({current}).");
+            }
+        }
+        "general.currency_code" => {
+            let is_valid = value.len() == 3 && value.bytes().all(|b| b.is_ascii_uppercase());
+            if !is_valid {
+                bail!("Currency code must be three uppercase letters (e.g. USD).");
+            }
+        }
+        _ if value_type == "int" => {
+            value
+                .parse::<i64>()
+                .map_err(|_| anyhow::anyhow!("Setting {key} must be a whole number."))?;
+        }
+        _ => {}
+    }
+
+    Ok(())
+}
+
 pub async fn update_system_setting(
     pool: &PgPool,
     key: &str,
@@ -58,7 +107,27 @@ pub async fn update_system_setting(
         bail!("Setting value cannot be empty.");
     }
 
-    sqlx::query_as::<_, SystemSetting>(
+    // `FOR UPDATE` inside a transaction locks the row for the read-validate-write span, so a
+    // second concurrent update (e.g. two admins bumping `invoicing.next_sequence`) blocks until
+    // this one commits rather than validating against a stale `current_value`.
+    let mut tx = pool.begin().await?;
+
+    let current = sqlx::query_as::<_, SystemSetting>(
+        r#"
+        SELECT key, value, value_type, category, description, updated_at::text AS updated_at
+        FROM system_settings
+        WHERE key = $1
+        FOR UPDATE
+        "#,
+    )
+    .bind(key)
+    .fetch_optional(&mut *tx)
+    .await?
+    .ok_or_else(|| anyhow::anyhow!("Setting {key} does not exist."))?;
+
+    validate_setting_value(key, &current.value_type, &current.value, value)?;
+
+    let updated = sqlx::query_as::<_, SystemSetting>(
         r#"
         UPDATE system_settings
         SET value = $1, updated_at = now()
@@ -68,7 +137,11 @@ pub async fn update_system_setting(
     )
     .bind(value)
     .bind(key)
-    .fetch_optional(pool)
+    .fetch_optional(&mut *tx)
     .await?
-    .ok_or_else(|| anyhow::anyhow!("Setting {key} does not exist."))
+    .ok_or_else(|| anyhow::anyhow!("Setting {key} does not exist."))?;
+
+    tx.commit().await?;
+
+    Ok(updated)
 }

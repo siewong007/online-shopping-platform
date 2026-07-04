@@ -2,8 +2,11 @@ use anyhow::Result;
 use sqlx::PgPool;
 
 use super::{
-    dto::{CreateCategoryInput, CreateProductInput, UpdateCategoryInput, UpdateProductInput},
-    model::{AdminCatalogPayload, Category, Product},
+    dto::{
+        CreateCategoryInput, CreateProductInput, UpdateCategoryInput, UpdateProductInput,
+        UpdateProductStockInput,
+    },
+    model::{AdminCatalogPayload, Category, Product, ProductRestockResult},
 };
 
 pub async fn fetch_admin_catalog(pool: &PgPool) -> Result<AdminCatalogPayload> {
@@ -40,4 +43,16 @@ pub async fn update_product(
 
 pub async fn delete_product(pool: &PgPool, product_id: i32) -> Result<()> {
     crate::db::delete_product(pool, product_id).await
+}
+
+pub async fn update_product_stock(
+    pool: &PgPool,
+    product_id: i32,
+    input: &UpdateProductStockInput,
+) -> Result<Product> {
+    crate::db::update_product_stock(pool, product_id, input).await
+}
+
+pub async fn run_supplier_sync(pool: &PgPool) -> Result<Vec<ProductRestockResult>> {
+    crate::db::supplier_sync(pool).await
 }

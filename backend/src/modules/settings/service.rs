@@ -1,6 +1,8 @@
 use anyhow::Result;
 use sqlx::PgPool;
 
+use crate::modules::{audit, auth::model::AdminIdentity};
+
 use super::{dto::UpdateSystemSettingInput, model::SystemSetting, repository};
 
 pub async fn fetch_system_settings(pool: &PgPool) -> Result<Vec<SystemSetting>> {
@@ -9,8 +11,19 @@ pub async fn fetch_system_settings(pool: &PgPool) -> Result<Vec<SystemSetting>> 
 
 pub async fn update_system_setting(
     pool: &PgPool,
+    identity: &AdminIdentity,
     key: &str,
     input: &UpdateSystemSettingInput,
 ) -> Result<SystemSetting> {
-    repository::update_system_setting(pool, key, input).await
+    let setting = repository::update_system_setting(pool, key, input).await?;
+    audit::service::record_event(
+        pool,
+        &identity.username,
+        "update",
+        "setting",
+        &setting.key,
+        &setting.value,
+    )
+    .await;
+    Ok(setting)
 }

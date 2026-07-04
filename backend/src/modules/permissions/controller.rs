@@ -45,7 +45,7 @@ pub async fn create_role(
     )
     .await?;
 
-    service::create_role(&state.pool, &input)
+    service::create_role(&state.pool, &identity, &input)
         .await
         .map(|role| (StatusCode::CREATED, Json(role)))
         .map_err(error::map_admin_error)
@@ -66,7 +66,7 @@ pub async fn update_role(
     )
     .await?;
 
-    service::update_role(&state.pool, role_id, &input)
+    service::update_role(&state.pool, &identity, role_id, &input)
         .await
         .map(Json)
         .map_err(error::map_admin_error)
@@ -86,7 +86,7 @@ pub async fn delete_role(
     )
     .await?;
 
-    service::delete_role(&state.pool, role_id)
+    service::delete_role(&state.pool, &identity, role_id)
         .await
         .map(|()| StatusCode::NO_CONTENT)
         .map_err(error::map_admin_error)
@@ -106,7 +106,7 @@ pub async fn update_role_permission(
     )
     .await?;
 
-    service::update_role_page_permission(&state.pool, &input)
+    service::update_role_page_permission(&state.pool, &identity, &input)
         .await
         .map(Json)
         .map_err(error::map_admin_error)

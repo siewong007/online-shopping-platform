@@ -17,9 +17,12 @@ type ProductFormState = {
   category_slug: string;
   description: string;
   featured: boolean;
+  image_url: string;
   name: string;
   price: string;
   tone: string;
+  stock_quantity: string;
+  low_stock_threshold: string;
 };
 
 type CatalogPanelProps = {
@@ -92,7 +95,10 @@ function emptyProductForm(categories: Category[]): ProductFormState {
     badge: "",
     description: "",
     tone: "",
-    featured: true
+    featured: true,
+    stock_quantity: "0",
+    low_stock_threshold: "10",
+    image_url: ""
   };
 }
 
@@ -104,7 +110,10 @@ function productFormFromProduct(product: Product): ProductFormState {
     badge: product.badge,
     description: product.description,
     tone: product.tone,
-    featured: product.featured
+    featured: product.featured,
+    stock_quantity: String(product.stock_quantity),
+    low_stock_threshold: String(product.low_stock_threshold),
+    image_url: product.image_url
   };
 }
 
@@ -115,6 +124,23 @@ function productInputFromForm(form: ProductFormState): CreateProductInput {
     throw new Error("Enter a valid product price.");
   }
 
+  const stockQuantity = Number(form.stock_quantity);
+  const lowStockThreshold = Number(form.low_stock_threshold);
+
+  if (!Number.isInteger(stockQuantity) || stockQuantity < 0) {
+    throw new Error("Enter a valid stock quantity.");
+  }
+
+  if (!Number.isInteger(lowStockThreshold) || lowStockThreshold < 0) {
+    throw new Error("Enter a valid low stock threshold.");
+  }
+
+  const imageUrl = form.image_url.trim() || undefined;
+
+  if (imageUrl && !imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
+    throw new Error("Image URL must be empty or start with http:// or https://");
+  }
+
   return {
     name: form.name.trim(),
     category_slug: form.category_slug,
@@ -122,7 +148,10 @@ function productInputFromForm(form: ProductFormState): CreateProductInput {
     badge: form.badge.trim(),
     description: form.description.trim(),
     tone: form.tone.trim(),
-    featured: form.featured
+    featured: form.featured,
+    stock_quantity: stockQuantity,
+    low_stock_threshold: lowStockThreshold,
+    image_url: imageUrl
   };
 }
 
@@ -177,6 +206,40 @@ function productFields(categories: Category[]): RecordFormField<ProductFormState
       label: "Show on storefront",
       type: "toggle",
       description: "Turn on to publish this product to shoppers immediately."
+    },
+    {
+      name: "stock_quantity",
+      label: "Stock quantity",
+      type: "number",
+      required: true,
+      min: 0,
+      step: "1",
+      placeholder: "48",
+      validate: (value) =>
+        Number.isInteger(Number(value)) && Number(value) >= 0
+          ? null
+          : "Enter a valid stock quantity."
+    },
+    {
+      name: "low_stock_threshold",
+      label: "Low stock threshold",
+      type: "number",
+      required: true,
+      min: 0,
+      step: "1",
+      placeholder: "10",
+      helpText: "Products at or below this level are flagged as low stock.",
+      validate: (value) =>
+        Number.isInteger(Number(value)) && Number(value) >= 0
+          ? null
+          : "Enter a valid low stock threshold."
+    },
+    {
+      name: "image_url",
+      label: "Image URL",
+      type: "text",
+      placeholder: "https://example.com/product.jpg",
+      helpText: "Optional. Must be a valid http or https URL. Leave empty to use tone fallback."
     }
   ];
 }
@@ -526,6 +589,21 @@ export function CatalogPanel({
       )
     },
     {
+      key: "image",
+      label: "Image",
+      render: (product: Product) =>
+        product.image_url ? (
+          <img
+            src={product.image_url}
+            alt={product.name}
+            className="product-thumbnail"
+            onError={(event) => {
+              event.currentTarget.style.display = "none";
+            }}
+          />
+        ) : null
+    },
+    {
       key: "actions",
       label: "Actions",
       align: "right" as const,
@@ -691,6 +769,28 @@ export function CatalogPanel({
           submitLabel={editingProductId === null ? "Create Product" : "Save Product"}
           values={productForm}
         />
+        <div className="image-url-preview">
+          <span>Image preview</span>
+          {productForm.image_url.trim() ? (
+            <img
+              src={productForm.image_url.trim()}
+              alt="Product preview"
+              onError={(event) => {
+                event.currentTarget.style.display = "none";
+                const parent = event.currentTarget.parentElement;
+                if (parent) parent.classList.add("preview-broken");
+              }}
+              onLoad={(event) => {
+                event.currentTarget.style.display = "block";
+                const parent = event.currentTarget.parentElement;
+                if (parent) parent.classList.remove("preview-broken");
+              }}
+            />
+          ) : (
+            <p>No image URL set — the tone block fallback will be used.</p>
+          )}
+          <p className="image-url-preview-broken-note">Image could not be loaded from that URL.</p>
+        </div>
       </RecordModal>
     </section>
   );

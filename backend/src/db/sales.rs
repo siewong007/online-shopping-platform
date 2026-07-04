@@ -1,11 +1,15 @@
 use crate::db::settings::{compute_tax_and_total, fetch_setting_int};
 use crate::models::*;
 use anyhow::{Result, bail};
-use sqlx::PgPool;
+use sqlx::{PgPool, Postgres, Transaction};
 
+// `fulfilled` is reachable directly from `confirmed`/`processing` (not just `paid`) because
+// the fulfillment flow (order_fulfillment_history) can legitimately reach a terminal fulfillment
+// state before payment is recorded — this is the single source of truth both call sites use;
+// see `advance_sales_status_for_fulfillment` below.
 const SALES_TRANSITIONS: &[(&str, &[&str])] = &[
-    ("confirmed", &["processing", "cancelled"]),
-    ("processing", &["paid", "cancelled"]),
+    ("confirmed", &["processing", "fulfilled", "cancelled"]),
+    ("processing", &["paid", "fulfilled", "cancelled"]),
     ("paid", &["fulfilled", "cancelled"]),
     ("fulfilled", &[]),
     ("cancelled", &[]),
@@ -23,6 +27,121 @@ fn ensure_valid_sales_transition(from: &str, to: &str) -> Result<()> {
     if !allowed.contains(&to) {
         bail!("Cannot move a sale from {from} to {to}.");
     }
+
+    Ok(())
+}
+
+/// Advances `order_sales_meta.status` from within an already-open transaction, validating the
+/// move against the same `SALES_TRANSITIONS` table `update_sales_status` uses. Unlike
+/// `update_sales_status`, this never touches `payment_status` — fulfillment reaching a terminal
+/// state must never be mistaken for a payment event. No-ops if the sale is already terminal or
+/// has no meta row yet (defensive; `create_order` always inserts one).
+pub async fn advance_sales_status_for_fulfillment(
+    tx: &mut Transaction<'_, Postgres>,
+    order_id: i32,
+    to_status: &str,
+    note: &str,
+) -> Result<()> {
+    let current_status = sqlx::query_scalar::<_, String>(
+        r#"
+        SELECT status
+        FROM order_sales_meta
+        WHERE order_id = $1
+        FOR UPDATE
+        "#,
+    )
+    .bind(order_id)
+    .fetch_optional(&mut **tx)
+    .await?;
+
+    let Some(from_status) = current_status else {
+        return Ok(());
+    };
+
+    if matches!(from_status.as_str(), "fulfilled" | "cancelled") {
+        return Ok(());
+    }
+
+    ensure_valid_sales_transition(&from_status, to_status)?;
+
+    sqlx::query(
+        r#"
+        UPDATE order_sales_meta
+        SET status = $1, updated_at = now()
+        WHERE order_id = $2
+        "#,
+    )
+    .bind(to_status)
+    .bind(order_id)
+    .execute(&mut **tx)
+    .await?;
+
+    sqlx::query(
+        r#"
+        INSERT INTO sales_status_history (order_id, from_status, to_status, note)
+        VALUES ($1, $2, $3, $4)
+        "#,
+    )
+    .bind(order_id)
+    .bind(&from_status)
+    .bind(to_status)
+    .bind(note)
+    .execute(&mut **tx)
+    .await?;
+
+    Ok(())
+}
+
+/// Mirror of `advance_sales_status_for_fulfillment` for the reverse direction: cancelling a sale
+/// also cancels its fulfillment, so the two pipelines can't end up in contradictory terminal
+/// states (e.g. `delivered` + `cancelled`). No-ops if fulfillment is already terminal.
+async fn cancel_fulfillment_for_sale(
+    tx: &mut Transaction<'_, Postgres>,
+    order_id: i32,
+    changed_by: &str,
+) -> Result<()> {
+    let current_status = sqlx::query_scalar::<_, String>(
+        r#"
+        SELECT fulfillment_status
+        FROM orders
+        WHERE id = $1
+        FOR UPDATE
+        "#,
+    )
+    .bind(order_id)
+    .fetch_optional(&mut **tx)
+    .await?;
+
+    let Some(from_status) = current_status else {
+        return Ok(());
+    };
+
+    if matches!(from_status.as_str(), "completed" | "delivered" | "canceled") {
+        return Ok(());
+    }
+
+    sqlx::query(
+        r#"
+        UPDATE orders
+        SET fulfillment_status = 'canceled'
+        WHERE id = $1
+        "#,
+    )
+    .bind(order_id)
+    .execute(&mut **tx)
+    .await?;
+
+    sqlx::query(
+        r#"
+        INSERT INTO order_fulfillment_history (order_id, from_status, to_status, note, changed_by)
+        VALUES ($1, $2, 'canceled', 'Sale was cancelled.', $3)
+        "#,
+    )
+    .bind(order_id)
+    .bind(&from_status)
+    .bind(changed_by)
+    .execute(&mut **tx)
+    .await?;
 
     Ok(())
 }
@@ -145,6 +264,7 @@ pub async fn update_sales_status(
     pool: &PgPool,
     order_id: i32,
     input: &UpdateSalesStatusInput,
+    changed_by: &str,
 ) -> Result<SalesRecord> {
     let to_status = input.status.trim().to_lowercase();
     if !SALES_STATUSES.contains(&to_status.as_str()) {
@@ -198,6 +318,10 @@ pub async fn update_sales_status(
     .bind(input.note.trim())
     .execute(&mut *tx)
     .await?;
+
+    if to_status == "cancelled" {
+        cancel_fulfillment_for_sale(&mut tx, order_id, changed_by).await?;
+    }
 
     tx.commit().await?;
 

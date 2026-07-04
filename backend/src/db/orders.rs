@@ -1,7 +1,8 @@
+use crate::db::sales::advance_sales_status_for_fulfillment;
 use crate::db::settings::{compute_tax_and_total, fetch_setting_int};
 use crate::models::*;
 use anyhow::{Result, anyhow, bail};
-use sqlx::PgPool;
+use sqlx::{PgConnection, PgPool};
 use std::collections::HashMap;
 
 const FULFILLMENT_METHODS: &[&str] = &["pickup", "delivery"];
@@ -75,65 +76,24 @@ fn ensure_valid_fulfillment_transition(from: &str, to: &str, method: &str) -> Re
     Ok(())
 }
 
-pub async fn create_order(pool: &PgPool, input: &CreateOrderInput) -> Result<Order> {
-    let customer_name = input.customer_name.trim();
-    let customer_email = input.customer_email.trim();
+pub async fn create_order(
+    pool: &PgPool,
+    input: &CreateOrderInput,
+    customer_account_id: Option<i32>,
+) -> Result<Order> {
+    let (customer_name, customer_email) = validate_order_input(input)?;
     let fulfillment_method = normalize_fulfillment_method(input.fulfillment_method.as_deref())?;
-
-    if customer_name.is_empty() || customer_email.is_empty() {
-        bail!("Customer name and email are required.");
-    }
-
-    if !customer_email.contains('@') {
-        bail!("Customer email must be a valid address.");
-    }
-
-    if input.items.is_empty() {
-        bail!("An order must contain at least one item.");
-    }
 
     let mut tx = pool.begin().await?;
 
-    let mut subtotal_cents: i64 = 0;
-    let mut line_items: Vec<OrderItem> = Vec::with_capacity(input.items.len());
-
-    for item in &input.items {
-        if item.quantity <= 0 {
-            bail!("Order item quantity must be greater than zero.");
-        }
-
-        let product = sqlx::query_as::<_, (String, i32)>(
-            r#"
-            SELECT name, price_cents
-            FROM products
-            WHERE id = $1
-            "#,
-        )
-        .bind(item.product_id)
-        .fetch_optional(&mut *tx)
-        .await?;
-
-        let Some((product_name, unit_price_cents)) = product else {
-            bail!("Product {} does not exist.", item.product_id);
-        };
-
-        subtotal_cents += i64::from(unit_price_cents) * i64::from(item.quantity);
-        line_items.push(OrderItem {
-            product_id: item.product_id,
-            product_name,
-            unit_price_cents,
-            quantity: item.quantity,
-        });
-    }
-
-    let subtotal_cents = i32::try_from(subtotal_cents)
-        .map_err(|_| anyhow::anyhow!("Order subtotal exceeds the supported maximum."))?;
+    let (subtotal_cents, line_items) =
+        resolve_order_line_items(&mut tx, input, DecrementStock::Yes).await?;
 
     let (order_id, fulfillment_status, fulfillment_method, created_at) =
         sqlx::query_as::<_, (i32, String, String, String)>(
             r#"
-        INSERT INTO orders (customer_name, customer_email, subtotal_cents, fulfillment_method)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO orders (customer_name, customer_email, subtotal_cents, fulfillment_method, customer_account_id)
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING id, fulfillment_status, fulfillment_method, created_at::text
         "#,
         )
@@ -141,6 +101,7 @@ pub async fn create_order(pool: &PgPool, input: &CreateOrderInput) -> Result<Ord
         .bind(customer_email)
         .bind(subtotal_cents)
         .bind(&fulfillment_method)
+        .bind(customer_account_id)
         .fetch_one(&mut *tx)
         .await?;
 
@@ -177,14 +138,15 @@ pub async fn create_order(pool: &PgPool, input: &CreateOrderInput) -> Result<Ord
     sqlx::query(
         r#"
         INSERT INTO customer_portal_profiles
-            (customer_name, customer_email, membership_tier, points_balance, lifetime_purchase_cents, total_orders, last_purchase_at)
-        VALUES ($1, $2, 'Bronze', $3, $4, 1, $5::timestamptz)
+            (customer_name, customer_email, membership_tier, points_balance, lifetime_purchase_cents, total_orders, last_purchase_at, customer_account_id)
+        VALUES ($1, $2, 'Bronze', $3, $4, 1, $5::timestamptz, $6)
         ON CONFLICT (customer_email) DO UPDATE SET
             customer_name = EXCLUDED.customer_name,
             points_balance = customer_portal_profiles.points_balance + EXCLUDED.points_balance,
             lifetime_purchase_cents = customer_portal_profiles.lifetime_purchase_cents + EXCLUDED.lifetime_purchase_cents,
             total_orders = customer_portal_profiles.total_orders + 1,
             last_purchase_at = EXCLUDED.last_purchase_at,
+            customer_account_id = COALESCE(customer_portal_profiles.customer_account_id, EXCLUDED.customer_account_id),
             updated_at = now()
         "#,
     )
@@ -193,6 +155,7 @@ pub async fn create_order(pool: &PgPool, input: &CreateOrderInput) -> Result<Ord
     .bind(earned_points)
     .bind(subtotal_cents)
     .bind(&created_at)
+    .bind(customer_account_id)
     .execute(&mut *tx)
     .await?;
 
@@ -345,9 +308,20 @@ fn validate_order_input(input: &CreateOrderInput) -> Result<(&str, &str)> {
     Ok((customer_name, customer_email))
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum DecrementStock {
+    Yes,
+    No,
+}
+
+/// Resolves order line items against `products`, computing the subtotal. When
+/// `DecrementStock::Yes`, the stock check-and-decrement is a single conditional `UPDATE` so
+/// concurrent checkouts can never oversell the same unit — the `WHERE stock_quantity >= $qty`
+/// clause makes the decrement atomic with the check.
 async fn resolve_order_line_items(
-    pool: &PgPool,
+    conn: &mut PgConnection,
     input: &CreateOrderInput,
+    decrement_stock: DecrementStock,
 ) -> Result<(i32, Vec<OrderItem>)> {
     let mut subtotal_cents: i64 = 0;
     let mut line_items: Vec<OrderItem> = Vec::with_capacity(input.items.len());
@@ -357,19 +331,55 @@ async fn resolve_order_line_items(
             bail!("Order item quantity must be greater than zero.");
         }
 
-        let product = sqlx::query_as::<_, (String, i32)>(
-            r#"
-            SELECT name, price_cents
-            FROM products
-            WHERE id = $1
-            "#,
-        )
-        .bind(item.product_id)
-        .fetch_optional(pool)
-        .await?;
+        let (product_name, unit_price_cents) = if decrement_stock == DecrementStock::Yes {
+            let decremented = sqlx::query_as::<_, (String, i32)>(
+                r#"
+                UPDATE products
+                SET stock_quantity = stock_quantity - $1
+                WHERE id = $2 AND stock_quantity >= $1
+                RETURNING name, price_cents
+                "#,
+            )
+            .bind(item.quantity)
+            .bind(item.product_id)
+            .fetch_optional(&mut *conn)
+            .await?;
 
-        let Some((product_name, unit_price_cents)) = product else {
-            bail!("Product {} does not exist.", item.product_id);
+            match decremented {
+                Some(row) => row,
+                None => {
+                    let existing = sqlx::query_as::<_, (String, i32)>(
+                        r#"
+                        SELECT name, stock_quantity
+                        FROM products
+                        WHERE id = $1
+                        "#,
+                    )
+                    .bind(item.product_id)
+                    .fetch_optional(&mut *conn)
+                    .await?;
+
+                    match existing {
+                        Some((name, stock_quantity)) => {
+                            bail!("{name} has only {stock_quantity} left in stock.");
+                        }
+                        None => bail!("Product {} does not exist.", item.product_id),
+                    }
+                }
+            }
+        } else {
+            let product = sqlx::query_as::<_, (String, i32)>(
+                r#"
+                SELECT name, price_cents
+                FROM products
+                WHERE id = $1
+                "#,
+            )
+            .bind(item.product_id)
+            .fetch_optional(&mut *conn)
+            .await?;
+
+            product.ok_or_else(|| anyhow!("Product {} does not exist.", item.product_id))?
         };
 
         subtotal_cents += i64::from(unit_price_cents) * i64::from(item.quantity);
@@ -382,14 +392,13 @@ async fn resolve_order_line_items(
     }
 
     let subtotal_cents = i32::try_from(subtotal_cents)
-        .map_err(|_| anyhow::anyhow!("Order subtotal exceeds the supported maximum."))?;
+        .map_err(|_| anyhow!("Order subtotal exceeds the supported maximum."))?;
 
     Ok((subtotal_cents, line_items))
 }
 
 pub async fn update_order(pool: &PgPool, order_id: i32, input: &CreateOrderInput) -> Result<Order> {
     let (customer_name, customer_email) = validate_order_input(input)?;
-    let (subtotal_cents, line_items) = resolve_order_line_items(pool, input).await?;
     let fulfillment_method = input
         .fulfillment_method
         .as_deref()
@@ -397,6 +406,32 @@ pub async fn update_order(pool: &PgPool, order_id: i32, input: &CreateOrderInput
         .transpose()?;
     let tax_rate_bps = fetch_setting_int(pool, "sales.default_tax_rate_bps", 0).await?;
     let mut tx = pool.begin().await?;
+
+    let current_status = sqlx::query_scalar::<_, String>(
+        r#"
+        SELECT fulfillment_status
+        FROM orders
+        WHERE id = $1
+        FOR UPDATE
+        "#,
+    )
+    .bind(order_id)
+    .fetch_optional(&mut *tx)
+    .await?;
+
+    let Some(current_status) = current_status else {
+        bail!("Order {order_id} does not exist.");
+    };
+
+    if matches!(
+        current_status.as_str(),
+        "completed" | "delivered" | "canceled"
+    ) {
+        bail!("Order {order_id} is {current_status} and can no longer be edited.");
+    }
+
+    let (subtotal_cents, line_items) =
+        resolve_order_line_items(&mut tx, input, DecrementStock::No).await?;
 
     let order_state = sqlx::query_as::<_, (String, String, String)>(
         r#"
@@ -646,77 +681,15 @@ pub async fn update_order_fulfillment(
             "fulfilled"
         };
 
-        let sales_status = sqlx::query_scalar::<_, String>(
-            r#"
-            SELECT status
-            FROM order_sales_meta
-            WHERE order_id = $1
-            FOR UPDATE
-            "#,
+        // payment_status is intentionally left untouched by this path: it should only ever
+        // reflect an actual payment record, never be inferred from fulfillment.
+        advance_sales_status_for_fulfillment(
+            &mut tx,
+            order_id,
+            sales_to_status,
+            &format!("Fulfillment moved to {to_status}."),
         )
-        .bind(order_id)
-        .fetch_optional(&mut *tx)
         .await?;
-
-        match sales_status {
-            Some(from_status) if !matches!(from_status.as_str(), "fulfilled" | "cancelled") => {
-                // payment_status is intentionally left untouched: it should only ever
-                // reflect an actual payment record, never be inferred from fulfillment.
-                sqlx::query(
-                    r#"
-                    UPDATE order_sales_meta
-                    SET status = $1,
-                        updated_at = now()
-                    WHERE order_id = $2
-                    "#,
-                )
-                .bind(sales_to_status)
-                .bind(order_id)
-                .execute(&mut *tx)
-                .await?;
-
-                sqlx::query(
-                    r#"
-                    INSERT INTO sales_status_history (order_id, from_status, to_status, note)
-                    VALUES ($1, $2, $3, $4)
-                    "#,
-                )
-                .bind(order_id)
-                .bind(&from_status)
-                .bind(sales_to_status)
-                .bind(format!("Fulfillment moved to {to_status}."))
-                .execute(&mut *tx)
-                .await?;
-            }
-            None => {
-                sqlx::query(
-                    r#"
-                    INSERT INTO order_sales_meta
-                        (order_id, status, payment_status, channel, total_cents)
-                    SELECT id, $2, 'unpaid', 'web', subtotal_cents
-                    FROM orders
-                    WHERE id = $1
-                    "#,
-                )
-                .bind(order_id)
-                .bind(sales_to_status)
-                .execute(&mut *tx)
-                .await?;
-
-                sqlx::query(
-                    r#"
-                    INSERT INTO sales_status_history (order_id, from_status, to_status, note)
-                    VALUES ($1, NULL, $2, $3)
-                    "#,
-                )
-                .bind(order_id)
-                .bind(sales_to_status)
-                .bind(format!("Fulfillment moved to {to_status}."))
-                .execute(&mut *tx)
-                .await?;
-            }
-            _ => {}
-        }
     }
 
     tx.commit().await?;

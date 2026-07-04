@@ -1,6 +1,10 @@
 import { fallbackStorefront } from "../../../data/fallback";
-import { fetchJson } from "../../../shared/api/http";
+import { fetchJsonResult } from "../../../shared/api/http";
 import type { Product, StorefrontPayload, StorefrontQueryParams, StorefrontSort } from "../types";
+
+function isValidPriceCents(value: number | undefined): value is number {
+  return value !== undefined && Number.isFinite(value) && value >= 0;
+}
 
 function matchesQuery(product: Product, params: StorefrontQueryParams): boolean {
   const search = params.q?.trim().toLowerCase();
@@ -15,11 +19,11 @@ function matchesQuery(product: Product, params: StorefrontQueryParams): boolean 
     return false;
   }
 
-  if (params.minPriceCents != null && product.price_cents < params.minPriceCents) {
+  if (isValidPriceCents(params.minPriceCents) && product.price_cents < params.minPriceCents) {
     return false;
   }
 
-  if (params.maxPriceCents != null && product.price_cents > params.maxPriceCents) {
+  if (isValidPriceCents(params.maxPriceCents) && product.price_cents > params.maxPriceCents) {
     return false;
   }
 
@@ -56,11 +60,11 @@ function buildQueryString(params?: StorefrontQueryParams): string {
     search.set("category", params.category);
   }
 
-  if (params.minPriceCents != null) {
+  if (isValidPriceCents(params.minPriceCents)) {
     search.set("min_price_cents", String(params.minPriceCents));
   }
 
-  if (params.maxPriceCents != null) {
+  if (isValidPriceCents(params.maxPriceCents)) {
     search.set("max_price_cents", String(params.maxPriceCents));
   }
 
@@ -73,9 +77,12 @@ function buildQueryString(params?: StorefrontQueryParams): string {
 }
 
 export async function fetchStorefront(params?: StorefrontQueryParams): Promise<StorefrontPayload> {
-  const payload = await fetchJson(`/api/storefront${buildQueryString(params)}`, fallbackStorefront);
+  const { data: payload, isFallback } = await fetchJsonResult(
+    `/api/storefront${buildQueryString(params)}`,
+    fallbackStorefront
+  );
 
-  if (payload !== fallbackStorefront || !params) {
+  if (!isFallback || !params) {
     return payload;
   }
 

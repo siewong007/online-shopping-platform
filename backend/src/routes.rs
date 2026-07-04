@@ -8,8 +8,8 @@ use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use crate::{
     app_state::AppState,
     modules::{
-        admin_users, auth, catalog, customer_portal, dashboard, health, invoices, orders, payments,
-        permissions, sales, settings, storefront,
+        admin_users, audit, auth, catalog, customer_auth, customer_portal, dashboard, health,
+        invoices, orders, payments, permissions, sales, settings, storefront,
     },
 };
 
@@ -52,6 +52,10 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
         .route(
             "/api/admin/dashboard",
             get(dashboard::controller::admin_dashboard),
+        )
+        .route(
+            "/api/admin/audit-events",
+            get(audit::controller::admin_audit_events),
         )
         .route(
             "/api/admin/orders",
@@ -163,7 +167,25 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
             "/api/admin/products/{product_id}",
             put(catalog::controller::update_product).delete(catalog::controller::delete_product),
         )
+        .route(
+            "/api/admin/products/{product_id}/stock",
+            put(catalog::controller::update_product_stock),
+        )
+        .route(
+            "/api/admin/inventory/supplier-sync",
+            post(catalog::controller::supplier_sync),
+        )
         .route("/api/checkout", post(orders::controller::checkout))
+        .route(
+            "/api/account/register",
+            post(customer_auth::controller::register),
+        )
+        .route("/api/account/login", post(customer_auth::controller::login))
+        .route(
+            "/api/account/logout",
+            post(customer_auth::controller::logout),
+        )
+        .route("/api/account/me", get(customer_auth::controller::me))
         .with_state(state)
         .layer(TraceLayer::new_for_http())
         .layer(cors)

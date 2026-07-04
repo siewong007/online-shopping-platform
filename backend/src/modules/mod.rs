@@ -1,6 +1,8 @@
 pub mod admin_users;
+pub mod audit;
 pub mod auth;
 pub mod catalog;
+pub mod customer_auth;
 pub mod customer_portal;
 pub mod dashboard;
 pub mod health;

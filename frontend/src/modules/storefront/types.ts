@@ -13,6 +13,9 @@ export type Product = {
   description: string;
   tone: string;
   featured: boolean;
+  stock_quantity: number;
+  low_stock_threshold: number;
+  image_url: string;
 };
 
 export type CreateCategoryInput = {
@@ -29,9 +32,23 @@ export type CreateProductInput = {
   description: string;
   tone: string;
   featured: boolean;
+  stock_quantity: number;
+  low_stock_threshold: number;
+  image_url?: string;
 };
 
 export type UpdateProductInput = CreateProductInput;
+
+export type UpdateProductStockInput = {
+  stock_quantity: number;
+  low_stock_threshold: number;
+};
+
+export type ProductRestockResult = {
+  product_id: number;
+  name: string;
+  added: number;
+};
 
 export type Promotion = {
   label: string;

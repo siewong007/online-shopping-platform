@@ -2,11 +2,13 @@ import type {
   AdminCatalogPayload,
   AdminDashboardPayload,
   AdminUser,
+  AuditEvent,
   CustomerPortalProfile,
   Invoice,
   Order,
   Payment,
   PermissionsPayload,
+  ProductRestockResult,
   SalesRecord,
   SalesSummaryPayload,
   StorefrontPayload,
@@ -51,7 +53,10 @@ export const fallbackStorefront: StorefrontPayload = {
       badge: "Special Buy",
       description: "Two batteries, charger and contractor bag for garages, remodels and everyday doer jobs.",
       tone: "Milwaukee",
-      featured: true
+      featured: true,
+      stock_quantity: 25,
+      low_stock_threshold: 5,
+      image_url: "https://picsum.photos/seed/milwaukee-combo-kit/400/300"
     },
     {
       id: 2,
@@ -61,7 +66,10 @@ export const fallbackStorefront: StorefrontPayload = {
       badge: "Weekend Project",
       description: "Deck boards, posts and hardware grouped for a cleaner project kickoff.",
       tone: "Deck Build",
-      featured: true
+      featured: true,
+      stock_quantity: 12,
+      low_stock_threshold: 5,
+      image_url: ""
     },
     {
       id: 3,
@@ -71,7 +79,10 @@ export const fallbackStorefront: StorefrontPayload = {
       badge: "Top Rated",
       description: "Low-sheen interior coverage with durable washability for high-traffic spaces.",
       tone: "BEHR",
-      featured: true
+      featured: true,
+      stock_quantity: 48,
+      low_stock_threshold: 10,
+      image_url: "https://picsum.photos/seed/behr-interior-paint/400/300"
     },
     {
       id: 4,
@@ -81,7 +92,10 @@ export const fallbackStorefront: StorefrontPayload = {
       badge: "Fast Delivery",
       description: "Stainless finish, quiet operation and install-friendly scheduling for kitchen updates.",
       tone: "Frigidaire",
-      featured: true
+      featured: true,
+      stock_quantity: 8,
+      low_stock_threshold: 5,
+      image_url: ""
     },
     {
       id: 5,
@@ -91,7 +105,10 @@ export const fallbackStorefront: StorefrontPayload = {
       badge: "Spring Black Friday",
       description: "Battery mower bundle for smaller yards, weekend touchups and low-maintenance storage.",
       tone: "RYOBI",
-      featured: true
+      featured: true,
+      stock_quantity: 16,
+      low_stock_threshold: 5,
+      image_url: "https://picsum.photos/seed/ryobi-mower-kit/400/300"
     },
     {
       id: 6,
@@ -101,7 +118,10 @@ export const fallbackStorefront: StorefrontPayload = {
       badge: "Bath Refresh",
       description: "Sink, cabinet and mirror styling arranged for a quick bathroom overhaul.",
       tone: "Glacier Bay",
-      featured: true
+      featured: true,
+      stock_quantity: 3,
+      low_stock_threshold: 5,
+      image_url: ""
     },
     {
       id: 7,
@@ -111,7 +131,10 @@ export const fallbackStorefront: StorefrontPayload = {
       badge: "Bulk Savings",
       description: "A patio-ready paver assortment for outdoor living upgrades and curb appeal.",
       tone: "Pavestone",
-      featured: true
+      featured: true,
+      stock_quantity: 20,
+      low_stock_threshold: 5,
+      image_url: "https://picsum.photos/seed/pavestone-patio-pallet/400/300"
     },
     {
       id: 8,
@@ -121,7 +144,10 @@ export const fallbackStorefront: StorefrontPayload = {
       badge: "Everyday Value",
       description: "Garage, attic and jobsite storage with durable lids and stackable footprints.",
       tone: "Husky",
-      featured: true
+      featured: true,
+      stock_quantity: 52,
+      low_stock_threshold: 10,
+      image_url: ""
     }
   ],
   services: [
@@ -161,6 +187,7 @@ export const fallbackAdminDashboard: AdminDashboardPayload = {
     revenue_today_cents: 48240000,
     revenue_yesterday_cents: 40810000,
     orders_awaiting_fulfillment: 37,
+    low_stock_sku_count: 2,
     unpaid_invoice_count: 6,
     unpaid_invoice_amount_cents: 1284500
   },
@@ -191,6 +218,36 @@ export const fallbackAdminDashboard: AdminDashboardPayload = {
     { happened_at: "09:05", detail: "Dishwasher install route synced with updated delivery windows." }
   ]
 };
+
+export const fallbackAuditEvents: AuditEvent[] = [
+  {
+    id: 3,
+    actor: "admin",
+    action: "update",
+    entity_type: "order_fulfillment",
+    entity_id: "1042",
+    detail: "Dishwasher install route synced with updated delivery windows.",
+    happened_at: "09:05"
+  },
+  {
+    id: 2,
+    actor: "admin",
+    action: "update",
+    entity_type: "sale",
+    entity_id: "1041",
+    detail: "Pro desk quote approved for Falcon Builders deck materials order.",
+    happened_at: "08:42"
+  },
+  {
+    id: 1,
+    actor: "admin",
+    action: "update",
+    entity_type: "product",
+    entity_id: "204",
+    detail: "Milwaukee battery promo moved to the hero slot for western stores.",
+    happened_at: "08:10"
+  }
+];
 
 export const fallbackOrders: Order[] = [
   {
@@ -567,3 +624,5 @@ export const fallbackAdminUsers: AdminUser[] = [
     updated_at: "2026-07-02 14:00:00+00"
   }
 ];
+
+export const fallbackSupplierSync: ProductRestockResult[] = [];

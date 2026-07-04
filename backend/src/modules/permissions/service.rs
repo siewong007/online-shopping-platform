@@ -2,7 +2,10 @@ use anyhow::Result;
 use axum::http::StatusCode;
 use sqlx::PgPool;
 
-use crate::{error::HttpError, modules::auth::model::AdminIdentity};
+use crate::{
+    error::HttpError,
+    modules::{audit, auth::model::AdminIdentity},
+};
 
 use super::{
     dto::{CreateRoleInput, PermissionsPayload, UpdateRoleInput, UpdateRolePagePermissionInput},
@@ -54,21 +57,71 @@ pub async fn ensure_permission(
     }
 }
 
-pub async fn create_role(pool: &PgPool, input: &CreateRoleInput) -> Result<Role> {
-    repository::create_role(pool, input).await
+pub async fn create_role(
+    pool: &PgPool,
+    identity: &AdminIdentity,
+    input: &CreateRoleInput,
+) -> Result<Role> {
+    let role = repository::create_role(pool, input).await?;
+    audit::service::record_event(
+        pool,
+        &identity.username,
+        "create",
+        "role",
+        &role.id.to_string(),
+        &role.name,
+    )
+    .await;
+    Ok(role)
 }
 
-pub async fn update_role(pool: &PgPool, role_id: i32, input: &UpdateRoleInput) -> Result<Role> {
-    repository::update_role(pool, role_id, input).await
+pub async fn update_role(
+    pool: &PgPool,
+    identity: &AdminIdentity,
+    role_id: i32,
+    input: &UpdateRoleInput,
+) -> Result<Role> {
+    let role = repository::update_role(pool, role_id, input).await?;
+    audit::service::record_event(
+        pool,
+        &identity.username,
+        "update",
+        "role",
+        &role.id.to_string(),
+        &role.name,
+    )
+    .await;
+    Ok(role)
 }
 
-pub async fn delete_role(pool: &PgPool, role_id: i32) -> Result<()> {
-    repository::delete_role(pool, role_id).await
+pub async fn delete_role(pool: &PgPool, identity: &AdminIdentity, role_id: i32) -> Result<()> {
+    repository::delete_role(pool, role_id).await?;
+    audit::service::record_event(
+        pool,
+        &identity.username,
+        "delete",
+        "role",
+        &role_id.to_string(),
+        "",
+    )
+    .await;
+    Ok(())
 }
 
 pub async fn update_role_page_permission(
     pool: &PgPool,
+    identity: &AdminIdentity,
     input: &UpdateRolePagePermissionInput,
 ) -> Result<RolePagePermission> {
-    repository::update_role_page_permission(pool, input).await
+    let permission = repository::update_role_page_permission(pool, input).await?;
+    audit::service::record_event(
+        pool,
+        &identity.username,
+        "update",
+        "role_permission",
+        &permission.role_id.to_string(),
+        &format!("page {}", permission.page_id),
+    )
+    .await;
+    Ok(permission)
 }
