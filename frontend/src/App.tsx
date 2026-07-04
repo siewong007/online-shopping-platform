@@ -61,6 +61,7 @@ import {
 import { TeamPanel } from "./modules/admin_users/components/TeamPanel";
 import { AdminLoginScreen } from "./modules/auth/components/AdminLoginScreen";
 import { CatalogPanel } from "./modules/catalog/components/CatalogPanel";
+import { LandingView } from "./modules/landing/LandingView";
 import { InvoicesPanel } from "./modules/invoices/components/InvoicesPanel";
 import { OrderControlPanel } from "./modules/orders/components/OrderControlPanel";
 import { PaymentManagementPanel } from "./modules/payments/components/PaymentManagementPanel";
@@ -142,7 +143,7 @@ import type {
 const CART_STORAGE_KEY = "depot-cart";
 const ACCOUNT_EMAIL_STORAGE_KEY = "depot-account-email";
 
-type View = "store" | "admin";
+type View = "landing" | "store" | "admin";
 type AdminAuthState = "checking" | "unauthenticated" | "authenticated" | "demo";
 type AdminTab =
   | "overview"
@@ -996,7 +997,13 @@ function DepotMark({ compact = false }: { compact?: boolean }) {
 }
 
 export default function App() {
-  const [view, setView] = useState<View>(window.location.pathname === "/admin" ? "admin" : "store");
+  const [view, setView] = useState<View>(() => {
+    const path = window.location.pathname;
+    if (path === "/admin") {
+      return "admin";
+    }
+    return "landing";
+  });
   const [storefront, setStorefront] = useState<StorefrontPayload | null>(null);
   const [dashboard, setDashboard] = useState<AdminDashboardPayload | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -1080,7 +1087,14 @@ export default function App() {
 
   useEffect(() => {
     const onPopState = () => {
-      setView(window.location.pathname === "/admin" ? "admin" : "store");
+      const path = window.location.pathname;
+      if (path === "/admin") {
+        setView("admin");
+      } else if (path === "/") {
+        setView("landing");
+      } else {
+        setView("store");
+      }
     };
 
     window.addEventListener("popstate", onPopState);
@@ -2010,6 +2024,17 @@ export default function App() {
       ...current
     ]);
   };
+
+  const openShop = () => openView("store");
+
+  // Show landing page immediately without waiting for storefront data
+  if (view === "landing") {
+    return (
+      <div className="app-shell">
+        <LandingView onOpenShop={openShop} />
+      </div>
+    );
+  }
 
   if (!storefront) {
     return <main className="loading-shell">Loading Home Depot storefront...</main>;
