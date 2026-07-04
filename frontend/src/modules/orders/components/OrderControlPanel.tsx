@@ -40,6 +40,9 @@ type OrderControlPanelProps = {
   products: Product[];
 };
 
+// Mirrors FULFILLMENT_PICKUP_TRANSITIONS / FULFILLMENT_DELIVERY_TRANSITIONS in
+// backend/src/db/orders.rs — the backend is authoritative and re-validates on submit; this
+// copy only limits which options the "Advance" modal offers.
 const fulfillmentTransitions: Record<
   FulfillmentMethod,
   Record<FulfillmentStatus, FulfillmentStatus[]>
@@ -90,7 +93,7 @@ function fulfillmentTone(status: FulfillmentStatus): string {
 }
 
 function nextFulfillmentStatuses(order: Order): FulfillmentStatus[] {
-  return fulfillmentTransitions[order.fulfillment_method][order.fulfillment_status] ?? [];
+  return fulfillmentTransitions[order.fulfillment_method]?.[order.fulfillment_status] ?? [];
 }
 
 function newOrderLine(productId: string, quantity = 1): OrderFormLine {

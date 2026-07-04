@@ -22,8 +22,9 @@ pub async fn update_sales_status(
     pool: &PgPool,
     order_id: i32,
     input: &UpdateSalesStatusInput,
+    changed_by: &str,
 ) -> Result<SalesRecord> {
-    crate::db::update_sales_status(pool, order_id, input).await
+    crate::db::update_sales_status(pool, order_id, input, changed_by).await
 }
 
 pub async fn fetch_sales_summary(pool: &PgPool) -> Result<SalesSummaryPayload> {

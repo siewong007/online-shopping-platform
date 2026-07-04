@@ -93,6 +93,11 @@ pub async fn fetch_live_dashboard_metrics(pool: &PgPool) -> Result<LiveDashboard
             )::bigint AS orders_awaiting_fulfillment,
             (
                 SELECT COUNT(*)
+                FROM products
+                WHERE stock_quantity <= low_stock_threshold
+            )::bigint AS low_stock_sku_count,
+            (
+                SELECT COUNT(*)
                 FROM invoices i
                 WHERE i.voided_at IS NULL
                   AND i.total_cents > COALESCE((

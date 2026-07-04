@@ -49,7 +49,7 @@ pub async fn admin_create_payment(
     )
     .await?;
 
-    service::create_payment(&state.pool, &input)
+    service::create_payment(&state.pool, &identity, &input)
         .await
         .map(|payment| (StatusCode::CREATED, Json(payment)))
         .map_err(error::map_admin_error)
@@ -70,7 +70,7 @@ pub async fn admin_update_payment(
     )
     .await?;
 
-    service::update_payment(&state.pool, payment_id, &input)
+    service::update_payment(&state.pool, &identity, payment_id, &input)
         .await
         .map(Json)
         .map_err(error::map_admin_error)
@@ -90,7 +90,7 @@ pub async fn admin_delete_payment(
     )
     .await?;
 
-    service::delete_payment(&state.pool, payment_id)
+    service::delete_payment(&state.pool, &identity, payment_id)
         .await
         .map(|()| StatusCode::NO_CONTENT)
         .map_err(error::map_admin_error)

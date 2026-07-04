@@ -14,7 +14,7 @@ pub async fn fetch_storefront(pool: &PgPool, query: &StorefrontQuery) -> Result<
     .await?;
 
     let mut builder = sqlx::QueryBuilder::new(
-        "SELECT id, name, category_slug, price_cents, badge, description, tone, featured \
+        "SELECT id, name, category_slug, price_cents, badge, description, tone, featured, stock_quantity, low_stock_threshold, image_url \
          FROM products WHERE featured = true",
     );
 
@@ -24,14 +24,18 @@ pub async fn fetch_storefront(pool: &PgPool, query: &StorefrontQuery) -> Result<
         .map(str::trim)
         .filter(|text| !text.is_empty())
     {
-        let pattern = format!("%{text}%");
+        let escaped = text
+            .replace('\\', "\\\\")
+            .replace('%', "\\%")
+            .replace('_', "\\_");
+        let pattern = format!("%{escaped}%");
         builder.push(" AND (name ILIKE ");
         builder.push_bind(pattern.clone());
-        builder.push(" OR description ILIKE ");
+        builder.push(" ESCAPE '\\' OR description ILIKE ");
         builder.push_bind(pattern.clone());
-        builder.push(" OR badge ILIKE ");
+        builder.push(" ESCAPE '\\' OR badge ILIKE ");
         builder.push_bind(pattern);
-        builder.push(")");
+        builder.push(" ESCAPE '\\')");
     }
 
     if let Some(category) = query

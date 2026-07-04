@@ -1,5 +1,8 @@
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 const AUTH_TOKEN_STORAGE_KEY = "depot_admin_token";
+const CUSTOMER_TOKEN_STORAGE_KEY = "depot_customer_token";
+
+export type AuthScope = "admin" | "customer";
 
 type ApiErrorOptions = {
   isNetworkError?: boolean;
@@ -18,27 +21,29 @@ export class ApiError extends Error {
   }
 }
 
-let authToken = readStoredToken();
+let authToken = readStoredToken(AUTH_TOKEN_STORAGE_KEY);
+let customerAuthToken = readStoredToken(CUSTOMER_TOKEN_STORAGE_KEY);
 let onUnauthorized: (() => void) | null = null;
 let onApiUnavailable: (() => void) | null = null;
 
-function readStoredToken(): string | null {
+function readStoredToken(key: string): string | null {
   try {
-    return window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+    return window.localStorage.getItem(key);
   } catch {
     return null;
   }
 }
 
-function requestHeaders(includeJson: boolean, extra?: HeadersInit): Headers {
+function requestHeaders(includeJson: boolean, extra?: HeadersInit, scope: AuthScope = "admin"): Headers {
   const headers = new Headers(extra);
 
   if (includeJson && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
-  if (authToken && !headers.has("Authorization")) {
-    headers.set("Authorization", `Bearer ${authToken}`);
+  const token = scope === "customer" ? customerAuthToken : authToken;
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
   return headers;
@@ -62,6 +67,24 @@ export function setAuthToken(token: string | null): void {
   }
 }
 
+export function getCustomerAuthToken(): string | null {
+  return customerAuthToken;
+}
+
+export function setCustomerAuthToken(token: string | null): void {
+  customerAuthToken = token;
+
+  try {
+    if (token) {
+      window.localStorage.setItem(CUSTOMER_TOKEN_STORAGE_KEY, token);
+    } else {
+      window.localStorage.removeItem(CUSTOMER_TOKEN_STORAGE_KEY);
+    }
+  } catch {
+    // localStorage unavailable (private browsing, etc.) — in-memory token above still applies.
+  }
+}
+
 export function setOnUnauthorized(callback: (() => void) | null): void {
   onUnauthorized = callback;
 }
@@ -70,13 +93,22 @@ export function setOnApiUnavailable(callback: (() => void) | null): void {
   onApiUnavailable = callback;
 }
 
-export async function fetchJson<T>(path: string, fallback: T): Promise<T> {
+export async function fetchJson<T>(path: string, fallback: T, scope: AuthScope = "admin"): Promise<T> {
+  const { data } = await fetchJsonResult(path, fallback, scope);
+  return data;
+}
+
+export async function fetchJsonResult<T>(
+  path: string,
+  fallback: T,
+  scope: AuthScope = "admin"
+): Promise<{ data: T; isFallback: boolean }> {
   try {
     const response = await fetch(`${API_URL}${path}`, {
-      headers: requestHeaders(false)
+      headers: requestHeaders(false, undefined, scope)
     });
 
-    if (response.status === 401) {
+    if (response.status === 401 && scope === "admin") {
       onUnauthorized?.();
       throw new ApiError(`Request failed for ${path}`, { status: response.status });
     }
@@ -85,27 +117,28 @@ export async function fetchJson<T>(path: string, fallback: T): Promise<T> {
       throw new ApiError(`Request failed for ${path}`, { status: response.status });
     }
 
-    return (await response.json()) as T;
+    return { data: (await response.json()) as T, isFallback: false };
   } catch (error) {
     if (!(error instanceof ApiError)) {
       onApiUnavailable?.();
     }
 
     console.warn("Using fallback data because the API is unavailable.", error);
-    return fallback;
+    return { data: fallback, isFallback: true };
   }
 }
 
 export async function requestJson<TResponse>(
   path: string,
-  init: RequestInit = {}
+  init: RequestInit = {},
+  scope: AuthScope = "admin"
 ): Promise<TResponse> {
   let response: Response;
 
   try {
     response = await fetch(`${API_URL}${path}`, {
       ...init,
-      headers: requestHeaders(false, init.headers)
+      headers: requestHeaders(false, init.headers, scope)
     });
   } catch (error) {
     onApiUnavailable?.();
@@ -115,7 +148,7 @@ export async function requestJson<TResponse>(
     });
   }
 
-  if (response.status === 401) {
+  if (response.status === 401 && scope === "admin") {
     onUnauthorized?.();
   }
 
@@ -133,29 +166,43 @@ export async function requestJson<TResponse>(
 
 export async function postJson<TBody, TResponse>(
   path: string,
-  body: TBody
+  body: TBody,
+  scope: AuthScope = "admin"
 ): Promise<TResponse> {
-  return requestJson<TResponse>(path, {
-    method: "POST",
-    headers: requestHeaders(true),
-    body: JSON.stringify(body)
-  });
+  return requestJson<TResponse>(
+    path,
+    {
+      method: "POST",
+      headers: requestHeaders(true, undefined, scope),
+      body: JSON.stringify(body)
+    },
+    scope
+  );
 }
 
 export async function putJson<TBody, TResponse>(
   path: string,
-  body: TBody
+  body: TBody,
+  scope: AuthScope = "admin"
 ): Promise<TResponse> {
-  return requestJson<TResponse>(path, {
-    method: "PUT",
-    headers: requestHeaders(true),
-    body: JSON.stringify(body)
-  });
+  return requestJson<TResponse>(
+    path,
+    {
+      method: "PUT",
+      headers: requestHeaders(true, undefined, scope),
+      body: JSON.stringify(body)
+    },
+    scope
+  );
 }
 
-export async function deleteJson(path: string): Promise<void> {
-  return requestJson<void>(path, {
-    method: "DELETE",
-    headers: requestHeaders(false)
-  });
+export async function deleteJson(path: string, scope: AuthScope = "admin"): Promise<void> {
+  return requestJson<void>(
+    path,
+    {
+      method: "DELETE",
+      headers: requestHeaders(false, undefined, scope)
+    },
+    scope
+  );
 }

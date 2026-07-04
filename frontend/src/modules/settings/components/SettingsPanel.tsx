@@ -24,6 +24,47 @@ function groupedByCategory(settings: SystemSetting[]): Record<string, SystemSett
   }, {});
 }
 
+function validateSettingValue(setting: SystemSetting, value: string): string | null {
+  if (value === "") {
+    return "Setting value cannot be empty.";
+  }
+
+  switch (setting.key) {
+    case "sales.default_tax_rate_bps": {
+      const parsed = Number(value);
+      if (!Number.isInteger(parsed) || parsed < 0 || parsed > 10000) {
+        return "Tax rate must be a whole number between 0 and 10000 basis points.";
+      }
+      return null;
+    }
+    case "invoicing.payment_terms_days": {
+      const parsed = Number(value);
+      if (!Number.isInteger(parsed) || parsed < 0 || parsed > 365) {
+        return "Payment terms must be a whole number between 0 and 365 days.";
+      }
+      return null;
+    }
+    case "invoicing.next_sequence": {
+      const parsed = Number(value);
+      const current = Number(setting.value);
+      if (!Number.isInteger(parsed) || parsed <= current) {
+        return `Next sequence must be a whole number greater than ${current}.`;
+      }
+      return null;
+    }
+    case "general.currency_code":
+      if (!/^[A-Z]{3}$/.test(value)) {
+        return "Currency code must be three uppercase letters (e.g. USD).";
+      }
+      return null;
+    default:
+      if (setting.value_type === "int" && !Number.isInteger(Number(value))) {
+        return `${setting.key} must be a whole number.`;
+      }
+      return null;
+  }
+}
+
 export function SettingsPanel({ canUpdate, onUpdateSetting, settings }: SettingsPanelProps) {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [feedback, setFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
@@ -41,10 +82,18 @@ export function SettingsPanel({ canUpdate, onUpdateSetting, settings }: Settings
     }
 
     setFeedback(null);
+
+    const value = draftFor(setting).trim();
+    const validationError = validateSettingValue(setting, value);
+    if (validationError) {
+      setFeedback({ kind: "error", message: validationError });
+      return;
+    }
+
     setSavingKey(setting.key);
 
     try {
-      const updated = await onUpdateSetting(setting.key, { value: draftFor(setting).trim() });
+      const updated = await onUpdateSetting(setting.key, { value });
       setDrafts((current) => ({ ...current, [updated.key]: updated.value }));
       setFeedback({ kind: "success", message: `${updated.key} was updated.` });
     } catch (error) {

@@ -5,7 +5,7 @@ use axum::{
     body::Body,
     http::{HeaderValue, Method, Request, StatusCode, header::AUTHORIZATION, header::CONTENT_TYPE},
 };
-use home_depot_clone_api::{app_state::AppState, db, modules::auth, routes};
+use home_depot_clone_api::{app_state::AppState, db, routes, security::hash_password};
 use http_body_util::BodyExt;
 use serde_json::{Value, json};
 use sqlx::PgPool;
@@ -30,7 +30,7 @@ pub async fn create_admin(pool: &PgPool, role_name: &str, username: &str, passwo
     .fetch_one(pool)
     .await
     .expect("role should exist");
-    let password_hash = auth::service::hash_password(password).expect("password should hash");
+    let password_hash = hash_password(password).expect("password should hash");
 
     db::create_admin_user(pool, username, username, &password_hash, role_id)
         .await

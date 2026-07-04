@@ -80,6 +80,7 @@ export function InvoicesPanel({
 
   const companyName = settingValue(settings, "general.company_name", "Project Depot");
   const companyAddress = settingValue(settings, "general.company_address", "");
+  const paymentTermsDays = settingValue(settings, "invoicing.payment_terms_days", "30");
 
   const billingDraftFor = (invoice: Invoice) => billingDrafts[invoice.id] ?? invoice.billing_address;
   const paymentDraftFor = (invoice: Invoice) =>
@@ -508,7 +509,15 @@ export function InvoicesPanel({
               <span>Paid</span>
               <strong>{currencyFromCents(printingInvoice.amount_paid_cents)}</strong>
             </div>
+            <div>
+              <span>Balance due</span>
+              <strong>
+                {currencyFromCents(printingInvoice.total_cents - printingInvoice.amount_paid_cents)}
+              </strong>
+            </div>
           </div>
+
+          <p className="invoice-print-terms">Payment due within {paymentTermsDays} days of the issue date.</p>
         </div>
       ) : null}
     </section>

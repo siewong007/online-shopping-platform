@@ -2,6 +2,15 @@ use crate::models::*;
 use anyhow::{Result, anyhow, bail};
 use sqlx::PgPool;
 
+fn validate_image_url(image_url: &str) -> Result<()> {
+    let lower = image_url.to_ascii_lowercase();
+    if !image_url.is_empty() && !lower.starts_with("http://") && !lower.starts_with("https://") {
+        bail!("Image URL must be empty or start with http:// or https://.");
+    }
+
+    Ok(())
+}
+
 pub async fn fetch_admin_catalog(pool: &PgPool) -> Result<AdminCatalogPayload> {
     let categories = sqlx::query_as::<_, Category>(
         r#"
@@ -15,7 +24,7 @@ pub async fn fetch_admin_catalog(pool: &PgPool) -> Result<AdminCatalogPayload> {
 
     let products = sqlx::query_as::<_, Product>(
         r#"
-        SELECT id, name, category_slug, price_cents, badge, description, tone, featured
+        SELECT id, name, category_slug, price_cents, badge, description, tone, featured, stock_quantity, low_stock_threshold, image_url
         FROM products
         ORDER BY sort_order
         "#,
@@ -180,11 +189,14 @@ pub async fn create_product(pool: &PgPool, input: &CreateProductInput) -> Result
     .fetch_one(pool)
     .await?;
 
+    let image_url = input.image_url.as_deref().unwrap_or("").trim();
+    validate_image_url(image_url)?;
+
     sqlx::query_as::<_, Product>(
         r#"
-        INSERT INTO products (name, category_slug, price_cents, badge, description, tone, featured, sort_order)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING id, name, category_slug, price_cents, badge, description, tone, featured
+        INSERT INTO products (name, category_slug, price_cents, badge, description, tone, featured, stock_quantity, low_stock_threshold, image_url, sort_order)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        RETURNING id, name, category_slug, price_cents, badge, description, tone, featured, stock_quantity, low_stock_threshold, image_url
         "#,
     )
     .bind(name)
@@ -194,6 +206,9 @@ pub async fn create_product(pool: &PgPool, input: &CreateProductInput) -> Result
     .bind(description)
     .bind(tone)
     .bind(input.featured)
+    .bind(input.stock_quantity)
+    .bind(input.low_stock_threshold)
+    .bind(image_url)
     .bind(next_sort_order)
     .fetch_one(pool)
     .await
@@ -237,6 +252,9 @@ pub async fn update_product(
         bail!("Select a valid category before updating a product.");
     }
 
+    let image_url = input.image_url.as_deref().unwrap_or("").trim();
+    validate_image_url(image_url)?;
+
     sqlx::query_as::<_, Product>(
         r#"
         UPDATE products
@@ -246,9 +264,12 @@ pub async fn update_product(
             badge = $4,
             description = $5,
             tone = $6,
-            featured = $7
-        WHERE id = $8
-        RETURNING id, name, category_slug, price_cents, badge, description, tone, featured
+            featured = $7,
+            stock_quantity = $8,
+            low_stock_threshold = $9,
+            image_url = $10
+        WHERE id = $11
+        RETURNING id, name, category_slug, price_cents, badge, description, tone, featured, stock_quantity, low_stock_threshold, image_url
         "#,
     )
     .bind(name)
@@ -258,6 +279,9 @@ pub async fn update_product(
     .bind(description)
     .bind(tone)
     .bind(input.featured)
+    .bind(input.stock_quantity)
+    .bind(input.low_stock_threshold)
+    .bind(image_url)
     .bind(product_id)
     .fetch_optional(pool)
     .await?
@@ -280,4 +304,72 @@ pub async fn delete_product(pool: &PgPool, product_id: i32) -> Result<()> {
     }
 
     Ok(())
+}
+
+pub async fn update_product_stock(
+    pool: &PgPool,
+    product_id: i32,
+    input: &UpdateProductStockInput,
+) -> Result<Product> {
+    if input.stock_quantity < 0 {
+        bail!("Stock quantity cannot be negative.");
+    }
+    if input.low_stock_threshold < 0 {
+        bail!("Low stock threshold cannot be negative.");
+    }
+
+    sqlx::query_as::<_, Product>(
+        r#"
+        UPDATE products
+        SET stock_quantity = $1,
+            low_stock_threshold = $2
+        WHERE id = $3
+        RETURNING id, name, category_slug, price_cents, badge, description, tone, featured, stock_quantity, low_stock_threshold, image_url
+        "#,
+    )
+    .bind(input.stock_quantity)
+    .bind(input.low_stock_threshold)
+    .bind(product_id)
+    .fetch_optional(pool)
+    .await?
+    .ok_or_else(|| anyhow!("Product not found."))
+}
+
+pub async fn supplier_sync(pool: &PgPool) -> Result<Vec<ProductRestockResult>> {
+    let low_stock_products = sqlx::query_as::<_, Product>(
+        r#"
+        SELECT id, name, category_slug, price_cents, badge, description, tone, featured, stock_quantity, low_stock_threshold, image_url
+        FROM products
+        WHERE stock_quantity <= low_stock_threshold
+        "#,
+    )
+    .fetch_all(pool)
+    .await?;
+
+    let mut restocked: Vec<ProductRestockResult> = Vec::new();
+    for product in low_stock_products {
+        // Restock to a target level (double the threshold as the target)
+        let target_stock = product.low_stock_threshold * 2;
+        let added = target_stock - product.stock_quantity;
+
+        sqlx::query(
+            r#"
+            UPDATE products
+            SET stock_quantity = $1
+            WHERE id = $2
+            "#,
+        )
+        .bind(target_stock)
+        .bind(product.id)
+        .execute(pool)
+        .await?;
+
+        restocked.push(ProductRestockResult {
+            product_id: product.id,
+            name: product.name,
+            added,
+        });
+    }
+
+    Ok(restocked)
 }

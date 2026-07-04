@@ -73,7 +73,7 @@ pub async fn create_customer_portal_profile(
     )
     .await?;
 
-    service::create_customer_portal_profile(&state.pool, &input)
+    service::create_customer_portal_profile(&state.pool, &identity, &input)
         .await
         .map(|profile| (StatusCode::CREATED, Json(profile)))
         .map_err(error::map_admin_error)
@@ -94,7 +94,7 @@ pub async fn update_customer_portal_profile(
     )
     .await?;
 
-    service::update_customer_portal_profile(&state.pool, profile_id, &input)
+    service::update_customer_portal_profile(&state.pool, &identity, profile_id, &input)
         .await
         .map(Json)
         .map_err(error::map_admin_error)
@@ -114,7 +114,7 @@ pub async fn delete_customer_portal_profile(
     )
     .await?;
 
-    service::delete_customer_portal_profile(&state.pool, profile_id)
+    service::delete_customer_portal_profile(&state.pool, &identity, profile_id)
         .await
         .map(|()| StatusCode::NO_CONTENT)
         .map_err(error::map_admin_error)

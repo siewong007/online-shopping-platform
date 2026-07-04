@@ -15,13 +15,19 @@ export {
   fetchAdminDashboard
 } from "../modules/dashboard/api/dashboardApi";
 export {
+  AUDIT_EVENTS_PAGE_SIZE,
+  fetchAuditEvents
+} from "../modules/audit/api/auditApi";
+export {
   deleteCategory,
   deleteProduct,
   fetchAdminCatalog,
   createCategory,
   createProduct,
   updateCategory,
-  updateProduct
+  updateProduct,
+  updateProductStock,
+  supplierSync
 } from "../modules/catalog/api/catalogApi";
 export {
   createCustomerPortalProfile,
@@ -30,6 +36,12 @@ export {
   lookupCustomer,
   updateCustomerPortalProfile
 } from "../modules/customer/api/customerApi";
+export {
+  register as registerCustomer,
+  login as loginCustomer,
+  logout as logoutCustomer,
+  fetchMe as fetchCustomerMe
+} from "../modules/customer_auth/api/customerAuthApi";
 export {
   checkout,
   createAdminOrder,

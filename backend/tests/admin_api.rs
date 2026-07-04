@@ -135,7 +135,9 @@ async fn catalog_mutation_respects_create_permission(pool: PgPool) {
         "badge": "Test",
         "description": "A test product for permission coverage.",
         "tone": "Test",
-        "featured": false
+        "featured": false,
+        "stock_quantity": 10,
+        "low_stock_threshold": 5
     });
 
     let (created_status, created_body) = common::request(
@@ -206,7 +208,9 @@ async fn catalog_crud_roundtrip_blocks_category_delete_with_products(pool: PgPoo
             "badge": "Test",
             "description": "Temporary catalog product for CRUD coverage.",
             "tone": "Electrical",
-            "featured": true
+            "featured": true,
+            "stock_quantity": 5,
+            "low_stock_threshold": 3
         })),
     )
     .await;
@@ -261,6 +265,90 @@ async fn catalog_crud_roundtrip_blocks_category_delete_with_products(pool: PgPoo
     )
     .await;
     assert_eq!(delete_category_status, StatusCode::NO_CONTENT);
+}
+
+#[sqlx::test]
+async fn product_image_url_scheme_is_validated_and_roundtrips(pool: PgPool) {
+    common::create_admin(&pool, "Catalog Specialist", "catalog-image", "secret123").await;
+    let app = common::app(pool);
+    let token = common::login(app.clone(), "catalog-image", "secret123").await;
+
+    let base_product = json!({
+        "name": "Test Wire Stripper",
+        "category_slug": "tools",
+        "price_cents": 1299,
+        "badge": "Test",
+        "description": "A test product for image URL coverage.",
+        "tone": "Test",
+        "featured": false,
+        "stock_quantity": 10,
+        "low_stock_threshold": 5
+    });
+
+    let mut javascript_scheme = base_product.clone();
+    javascript_scheme["image_url"] = json!("javascript:alert('xss')");
+    let (javascript_status, javascript_body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/admin/products",
+        Some(&token),
+        Some(javascript_scheme),
+    )
+    .await;
+    assert_eq!(
+        javascript_status,
+        StatusCode::BAD_REQUEST,
+        "{javascript_body}"
+    );
+
+    let mut data_scheme = base_product.clone();
+    data_scheme["image_url"] = json!("data:image/png;base64,aGVsbG8=");
+    let (data_status, data_body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/admin/products",
+        Some(&token),
+        Some(data_scheme),
+    )
+    .await;
+    assert_eq!(data_status, StatusCode::BAD_REQUEST, "{data_body}");
+
+    let mut valid_url = base_product.clone();
+    valid_url["image_url"] = json!("https://example.com/wire-stripper.jpg");
+    let (created_status, created_body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/admin/products",
+        Some(&token),
+        Some(valid_url),
+    )
+    .await;
+    assert_eq!(created_status, StatusCode::CREATED, "{created_body}");
+    assert_eq!(
+        created_body["image_url"],
+        "https://example.com/wire-stripper.jpg"
+    );
+    let product_id = created_body["id"].as_i64().expect("product id") as i32;
+
+    let (empty_status, empty_body) = common::request(
+        app.clone(),
+        Method::PUT,
+        &format!("/api/admin/products/{product_id}"),
+        Some(&token),
+        Some(base_product.clone()),
+    )
+    .await;
+    assert_eq!(empty_status, StatusCode::OK, "{empty_body}");
+    assert_eq!(empty_body["image_url"], "");
+
+    let (catalog_status, catalog_body) =
+        common::request(app, Method::GET, "/api/admin/catalog", Some(&token), None).await;
+    assert_eq!(catalog_status, StatusCode::OK, "{catalog_body}");
+    assert!(catalog_body["products"].as_array().is_some_and(|products| {
+        products
+            .iter()
+            .any(|product| product["id"] == product_id && product["image_url"] == "")
+    }));
 }
 
 #[sqlx::test]
@@ -442,6 +530,164 @@ async fn fulfillment_status_flow_writes_history_and_advances_sales(pool: PgPool)
     )
     .await;
     assert_eq!(canceled_terminal_status, StatusCode::BAD_REQUEST);
+}
+
+#[sqlx::test]
+async fn pickup_fulfillment_flow_completes_and_rejects_delivery_only_status(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "pickup-admin", "secret123").await;
+    let app = common::app(pool.clone());
+    let token = common::login(app.clone(), "pickup-admin", "secret123").await;
+
+    let (order_status, order_body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/checkout",
+        None,
+        Some(json!({
+            "customer_name": "Pickup Buyer",
+            "customer_email": "pickup-buyer@example.com",
+            "fulfillment_method": "pickup",
+            "items": [{ "product_id": 1, "quantity": 1 }]
+        })),
+    )
+    .await;
+    assert_eq!(order_status, StatusCode::CREATED, "{order_body}");
+    assert_eq!(order_body["fulfillment_method"], "pickup");
+    let order_id = order_body["id"].as_i64().expect("order id");
+
+    let (mismatch_status, mismatch_body) = common::request(
+        app.clone(),
+        Method::PUT,
+        &format!("/api/admin/orders/{order_id}/fulfillment"),
+        Some(&token),
+        Some(json!({ "to_status": "out_for_delivery", "note": "wrong lane" })),
+    )
+    .await;
+    assert_eq!(mismatch_status, StatusCode::BAD_REQUEST, "{mismatch_body}");
+
+    for status in ["picking", "packed", "ready_for_pickup", "completed"] {
+        let (move_status, move_body) = common::request(
+            app.clone(),
+            Method::PUT,
+            &format!("/api/admin/orders/{order_id}/fulfillment"),
+            Some(&token),
+            Some(json!({ "to_status": status, "note": format!("move to {status}") })),
+        )
+        .await;
+        assert_eq!(move_status, StatusCode::OK, "{move_body}");
+        assert_eq!(move_body["fulfillment_status"], status);
+    }
+
+    let sales_status = sqlx::query_as::<_, (String, String)>(
+        r#"
+        SELECT status, payment_status
+        FROM order_sales_meta
+        WHERE order_id = $1
+        "#,
+    )
+    .bind(order_id as i32)
+    .fetch_one(&pool)
+    .await
+    .expect("sales meta should load");
+    assert_eq!(
+        sales_status,
+        ("fulfilled".to_string(), "unpaid".to_string())
+    );
+}
+
+#[sqlx::test]
+async fn canceled_order_can_no_longer_be_edited(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "edit-guard-admin", "secret123").await;
+    let app = common::app(pool.clone());
+    let token = common::login(app.clone(), "edit-guard-admin", "secret123").await;
+
+    let order_id =
+        create_checkout_order(&app, "Edit Guard Buyer", "edit-guard@example.com", 1).await;
+
+    let (cancel_status, cancel_body) = common::request(
+        app.clone(),
+        Method::PUT,
+        &format!("/api/admin/orders/{order_id}/fulfillment"),
+        Some(&token),
+        Some(json!({ "to_status": "canceled", "note": "changed mind" })),
+    )
+    .await;
+    assert_eq!(cancel_status, StatusCode::OK, "{cancel_body}");
+
+    let (edit_status, edit_body) = common::request(
+        app.clone(),
+        Method::PUT,
+        &format!("/api/admin/orders/{order_id}"),
+        Some(&token),
+        Some(json!({
+            "customer_name": "Renamed Buyer",
+            "customer_email": "edit-guard@example.com",
+            "items": [{ "product_id": 1, "quantity": 2 }]
+        })),
+    )
+    .await;
+    assert_eq!(edit_status, StatusCode::BAD_REQUEST, "{edit_body}");
+    assert!(
+        edit_body
+            .as_str()
+            .is_some_and(|message| message.contains("can no longer be edited"))
+    );
+}
+
+#[sqlx::test]
+async fn cancelling_a_sale_also_cancels_fulfillment(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "sale-cancel-admin", "secret123").await;
+    let app = common::app(pool.clone());
+    let token = common::login(app.clone(), "sale-cancel-admin", "secret123").await;
+
+    let order_id =
+        create_checkout_order(&app, "Sale Cancel Buyer", "sale-cancel@example.com", 1).await;
+
+    let (advance_status, advance_body) = common::request(
+        app.clone(),
+        Method::PUT,
+        &format!("/api/admin/orders/{order_id}/fulfillment"),
+        Some(&token),
+        Some(json!({ "to_status": "picking", "note": "start picking" })),
+    )
+    .await;
+    assert_eq!(advance_status, StatusCode::OK, "{advance_body}");
+
+    let (cancel_status, cancel_body) = common::request(
+        app.clone(),
+        Method::PUT,
+        &format!("/api/admin/sales/{order_id}/status"),
+        Some(&token),
+        Some(json!({ "status": "cancelled", "note": "customer backed out" })),
+    )
+    .await;
+    assert_eq!(cancel_status, StatusCode::OK, "{cancel_body}");
+
+    let fulfillment_status = sqlx::query_scalar::<_, String>(
+        r#"
+        SELECT fulfillment_status
+        FROM orders
+        WHERE id = $1
+        "#,
+    )
+    .bind(order_id as i32)
+    .fetch_one(&pool)
+    .await
+    .expect("order should load");
+    assert_eq!(fulfillment_status, "canceled");
+
+    let history_changed_by = sqlx::query_scalar::<_, String>(
+        r#"
+        SELECT changed_by
+        FROM order_fulfillment_history
+        WHERE order_id = $1 AND to_status = 'canceled'
+        "#,
+    )
+    .bind(order_id as i32)
+    .fetch_one(&pool)
+    .await
+    .expect("fulfillment history should record the cancellation");
+    assert_eq!(history_changed_by, "sale-cancel-admin");
 }
 
 #[sqlx::test]
@@ -651,6 +897,109 @@ async fn settings_update_roundtrip(pool: PgPool) {
 }
 
 #[sqlx::test]
+async fn settings_update_rejects_out_of_range_tax_rate(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "settings-tax", "secret123").await;
+    let app = common::app(pool);
+    let token = common::login(app.clone(), "settings-tax", "secret123").await;
+
+    let (status, body) = common::request(
+        app,
+        Method::PUT,
+        "/api/admin/settings/sales.default_tax_rate_bps",
+        Some(&token),
+        Some(json!({ "value": "10001" })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST, "{body}");
+}
+
+#[sqlx::test]
+async fn settings_update_rejects_invalid_currency_code(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "settings-currency", "secret123").await;
+    let app = common::app(pool);
+    let token = common::login(app.clone(), "settings-currency", "secret123").await;
+
+    let (status, body) = common::request(
+        app,
+        Method::PUT,
+        "/api/admin/settings/general.currency_code",
+        Some(&token),
+        Some(json!({ "value": "usd" })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST, "{body}");
+}
+
+#[sqlx::test]
+async fn settings_update_rejects_sequence_moving_backwards(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "settings-sequence", "secret123").await;
+    let app = common::app(pool);
+    let token = common::login(app.clone(), "settings-sequence", "secret123").await;
+
+    let (forward_status, forward_body) = common::request(
+        app.clone(),
+        Method::PUT,
+        "/api/admin/settings/invoicing.next_sequence",
+        Some(&token),
+        Some(json!({ "value": "2000" })),
+    )
+    .await;
+    assert_eq!(forward_status, StatusCode::OK, "{forward_body}");
+
+    let (backward_status, backward_body) = common::request(
+        app,
+        Method::PUT,
+        "/api/admin/settings/invoicing.next_sequence",
+        Some(&token),
+        Some(json!({ "value": "1500" })),
+    )
+    .await;
+    assert_eq!(backward_status, StatusCode::BAD_REQUEST, "{backward_body}");
+}
+
+#[sqlx::test]
+async fn concurrent_invoice_creation_allocates_distinct_sequential_numbers(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "invoice-race-admin", "secret123").await;
+    let app = common::app(pool.clone());
+    let token = common::login(app.clone(), "invoice-race-admin", "secret123").await;
+
+    let first_order_id =
+        create_checkout_order(&app, "Race Buyer One", "race-one@example.com", 1).await;
+    let second_order_id =
+        create_checkout_order(&app, "Race Buyer Two", "race-two@example.com", 2).await;
+
+    let first_app = app.clone();
+    let first_token = token.clone();
+    let second_app = app.clone();
+    let second_token = token.clone();
+    let first_path = format!("/api/admin/invoices/from-order/{first_order_id}");
+    let second_path = format!("/api/admin/invoices/from-order/{second_order_id}");
+
+    let (first_result, second_result) = tokio::join!(
+        common::request(
+            first_app,
+            Method::POST,
+            &first_path,
+            Some(&first_token),
+            Some(json!({ "discount_cents": 0 })),
+        ),
+        common::request(
+            second_app,
+            Method::POST,
+            &second_path,
+            Some(&second_token),
+            Some(json!({ "discount_cents": 0 })),
+        )
+    );
+
+    let (first_status, first_body) = first_result;
+    let (second_status, second_body) = second_result;
+    assert_eq!(first_status, StatusCode::CREATED, "{first_body}");
+    assert_eq!(second_status, StatusCode::CREATED, "{second_body}");
+    assert_ne!(first_body["invoice_number"], second_body["invoice_number"]);
+}
+
+#[sqlx::test]
 async fn dashboard_live_metrics_reflect_orders_and_unpaid_invoices(pool: PgPool) {
     common::create_admin(&pool, "Super Admin", "metrics-admin", "secret123").await;
     let app = common::app(pool);
@@ -695,4 +1044,116 @@ async fn dashboard_live_metrics_reflect_orders_and_unpaid_invoices(pool: PgPool)
         live["unpaid_invoice_amount_cents"].as_i64(),
         Some(invoice_total)
     );
+}
+
+#[sqlx::test]
+async fn audit_events_require_permission_and_record_mutations(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "audit-admin", "secret123").await;
+
+    sqlx::query(
+        r#"
+        INSERT INTO roles (name, description, is_super_admin)
+        VALUES ('Auditless', 'No overview access', FALSE)
+        "#,
+    )
+    .execute(&pool)
+    .await
+    .expect("role should be created");
+    common::create_admin(&pool, "Auditless", "audit-no-access", "secret123").await;
+
+    let app = common::app(pool.clone());
+
+    let no_access_token = common::login(app.clone(), "audit-no-access", "secret123").await;
+    let (forbidden_status, _) = common::request(
+        app.clone(),
+        Method::GET,
+        "/api/admin/audit-events",
+        Some(&no_access_token),
+        None,
+    )
+    .await;
+    assert_eq!(forbidden_status, StatusCode::FORBIDDEN);
+
+    let super_token = common::login(app.clone(), "audit-admin", "secret123").await;
+
+    let (settings_status, settings_body) = common::request(
+        app.clone(),
+        Method::GET,
+        "/api/admin/settings",
+        Some(&super_token),
+        None,
+    )
+    .await;
+    assert_eq!(settings_status, StatusCode::OK, "{settings_body}");
+    let setting_key = settings_body[0]["key"]
+        .as_str()
+        .expect("setting key")
+        .to_string();
+
+    let (update_status, update_body) = common::request(
+        app.clone(),
+        Method::PUT,
+        &format!("/api/admin/settings/{setting_key}"),
+        Some(&super_token),
+        Some(json!({ "value": "updated-value" })),
+    )
+    .await;
+    assert_eq!(update_status, StatusCode::OK, "{update_body}");
+
+    let (events_status, events_body) = common::request(
+        app,
+        Method::GET,
+        "/api/admin/audit-events",
+        Some(&super_token),
+        None,
+    )
+    .await;
+    assert_eq!(events_status, StatusCode::OK, "{events_body}");
+    let events = events_body.as_array().expect("events array");
+
+    let matching_setting_events: Vec<_> = events
+        .iter()
+        .filter(|event| event["entity_type"] == "setting" && event["entity_id"] == setting_key)
+        .collect();
+    assert_eq!(
+        matching_setting_events.len(),
+        1,
+        "expected exactly one audit event for the setting update: {events:?}"
+    );
+    assert_eq!(matching_setting_events[0]["action"], "update");
+    assert_eq!(matching_setting_events[0]["actor"], "audit-admin");
+
+    let login_event = events
+        .iter()
+        .find(|event| event["action"] == "login" && event["actor"] == "audit-admin");
+    assert!(
+        login_event.is_some(),
+        "login should be recorded: {events:?}"
+    );
+}
+
+#[sqlx::test]
+async fn audit_log_failures_do_not_fail_mutations(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "audit-resilient-admin", "secret123").await;
+    let app = common::app(pool.clone());
+    let token = common::login(app.clone(), "audit-resilient-admin", "secret123").await;
+
+    sqlx::query("DROP TABLE audit_events")
+        .execute(&pool)
+        .await
+        .expect("audit_events table should drop");
+
+    let (status, body) = common::request(
+        app,
+        Method::POST,
+        "/api/admin/categories",
+        Some(&token),
+        Some(json!({
+            "slug": "resilience-check",
+            "name": "Resilience Check",
+            "teaser": "Testing audit resilience"
+        })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CREATED, "{body}");
 }

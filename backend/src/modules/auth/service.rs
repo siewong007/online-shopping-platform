@@ -1,15 +1,18 @@
-use std::{env, fmt::Write};
+use std::env;
 
-use anyhow::{Result, anyhow, bail};
-use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier, password_hash::SaltString};
+use anyhow::Result;
 use axum::{
     extract::FromRequestParts,
     http::{HeaderMap, StatusCode, request::Parts},
 };
-use rand::{RngCore, rngs::OsRng};
 use sqlx::PgPool;
 
-use crate::{app_state::AppState, error::HttpError};
+use crate::{
+    app_state::AppState,
+    error::HttpError,
+    modules::audit,
+    security::{generate_session_token, hash_password, verify_password},
+};
 
 use super::{
     dto::{AdminAuthPayload, AdminLoginInput, AdminMePayload},
@@ -20,20 +23,6 @@ use super::{
 const DEFAULT_ADMIN_USERNAME: &str = "admin";
 const DEFAULT_ADMIN_DISPLAY_NAME: &str = "Admin";
 const DEFAULT_ADMIN_PASSWORD: &str = "admin123";
-
-pub fn hash_password(password: &str) -> Result<String> {
-    if password.trim().is_empty() {
-        bail!("Admin password cannot be empty.");
-    }
-
-    let salt = SaltString::generate(&mut OsRng);
-    let password_hash = Argon2::default()
-        .hash_password(password.as_bytes(), &salt)
-        .map_err(|error| anyhow!("failed to hash admin password: {error}"))?
-        .to_string();
-
-    Ok(password_hash)
-}
 
 pub async fn ensure_seed_admin(pool: &PgPool) -> Result<()> {
     if repository::count_admin_users(pool).await? > 0 {
@@ -85,18 +74,7 @@ pub async fn login(pool: &PgPool, input: &AdminLoginInput) -> Result<AdminAuthPa
         ));
     }
 
-    let parsed_hash = PasswordHash::new(&admin_user.password_hash).map_err(|error| {
-        tracing::error!("stored admin password hash is invalid: {error:?}");
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Unable to verify admin credentials.".to_string(),
-        )
-    })?;
-
-    if Argon2::default()
-        .verify_password(password.as_bytes(), &parsed_hash)
-        .is_err()
-    {
+    if !verify_password(password, &admin_user.password_hash) {
         return Err((
             StatusCode::UNAUTHORIZED,
             "Invalid username or password.".to_string(),
@@ -112,15 +90,36 @@ pub async fn login(pool: &PgPool, input: &AdminLoginInput) -> Result<AdminAuthPa
         .await
         .map_err(map_auth_lookup_error)?;
 
-    build_auth_payload(pool, admin_user, token).await
+    let username = admin_user.username.clone();
+    let payload = build_auth_payload(pool, admin_user, token).await?;
+
+    audit::service::record_event(pool, &username, "login", "admin_user", &username, "").await;
+
+    Ok(payload)
 }
 
-pub async fn logout(pool: &PgPool, headers: &HeaderMap) -> Result<(), HttpError> {
+pub async fn logout(
+    pool: &PgPool,
+    identity: &AdminIdentity,
+    headers: &HeaderMap,
+) -> Result<(), HttpError> {
     let token = bearer_token_from_headers(headers)?;
 
     repository::delete_admin_session(pool, token)
         .await
-        .map_err(map_auth_lookup_error)
+        .map_err(map_auth_lookup_error)?;
+
+    audit::service::record_event(
+        pool,
+        &identity.username,
+        "logout",
+        "admin_user",
+        &identity.username,
+        "",
+    )
+    .await;
+
+    Ok(())
 }
 
 pub async fn me(pool: &PgPool, identity: &AdminIdentity) -> Result<AdminMePayload, HttpError> {
@@ -223,18 +222,6 @@ async fn build_auth_payload(
         role,
         permissions,
     })
-}
-
-fn generate_session_token() -> String {
-    let mut bytes = [0_u8; 32];
-    OsRng.fill_bytes(&mut bytes);
-
-    let mut token = String::with_capacity(bytes.len() * 2);
-    for byte in bytes {
-        let _ = write!(&mut token, "{byte:02x}");
-    }
-
-    token
 }
 
 fn map_auth_lookup_error(error: anyhow::Error) -> HttpError {

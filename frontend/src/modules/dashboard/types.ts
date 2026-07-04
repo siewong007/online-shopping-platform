@@ -32,6 +32,7 @@ export type LiveDashboardMetrics = {
   revenue_today_cents: number;
   revenue_yesterday_cents: number;
   orders_awaiting_fulfillment: number;
+  low_stock_sku_count: number;
   unpaid_invoice_count: number;
   unpaid_invoice_amount_cents: number;
 };

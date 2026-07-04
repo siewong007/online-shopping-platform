@@ -1,11 +1,11 @@
 use anyhow::Result;
-use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use axum::http::StatusCode;
 use sqlx::PgPool;
 
 use crate::{
     error::{self, HttpError},
-    modules::auth::{self, model::AdminIdentity},
+    modules::{audit, auth::model::AdminIdentity},
+    security::{hash_password, verify_password},
 };
 
 use super::{
@@ -35,10 +35,9 @@ pub async fn create_user(
 ) -> Result<AdminUser, HttpError> {
     ensure_permission(pool, identity, PermissionAction::Create).await?;
 
-    let password_hash =
-        auth::service::hash_password(&input.password).map_err(error::map_admin_error)?;
+    let password_hash = hash_password(&input.password).map_err(error::map_admin_error)?;
 
-    repository::create_admin_user(
+    let user = repository::create_admin_user(
         pool,
         &input.username,
         &input.display_name,
@@ -46,7 +45,19 @@ pub async fn create_user(
         input.role_id,
     )
     .await
-    .map_err(error::map_admin_error)
+    .map_err(error::map_admin_error)?;
+
+    audit::service::record_event(
+        pool,
+        &identity.username,
+        "create",
+        "admin_user",
+        &user.id.to_string(),
+        &user.username,
+    )
+    .await;
+
+    Ok(user)
 }
 
 pub async fn update_profile(
@@ -57,9 +68,22 @@ pub async fn update_profile(
 ) -> Result<AdminUser, HttpError> {
     ensure_permission(pool, identity, PermissionAction::Update).await?;
 
-    repository::update_admin_user_profile(pool, target_id, &input.display_name, input.role_id)
-        .await
-        .map_err(error::map_admin_error)
+    let user =
+        repository::update_admin_user_profile(pool, target_id, &input.display_name, input.role_id)
+            .await
+            .map_err(error::map_admin_error)?;
+
+    audit::service::record_event(
+        pool,
+        &identity.username,
+        "update",
+        "admin_user",
+        &user.id.to_string(),
+        &user.username,
+    )
+    .await;
+
+    Ok(user)
 }
 
 pub async fn set_active(
@@ -70,9 +94,25 @@ pub async fn set_active(
 ) -> Result<AdminUser, HttpError> {
     ensure_permission(pool, identity, PermissionAction::Update).await?;
 
-    repository::set_admin_user_active(pool, target_id, input.is_active)
+    let user = repository::set_admin_user_active(pool, target_id, input.is_active)
         .await
-        .map_err(error::map_admin_error)
+        .map_err(error::map_admin_error)?;
+
+    audit::service::record_event(
+        pool,
+        &identity.username,
+        if input.is_active {
+            "activate"
+        } else {
+            "deactivate"
+        },
+        "admin_user",
+        &user.id.to_string(),
+        &user.username,
+    )
+    .await;
+
+    Ok(user)
 }
 
 pub async fn admin_reset_password(
@@ -83,8 +123,7 @@ pub async fn admin_reset_password(
 ) -> Result<(), HttpError> {
     ensure_permission(pool, identity, PermissionAction::Update).await?;
 
-    let password_hash =
-        auth::service::hash_password(&input.new_password).map_err(error::map_admin_error)?;
+    let password_hash = hash_password(&input.new_password).map_err(error::map_admin_error)?;
 
     repository::update_admin_user_password(pool, target_id, &password_hash)
         .await
@@ -92,7 +131,19 @@ pub async fn admin_reset_password(
 
     repository::delete_admin_sessions_for_user(pool, target_id)
         .await
-        .map_err(error::map_admin_error)
+        .map_err(error::map_admin_error)?;
+
+    audit::service::record_event(
+        pool,
+        &identity.username,
+        "reset_password",
+        "admin_user",
+        &target_id.to_string(),
+        "",
+    )
+    .await;
+
+    Ok(())
 }
 
 pub async fn change_own_password(
@@ -110,26 +161,14 @@ pub async fn change_own_password(
             )
         })?;
 
-    let parsed_hash = PasswordHash::new(&credentials.password_hash).map_err(|parse_error| {
-        tracing::error!("stored admin password hash is invalid: {parse_error:?}");
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Unable to verify admin credentials.".to_string(),
-        )
-    })?;
-
-    if Argon2::default()
-        .verify_password(input.current_password.as_bytes(), &parsed_hash)
-        .is_err()
-    {
+    if !verify_password(&input.current_password, &credentials.password_hash) {
         return Err((
             StatusCode::BAD_REQUEST,
             "Current password is incorrect.".to_string(),
         ));
     }
 
-    let password_hash =
-        auth::service::hash_password(&input.new_password).map_err(error::map_admin_error)?;
+    let password_hash = hash_password(&input.new_password).map_err(error::map_admin_error)?;
 
     repository::update_admin_user_password(pool, identity.user_id, &password_hash)
         .await
@@ -137,7 +176,19 @@ pub async fn change_own_password(
 
     repository::delete_admin_sessions_for_user(pool, identity.user_id)
         .await
-        .map_err(error::map_admin_error)
+        .map_err(error::map_admin_error)?;
+
+    audit::service::record_event(
+        pool,
+        &identity.username,
+        "change_own_password",
+        "admin_user",
+        &identity.user_id.to_string(),
+        "",
+    )
+    .await;
+
+    Ok(())
 }
 
 async fn ensure_permission(

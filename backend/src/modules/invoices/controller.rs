@@ -50,7 +50,7 @@ pub async fn admin_create_invoice_from_order(
     )
     .await?;
 
-    service::create_invoice_from_order(&state.pool, order_id, &input)
+    service::create_invoice_from_order(&state.pool, &identity, order_id, &input)
         .await
         .map(|invoice| (StatusCode::CREATED, Json(invoice)))
         .map_err(error::map_admin_error)
@@ -71,7 +71,7 @@ pub async fn admin_update_invoice_billing(
     )
     .await?;
 
-    service::update_invoice_billing(&state.pool, invoice_id, &input)
+    service::update_invoice_billing(&state.pool, &identity, invoice_id, &input)
         .await
         .map(Json)
         .map_err(error::map_admin_error)
@@ -91,7 +91,7 @@ pub async fn admin_void_invoice(
     )
     .await?;
 
-    service::void_invoice(&state.pool, invoice_id)
+    service::void_invoice(&state.pool, &identity, invoice_id)
         .await
         .map(Json)
         .map_err(error::map_admin_error)
@@ -112,7 +112,7 @@ pub async fn admin_record_invoice_payment(
     )
     .await?;
 
-    service::record_invoice_payment(&state.pool, invoice_id, &input)
+    service::record_invoice_payment(&state.pool, &identity, invoice_id, &input)
         .await
         .map(|invoice| (StatusCode::CREATED, Json(invoice)))
         .map_err(error::map_admin_error)

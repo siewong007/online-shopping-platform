@@ -7,7 +7,7 @@ use axum::{
 use crate::{
     app_state::AppState,
     error,
-    modules::{auth::model::AdminIdentity, permissions},
+    modules::{auth::model::AdminIdentity, customer_auth::model::CustomerIdentity, permissions},
 };
 
 use super::{
@@ -49,7 +49,7 @@ pub async fn admin_create_order(
     )
     .await?;
 
-    service::create_order(&state.pool, &input)
+    service::create_order(&state.pool, &identity.username, &input, None)
         .await
         .map(|order| (StatusCode::CREATED, Json(order)))
         .map_err(error::map_admin_error)
@@ -70,7 +70,7 @@ pub async fn admin_update_order(
     )
     .await?;
 
-    service::update_order(&state.pool, order_id, &input)
+    service::update_order(&state.pool, &identity, order_id, &input)
         .await
         .map(Json)
         .map_err(error::map_admin_error)
@@ -90,7 +90,7 @@ pub async fn admin_delete_order(
     )
     .await?;
 
-    service::delete_order(&state.pool, order_id)
+    service::delete_order(&state.pool, &identity, order_id)
         .await
         .map(|()| StatusCode::NO_CONTENT)
         .map_err(error::map_admin_error)
@@ -119,9 +119,11 @@ pub async fn admin_update_order_fulfillment(
 
 pub async fn checkout(
     State(state): State<AppState>,
+    identity: Option<CustomerIdentity>,
     Json(input): Json<CreateOrderInput>,
 ) -> Result<(StatusCode, Json<Order>), error::HttpError> {
-    service::create_order(&state.pool, &input)
+    let customer_account_id = identity.map(|identity| identity.customer_account_id);
+    service::create_order(&state.pool, "customer", &input, customer_account_id)
         .await
         .map(|order| (StatusCode::CREATED, Json(order)))
         .map_err(error::map_admin_error)
