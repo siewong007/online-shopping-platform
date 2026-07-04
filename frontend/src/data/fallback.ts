@@ -17,7 +17,7 @@ import type {
 
 export const fallbackStorefront: StorefrontPayload = {
   categories: [
-    { slug: "all", name: "Shop All Departments", teaser: "Browse the homepage the way Home Depot customers expect to shop it." },
+    { slug: "all", name: "Shop All Departments", teaser: "Browse the homepage the way Ekoway customers expect to shop it." },
     { slug: "tools", name: "Tools", teaser: "Cordless systems, combo kits and garage-ready essentials." },
     { slug: "lumber", name: "Lumber", teaser: "Deck boards, framing packs and project quantities." },
     { slug: "paint", name: "Paint", teaser: "Interior refreshes, primers and color-matched finishes." },
@@ -36,7 +36,7 @@ export const fallbackStorefront: StorefrontPayload = {
     {
       label: "Fast Free Delivery",
       title: "Appliances and oversized orders moving faster",
-      description: "Bring Home Depot-style freight confidence to dishwashers, laundry and kitchen refresh packages."
+      description: "Bring counter-tested freight confidence to dishwashers, laundry and kitchen refresh packages."
     },
     {
       label: "Special Buy Of The Day",

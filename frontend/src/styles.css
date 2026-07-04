@@ -140,34 +140,25 @@ ul {
   gap: 1rem;
 }
 
-.depot-mark {
+.ekoway-mark {
   width: 5.6rem;
   height: 5.6rem;
-  display: grid;
-  align-content: center;
-  justify-items: center;
-  gap: 0.08rem;
-  background: linear-gradient(135deg, var(--orange), var(--orange-deep));
-  color: white;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #000;
   box-shadow: var(--shadow);
   flex-shrink: 0;
 }
 
-.depot-mark span {
-  font-family: var(--display);
-  font-size: 1.05rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  line-height: 0.9;
+.ekoway-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.depot-mark.compact {
+.ekoway-mark.compact {
   width: 4.2rem;
   height: 4.2rem;
-}
-
-.depot-mark.compact span {
-  font-size: 0.82rem;
 }
 
 .brand-copy {
@@ -407,13 +398,13 @@ ul {
 
 .hero-secondary {
   background:
-    linear-gradient(180deg, rgba(249, 99, 2, 0.18), rgba(248, 239, 230, 0.96)),
+    linear-gradient(180deg, rgba(225, 224, 204, 0.1), rgba(20, 20, 20, 0.96)),
     var(--sand);
 }
 
 .hero-tertiary {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 244, 247, 0.96)),
+    linear-gradient(180deg, rgba(30, 30, 30, 0.96), rgba(22, 22, 22, 0.96)),
     var(--surface-soft);
 }
 
@@ -490,7 +481,7 @@ ul {
 }
 
 .badge-chip {
-  background: rgba(249, 99, 2, 0.12);
+  background: rgba(225, 224, 204, 0.14);
   color: var(--orange-deep);
 }
 
@@ -525,6 +516,14 @@ ul {
   background: linear-gradient(135deg, var(--orange), var(--orange-deep));
   border-color: transparent;
   color: white;
+}
+
+.storefront-shell .category-card.active {
+  color: #000;
+}
+
+.storefront-shell .category-card.active span {
+  color: rgba(0, 0, 0, 0.65);
 }
 
 .category-card.active span {
@@ -608,7 +607,7 @@ ul {
   justify-content: space-between;
   background:
     radial-gradient(circle at top right, rgba(255, 255, 255, 0.15), transparent 32%),
-    linear-gradient(145deg, rgba(18, 18, 18, 0.96), rgba(249, 99, 2, 0.92));
+    linear-gradient(145deg, rgba(18, 18, 18, 0.96), rgba(60, 58, 46, 0.92));
   color: white;
 }
 
@@ -622,7 +621,7 @@ ul {
 .product-visual.tone-fallback {
   background:
     radial-gradient(circle at top right, rgba(255, 255, 255, 0.15), transparent 32%),
-    linear-gradient(145deg, rgba(18, 18, 18, 0.96), rgba(249, 99, 2, 0.92));
+    linear-gradient(145deg, rgba(18, 18, 18, 0.96), rgba(60, 58, 46, 0.92));
 }
 
 .product-visual span {
@@ -1883,7 +1882,7 @@ ul {
   place-items: center;
   overflow: hidden;
   border-radius: 0.4rem;
-  background: linear-gradient(145deg, rgba(18, 18, 18, 0.96), rgba(249, 99, 2, 0.92));
+  background: linear-gradient(145deg, rgba(18, 18, 18, 0.96), rgba(60, 58, 46, 0.92));
   color: white;
   font-size: 0.62rem;
   font-weight: 800;
@@ -2068,7 +2067,7 @@ ul {
   gap: 0.35rem;
   padding: 1.2rem;
   background:
-    linear-gradient(145deg, rgba(18, 18, 18, 0.96), rgba(249, 99, 2, 0.88)),
+    linear-gradient(145deg, rgba(18, 18, 18, 0.96), rgba(60, 58, 46, 0.88)),
     var(--charcoal);
   color: white;
 }
@@ -2343,4 +2342,71 @@ ul {
   text-align: right;
   color: var(--muted);
   font-size: 0.85rem;
+}
+
+/* ---------- Ekoway storefront theme (dark, matches the landing page) ---------- */
+.storefront-shell {
+  --page: #000000;
+  --surface: #101010;
+  --surface-soft: #161616;
+  --ink: #e1e0cc;
+  --muted: rgba(225, 224, 204, 0.64);
+  --line: rgba(225, 224, 204, 0.14);
+  --orange: #e1e0cc;
+  --orange-deep: #dedbc8;
+  --charcoal: #000000;
+  --charcoal-soft: #161616;
+  --sand: #141414;
+  --shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+  --display: "Almarai", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei",
+    "Noto Sans CJK SC", sans-serif;
+  --body: "Almarai", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei",
+    "Noto Sans CJK SC", sans-serif;
+
+  background:
+    radial-gradient(circle at top right, rgba(225, 224, 204, 0.05), transparent 22rem),
+    linear-gradient(180deg, #000000 0%, #060606 100%);
+  color: var(--ink);
+  font-family: var(--body);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.storefront-shell .solid-button,
+.storefront-shell .cart-drawer-foot .solid-button,
+.storefront-shell .cart-confirmation .solid-button {
+  color: #000;
+}
+
+.storefront-shell .lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.storefront-shell .lang-toggle [data-lang] {
+  cursor: pointer;
+  color: var(--muted);
+  background: none;
+  border: none;
+  font: inherit;
+  padding: 3px 2px;
+  transition: color 0.3s;
+}
+
+.storefront-shell .lang-toggle [data-lang]:hover {
+  color: var(--ink);
+}
+
+.storefront-shell .lang-toggle [data-lang].on {
+  color: var(--ink);
+}
+
+.storefront-shell .lang-toggle .sep {
+  color: var(--line);
+  cursor: default;
 }
