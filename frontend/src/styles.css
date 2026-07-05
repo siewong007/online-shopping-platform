@@ -243,6 +243,7 @@ ul {
 .text-link {
   min-height: auto;
   padding: 0;
+  background: transparent;
   color: var(--orange-deep);
 }
 
@@ -1723,7 +1724,10 @@ ul {
   .customer-portal-grid,
   .order-control-grid,
   .payment-management-grid,
-  .permission-layout {
+  .permission-layout,
+  .sales-detail-grid,
+  .payment-detail-grid,
+  .payment-balance-card {
     grid-template-columns: repeat(2, 1fr);
   }
 
@@ -1758,8 +1762,6 @@ ul {
   .order-control-grid,
   .order-line-row,
   .payment-management-grid,
-  .payment-detail-grid,
-  .payment-balance-card,
   .permission-layout,
   .hero-metrics,
   .pro-panel,
@@ -1767,10 +1769,60 @@ ul {
     grid-template-columns: 1fr;
   }
 
+  .app-shell,
+  .site-header,
+  .mega-nav,
+  .page-shell,
+  .admin-layout {
+    width: min(1280px, calc(100% - 1rem));
+  }
+
+  .solid-button,
+  .outline-button,
+  .nav-button,
+  .mega-nav a,
+  .admin-nav-item,
+  .cart-remove,
+  .text-link {
+    min-height: 2.75rem;
+  }
+
+  .top-strip {
+    gap: 0.55rem;
+    padding: 0.75rem max(0.5rem, 4vw);
+  }
+
+  .header-actions,
+  .filter-bar,
+  .filter-field {
+    width: 100%;
+  }
+
   .search-shell {
     min-width: 100%;
   }
 
+  .mega-nav {
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding: 0.75rem 0 0.9rem;
+    scrollbar-width: none;
+    scroll-padding-inline: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mega-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mega-nav a,
+  .mega-nav .nav-button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .ekoway-mark,
   .depot-mark {
     width: 4.6rem;
     height: 4.6rem;
@@ -1778,6 +1830,68 @@ ul {
 
   .depot-mark span {
     font-size: 0.86rem;
+  }
+
+  .admin-layout {
+    padding-top: 0.5rem;
+  }
+
+  .admin-sidebar {
+    gap: 0.75rem;
+    padding: 0.85rem;
+  }
+
+  .admin-sidebar .admin-brand {
+    align-items: center;
+  }
+
+  .admin-nav {
+    display: flex;
+    gap: 0.5rem;
+    margin-inline: -0.85rem;
+    overflow-x: auto;
+    padding: 0 0.85rem 0.25rem;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .admin-nav-item {
+    flex: 0 0 auto;
+    justify-content: center;
+    min-width: max-content;
+    padding: 0.75rem 0.95rem;
+    white-space: nowrap;
+  }
+
+  .admin-nav-item small {
+    display: none;
+  }
+
+  .sidebar-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.8rem;
+  }
+
+  .sidebar-card h3,
+  .sidebar-card p:not(.eyebrow) {
+    display: none;
+  }
+
+  .admin-main {
+    padding: 0.9rem;
+  }
+
+  .payment-detail-grid,
+  .payment-balance-card,
+  .sales-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -2262,6 +2376,336 @@ ul {
 
 .invoice-print-view {
   display: none;
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: clamp(2.1rem, 13vw, 3rem);
+  }
+
+  h2 {
+    font-size: clamp(1.65rem, 10vw, 2.35rem);
+  }
+
+  h3 {
+    font-size: clamp(1.15rem, 7vw, 1.65rem);
+  }
+
+  .page-shell {
+    padding: 0.85rem 0 2.5rem;
+  }
+
+  .top-strip {
+    font-size: 0.9rem;
+  }
+
+  .site-header {
+    gap: 1rem;
+    padding: 0.9rem 0;
+  }
+
+  .brand-block,
+  .admin-brand {
+    gap: 0.7rem;
+  }
+
+  .ekoway-mark,
+  .ekoway-mark.compact {
+    width: 3.75rem;
+    height: 3.75rem;
+  }
+
+  .brand-tagline {
+    font-size: 0.92rem;
+  }
+
+  .header-actions .outline-button,
+  .header-actions .solid-button,
+  .hero-actions .outline-button,
+  .hero-actions .solid-button,
+  .filter-field,
+  .cart-checkout-actions button,
+  .form-actions button,
+  .split-actions button {
+    width: 100%;
+  }
+
+  .search-shell,
+  .filter-field,
+  .promo-rail article,
+  .service-card,
+  .product-card,
+  .metric-card,
+  .dashboard-panel,
+  .inventory-table,
+  .fulfillment-column,
+  .campaign-preview,
+  .sidebar-card,
+  .category-card,
+  .hero-panel,
+  .pro-section,
+  .seasonal-band,
+  .savings-band {
+    padding: 0.9rem;
+  }
+
+  .hero-primary {
+    min-height: 0;
+    gap: 1.5rem;
+  }
+
+  .hero-copy h2 {
+    max-width: none;
+  }
+
+  .hero-metrics div,
+  .mini-board div,
+  .pro-panel div,
+  .sales-detail-grid div,
+  .payment-detail-grid div,
+  .payment-balance-card div,
+  .account-stat-grid div {
+    padding: 0.75rem;
+  }
+
+  .promo-rail,
+  .section-heading,
+  .savings-band {
+    margin-top: 0.9rem;
+  }
+
+  .section-heading {
+    margin-bottom: 0.85rem;
+  }
+
+  .seasonal-band span,
+  .savings-tags span,
+  .status-pill,
+  .badge-chip,
+  .tone-chip {
+    padding: 0.42rem 0.58rem;
+    font-size: 0.76rem;
+  }
+
+  .product-visual {
+    min-height: 9rem;
+  }
+
+  .product-visual strong,
+  .product-card footer strong {
+    font-size: 1.4rem;
+  }
+
+  .product-card footer,
+  .cart-checkout-actions,
+  .form-actions,
+  .split-actions,
+  .settings-row-footer,
+  .order-form-footer,
+  .order-row-top,
+  .order-actions,
+  .payment-row-top,
+  .admin-topbar,
+  .panel-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-layout {
+    width: 100%;
+    padding: 0;
+  }
+
+  .admin-sidebar,
+  .admin-main {
+    border-left: 0;
+    border-right: 0;
+    box-shadow: none;
+  }
+
+  .admin-sidebar > .outline-button {
+    width: 100%;
+  }
+
+  .admin-topbar .admin-actions,
+  .admin-actions,
+  .record-toolbar {
+    width: 100%;
+  }
+
+  .admin-actions > *,
+  .record-toolbar > * {
+    flex: 1 1 100%;
+  }
+
+  .inventory-header {
+    display: none;
+  }
+
+  .inventory-row {
+    gap: 0.35rem;
+    align-items: start;
+  }
+
+  .bar-chart div {
+    grid-template-columns: 1fr;
+  }
+
+  .customer-purchase-list div,
+  .catalog-list div {
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .order-history-item,
+  .order-items,
+  .sales-detail-grid,
+  .payment-detail-grid,
+  .payment-balance-card,
+  .settings-category-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .management-table {
+    min-width: 44rem;
+  }
+
+  .management-table th,
+  .management-table td {
+    padding: 0.58rem;
+  }
+
+  .table-cell-main,
+  .table-cell-list {
+    min-width: 9rem;
+  }
+
+  .table-action {
+    min-height: 2.5rem;
+    padding: 0.48rem 0.6rem;
+    font-size: 0.82rem;
+  }
+
+  .record-modal-overlay {
+    align-items: end;
+    padding: 0;
+  }
+
+  .record-modal-dialog,
+  .record-modal-wide {
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+
+  .record-modal-head,
+  .record-modal-body {
+    padding: 0.95rem;
+  }
+
+  .record-modal-head {
+    align-items: flex-start;
+  }
+
+  .record-modal-head-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .record-checkbox-field,
+  .record-toggle-field {
+    align-items: flex-start;
+  }
+
+  .cart-drawer {
+    width: 100%;
+  }
+
+  .cart-drawer-head,
+  .cart-drawer-foot,
+  .cart-checkout-form,
+  .account-content,
+  .account-lookup-form {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .cart-lines {
+    padding: 0.25rem 1rem;
+  }
+
+  .cart-line {
+    display: grid;
+    grid-template-columns: 3.1rem minmax(0, 1fr);
+  }
+
+  .cart-line-visual {
+    width: 3.1rem;
+    height: 3.1rem;
+  }
+
+  .cart-line-controls,
+  .cart-subtotal {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .qty-stepper {
+    width: fit-content;
+  }
+
+  .qty-stepper button {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .qty-stepper span {
+    min-width: 2.4rem;
+  }
+
+  .cart-remove {
+    align-self: flex-start;
+    padding: 0;
+  }
+
+  .account-auth-tabs {
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding: 0.8rem 1rem 0;
+    scrollbar-width: none;
+  }
+
+  .account-auth-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .account-auth-tabs .text-link {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .account-order,
+  .account-hero {
+    padding: 0.9rem;
+  }
+
+  .account-order-total {
+    text-align: left;
+  }
+
+  .permission-matrix-panel {
+    margin-inline: -0.9rem;
+    padding-inline: 0.9rem;
+  }
+
+  .permission-table {
+    min-width: 42rem;
+  }
+
+  .permission-row {
+    grid-template-columns: minmax(11rem, 2fr) repeat(4, minmax(4.6rem, 0.55fr));
+    gap: 0.55rem;
+  }
 }
 
 @media print {
