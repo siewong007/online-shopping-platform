@@ -33,9 +33,8 @@ export function AdminLoginScreen({ onBackToStore, onLogin }: AdminLoginScreenPro
     <main className="admin-login-shell">
       <section className="admin-login-panel">
         <div className="admin-brand">
-          <div className="depot-mark compact">
-            <span>HOME</span>
-            <span>DEPOT</span>
+          <div className="ekoway-mark compact" aria-hidden="true">
+            <img src="/ekoway/ekoway-logo.jpeg" alt="" />
           </div>
           <div>
             <p className="eyebrow">Internal Retail Tools</p>

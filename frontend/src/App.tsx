@@ -58,9 +58,12 @@ import {
   updateSystemSetting as updateSystemSettingRequest,
   voidInvoice as voidInvoiceRequest
 } from "./lib/api";
+import { LangToggle, useI18n } from "./i18n/LanguageContext";
+import type { TranslationKey } from "./i18n/translations";
 import { TeamPanel } from "./modules/admin_users/components/TeamPanel";
 import { AdminLoginScreen } from "./modules/auth/components/AdminLoginScreen";
 import { CatalogPanel } from "./modules/catalog/components/CatalogPanel";
+import { LandingView } from "./modules/landing/LandingView";
 import { InvoicesPanel } from "./modules/invoices/components/InvoicesPanel";
 import { OrderControlPanel } from "./modules/orders/components/OrderControlPanel";
 import { PaymentManagementPanel } from "./modules/payments/components/PaymentManagementPanel";
@@ -142,7 +145,13 @@ import type {
 const CART_STORAGE_KEY = "depot-cart";
 const ACCOUNT_EMAIL_STORAGE_KEY = "depot-account-email";
 
-type View = "store" | "admin";
+type View = "landing" | "store" | "admin";
+
+function viewFromPath(pathname: string): View {
+  if (pathname === "/admin") return "admin";
+  if (pathname === "/shop") return "store";
+  return "landing";
+}
 type AdminAuthState = "checking" | "unauthenticated" | "authenticated" | "demo";
 type AdminTab =
   | "overview"
@@ -194,37 +203,36 @@ const changePasswordFields: RecordFormField<ChangeOwnPasswordInput>[] = [
 
 const membershipTiers = ["Bronze", "Silver", "Gold", "Pro Xtra", "VIP"];
 
-const departmentMenu = [
-  "Shop All",
-  "Specials & Offers",
-  "Appliances",
-  "Bath",
-  "Building Materials",
-  "Lumber",
-  "Garden Center",
-  "Tools",
-  "Paint",
-  "Storage",
-  "Services",
-  "DIY",
-  "Pro"
+const departmentMenu: { key: TranslationKey }[] = [
+  { key: "shop.dept.all" },
+  { key: "shop.dept.deals" },
+  { key: "shop.dept.power" },
+  { key: "shop.dept.paint" },
+  { key: "shop.dept.building" },
+  { key: "shop.dept.bath" },
+  { key: "shop.dept.kitchen" },
+  { key: "shop.dept.electrical" },
+  { key: "shop.dept.lighting" },
+  { key: "shop.dept.hand" },
+  { key: "shop.dept.services" },
+  { key: "shop.dept.pro" }
 ];
 
 const seasonalTags = [
-  "Spring Black Friday",
-  "Fast Free Delivery",
-  "Special Buy of the Day",
-  "Outdoor Power",
-  "Patio Furniture",
-  "Mulch",
-  "Bathroom Vanities",
-  "Refrigerators"
+  "Genuine Brands",
+  "Fast Counter Service",
+  "This Month's Picks",
+  "Power Tools",
+  "Nippon Paint",
+  "Building Materials",
+  "Bathroom Fittings",
+  "Home Appliances"
 ];
 
-const quickServiceCalls = [
-  { time: "Pickup", detail: "Buy online and collect in as little as 2 hours." },
-  { time: "Delivery", detail: "Appliances, pallets and oversized orders scheduled fast." },
-  { time: "Install", detail: "Measure, quote and book trusted installers from one flow." }
+const quickServiceCalls: { key: TranslationKey; detail: TranslationKey }[] = [
+  { key: "shop.svc.1.k", detail: "shop.svc.1.v" },
+  { key: "shop.svc.2.k", detail: "shop.svc.2.v" },
+  { key: "shop.svc.3.k", detail: "shop.svc.3.v" }
 ];
 
 const storeClusterBars = [
@@ -985,18 +993,16 @@ function priceInputToCents(value: string): number | null {
   return Number.isFinite(parsed) && parsed >= 0 ? Math.round(parsed * 100) : null;
 }
 
-function DepotMark({ compact = false }: { compact?: boolean }) {
+function EkowayMark({ compact = false }: { compact?: boolean }) {
   return (
-    <div className={`depot-mark ${compact ? "compact" : ""}`} aria-hidden="true">
-      <span>THE</span>
-      <span>HOME</span>
-      <span>DEPOT</span>
+    <div className={`ekoway-mark ${compact ? "compact" : ""}`} aria-hidden="true">
+      <img src="/ekoway/ekoway-logo.jpeg" alt="" />
     </div>
   );
 }
 
 export default function App() {
-  const [view, setView] = useState<View>(window.location.pathname === "/admin" ? "admin" : "store");
+  const [view, setView] = useState<View>(() => viewFromPath(window.location.pathname));
   const [storefront, setStorefront] = useState<StorefrontPayload | null>(null);
   const [dashboard, setDashboard] = useState<AdminDashboardPayload | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -1041,6 +1047,16 @@ export default function App() {
 
   const isInitialStorefrontFilter = useRef(true);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const { t } = useI18n();
+
+  useEffect(() => {
+    document.title =
+      view === "landing"
+        ? "Ekoway Hardware — 永光五金 · Sibu, Sarawak"
+        : view === "store"
+          ? "Ekoway Hardware — Shop Online"
+          : "Ekoway Hardware — Ops Console";
+  }, [view]);
 
   useEffect(() => {
     window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
@@ -1080,7 +1096,7 @@ export default function App() {
 
   useEffect(() => {
     const onPopState = () => {
-      setView(window.location.pathname === "/admin" ? "admin" : "store");
+      setView(viewFromPath(window.location.pathname));
     };
 
     window.addEventListener("popstate", onPopState);
@@ -1093,7 +1109,7 @@ export default function App() {
 
   const openView = (nextView: View) => {
     startTransition(() => {
-      const nextPath = nextView === "admin" ? "/admin" : "/";
+      const nextPath = nextView === "admin" ? "/admin" : nextView === "store" ? "/shop" : "/";
       window.history.pushState({}, "", nextPath);
       setView(nextView);
     });
@@ -2011,8 +2027,19 @@ export default function App() {
     ]);
   };
 
+  const openShop = () => openView("store");
+
+  // Show landing page immediately without waiting for storefront data
+  if (view === "landing") {
+    return (
+      <div className="app-shell">
+        <LandingView onOpenShop={openShop} />
+      </div>
+    );
+  }
+
   if (!storefront) {
-    return <main className="loading-shell">Loading Home Depot storefront...</main>;
+    return <main className="loading-shell">{t("shop.loading")}</main>;
   }
 
   return (
@@ -2199,43 +2226,45 @@ function StorefrontView({
   sortOption,
   storefront
 }: StorefrontViewProps) {
+  const { t } = useI18n();
   const activeCategory =
     storefront.categories.find((category) => category.slug === selectedCategory) ?? storefront.categories[0];
 
   return (
-    <>
+    <div className="storefront-shell">
       <div className="top-strip">
-        <p>Spring Black Friday is live with daily savings, fast delivery and pickup-ready inventory.</p>
+        <p>{t("shop.strip")}</p>
         <button className="top-link" onClick={onOpenAdmin}>
-          Open Ops Console
+          {t("shop.strip.cta")}
         </button>
       </div>
 
       <header className="site-header">
         <div className="brand-block">
-          <DepotMark />
+          <EkowayMark />
           <div className="brand-copy">
-            <p className="eyebrow">#1 Home Improvement Retailer</p>
-            <h1>The Home Depot</h1>
-            <p className="brand-tagline">How doers get more done.</p>
+            <p className="eyebrow">{t("shop.eyebrow")}</p>
+            <h1>{t("shop.brand")}</h1>
+            <p className="brand-tagline">{t("shop.tagline")}</p>
           </div>
         </div>
 
         <div className="header-actions">
           <label className="search-shell">
-            <span>What can we help you find today?</span>
+            <span>{t("shop.search.label")}</span>
             <input
               type="search"
-              placeholder="Search tools, appliances, patio, paint and more"
+              placeholder={t("shop.search.placeholder")}
               value={searchTerm}
               onChange={(event) => onChangeSearch(event.target.value)}
             />
           </label>
+          <LangToggle />
           <button className="outline-button" onClick={onOpenAccount}>
-            My Account
+            {t("shop.account")}
           </button>
           <button className="solid-button cart-button" onClick={onOpenCart}>
-            Cart
+            {t("shop.cart")}
             <span>{cartCount}</span>
           </button>
         </div>
@@ -2243,12 +2272,12 @@ function StorefrontView({
 
       <nav className="mega-nav" aria-label="Primary">
         {departmentMenu.map((item) => (
-          <a href="#categories" key={item}>
-            {item}
+          <a href="#categories" key={item.key}>
+            {t(item.key)}
           </a>
         ))}
         <button className="nav-button" onClick={onOpenAdmin}>
-          Admin
+          {t("shop.nav.admin")}
         </button>
       </nav>
 
@@ -2256,62 +2285,58 @@ function StorefrontView({
         <section className="hero-grid">
           <article className="hero-panel hero-primary">
             <div className="hero-copy">
-              <p className="eyebrow">Spring Black Friday</p>
-              <h2>Big orange savings across tools, patio, appliances and pickup-ready essentials.</h2>
-              <p>
-                This storefront is rebuilt to feel like the real Home Depot homepage: utility-first
-                navigation, dense promotional blocks and a strong mix of DIY, pro and service-driven
-                merchandising.
-              </p>
+              <p className="eyebrow">{t("shop.hero.eyebrow")}</p>
+              <h2>{t("shop.hero.title")}</h2>
+              <p>{t("shop.hero.body")}</p>
               <div className="hero-actions">
                 <a className="solid-button" href="#featured-products">
-                  Shop Deals
+                  {t("shop.hero.cta1")}
                 </a>
                 <a className="outline-button" href="#services">
-                  Explore Services
+                  {t("shop.hero.cta2")}
                 </a>
               </div>
             </div>
 
             <div className="hero-metrics">
               <div>
-                <strong>2 hrs</strong>
-                <span>pickup-ready order window</span>
+                <strong>{t("shop.hero.m1.v")}</strong>
+                <span>{t("shop.hero.m1.k")}</span>
               </div>
               <div>
-                <strong>48 states</strong>
-                <span>delivery coverage on major appliances</span>
+                <strong>{t("shop.hero.m2.v")}</strong>
+                <span>{t("shop.hero.m2.k")}</span>
               </div>
               <div>
-                <strong>1,300+</strong>
-                <span>rental and service touchpoints</span>
+                <strong>{t("shop.hero.m3.v")}</strong>
+                <span>{t("shop.hero.m3.k")}</span>
               </div>
             </div>
           </article>
 
           <article className="hero-panel hero-secondary">
-            <p className="eyebrow">Today&apos;s Big Savings</p>
-            <h3>Deals stacked the way shoppers expect.</h3>
-            <p>Browse category-led offers built for spring projects, quick refreshes and pro replenishment.</p>
+            <p className="eyebrow">{t("shop.panel2.eyebrow")}</p>
+            <h3>{t("shop.panel2.title")}</h3>
+            <p>{t("shop.panel2.body")}</p>
             <ul className="deal-points">
-              <li>Special Buy pricing on cordless tool kits</li>
-              <li>Fast free delivery on select appliances</li>
-              <li>Patio and garden markdowns ahead of the weekend</li>
+              <li>{t("shop.panel2.p1")}</li>
+              <li>{t("shop.panel2.p2")}</li>
+              <li>{t("shop.panel2.p3")}</li>
             </ul>
             <a className="text-link" href="#deals">
-              View all savings
+              {t("shop.panel2.link")}
             </a>
           </article>
 
           <article className="hero-panel hero-tertiary">
-            <p className="eyebrow">Store Services</p>
-            <h3>Pickup, delivery and installs from one shelf.</h3>
-            <p>Bring the retail convenience layer closer to the product grid instead of hiding it in a side flow.</p>
+            <p className="eyebrow">{t("shop.panel3.eyebrow")}</p>
+            <h3>{t("shop.panel3.title")}</h3>
+            <p>{t("shop.panel3.body")}</p>
             <div className="mini-board">
               {quickServiceCalls.map((item) => (
-                <div key={item.time}>
-                  <span>{item.time}</span>
-                  <strong>{item.detail}</strong>
+                <div key={item.key}>
+                  <span>{t(item.key)}</span>
+                  <strong>{t(item.detail)}</strong>
                 </div>
               ))}
             </div>
@@ -2336,9 +2361,11 @@ function StorefrontView({
 
         <section className="category-section" id="categories">
           <div className="section-heading">
-            <p className="eyebrow">Shop By Category</p>
-            <h2>Department-first merchandising, just like the live site</h2>
-            <p className="section-copy">Now showing: {activeCategory?.name ?? "All Departments"}</p>
+            <p className="eyebrow">{t("shop.sec.cat.eyebrow")}</p>
+            <h2>{t("shop.sec.cat.title")}</h2>
+            <p className="section-copy">
+              {t("shop.sec.cat.now")} {activeCategory?.name ?? t("shop.dept.all")}
+            </p>
           </div>
 
           <div className="category-grid">
@@ -2356,7 +2383,7 @@ function StorefrontView({
 
           <div className="filter-bar">
             <label className="filter-field">
-              <span>Min price</span>
+              <span>{t("shop.filter.min")}</span>
               <input
                 type="number"
                 min="0"
@@ -2369,7 +2396,7 @@ function StorefrontView({
               />
             </label>
             <label className="filter-field">
-              <span>Max price</span>
+              <span>{t("shop.filter.max")}</span>
               <input
                 type="number"
                 min="0"
@@ -2382,15 +2409,15 @@ function StorefrontView({
               />
             </label>
             <label className="filter-field">
-              <span>Sort by</span>
+              <span>{t("shop.filter.sort")}</span>
               <select
                 value={sortOption}
                 onChange={(event) => onChangeSort(event.target.value as StorefrontSort)}
               >
-                <option value="featured">Featured</option>
-                <option value="price_asc">Price: Low to High</option>
-                <option value="price_desc">Price: High to Low</option>
-                <option value="name">Name A-Z</option>
+                <option value="featured">{t("shop.sort.featured")}</option>
+                <option value="price_asc">{t("shop.sort.priceAsc")}</option>
+                <option value="price_desc">{t("shop.sort.priceDesc")}</option>
+                <option value="name">{t("shop.sort.name")}</option>
               </select>
             </label>
           </div>
@@ -2398,22 +2425,22 @@ function StorefrontView({
 
         <section className="savings-band">
           <div>
-            <p className="eyebrow">Savings Snapshot</p>
-            <h3>Promotions grouped around urgency, delivery and category breadth.</h3>
-            <p>{filteredProducts.length} featured products match the current department and search filters.</p>
+            <p className="eyebrow">{t("shop.savings.eyebrow")}</p>
+            <h3>{t("shop.savings.title")}</h3>
+            <p>{t("shop.savings.count", { n: filteredProducts.length })}</p>
           </div>
           <div className="savings-tags">
-            <span>Daily Deals</span>
-            <span>Special Buy</span>
-            <span>Free Delivery</span>
-            <span>Pro Volume Pricing</span>
+            <span>{t("shop.savings.t1")}</span>
+            <span>{t("shop.savings.t2")}</span>
+            <span>{t("shop.savings.t3")}</span>
+            <span>{t("shop.savings.t4")}</span>
           </div>
         </section>
 
         <section className="product-section" id="featured-products">
           <div className="section-heading">
-            <p className="eyebrow">Spring Black Friday Deals</p>
-            <h2>Featured products with Home Depot-style density and hierarchy</h2>
+            <p className="eyebrow">{t("shop.products.eyebrow")}</p>
+            <h2>{t("shop.products.title")}</h2>
           </div>
 
            <div className="product-grid">
@@ -2457,11 +2484,11 @@ function StorefrontView({
 
                    <footer>
                      <div>
-                       <p className="price-label">From</p>
+                       <p className="price-label">{t("shop.product.from")}</p>
                        <strong>{currencyFromCents(product.price_cents)}</strong>
                        <p>{categoryName}</p>
                      </div>
-                     <button onClick={() => onAddToCart(product)}>Add to Cart</button>
+                     <button onClick={() => onAddToCart(product)}>{t("shop.product.add")}</button>
                    </footer>
                  </article>
                );
@@ -2471,14 +2498,14 @@ function StorefrontView({
 
         <section className="services-section" id="services">
           <div className="section-heading">
-            <p className="eyebrow">More Ways To Get It Done</p>
-            <h2>Services belong next to the commerce, not outside it</h2>
+            <p className="eyebrow">{t("shop.services.eyebrow")}</p>
+            <h2>{t("shop.services.title")}</h2>
           </div>
 
           <div className="service-grid">
             {storefront.services.map((service) => (
               <article className="service-card" key={service.name}>
-                <p className="eyebrow">Service</p>
+                <p className="eyebrow">{t("shop.services.card")}</p>
                 <h3>{service.name}</h3>
                 <p>{service.description}</p>
               </article>
@@ -2488,12 +2515,9 @@ function StorefrontView({
 
         <section className="pro-section" id="pro-desk">
           <div className="pro-copy">
-            <p className="eyebrow">Pro Services & Contractor Supply</p>
-            <h2>Built for crews that need quotes, pickups and installs to move without friction.</h2>
-            <p>
-              The clone keeps the consumer storefront recognizable while still surfacing the operational
-              muscle behind pickup windows, trade pricing and regional inventory flow.
-            </p>
+            <p className="eyebrow">{t("shop.pro.eyebrow")}</p>
+            <h2>{t("shop.pro.title")}</h2>
+            <p>{t("shop.pro.body")}</p>
           </div>
 
           <div className="pro-panel">
@@ -2522,7 +2546,7 @@ function StorefrontView({
         onLookupCustomer={onLookupCustomer}
         onClose={onCloseAccount}
       />
-    </>
+    </div>
   );
 }
 
@@ -3065,6 +3089,7 @@ function CartDrawer({
   onRemoveFromCart,
   onUpdateQuantity
 }: CartDrawerProps) {
+  const { t } = useI18n();
   const [stage, setStage] = useState<"cart" | "checkout">("cart");
   const [form, setForm] = useState<{
     customer_name: string;
@@ -3110,7 +3135,7 @@ function CartDrawer({
     }
   };
 
-  let title = "Your Cart";
+  let title = t("shop.cartd.title");
   if (confirmedOrder) {
     title = "Order Confirmed";
   } else if (stage === "checkout") {
@@ -3119,7 +3144,7 @@ function CartDrawer({
 
   return (
     <div className="cart-overlay" role="dialog" aria-modal="true" aria-label="Shopping cart">
-      <button className="cart-scrim" aria-label="Close cart" onClick={close} />
+      <button className="cart-scrim" aria-label={t("shop.cartd.close")} onClick={close} />
       <aside className="cart-drawer">
         <header className="cart-drawer-head">
           <h2>{title}</h2>
@@ -3143,7 +3168,7 @@ function CartDrawer({
           </div>
         ) : cart.length === 0 ? (
           <div className="cart-empty">
-            <p>Your cart is empty.</p>
+            <p>{t("shop.cartd.empty")}</p>
             <button className="outline-button" onClick={close}>
               Browse products
             </button>
@@ -3194,7 +3219,7 @@ function CartDrawer({
                       </div>
                       <strong>{currencyFromCents(item.product.price_cents * item.quantity)}</strong>
                       <button className="cart-remove" onClick={() => onRemoveFromCart(item.product.id)}>
-                        Remove
+                        {t("shop.cartd.remove")}
                       </button>
                     </div>
                   </div>
@@ -3203,7 +3228,7 @@ function CartDrawer({
             </ul>
             <footer className="cart-drawer-foot">
               <div className="cart-subtotal">
-                <span>Subtotal</span>
+                <span>{t("shop.cartd.subtotal")}</span>
                 <strong>{currencyFromCents(subtotalCents)}</strong>
               </div>
               <button className="solid-button" onClick={() => setStage("checkout")}>
@@ -3249,7 +3274,7 @@ function CartDrawer({
             </label>
             {feedback ? <p className="cart-feedback">{feedback}</p> : null}
             <div className="cart-subtotal">
-              <span>Subtotal</span>
+              <span>{t("shop.cartd.subtotal")}</span>
               <strong>{currencyFromCents(subtotalCents)}</strong>
             </div>
             <div className="cart-checkout-actions">
@@ -3548,7 +3573,7 @@ function AdminView({
     <main className="admin-layout">
       <aside className="admin-sidebar">
         <div className="admin-brand">
-          <DepotMark compact />
+          <EkowayMark compact />
           <div>
             <p className="eyebrow">Internal Retail Tools</p>
             <h1>Ops Console</h1>
