@@ -758,8 +758,13 @@ ul {
 }
 
 .admin-main {
+  min-width: 0;
   padding: 1.25rem;
   background: rgba(255, 255, 255, 0.72);
+}
+
+.dashboard-panel {
+  min-width: 0;
 }
 
 .admin-demo-banner {
@@ -771,7 +776,8 @@ ul {
   font-weight: 800;
 }
 
-.admin-actions {
+.admin-actions,
+.record-toolbar {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
@@ -1872,15 +1878,6 @@ ul {
   }
 
   .sidebar-card {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.6rem;
-    padding: 0.8rem;
-  }
-
-  .sidebar-card h3,
-  .sidebar-card p:not(.eyebrow) {
     display: none;
   }
 
@@ -2502,9 +2499,7 @@ ul {
   .split-actions,
   .settings-row-footer,
   .order-form-footer,
-  .order-row-top,
   .order-actions,
-  .payment-row-top,
   .admin-topbar,
   .panel-header {
     flex-direction: column;
@@ -2538,27 +2533,11 @@ ul {
     flex: 1 1 100%;
   }
 
-  .inventory-header {
-    display: none;
-  }
-
-  .inventory-row {
-    gap: 0.35rem;
-    align-items: start;
-  }
-
   .bar-chart div {
     grid-template-columns: 1fr;
   }
 
-  .customer-purchase-list div,
-  .catalog-list div {
-    flex-direction: column;
-    gap: 0.35rem;
-  }
-
   .order-history-item,
-  .order-items,
   .sales-detail-grid,
   .payment-detail-grid,
   .payment-balance-card,
