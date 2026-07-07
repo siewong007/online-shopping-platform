@@ -26,6 +26,18 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
             "/api/customer-portal/lookup",
             get(customer_portal::controller::lookup_customer_portal),
         )
+        .route(
+            "/api/customer-portal/me/membership",
+            get(customer_portal::controller::membership),
+        )
+        .route(
+            "/api/customer-portal/me/benefits",
+            get(customer_portal::controller::benefits),
+        )
+        .route(
+            "/api/customer-portal/me/transactions",
+            get(customer_portal::controller::transactions),
+        )
         .route("/api/admin/login", post(auth::controller::login))
         .route("/api/admin/logout", post(auth::controller::logout))
         .route("/api/admin/me", get(auth::controller::me))

@@ -344,6 +344,86 @@ pub struct CustomerMePayload {
     pub orders: Vec<CustomerLookupOrder>,
 }
 
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct MembershipTier {
+    pub name: String,
+    pub rank: i32,
+    pub min_lifetime_purchase_cents: i32,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct NextMembershipTier {
+    pub name: String,
+    pub min_lifetime_purchase_cents: i32,
+    pub remaining_cents: i32,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MembershipPayload {
+    pub profile: CustomerLookupProfile,
+    pub current_tier: Option<MembershipTier>,
+    pub next_tier: Option<NextMembershipTier>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MembershipBenefit {
+    pub title: String,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MembershipTierWithBenefits {
+    pub name: String,
+    pub rank: i32,
+    pub min_lifetime_purchase_cents: i32,
+    pub benefits: Vec<MembershipBenefit>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MembershipBenefitsPayload {
+    pub current_tier: Option<String>,
+    pub tiers: Vec<MembershipTierWithBenefits>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct CustomerTransactionsQuery {
+    pub limit: Option<i64>,
+    pub offset: Option<i64>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CustomerTransactionItem {
+    pub product_name: String,
+    pub quantity: i32,
+    pub unit_price_cents: i32,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CustomerTransactionPayment {
+    pub method: String,
+    pub status: String,
+    pub amount_cents: i32,
+    pub reference: String,
+    pub processed_at: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CustomerTransaction {
+    pub id: i32,
+    pub created_at: String,
+    pub status: String,
+    pub subtotal_cents: i32,
+    pub fulfillment_method: String,
+    pub items: Vec<CustomerTransactionItem>,
+    pub payments: Vec<CustomerTransactionPayment>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CustomerTransactionsPayload {
+    pub total: i64,
+    pub transactions: Vec<CustomerTransaction>,
+}
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct CreateCustomerPortalProfileInput {
     pub customer_name: String,

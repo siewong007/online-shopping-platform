@@ -4,7 +4,10 @@ import type {
   AdminUser,
   AuditEvent,
   CustomerPortalProfile,
+  CustomerTransactionsPayload,
   Invoice,
+  MembershipBenefitsPayload,
+  MembershipPayload,
   Order,
   Payment,
   PermissionsPayload,
@@ -324,6 +327,101 @@ export const fallbackCustomerPortalProfiles: CustomerPortalProfile[] = [
     updated_at: "2026-06-29 07:15:00+00"
   }
 ];
+
+export const fallbackCustomerPortalMembership: MembershipPayload = {
+  profile: {
+    customer_name: "Dana Whitfield",
+    customer_email: "dana.w@example.com",
+    membership_tier: "Silver",
+    points_balance: 649,
+    lifetime_purchase_cents: 64900,
+    total_orders: 1,
+    last_purchase_at: "2026-06-29 07:15:00+00"
+  },
+  current_tier: {
+    name: "Silver",
+    rank: 2,
+    min_lifetime_purchase_cents: 50000
+  },
+  next_tier: {
+    name: "Gold",
+    min_lifetime_purchase_cents: 150000,
+    remaining_cents: 85100
+  }
+};
+
+export const fallbackCustomerPortalBenefits: MembershipBenefitsPayload = {
+  current_tier: "Silver",
+  tiers: [
+    {
+      name: "Bronze",
+      rank: 1,
+      min_lifetime_purchase_cents: 0,
+      benefits: [
+        { title: "Member pricing", description: "Access to members-only prices on select items." },
+        { title: "Order history", description: "Track every past order and reorder in one click." },
+        { title: "1x points", description: "Earn 1 point per dollar on every purchase." }
+      ]
+    },
+    {
+      name: "Silver",
+      rank: 2,
+      min_lifetime_purchase_cents: 50000,
+      benefits: [
+        { title: "Free delivery over $45", description: "Free standard delivery on eligible orders above $45." },
+        { title: "1.25x points", description: "Earn 25% more points on every purchase." },
+        { title: "Extended returns", description: "90-day returns on most items." }
+      ]
+    },
+    {
+      name: "Gold",
+      rank: 3,
+      min_lifetime_purchase_cents: 150000,
+      benefits: [
+        { title: "Free delivery over $25", description: "Free standard delivery on eligible orders above $25." },
+        { title: "1.5x points", description: "Earn 50% more points on every purchase." },
+        { title: "Early access to sales", description: "Shop seasonal and holiday sales before everyone else." },
+        { title: "Priority support", description: "Faster response times from our support team." }
+      ]
+    },
+    {
+      name: "Pro Xtra",
+      rank: 4,
+      min_lifetime_purchase_cents: 300000,
+      benefits: [
+        { title: "Free delivery", description: "Free standard delivery on all eligible orders." },
+        { title: "2x points", description: "Earn double points on every purchase." },
+        { title: "Volume pricing", description: "Bulk and Pro pricing on qualifying quantities." },
+        { title: "Dedicated Pro desk", description: "A dedicated account team and dedicated support line." }
+      ]
+    }
+  ]
+};
+
+export const fallbackCustomerPortalTransactions: CustomerTransactionsPayload = {
+  total: 1,
+  transactions: [
+    {
+      id: 1041,
+      created_at: "2026-06-29 07:15:00+00",
+      status: "received",
+      subtotal_cents: 64900,
+      fulfillment_method: "delivery",
+      items: [
+        { product_name: "Milwaukee M18 9-Tool Combo Kit", quantity: 1, unit_price_cents: 64900 }
+      ],
+      payments: [
+        {
+          method: "ACH",
+          status: "Pending",
+          amount_cents: 64900,
+          reference: "ach-dana-1041",
+          processed_at: null
+        }
+      ]
+    }
+  ]
+};
 
 export const fallbackPayments: Payment[] = [
   {

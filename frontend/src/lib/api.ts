@@ -43,6 +43,11 @@ export {
   fetchMe as fetchCustomerMe
 } from "../modules/customer_auth/api/customerAuthApi";
 export {
+  fetchBenefits as fetchCustomerPortalBenefits,
+  fetchMembership as fetchCustomerPortalMembership,
+  fetchTransactions as fetchCustomerPortalTransactions
+} from "../modules/customer_portal/api/customerPortalApi";
+export {
   checkout,
   createAdminOrder,
   deleteAdminOrder,

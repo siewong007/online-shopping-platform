@@ -182,3 +182,66 @@ async fn checkout_while_signed_in_links_account_and_awards_points(pool: PgPool) 
             .is_some_and(|points| points > 0)
     );
 }
+
+#[sqlx::test]
+async fn transactions_do_not_match_unverified_email_claims(pool: PgPool) {
+    let app = common::app(pool.clone());
+
+    let (checkout_status, checkout_body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/checkout",
+        None,
+        Some(json!({
+            "customer_name": "Victim Buyer",
+            "customer_email": "victim-transactions@example.com",
+            "items": [{ "product_id": 1, "quantity": 1 }]
+        })),
+    )
+    .await;
+    assert_eq!(checkout_status, StatusCode::CREATED, "{checkout_body}");
+    let victim_order_id = checkout_body["id"].as_i64().expect("order id") as i32;
+
+    sqlx::query(
+        r#"
+        INSERT INTO payments
+            (order_id, idempotency_key, amount_cents, method, status, reference, notes, processed_at)
+        VALUES
+            ($1, 'victim-payment-reference', 1000, 'Card', 'Captured', 'card-ref-4242', '', now())
+        "#,
+    )
+    .bind(victim_order_id)
+    .execute(&pool)
+    .await
+    .expect("victim payment should be created");
+
+    let (register_status, register_body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/account/register",
+        None,
+        Some(json!({
+            "email": "victim-transactions@example.com",
+            "password": "hunter2pass",
+            "display_name": "Email Claimer"
+        })),
+    )
+    .await;
+    assert_eq!(register_status, StatusCode::CREATED, "{register_body}");
+    let attacker_token = register_body["token"].as_str().expect("token").to_string();
+
+    let (transactions_status, transactions_body) = common::request(
+        app,
+        Method::GET,
+        "/api/customer-portal/me/transactions",
+        Some(&attacker_token),
+        None,
+    )
+    .await;
+    assert_eq!(transactions_status, StatusCode::OK, "{transactions_body}");
+    assert_eq!(transactions_body["total"], 0);
+    assert_eq!(
+        transactions_body["transactions"].as_array().map(Vec::len),
+        Some(0)
+    );
+}

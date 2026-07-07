@@ -77,6 +77,20 @@ export type {
 } from "./modules/customer_auth/types";
 
 export type {
+  CustomerTransaction,
+  CustomerTransactionItem,
+  CustomerTransactionPayment,
+  CustomerTransactionsPayload,
+  CustomerTransactionsQueryParams,
+  MembershipBenefit,
+  MembershipBenefitsPayload,
+  MembershipPayload,
+  MembershipTier,
+  MembershipTierWithBenefits,
+  NextMembershipTier
+} from "./modules/customer_portal/types";
+
+export type {
   CreateRoleInput,
   PermissionPage,
   PermissionsPayload,

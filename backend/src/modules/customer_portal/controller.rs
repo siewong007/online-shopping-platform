@@ -7,6 +7,10 @@ use axum::{
 use crate::{
     app_state::AppState,
     error,
+    models::{
+        CustomerIdentity, CustomerTransactionsPayload, CustomerTransactionsQuery,
+        MembershipBenefitsPayload, MembershipPayload,
+    },
     modules::{auth::model::AdminIdentity, permissions},
 };
 
@@ -118,4 +122,28 @@ pub async fn delete_customer_portal_profile(
         .await
         .map(|()| StatusCode::NO_CONTENT)
         .map_err(error::map_admin_error)
+}
+
+pub async fn membership(
+    State(state): State<AppState>,
+    identity: CustomerIdentity,
+) -> Result<Json<MembershipPayload>, error::HttpError> {
+    service::membership(&state.pool, &identity).await.map(Json)
+}
+
+pub async fn benefits(
+    State(state): State<AppState>,
+    identity: CustomerIdentity,
+) -> Result<Json<MembershipBenefitsPayload>, error::HttpError> {
+    service::benefits(&state.pool, &identity).await.map(Json)
+}
+
+pub async fn transactions(
+    State(state): State<AppState>,
+    identity: CustomerIdentity,
+    Query(query): Query<CustomerTransactionsQuery>,
+) -> Result<Json<CustomerTransactionsPayload>, error::HttpError> {
+    service::transactions(&state.pool, &identity, query.limit, query.offset)
+        .await
+        .map(Json)
 }

@@ -23,6 +23,9 @@ import {
   fetchAdminUsers,
   fetchAuditEvents,
   fetchCustomerPortalProfiles,
+  fetchCustomerPortalBenefits,
+  fetchCustomerPortalMembership,
+  fetchCustomerPortalTransactions,
   fetchInvoices,
   fetchMe,
   fetchOrders,
@@ -70,7 +73,12 @@ import { PaymentManagementPanel } from "./modules/payments/components/PaymentMan
 import { PermissionsPanel } from "./modules/permissions/components/PermissionsPanel";
 import { SalesPanel } from "./modules/sales/components/SalesPanel";
 import { SettingsPanel } from "./modules/settings/components/SettingsPanel";
-import { fallbackPermissions } from "./data/fallback";
+import {
+  fallbackCustomerPortalBenefits,
+  fallbackCustomerPortalMembership,
+  fallbackCustomerPortalTransactions,
+  fallbackPermissions
+} from "./data/fallback";
 import {
   ApiError,
   getAuthToken,
@@ -111,10 +119,13 @@ import type {
   CustomerMePayload,
   CustomerPortalProfile,
   CustomerRegisterInput,
+  CustomerTransactionsPayload,
   FulfillmentMethod,
   FulfillmentStatus,
   Invoice,
   LiveDashboardMetrics,
+  MembershipBenefitsPayload,
+  MembershipPayload,
   Order,
   Payment,
   PermissionsPayload,
@@ -2559,6 +2570,10 @@ type AccountDrawerProps = {
 
 type AccountLookupStatus = "idle" | "loading" | "success" | "error";
 type AccountAuthView = "login" | "register" | "guest";
+type AccountPortalTab = "transactions" | "membership" | "benefits";
+type PortalLoadStatus = "idle" | "loading" | "success" | "not-found" | "error";
+
+const PORTAL_TRANSACTIONS_PAGE_SIZE = 20;
 
 const emptyCustomerLookupPayload: CustomerLookupPayload = {
   profile: null,
@@ -2590,6 +2605,18 @@ function AccountDrawer({
   const [authForm, setAuthForm] = useState<CustomerRegisterInput>(emptyCustomerAuthForm);
   const [authStatus, setAuthStatus] = useState<"idle" | "loading" | "error">("idle");
   const [authError, setAuthError] = useState("");
+
+  const [portalTab, setPortalTab] = useState<AccountPortalTab>("transactions");
+
+  const [membership, setMembership] = useState<MembershipPayload | null>(null);
+  const [membershipStatus, setMembershipStatus] = useState<PortalLoadStatus>("idle");
+
+  const [benefits, setBenefits] = useState<MembershipBenefitsPayload | null>(null);
+  const [benefitsStatus, setBenefitsStatus] = useState<PortalLoadStatus>("idle");
+
+  const [transactions, setTransactions] = useState<CustomerTransactionsPayload | null>(null);
+  const [transactionsStatus, setTransactionsStatus] = useState<PortalLoadStatus>("idle");
+  const [transactionsOffset, setTransactionsOffset] = useState(0);
 
   useEffect(() => {
     if (!open) {
@@ -2625,6 +2652,112 @@ function AccountDrawer({
       cancelled = true;
     };
   }, [open]);
+
+  useEffect(() => {
+    if (!open || !session) {
+      return;
+    }
+
+    let cancelled = false;
+    setMembershipStatus("loading");
+
+    void (async () => {
+      try {
+        const payload = await fetchCustomerPortalMembership();
+        if (!cancelled) {
+          setMembership(payload);
+          setMembershipStatus("success");
+        }
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+        if (error instanceof ApiError && !error.isNetworkError && error.status === 404) {
+          setMembership(null);
+          setMembershipStatus("not-found");
+        } else if (error instanceof ApiError && !error.isNetworkError && error.status === 401) {
+          setMembershipStatus("error");
+        } else {
+          // API unreachable — fall back to demo portal data rather than a blank crash.
+          setMembership(fallbackCustomerPortalMembership);
+          setMembershipStatus("success");
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, session]);
+
+  useEffect(() => {
+    if (!open || !session) {
+      return;
+    }
+
+    let cancelled = false;
+    setBenefitsStatus("loading");
+
+    void (async () => {
+      try {
+        const payload = await fetchCustomerPortalBenefits();
+        if (!cancelled) {
+          setBenefits(payload);
+          setBenefitsStatus("success");
+        }
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+        if (error instanceof ApiError && !error.isNetworkError && error.status === 401) {
+          setBenefitsStatus("error");
+        } else {
+          setBenefits(fallbackCustomerPortalBenefits);
+          setBenefitsStatus("success");
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, session]);
+
+  useEffect(() => {
+    if (!open || !session) {
+      return;
+    }
+
+    let cancelled = false;
+    setTransactionsStatus("loading");
+
+    void (async () => {
+      try {
+        const payload = await fetchCustomerPortalTransactions({
+          limit: PORTAL_TRANSACTIONS_PAGE_SIZE,
+          offset: transactionsOffset
+        });
+        if (!cancelled) {
+          setTransactions(payload);
+          setTransactionsStatus("success");
+        }
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+        if (error instanceof ApiError && !error.isNetworkError && error.status === 401) {
+          setTransactionsStatus("error");
+        } else {
+          setTransactions(fallbackCustomerPortalTransactions);
+          setTransactionsStatus("success");
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, session, transactionsOffset]);
 
   const submitLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -2669,6 +2802,14 @@ function AccountDrawer({
     } finally {
       setSession(null);
       setAuthView("login");
+      setPortalTab("transactions");
+      setMembership(null);
+      setMembershipStatus("idle");
+      setBenefits(null);
+      setBenefitsStatus("idle");
+      setTransactions(null);
+      setTransactionsStatus("idle");
+      setTransactionsOffset(0);
     }
   };
 
@@ -2755,10 +2896,18 @@ function AccountDrawer({
     const sessionOrders = [...session.orders].sort(
       (first, second) => Date.parse(second.created_at) - Date.parse(first.created_at)
     );
+
+    const membershipProfile = membership?.profile ?? null;
     const sessionLifetimeCents =
+      membershipProfile?.lifetime_purchase_cents ??
       sessionProfile?.lifetime_purchase_cents ??
       sessionOrders.reduce((sum, order) => sum + order.subtotal_cents, 0);
-    const sessionTotalOrders = sessionProfile?.total_orders ?? sessionOrders.length;
+    const sessionTotalOrders =
+      membershipProfile?.total_orders ?? sessionProfile?.total_orders ?? sessionOrders.length;
+    const sessionPointsBalance = membershipProfile?.points_balance ?? sessionProfile?.points_balance ?? 0;
+    const sessionLastPurchaseAt = membershipProfile?.last_purchase_at ?? sessionProfile?.last_purchase_at ?? null;
+    const membershipTierLabel =
+      membershipProfile?.membership_tier ?? sessionProfile?.membership_tier ?? "Online Shopper";
 
     return (
       <div className="cart-overlay" role="dialog" aria-modal="true" aria-label="My account">
@@ -2773,15 +2922,15 @@ function AccountDrawer({
 
           <div className="account-content">
             <section className="account-hero">
-              <p className="eyebrow">{sessionProfile?.membership_tier ?? "Online Shopper"}</p>
-              <h3>{sessionProfile?.customer_name ?? session.account.display_name}</h3>
+              <p className="eyebrow">{membershipTierLabel}</p>
+              <h3>{membershipProfile?.customer_name ?? sessionProfile?.customer_name ?? session.account.display_name}</h3>
               <p>{session.account.email}</p>
             </section>
 
             <section className="account-stat-grid" aria-label="Account summary">
               <div>
                 <span>Points</span>
-                <strong>{(sessionProfile?.points_balance ?? 0).toLocaleString()}</strong>
+                <strong>{sessionPointsBalance.toLocaleString()}</strong>
               </div>
               <div>
                 <span>Lifetime Spend</span>
@@ -2794,8 +2943,8 @@ function AccountDrawer({
               <div>
                 <span>Last Purchase</span>
                 <strong>
-                  {sessionProfile?.last_purchase_at
-                    ? formatOrderDate(sessionProfile.last_purchase_at)
+                  {sessionLastPurchaseAt
+                    ? formatOrderDate(sessionLastPurchaseAt)
                     : sessionOrders[0]
                       ? formatOrderDate(sessionOrders[0].created_at)
                       : "None yet"}
@@ -2803,42 +2952,236 @@ function AccountDrawer({
               </div>
             </section>
 
-            <section className="account-section">
-              <div className="account-section-head">
-                <p className="eyebrow">Recent Orders</p>
-                <span className="status-pill">{sessionOrders.length} found</span>
-              </div>
-              {sessionOrders.length > 0 ? (
-                <div className="account-orders">
-                  {sessionOrders.map((order) => (
-                    <article className="account-order" key={order.id}>
-                      <div className="account-order-head">
-                        <div>
-                          <strong>Order #{order.id}</strong>
-                          <span>{formatOrderDate(order.created_at)}</span>
+            <div className="account-portal-tabs" role="tablist" aria-label="Account portal">
+              <button
+                role="tab"
+                aria-selected={portalTab === "transactions"}
+                className={`text-link${portalTab === "transactions" ? " active" : ""}`}
+                onClick={() => setPortalTab("transactions")}
+              >
+                Transactions
+              </button>
+              <button
+                role="tab"
+                aria-selected={portalTab === "membership"}
+                className={`text-link${portalTab === "membership" ? " active" : ""}`}
+                onClick={() => setPortalTab("membership")}
+              >
+                Membership
+              </button>
+              <button
+                role="tab"
+                aria-selected={portalTab === "benefits"}
+                className={`text-link${portalTab === "benefits" ? " active" : ""}`}
+                onClick={() => setPortalTab("benefits")}
+              >
+                Benefits
+              </button>
+            </div>
+
+            {portalTab === "transactions" ? (
+              <section className="account-section" aria-label="Transactions">
+                <div className="account-section-head">
+                  <p className="eyebrow">Transactions</p>
+                  <span className="status-pill">
+                    {transactions ? `${transactions.total} found` : `${sessionOrders.length} found`}
+                  </span>
+                </div>
+
+                {transactionsStatus === "loading" && !transactions ? (
+                  <p className="account-empty-note">Loading transactions...</p>
+                ) : transactionsStatus === "error" ? (
+                  <p className="account-empty-note">Unable to load transactions right now.</p>
+                ) : transactions && transactions.transactions.length > 0 ? (
+                  <>
+                    <div className="account-orders">
+                      {transactions.transactions.map((transaction) => (
+                        <article className="account-order" key={transaction.id}>
+                          <div className="account-order-head">
+                            <div>
+                              <strong>Order #{transaction.id}</strong>
+                              <span>{formatOrderDate(transaction.created_at)}</span>
+                            </div>
+                            <div className="account-order-total">
+                              <strong>{currencyFromCents(transaction.subtotal_cents)}</strong>
+                              <span>{fulfillmentLabel(transaction.status)}</span>
+                            </div>
+                          </div>
+                          <ul className="account-line-items">
+                            {transaction.items.map((item, index) => (
+                              <li key={`${transaction.id}-${index}-${item.product_name}`}>
+                                <span>{item.product_name}</span>
+                                <strong>
+                                  {item.quantity} x {currencyFromCents(item.unit_price_cents)}
+                                </strong>
+                              </li>
+                            ))}
+                          </ul>
+                          {transaction.payments.length > 0 ? (
+                            <ul className="account-payment-list">
+                              {transaction.payments.map((payment, index) => (
+                                <li key={`${transaction.id}-payment-${index}`}>
+                                  <span>
+                                    {payment.method} &middot; {payment.reference}
+                                  </span>
+                                  <strong>
+                                    {currencyFromCents(payment.amount_cents)} &middot; {payment.status}
+                                  </strong>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : null}
+                        </article>
+                      ))}
+                    </div>
+                    <div className="account-pagination">
+                      <button
+                        className="outline-button"
+                        disabled={transactionsOffset === 0 || transactionsStatus === "loading"}
+                        onClick={() =>
+                          setTransactionsOffset((current) =>
+                            Math.max(0, current - PORTAL_TRANSACTIONS_PAGE_SIZE)
+                          )
+                        }
+                      >
+                        Previous
+                      </button>
+                      <span>
+                        {transactions.total === 0
+                          ? "0 of 0"
+                          : `${transactionsOffset + 1}-${Math.min(
+                              transactionsOffset + PORTAL_TRANSACTIONS_PAGE_SIZE,
+                              transactions.total
+                            )} of ${transactions.total}`}
+                      </span>
+                      <button
+                        className="outline-button"
+                        disabled={
+                          transactionsStatus === "loading" ||
+                          transactionsOffset + PORTAL_TRANSACTIONS_PAGE_SIZE >= transactions.total
+                        }
+                        onClick={() =>
+                          setTransactionsOffset((current) => current + PORTAL_TRANSACTIONS_PAGE_SIZE)
+                        }
+                      >
+                        Load more
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <p className="account-empty-note">No transactions are attached to this account yet.</p>
+                )}
+              </section>
+            ) : null}
+
+            {portalTab === "membership" ? (
+              <section className="account-section" aria-label="Membership">
+                {membershipStatus === "loading" && !membership ? (
+                  <p className="account-empty-note">Loading membership details...</p>
+                ) : membershipStatus === "not-found" ? (
+                  <p className="account-empty-note">No membership profile is linked to this account yet.</p>
+                ) : membershipStatus === "error" ? (
+                  <p className="account-empty-note">Unable to load membership details right now.</p>
+                ) : membership ? (
+                  <div className="membership-panel">
+                    <div className="membership-current">
+                      <p className="eyebrow">Current tier</p>
+                      <h3>{membership.current_tier?.name ?? membership.profile.membership_tier}</h3>
+                    </div>
+                    <dl className="membership-stats">
+                      <div>
+                        <dt>Points balance</dt>
+                        <dd>{membership.profile.points_balance.toLocaleString()}</dd>
+                      </div>
+                      <div>
+                        <dt>Lifetime spend</dt>
+                        <dd>{currencyFromCents(membership.profile.lifetime_purchase_cents)}</dd>
+                      </div>
+                      <div>
+                        <dt>Total orders</dt>
+                        <dd>{membership.profile.total_orders.toLocaleString()}</dd>
+                      </div>
+                      <div>
+                        <dt>Last purchase</dt>
+                        <dd>
+                          {membership.profile.last_purchase_at
+                            ? formatOrderDate(membership.profile.last_purchase_at)
+                            : "None yet"}
+                        </dd>
+                      </div>
+                    </dl>
+
+                    {membership.next_tier ? (
+                      <div className="membership-progress">
+                        <div className="membership-progress-head">
+                          <span>Progress to {membership.next_tier.name}</span>
+                          <span>{currencyFromCents(membership.next_tier.remaining_cents)} to go</span>
                         </div>
-                        <div className="account-order-total">
-                          <strong>{currencyFromCents(order.subtotal_cents)}</strong>
-                          <span>{fulfillmentLabel(order.fulfillment_status)}</span>
+                        <div className="membership-progress-bar">
+                          <div
+                            className="membership-progress-fill"
+                            style={{
+                              width: `${Math.min(
+                                100,
+                                Math.max(
+                                  0,
+                                  ((membership.next_tier.min_lifetime_purchase_cents -
+                                    membership.next_tier.remaining_cents) /
+                                    membership.next_tier.min_lifetime_purchase_cents) *
+                                    100
+                                )
+                              )}%`
+                            }}
+                          />
                         </div>
                       </div>
-                      <ul className="account-line-items">
-                        {order.items.map((item, index) => (
-                          <li key={`${order.id}-${index}-${item.product_name}`}>
-                            <span>{item.product_name}</span>
-                            <strong>
-                              {item.quantity} x {currencyFromCents(item.unit_price_cents)}
-                            </strong>
-                          </li>
-                        ))}
-                      </ul>
-                    </article>
-                  ))}
-                </div>
-              ) : (
-                <p className="account-empty-note">No storefront orders are attached to this account yet.</p>
-              )}
-            </section>
+                    ) : (
+                      <p className="account-empty-note">You have reached the top membership tier.</p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="account-empty-note">No membership profile is linked to this account yet.</p>
+                )}
+              </section>
+            ) : null}
+
+            {portalTab === "benefits" ? (
+              <section className="account-section" aria-label="Benefits">
+                {benefitsStatus === "loading" && !benefits ? (
+                  <p className="account-empty-note">Loading benefits...</p>
+                ) : benefitsStatus === "error" ? (
+                  <p className="account-empty-note">Unable to load benefits right now.</p>
+                ) : benefits && benefits.tiers.length > 0 ? (
+                  <div className="benefit-tier-list">
+                    {benefits.tiers.map((tier) => {
+                      const isCurrentTier =
+                        benefits.current_tier?.toLowerCase() === tier.name.toLowerCase();
+                      return (
+                        <article
+                          className={`benefit-tier${isCurrentTier ? " current" : ""}`}
+                          key={tier.name}
+                        >
+                          <div className="benefit-tier-head">
+                            <h4>{tier.name}</h4>
+                            {isCurrentTier ? <span className="status-pill">Your tier</span> : null}
+                          </div>
+                          <ul className="benefit-list">
+                            {tier.benefits.map((benefit) => (
+                              <li key={`${tier.name}-${benefit.title}`}>
+                                <strong>{benefit.title}</strong>
+                                {benefit.description ? <span>{benefit.description}</span> : null}
+                              </li>
+                            ))}
+                          </ul>
+                        </article>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="account-empty-note">No benefit tiers are available right now.</p>
+                )}
+              </section>
+            ) : null}
 
             <button className="outline-button" onClick={() => void handleLogout()}>
               Log out
