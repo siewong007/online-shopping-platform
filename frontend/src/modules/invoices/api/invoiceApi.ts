@@ -1,5 +1,5 @@
 import { fallbackInvoices } from "../../../data/fallback";
-import { fetchJson, postJson, putJson } from "../../../shared/api/http";
+import { fetchJson, postBlob, postJson, putJson } from "../../../shared/api/http";
 import {
   adminListPath,
   normalizePagedResponse,
@@ -7,6 +7,7 @@ import {
   type PagedResponse
 } from "../../../shared/api/pagination";
 import type {
+  AutoCountExportInput,
   CreateInvoiceFromOrderInput,
   Invoice,
   RecordInvoicePaymentInput,
@@ -55,4 +56,8 @@ export function recordInvoicePayment(
     `/api/admin/invoices/${invoiceId}/payments`,
     input
   );
+}
+
+export function exportAutoCountInvoices(input: AutoCountExportInput): Promise<Blob> {
+  return postBlob<AutoCountExportInput>("/api/admin/invoices/autocount-export", input);
 }

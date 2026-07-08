@@ -1,7 +1,7 @@
 use axum::{
     Json,
     extract::{Path, Query, State},
-    http::StatusCode,
+    http::{StatusCode, header},
 };
 
 use crate::{
@@ -13,8 +13,8 @@ use crate::{
 
 use super::{
     dto::{
-        AdminListQuery, CreateInvoiceFromOrderInput, RecordInvoicePaymentInput,
-        UpdateInvoiceBillingInput,
+        AdminListQuery, AutoCountExportInput, CreateInvoiceFromOrderInput,
+        RecordInvoicePaymentInput, UpdateInvoiceBillingInput,
     },
     model::Invoice,
     service,
@@ -38,6 +38,37 @@ pub async fn admin_invoices(
         .await
         .map(Json)
         .map_err(|error| error::map_admin_query_error("admin invoices query failed", error))
+}
+
+pub async fn admin_export_autocount_invoices(
+    State(state): State<AppState>,
+    identity: AdminIdentity,
+    Json(input): Json<AutoCountExportInput>,
+) -> Result<([(header::HeaderName, &'static str); 2], String), error::HttpError> {
+    permissions::service::ensure_permission(
+        &state.pool,
+        &identity,
+        permissions::model::ADMIN_INVOICES_PAGE,
+        permissions::model::PermissionAction::Update,
+        "invoice",
+    )
+    .await?;
+
+    service::export_autocount_invoices(&state.pool, &identity, &input)
+        .await
+        .map(|csv| {
+            (
+                [
+                    (header::CONTENT_TYPE, "text/csv; charset=utf-8"),
+                    (
+                        header::CONTENT_DISPOSITION,
+                        "attachment; filename=\"autocount-invoices.csv\"",
+                    ),
+                ],
+                csv,
+            )
+        })
+        .map_err(error::map_admin_error)
 }
 
 pub async fn admin_create_invoice_from_order(

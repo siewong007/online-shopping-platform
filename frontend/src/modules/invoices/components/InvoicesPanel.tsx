@@ -4,6 +4,7 @@ import { currencyFromCents, formatOrderDate } from "../../../shared/formatters";
 import type { Order } from "../../orders/types";
 import type { SystemSetting } from "../../settings/types";
 import type {
+  AutoCountExportInput,
   CreateInvoiceFromOrderInput,
   Invoice,
   InvoiceStatus,
@@ -30,6 +31,7 @@ type InvoicesPanelProps = {
     orderId: number,
     input: CreateInvoiceFromOrderInput
   ) => Promise<Invoice>;
+  onExportAutoCountInvoices: (input: AutoCountExportInput) => Promise<void>;
   onLoadMore: () => void;
   onRecordInvoicePayment: (
     invoiceId: number,
@@ -68,6 +70,7 @@ export function InvoicesPanel({
   invoices,
   isLoadingMore,
   onCreateInvoiceFromOrder,
+  onExportAutoCountInvoices,
   onLoadMore,
   onRecordInvoicePayment,
   onUpdateInvoiceBilling,
@@ -89,6 +92,12 @@ export function InvoicesPanel({
   const [feedback, setFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
   const [busyInvoiceId, setBusyInvoiceId] = useState<number | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportDraft, setExportDraft] = useState({
+    issued_from: "",
+    issued_to: "",
+    include_exported: false
+  });
   const [printingInvoice, setPrintingInvoice] = useState<Invoice | null>(null);
 
   const companyName = settingValue(settings, "general.company_name", "Project Depot");
@@ -256,6 +265,41 @@ export function InvoicesPanel({
     window.setTimeout(() => window.print(), 50);
   };
 
+  const handleExportAutoCount = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!canUpdate) {
+      setFeedback({ kind: "error", message: "The active role cannot export invoices." });
+      return;
+    }
+
+    const issuedFrom = exportDraft.issued_from
+      ? `${exportDraft.issued_from}T00:00:00Z`
+      : undefined;
+    const issuedTo = exportDraft.issued_to
+      ? `${exportDraft.issued_to}T23:59:59Z`
+      : undefined;
+
+    setFeedback(null);
+    setIsExporting(true);
+
+    try {
+      await onExportAutoCountInvoices({
+        issued_from: issuedFrom,
+        issued_to: issuedTo,
+        include_exported: exportDraft.include_exported
+      });
+      setFeedback({ kind: "success", message: "AutoCount invoice export downloaded." });
+    } catch (error) {
+      setFeedback({
+        kind: "error",
+        message: error instanceof Error ? error.message : "Unable to export invoices."
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <section className="admin-section active">
       <div className="panel-header">
@@ -317,6 +361,60 @@ export function InvoicesPanel({
         )}
       </article>
 
+      <article className="dashboard-panel no-print">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">Accounting</p>
+            <h3>AutoCount export</h3>
+          </div>
+          <span className={`status-pill ${canUpdate ? "live" : ""}`}>
+            {canUpdate ? "Ready" : "Read only"}
+          </span>
+        </div>
+
+        <form className="admin-form-grid sales-inline-form" onSubmit={(event) => void handleExportAutoCount(event)}>
+          <label className="admin-field">
+            Issued from
+            <input
+              disabled={!canUpdate}
+              onChange={(event) =>
+                setExportDraft((current) => ({ ...current, issued_from: event.target.value }))
+              }
+              type="date"
+              value={exportDraft.issued_from}
+            />
+          </label>
+          <label className="admin-field">
+            Issued to
+            <input
+              disabled={!canUpdate}
+              onChange={(event) =>
+                setExportDraft((current) => ({ ...current, issued_to: event.target.value }))
+              }
+              type="date"
+              value={exportDraft.issued_to}
+            />
+          </label>
+          <label className="admin-field checkbox-field">
+            <input
+              checked={exportDraft.include_exported}
+              disabled={!canUpdate}
+              onChange={(event) =>
+                setExportDraft((current) => ({
+                  ...current,
+                  include_exported: event.target.checked
+                }))
+              }
+              type="checkbox"
+            />
+            Include exported
+          </label>
+          <button className="solid-button" disabled={!canUpdate || isExporting} type="submit">
+            {isExporting ? "Exporting..." : "Download CSV"}
+          </button>
+        </form>
+      </article>
+
       {invoices.length === 0 ? (
         <p className="no-print">No invoices have been created yet.</p>
       ) : (
@@ -374,6 +472,14 @@ export function InvoicesPanel({
                   <div>
                     <span>Due</span>
                     <strong>{formatOrderDate(invoice.due_at)}</strong>
+                  </div>
+                  <div>
+                    <span>AutoCount</span>
+                    <strong>
+                      {invoice.exported_to_autocount_at
+                        ? formatOrderDate(invoice.exported_to_autocount_at)
+                        : "Not exported"}
+                    </strong>
                   </div>
                 </div>
 

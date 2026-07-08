@@ -7,7 +7,10 @@ use crate::{
 };
 
 use super::{
-    dto::{CreateInvoiceFromOrderInput, RecordInvoicePaymentInput, UpdateInvoiceBillingInput},
+    dto::{
+        AutoCountExportInput, CreateInvoiceFromOrderInput, RecordInvoicePaymentInput,
+        UpdateInvoiceBillingInput,
+    },
     model::Invoice,
     repository,
 };
@@ -108,4 +111,22 @@ pub async fn record_invoice_payment(
     )
     .await;
     Ok(invoice)
+}
+
+pub async fn export_autocount_invoices(
+    pool: &PgPool,
+    identity: &AdminIdentity,
+    input: &AutoCountExportInput,
+) -> Result<String> {
+    let csv = repository::export_autocount_invoices(pool, input).await?;
+    audit::service::record_event(
+        pool,
+        &identity.username,
+        "export",
+        "invoice",
+        "autocount",
+        "AutoCount invoice CSV",
+    )
+    .await;
+    Ok(csv)
 }

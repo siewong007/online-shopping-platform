@@ -114,6 +114,10 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
             post(invoices::controller::admin_create_invoice_from_order),
         )
         .route(
+            "/api/admin/invoices/autocount-export",
+            post(invoices::controller::admin_export_autocount_invoices),
+        )
+        .route(
             "/api/admin/invoices/{invoice_id}",
             put(invoices::controller::admin_update_invoice_billing),
         )

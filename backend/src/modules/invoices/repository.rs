@@ -2,7 +2,10 @@ use anyhow::Result;
 use sqlx::PgPool;
 
 use super::{
-    dto::{CreateInvoiceFromOrderInput, RecordInvoicePaymentInput, UpdateInvoiceBillingInput},
+    dto::{
+        AutoCountExportInput, CreateInvoiceFromOrderInput, RecordInvoicePaymentInput,
+        UpdateInvoiceBillingInput,
+    },
     model::Invoice,
 };
 
@@ -40,4 +43,11 @@ pub async fn record_invoice_payment(
     input: &RecordInvoicePaymentInput,
 ) -> Result<Invoice> {
     crate::db::record_invoice_payment(pool, invoice_id, input).await
+}
+
+pub async fn export_autocount_invoices(
+    pool: &PgPool,
+    input: &AutoCountExportInput,
+) -> Result<String> {
+    crate::db::export_autocount_invoices(pool, input).await
 }
