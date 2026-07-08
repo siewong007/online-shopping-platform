@@ -2155,7 +2155,7 @@ export default function App() {
   // Show landing page immediately without waiting for storefront data
   if (view === "landing") {
     return (
-      <div className="app-shell">
+      <div className="app-shell landing-shell">
         <LandingView onOpenShop={openShop} />
       </div>
     );

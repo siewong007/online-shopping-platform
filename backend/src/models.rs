@@ -706,6 +706,7 @@ pub struct Invoice {
     pub issued_at: String,
     pub due_at: String,
     pub voided_at: Option<String>,
+    pub exported_to_autocount_at: Option<String>,
     pub line_items: Vec<InvoiceLineItem>,
     pub payments: Vec<InvoicePayment>,
 }
@@ -728,6 +729,13 @@ pub struct RecordInvoicePaymentInput {
     pub amount_cents: i32,
     pub method: String,
     pub note: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct AutoCountExportInput {
+    pub issued_from: Option<String>,
+    pub issued_to: Option<String>,
+    pub include_exported: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, FromRow)]

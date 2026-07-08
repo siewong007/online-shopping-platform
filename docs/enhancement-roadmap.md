@@ -1,5 +1,35 @@
 # Enhancement Roadmap
 
+Status snapshot for the current tree:
+
+| Area | Status | Evidence |
+|------|--------|----------|
+| Admin user management | Shipped | `0010_admin_users_case_insensitive_username.sql`, `backend/src/modules/admin_users/` |
+| Fulfillment flow | Shipped | `0011_order_fulfillment.sql`, `/api/admin/orders/{order_id}/fulfillment` |
+| Customer order lookup | Shipped | `0012_order_email_index.sql`, `/api/customer-portal/lookup` |
+| Persistent audit log | Shipped | `0013_audit_events.sql`, `/api/admin/audit-events` |
+| Inventory and stock | Shipped | `0014_product_stock.sql`, `/api/admin/inventory/supplier-sync` |
+| Customer accounts | Shipped | `0015_customer_accounts.sql`, `/api/account/*` |
+| Product images | Shipped, URL-based | `0016_product_images.sql`, catalog image URL fields |
+| Membership tiers | Shipped | `0017_membership_tiers.sql`, customer membership endpoints |
+| E-invoice data fields | Shipped, needs export workflow | `0018_invoice_einvoice_fields.sql`, invoice billing fields |
+| CI pipeline | Shipped | `.github/workflows/ci.yml` |
+| Mobile hardening | Active next work | `docs/mobile-styling-plan.md` |
+| AutoCount export | Active next work | `docs/autocount/integration-plan.md` |
+
+Current recommended PR themes:
+
+1. Bring docs and onboarding in line with the shipped architecture.
+2. Finish mobile usability across storefront, landing, admin navigation, tables, and modals.
+3. Add AutoCount export as the first accounting integration surface.
+4. Harden e-invoice readiness with validation, export state, and reconciliation affordances.
+5. Extend customer self-service and admin-scale filtering after the accounting path is usable.
+
+The historical roadmap below is retained as implementation context. Treat shipped sections as
+reference notes rather than active backlog unless a regression or follow-up test is called out.
+
+---
+
 Detailed designs for the enhancements proposed after the auth/catalog/tests feature landed
 (commit `1d977b9`). Ordered by recommended implementation sequence. Each item follows the
 existing conventions: migrations are append-only (numbers below are indicative — always take

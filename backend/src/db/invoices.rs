@@ -23,6 +23,7 @@ struct InvoiceRow {
     issued_at: String,
     due_at: String,
     voided_at: Option<String>,
+    exported_to_autocount_at: Option<String>,
     is_overdue: bool,
 }
 
@@ -32,6 +33,7 @@ const INVOICE_ROW_SELECT: &str = r#"
            subtotal_cents, discount_cents, tax_cents, total_cents,
            issued_at::text AS issued_at, due_at::text AS due_at,
            voided_at::text AS voided_at,
+           exported_to_autocount_at::text AS exported_to_autocount_at,
            (voided_at IS NULL AND due_at < now()) AS is_overdue
     FROM invoices
 "#;
@@ -181,6 +183,7 @@ pub async fn create_invoice_from_order(
                   subtotal_cents, discount_cents, tax_cents, total_cents,
                   issued_at::text AS issued_at, due_at::text AS due_at,
                   voided_at::text AS voided_at,
+                  exported_to_autocount_at::text AS exported_to_autocount_at,
                   (voided_at IS NULL AND due_at < now()) AS is_overdue
         "#,
     )
@@ -245,6 +248,7 @@ pub async fn create_invoice_from_order(
         issued_at: row.issued_at,
         due_at: row.due_at,
         voided_at: row.voided_at,
+        exported_to_autocount_at: row.exported_to_autocount_at,
         line_items: order
             .items
             .iter()
@@ -393,6 +397,7 @@ pub async fn fetch_invoices(
                 issued_at: row.issued_at,
                 due_at: row.due_at,
                 voided_at: row.voided_at,
+                exported_to_autocount_at: row.exported_to_autocount_at,
                 line_items,
                 payments,
             }
@@ -460,6 +465,7 @@ async fn fetch_invoice_by_id(pool: &PgPool, invoice_id: i32) -> Result<Invoice> 
         issued_at: row.issued_at,
         due_at: row.due_at,
         voided_at: row.voided_at,
+        exported_to_autocount_at: row.exported_to_autocount_at,
         line_items,
         payments,
     })
