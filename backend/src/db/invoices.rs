@@ -133,6 +133,39 @@ fn compute_invoice_line_tax_cents(
     taxes
 }
 
+fn optional_trimmed(value: Option<&str>) -> Option<String> {
+    value
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(ToOwned::to_owned)
+}
+
+fn ensure_no_control_characters(label: &str, value: &str) -> Result<()> {
+    if value.chars().any(char::is_control) {
+        bail!("{label} cannot contain control characters.");
+    }
+
+    Ok(())
+}
+
+fn ensure_tax_identifier(label: &str, value: &str, min_len: usize, max_len: usize) -> Result<()> {
+    ensure_no_control_characters(label, value)?;
+
+    let len = value.chars().count();
+    if len < min_len || len > max_len {
+        bail!("{label} must be between {min_len} and {max_len} characters.");
+    }
+
+    if !value
+        .chars()
+        .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '/' | '_'))
+    {
+        bail!("{label} can only contain letters, numbers, hyphens, slashes or underscores.");
+    }
+
+    Ok(())
+}
+
 pub async fn create_invoice_from_order(
     pool: &PgPool,
     order_id: i32,
@@ -476,6 +509,31 @@ pub async fn update_invoice_billing(
     invoice_id: i32,
     input: &UpdateInvoiceBillingInput,
 ) -> Result<Invoice> {
+    let billing_address = input.billing_address.trim();
+    ensure_no_control_characters("Billing address", billing_address)?;
+
+    let buyer_tin = optional_trimmed(input.buyer_tin.as_deref());
+    let buyer_registration_number = optional_trimmed(input.buyer_registration_number.as_deref());
+    let buyer_sst_registration_number =
+        optional_trimmed(input.buyer_sst_registration_number.as_deref());
+
+    let has_tax_identifier = buyer_tin.is_some()
+        || buyer_registration_number.is_some()
+        || buyer_sst_registration_number.is_some();
+    if has_tax_identifier && billing_address.is_empty() {
+        bail!("Billing address is required when tax identifiers are provided.");
+    }
+
+    if let Some(value) = &buyer_tin {
+        ensure_tax_identifier("Buyer TIN", value, 6, 20)?;
+    }
+    if let Some(value) = &buyer_registration_number {
+        ensure_tax_identifier("Buyer registration number", value, 4, 30)?;
+    }
+    if let Some(value) = &buyer_sst_registration_number {
+        ensure_tax_identifier("Buyer SST registration number", value, 4, 30)?;
+    }
+
     let updated = sqlx::query_scalar::<_, i32>(
         r#"
         UPDATE invoices
@@ -488,22 +546,10 @@ pub async fn update_invoice_billing(
         RETURNING id
         "#,
     )
-    .bind(input.billing_address.trim())
-    .bind(input.buyer_tin.as_deref().unwrap_or("").trim())
-    .bind(
-        input
-            .buyer_registration_number
-            .as_deref()
-            .unwrap_or("")
-            .trim(),
-    )
-    .bind(
-        input
-            .buyer_sst_registration_number
-            .as_deref()
-            .unwrap_or("")
-            .trim(),
-    )
+    .bind(billing_address)
+    .bind(buyer_tin.as_deref().unwrap_or(""))
+    .bind(buyer_registration_number.as_deref().unwrap_or(""))
+    .bind(buyer_sst_registration_number.as_deref().unwrap_or(""))
     .bind(invoice_id)
     .fetch_optional(pool)
     .await?;

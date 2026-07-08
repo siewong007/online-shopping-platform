@@ -389,6 +389,82 @@ async fn invoice_from_order_uses_invoice_prefix_and_sequence(pool: PgPool) {
 }
 
 #[sqlx::test]
+async fn invoice_billing_validation_hardens_einvoice_fields(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "invoice-billing-admin", "secret123").await;
+    let app = common::app(pool);
+    let token = common::login(app.clone(), "invoice-billing-admin", "secret123").await;
+
+    let order_id = create_checkout_order(&app, "Tax Ready Buyer", "tax-ready@example.com", 1).await;
+
+    let (invoice_status, invoice_body) = common::request(
+        app.clone(),
+        Method::POST,
+        &format!("/api/admin/invoices/from-order/{order_id}"),
+        Some(&token),
+        Some(json!({ "discount_cents": 0 })),
+    )
+    .await;
+    assert_eq!(invoice_status, StatusCode::CREATED, "{invoice_body}");
+    let invoice_id = invoice_body["id"].as_i64().expect("invoice id");
+
+    let (missing_address_status, missing_address_body) = common::request(
+        app.clone(),
+        Method::PUT,
+        &format!("/api/admin/invoices/{invoice_id}"),
+        Some(&token),
+        Some(json!({
+            "billing_address": " ",
+            "buyer_tin": "IG1234567890",
+            "buyer_registration_number": null,
+            "buyer_sst_registration_number": null
+        })),
+    )
+    .await;
+    assert_eq!(
+        missing_address_status,
+        StatusCode::BAD_REQUEST,
+        "{missing_address_body}"
+    );
+
+    let (bad_tin_status, bad_tin_body) = common::request(
+        app.clone(),
+        Method::PUT,
+        &format!("/api/admin/invoices/{invoice_id}"),
+        Some(&token),
+        Some(json!({
+            "billing_address": "42 Jalan Test",
+            "buyer_tin": "TIN WITH SPACE",
+            "buyer_registration_number": null,
+            "buyer_sst_registration_number": null
+        })),
+    )
+    .await;
+    assert_eq!(bad_tin_status, StatusCode::BAD_REQUEST, "{bad_tin_body}");
+
+    let (ok_status, ok_body) = common::request(
+        app,
+        Method::PUT,
+        &format!("/api/admin/invoices/{invoice_id}"),
+        Some(&token),
+        Some(json!({
+            "billing_address": "  42 Jalan Test  ",
+            "buyer_tin": "  IG1234567890  ",
+            "buyer_registration_number": "  202401010001  ",
+            "buyer_sst_registration_number": "  W10-1808-31001441  "
+        })),
+    )
+    .await;
+    assert_eq!(ok_status, StatusCode::OK, "{ok_body}");
+    assert_eq!(ok_body["billing_address"], "42 Jalan Test");
+    assert_eq!(ok_body["buyer_tin"], "IG1234567890");
+    assert_eq!(ok_body["buyer_registration_number"], "202401010001");
+    assert_eq!(
+        ok_body["buyer_sst_registration_number"],
+        "W10-1808-31001441"
+    );
+}
+
+#[sqlx::test]
 async fn autocount_export_downloads_csv_and_marks_invoices(pool: PgPool) {
     common::create_admin(&pool, "Super Admin", "autocount-admin", "secret123").await;
     let app = common::app(pool);
