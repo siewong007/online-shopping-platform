@@ -11,6 +11,10 @@ basics — details live in the linked files. Load a linked file only when its tr
 - **Path quoting**: the repo path has a trailing space after "SSD"
   (`/Volumes/APPLE EXTERNAL SSD /Personal Projects/online-shopping-platform`) —
   always double-quote it in shell commands.
+- **Delegation is standing-authorized** (user, 2026-07-07): for volume work — repo-wide
+  scans, bulk reading, batch edits, verification — spawn subagents per
+  [docs/agents/model-dispatch.md](docs/agents/model-dispatch.md); this rule is the
+  "user ask" the Agent tool requires. Surgical edits stay in the main conversation.
 
 ## On-demand index
 
@@ -44,7 +48,7 @@ psql postgres://project_depot:project_depot@localhost:5433/project_depot \
 cd backend && cargo run        # http://localhost:4000
 
 # SPA
-cd frontend && npm install && npm run dev   # http://localhost:5173
+cd frontend && bun install && bun run dev   # http://localhost:5173
 ```
 
 `.claude/launch.json` defines `api` and `web` preview configs. The `web` config has
@@ -56,7 +60,7 @@ A `Makefile` wraps the same commands.
 ## Verifying changes
 
 - Backend: `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo build`
-- Frontend: `npm run build` (runs `tsc -b && vite build`)
+- Frontend: `bun run build` (runs `tsc -b && vite build`)
 - For UI work, exercise the flow in the browser — type-checking verifies code, not features.
 - Backend integration tests need the docker db up and
   `DATABASE_URL=postgres://project_depot:project_depot@localhost:5433/project_depot cargo test`.

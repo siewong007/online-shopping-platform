@@ -1,9 +1,18 @@
 import { fallbackOrders } from "../../../data/fallback";
 import { deleteJson, fetchJson, postJson, putJson } from "../../../shared/api/http";
+import {
+  adminListPath,
+  normalizePagedResponse,
+  type AdminListParams,
+  type PagedResponse
+} from "../../../shared/api/pagination";
 import type { CreateOrderInput, Order, UpdateOrderFulfillmentInput } from "../types";
 
-export function fetchOrders(): Promise<Order[]> {
-  return fetchJson("/api/admin/orders", fallbackOrders);
+export function fetchOrders(params: AdminListParams = {}): Promise<PagedResponse<Order>> {
+  return fetchJson<Order[] | PagedResponse<Order>>(
+    adminListPath("/api/admin/orders", params),
+    fallbackOrders
+  ).then(normalizePagedResponse);
 }
 
 export function checkout(input: CreateOrderInput): Promise<Order> {

@@ -14,7 +14,9 @@ Escalate (per model-dispatch.md Rule 5) when ANY of:
 
 Do NOT escalate for:
 - long-but-mechanical work (that is batching, not difficulty — stay cheap);
-- a first failure (retry once on the same model WITH the error attached);
+- a first failure on sonnet or opus (retry once on the SAME model WITH the error
+  attached — but haiku is the exception: one haiku failure goes straight to sonnet,
+  per model-dispatch.md Rule 5);
 - "many files" alone, when each file change is independent.
 
 ✅ Escalate: "settings validation passes tests but corrupts under concurrent writes" —
@@ -26,7 +28,7 @@ Do NOT escalate for:
 ALL must be true before reporting done:
 1. Gates pass, run by you in this session (CLAUDE.md "Verifying changes":
    `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo build`,
-   `npm run build` as applicable).
+   `bun run build` as applicable).
 2. The new behavior was demonstrated once — a test run, a `curl`, or a preview-tool
    snapshot. Type-checking alone NEVER proves a feature.
 3. `git status --short` shows only files you intended to touch (others' dirty files
@@ -80,8 +82,10 @@ route is suspect / proposed new route. Choose: new route, escalate per R1, or as
   the HTTP boundary (map to status codes instead).
 - Frontend still renders with the API down if you touched data fetching — actually stop
   the backend once and load the page (the fallback path is an intentional feature).
-- Migrations: append-only, numbered next in sequence (currently 0001–0016; next is 0017).
+- Migrations: append-only. Get the next number by running `ls backend/migrations/` NOW —
+  never from a number written in any doc (a doc said "next is 0017" while 0017 already
+  existed on disk; the tree is the only source of truth).
 - No secrets/env files staged (`backend/.env`, `frontend/.env` are gitignored — keep it so).
 
 ✅ Right: after touching api.ts, kill backend, reload page, storefront shows fallback data.
-❌ Wrong: adding `@ts-ignore` to make `npm run build` pass.
+❌ Wrong: adding `@ts-ignore` to make `bun run build` pass.

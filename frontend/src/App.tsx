@@ -88,6 +88,7 @@ import {
   setOnApiUnavailable,
   setOnUnauthorized
 } from "./shared/api/http";
+import type { PagedResponse } from "./shared/api/pagination";
 import { ManagementTable } from "./shared/components/ManagementTable";
 import { RecordForm, type RecordFormField, RecordModal } from "./shared/components/RecordModal";
 import { currencyFromCents, formatOrderDate, formatRelativeTime } from "./shared/formatters";
@@ -307,6 +308,25 @@ function rememberAccountEmail(email: string) {
   }
 }
 
+function appendUniqueByKey<T>(
+  current: T[],
+  next: T[],
+  keyFor: (item: T) => number | string
+): T[] {
+  const seen = new Set(current.map(keyFor));
+  const merged = [...current];
+
+  for (const item of next) {
+    const key = keyFor(item);
+    if (!seen.has(key)) {
+      seen.add(key);
+      merged.push(item);
+    }
+  }
+
+  return merged;
+}
+
 function emptyPermission(roleId: number, pageId: number): RolePagePermission {
   return {
     role_id: roleId,
@@ -472,10 +492,13 @@ type CustomerPortalPanelProps = {
   canCreate: boolean;
   canDelete: boolean;
   canUpdate: boolean;
+  hasMore: boolean;
+  isLoadingMore: boolean;
   onCreateCustomerPortalProfile: (
     input: CreateCustomerPortalProfileInput
   ) => Promise<CustomerPortalProfile>;
   onDeleteCustomerPortalProfile: (profileId: number) => Promise<void>;
+  onLoadMore: () => void;
   onUpdateCustomerPortalProfile: (
     profileId: number,
     input: UpdateCustomerPortalProfileInput
@@ -488,8 +511,11 @@ function CustomerPortalPanel({
   canCreate,
   canDelete,
   canUpdate,
+  hasMore,
+  isLoadingMore,
   onCreateCustomerPortalProfile,
   onDeleteCustomerPortalProfile,
+  onLoadMore,
   onUpdateCustomerPortalProfile,
   orders,
   profiles
@@ -760,7 +786,10 @@ function CustomerPortalPanel({
           columns={profileColumns}
           emptyMessage="No customer profiles have been created yet."
           getRowKey={(profile) => profile.id}
+          hasMore={hasMore}
           initialSortKey="name"
+          isLoadingMore={isLoadingMore}
+          onLoadMore={onLoadMore}
           rows={profiles}
           tableLabel="Customer profile management table"
         />
@@ -1040,12 +1069,20 @@ export default function App() {
   const [hasMoreActivity, setHasMoreActivity] = useState(false);
   const [isLoadingMoreActivity, setIsLoadingMoreActivity] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersNextCursor, setOrdersNextCursor] = useState<number | null>(null);
+  const [isLoadingMoreOrders, setIsLoadingMoreOrders] = useState(false);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [sales, setSales] = useState<SalesRecord[]>([]);
+  const [salesNextCursor, setSalesNextCursor] = useState<number | null>(null);
+  const [isLoadingMoreSales, setIsLoadingMoreSales] = useState(false);
   const [salesSummary, setSalesSummary] = useState<SalesSummaryPayload | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [invoicesNextCursor, setInvoicesNextCursor] = useState<number | null>(null);
+  const [isLoadingMoreInvoices, setIsLoadingMoreInvoices] = useState(false);
   const [systemSettings, setSystemSettings] = useState<SystemSetting[]>([]);
   const [customerProfiles, setCustomerProfiles] = useState<CustomerPortalProfile[]>([]);
+  const [customerProfilesNextCursor, setCustomerProfilesNextCursor] = useState<number | null>(null);
+  const [isLoadingMoreCustomerProfiles, setIsLoadingMoreCustomerProfiles] = useState(false);
   const [customerAccountEmail, setCustomerAccountEmail] = useState(readStoredAccountEmail);
   const [permissions, setPermissions] = useState<PermissionsPayload | null>(null);
   const [activeRoleId, setActiveRoleId] = useState<number | null>(null);
@@ -1144,14 +1181,14 @@ export default function App() {
     auditEventsData: AuditEvent[];
     catalogData: AdminCatalogPayload;
     dashboardData: AdminDashboardPayload;
-    invoicesData: Invoice[];
-    ordersData: Order[];
+    invoicesData: PagedResponse<Invoice>;
+    ordersData: PagedResponse<Order>;
     paymentsData: Payment[];
     permissionsData: PermissionsPayload;
-    salesData: SalesRecord[];
+    salesData: PagedResponse<SalesRecord>;
     salesSummaryData: SalesSummaryPayload;
     systemSettingsData: SystemSetting[];
-    customerProfileData: CustomerPortalProfile[];
+    customerProfileData: PagedResponse<CustomerPortalProfile>;
   }) => {
     setAdminUsers(adminUsersData);
     setAdminCatalog(catalogData);
@@ -1164,13 +1201,17 @@ export default function App() {
         : null
     );
     setHasMoreActivity(auditEventsData.length >= AUDIT_EVENTS_PAGE_SIZE);
-    setOrders(ordersData);
+    setOrders(ordersData.items);
+    setOrdersNextCursor(ordersData.next_cursor);
     setPayments(paymentsData);
-    setSales(salesData);
+    setSales(salesData.items);
+    setSalesNextCursor(salesData.next_cursor);
     setSalesSummary(salesSummaryData);
-    setInvoices(invoicesData);
+    setInvoices(invoicesData.items);
+    setInvoicesNextCursor(invoicesData.next_cursor);
     setSystemSettings(systemSettingsData);
-    setCustomerProfiles(customerProfileData);
+    setCustomerProfiles(customerProfileData.items);
+    setCustomerProfilesNextCursor(customerProfileData.next_cursor);
     setPermissions(permissionsData);
   };
 
@@ -1279,6 +1320,68 @@ export default function App() {
       customerProfileData,
       permissionsData: fallbackPermissions
     });
+  };
+
+  const loadMoreOrders = async () => {
+    if (ordersNextCursor === null || isLoadingMoreOrders) {
+      return;
+    }
+
+    setIsLoadingMoreOrders(true);
+    try {
+      const page = await fetchOrders({ before: ordersNextCursor });
+      setOrders((current) => appendUniqueByKey(current, page.items, (order) => order.id));
+      setOrdersNextCursor(page.next_cursor);
+    } finally {
+      setIsLoadingMoreOrders(false);
+    }
+  };
+
+  const loadMoreSales = async () => {
+    if (salesNextCursor === null || isLoadingMoreSales) {
+      return;
+    }
+
+    setIsLoadingMoreSales(true);
+    try {
+      const page = await fetchSales({ before: salesNextCursor });
+      setSales((current) => appendUniqueByKey(current, page.items, (sale) => sale.order_id));
+      setSalesNextCursor(page.next_cursor);
+    } finally {
+      setIsLoadingMoreSales(false);
+    }
+  };
+
+  const loadMoreInvoices = async () => {
+    if (invoicesNextCursor === null || isLoadingMoreInvoices) {
+      return;
+    }
+
+    setIsLoadingMoreInvoices(true);
+    try {
+      const page = await fetchInvoices({ before: invoicesNextCursor });
+      setInvoices((current) => appendUniqueByKey(current, page.items, (invoice) => invoice.id));
+      setInvoicesNextCursor(page.next_cursor);
+    } finally {
+      setIsLoadingMoreInvoices(false);
+    }
+  };
+
+  const loadMoreCustomerProfiles = async () => {
+    if (customerProfilesNextCursor === null || isLoadingMoreCustomerProfiles) {
+      return;
+    }
+
+    setIsLoadingMoreCustomerProfiles(true);
+    try {
+      const page = await fetchCustomerPortalProfiles({ before: customerProfilesNextCursor });
+      setCustomerProfiles((current) =>
+        appendUniqueByKey(current, page.items, (profile) => profile.id)
+      );
+      setCustomerProfilesNextCursor(page.next_cursor);
+    } finally {
+      setIsLoadingMoreCustomerProfiles(false);
+    }
   };
 
   const resetAdminSession = () => {
@@ -1395,7 +1498,10 @@ export default function App() {
     setCustomerAccountEmail(checkoutEmail);
     rememberAccountEmail(checkoutEmail);
     setOrders((current) => [order, ...current]);
-    void fetchCustomerPortalProfiles().then(setCustomerProfiles);
+    void fetchCustomerPortalProfiles().then((page) => {
+      setCustomerProfiles(page.items);
+      setCustomerProfilesNextCursor(page.next_cursor);
+    });
     setActivityFeed((current) => [
       {
         happened_at: "Now",
@@ -1411,7 +1517,10 @@ export default function App() {
     const order = await createAdminOrderRequest(input);
 
     setOrders((current) => [order, ...current]);
-    void fetchCustomerPortalProfiles().then(setCustomerProfiles);
+    void fetchCustomerPortalProfiles().then((page) => {
+      setCustomerProfiles(page.items);
+      setCustomerProfilesNextCursor(page.next_cursor);
+    });
     setActivityFeed((current) => [
       {
         happened_at: "Now",
@@ -1446,7 +1555,10 @@ export default function App() {
 
     setOrders((current) => current.map((item) => (item.id === order.id ? order : item)));
     if (order.fulfillment_status === "completed" || order.fulfillment_status === "delivered") {
-      void fetchSales().then(setSales);
+      void fetchSales().then((page) => {
+        setSales(page.items);
+        setSalesNextCursor(page.next_cursor);
+      });
       void fetchSalesSummary().then(setSalesSummary);
     }
     setActivityFeed((current) => [
@@ -2116,6 +2228,10 @@ export default function App() {
           highValueAccounts={highValueAccounts}
           isChangePasswordOpen={isChangePasswordOpen}
           isLoadingMoreActivity={isLoadingMoreActivity}
+          isLoadingMoreCustomerProfiles={isLoadingMoreCustomerProfiles}
+          isLoadingMoreInvoices={isLoadingMoreInvoices}
+          isLoadingMoreOrders={isLoadingMoreOrders}
+          isLoadingMoreSales={isLoadingMoreSales}
           onApplyCampaign={applyCampaign}
           onLoadMoreActivity={() => void loadMoreActivity()}
           onBackToStore={() => openView("store")}
@@ -2138,6 +2254,10 @@ export default function App() {
           onDeleteProduct={deleteProduct}
           onDeleteRole={deleteRole}
           onLogout={() => void handleAdminLogout()}
+          onLoadMoreCustomerProfiles={() => void loadMoreCustomerProfiles()}
+          onLoadMoreInvoices={() => void loadMoreInvoices()}
+          onLoadMoreOrders={() => void loadMoreOrders()}
+          onLoadMoreSales={() => void loadMoreSales()}
           onOpenChangePassword={() => setIsChangePasswordOpen(true)}
           onRecordInvoicePayment={recordInvoicePayment}
           onResetAdminUserPassword={resetAdminUserPassword}
@@ -2159,6 +2279,10 @@ export default function App() {
           onUpdateSalesStatus={updateSalesStatus}
           onUpdateSystemSetting={updateSystemSetting}
           onVoidInvoice={voidInvoice}
+          hasMoreCustomerProfiles={customerProfilesNextCursor !== null}
+          hasMoreInvoices={invoicesNextCursor !== null}
+          hasMoreOrders={ordersNextCursor !== null}
+          hasMoreSales={salesNextCursor !== null}
           orders={orders}
           payments={payments}
           invoices={invoices}
@@ -2544,6 +2668,7 @@ function StorefrontView({
 
       <CartDrawer
         cart={cart}
+        customerAccountEmail={customerAccountEmail}
         open={isCartOpen}
         onCheckout={onCheckout}
         onClose={onCloseCart}
@@ -3415,6 +3540,7 @@ function AccountDrawer({
 
 type CartDrawerProps = {
   cart: CartItem[];
+  customerAccountEmail: string;
   open: boolean;
   onCheckout: (input: CreateOrderInput) => Promise<Order>;
   onClose: () => void;
@@ -3425,6 +3551,7 @@ type CartDrawerProps = {
 
 function CartDrawer({
   cart,
+  customerAccountEmail,
   open,
   onCheckout,
   onClose,
@@ -3442,6 +3569,25 @@ function CartDrawer({
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const email = customerAccountEmail.trim();
+    if (!email) {
+      return;
+    }
+
+    setForm((current) => {
+      if (current.customer_email.trim()) {
+        return current;
+      }
+
+      return { ...current, customer_email: email };
+    });
+  }, [customerAccountEmail, open]);
 
   if (!open) {
     return null;
@@ -3647,10 +3793,18 @@ type AdminViewProps = {
   demoMode: boolean;
   discount: number;
   fulfillmentByStage: Record<FulfillmentStatus, Order[]>;
+  hasMoreCustomerProfiles: boolean;
   hasMoreActivity: boolean;
+  hasMoreInvoices: boolean;
+  hasMoreOrders: boolean;
+  hasMoreSales: boolean;
   highValueAccounts: { name: string; detail: string }[];
   isChangePasswordOpen: boolean;
   isLoadingMoreActivity: boolean;
+  isLoadingMoreCustomerProfiles: boolean;
+  isLoadingMoreInvoices: boolean;
+  isLoadingMoreOrders: boolean;
+  isLoadingMoreSales: boolean;
   onApplyCampaign: () => void;
   onBackToStore: () => void;
   onChangeDiscount: (value: number) => void;
@@ -3678,6 +3832,10 @@ type AdminViewProps = {
   onDeleteProduct: (productId: number) => Promise<void>;
   onDeleteRole: (roleId: number) => Promise<void>;
   onLogout: () => void;
+  onLoadMoreCustomerProfiles: () => void;
+  onLoadMoreInvoices: () => void;
+  onLoadMoreOrders: () => void;
+  onLoadMoreSales: () => void;
   onOpenChangePassword: () => void;
   onRecordInvoicePayment: (
     invoiceId: number,
@@ -3734,10 +3892,18 @@ function AdminView({
   demoMode,
   discount,
   fulfillmentByStage,
+  hasMoreCustomerProfiles,
   hasMoreActivity,
+  hasMoreInvoices,
+  hasMoreOrders,
+  hasMoreSales,
   highValueAccounts,
   isChangePasswordOpen,
   isLoadingMoreActivity,
+  isLoadingMoreCustomerProfiles,
+  isLoadingMoreInvoices,
+  isLoadingMoreOrders,
+  isLoadingMoreSales,
   onApplyCampaign,
   onBackToStore,
   onChangeDiscount,
@@ -3760,6 +3926,10 @@ function AdminView({
   onDeleteProduct,
   onDeleteRole,
   onLogout,
+  onLoadMoreCustomerProfiles,
+  onLoadMoreInvoices,
+  onLoadMoreOrders,
+  onLoadMoreSales,
   onOpenChangePassword,
   onRecordInvoicePayment,
   onResetAdminUserPassword,
@@ -4172,8 +4342,11 @@ function AdminView({
             canCreate={canCreateCustomers}
             canDelete={canDeleteCustomers}
             canUpdate={canUpdateCustomers}
+            hasMore={hasMoreCustomerProfiles}
+            isLoadingMore={isLoadingMoreCustomerProfiles}
             onCreateCustomerPortalProfile={onCreateCustomerPortalProfile}
             onDeleteCustomerPortalProfile={onDeleteCustomerPortalProfile}
+            onLoadMore={onLoadMoreCustomerProfiles}
             onUpdateCustomerPortalProfile={onUpdateCustomerPortalProfile}
             orders={orders}
             profiles={customerProfiles}
@@ -4185,8 +4358,11 @@ function AdminView({
             canCreate={canCreateOrders}
             canDelete={canDeleteOrders}
             canUpdate={canUpdateOrders}
+            hasMore={hasMoreOrders}
+            isLoadingMore={isLoadingMoreOrders}
             onCreateOrder={onCreateAdminOrder}
             onDeleteOrder={onDeleteAdminOrder}
+            onLoadMore={onLoadMoreOrders}
             onUpdateOrder={onUpdateAdminOrder}
             onUpdateFulfillment={onUpdateOrderFulfillment}
             orders={orders}
@@ -4210,6 +4386,9 @@ function AdminView({
         {adminTab === "sales" ? (
           <SalesPanel
             canUpdate={canUpdateSales}
+            hasMore={hasMoreSales}
+            isLoadingMore={isLoadingMoreSales}
+            onLoadMore={onLoadMoreSales}
             onUpdateSalesDetails={onUpdateSalesDetails}
             onUpdateSalesStatus={onUpdateSalesStatus}
             sales={sales}
@@ -4221,8 +4400,11 @@ function AdminView({
           <InvoicesPanel
             canCreate={canCreateInvoices}
             canUpdate={canUpdateInvoices}
+            hasMore={hasMoreInvoices}
             invoices={invoices}
+            isLoadingMore={isLoadingMoreInvoices}
             onCreateInvoiceFromOrder={onCreateInvoiceFromOrder}
+            onLoadMore={onLoadMoreInvoices}
             onRecordInvoicePayment={onRecordInvoicePayment}
             onUpdateInvoiceBilling={onUpdateInvoiceBilling}
             onVoidInvoice={onVoidInvoice}

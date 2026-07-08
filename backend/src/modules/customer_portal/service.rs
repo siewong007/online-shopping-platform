@@ -6,7 +6,7 @@ use crate::{
     error::HttpError,
     models::{
         CustomerIdentity, CustomerTransactionsPayload, MembershipBenefitsPayload,
-        MembershipPayload, NextMembershipTier,
+        MembershipPayload, NextMembershipTier, Paged,
     },
     modules::{audit, auth::model::AdminIdentity},
 };
@@ -21,9 +21,27 @@ use super::{
 
 const MAX_TRANSACTIONS_LIMIT: i64 = 100;
 const DEFAULT_TRANSACTIONS_LIMIT: i64 = 20;
+const DEFAULT_LIST_LIMIT: i64 = 50;
+const MAX_LIST_LIMIT: i64 = 100;
 
-pub async fn fetch_customer_portal_profiles(pool: &PgPool) -> Result<Vec<CustomerPortalProfile>> {
-    repository::fetch_customer_portal_profiles(pool).await
+pub async fn fetch_customer_portal_profiles(
+    pool: &PgPool,
+    limit: Option<i64>,
+    before: Option<i32>,
+) -> Result<Paged<CustomerPortalProfile>> {
+    let limit = limit.unwrap_or(DEFAULT_LIST_LIMIT).clamp(1, MAX_LIST_LIMIT);
+    let mut items = repository::fetch_customer_portal_profiles(pool, limit + 1, before).await?;
+    let has_more = items.len() > limit as usize;
+    if has_more {
+        items.truncate(limit as usize);
+    }
+    let next_cursor = if has_more {
+        items.last().map(|profile| profile.id)
+    } else {
+        None
+    };
+
+    Ok(Paged { items, next_cursor })
 }
 
 pub async fn lookup_customer_portal(pool: &PgPool, email: &str) -> Result<CustomerLookupPayload> {

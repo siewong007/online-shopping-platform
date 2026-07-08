@@ -63,7 +63,7 @@ Keep the summary under ~72 characters and write in the imperative mood.
 
 ### TypeScript / React (`frontend/`)
 
-- Run `npm run build` to ensure TypeScript compiles cleanly.
+- Run `bun run build` to ensure TypeScript compiles cleanly.
 - Use functional components and hooks — no class components.
 - Keep components small and co-locate types in `types.ts` or next to the component.
 - Avoid adding a component library unless the PR discusses it first.
@@ -87,7 +87,7 @@ cargo build
 
 # frontend
 cd frontend
-npm run build
+bun run build
 ```
 
 If your change affects the storefront or admin UI, please also exercise the flow in the browser and mention what you tested in the PR description.

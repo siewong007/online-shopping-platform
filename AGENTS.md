@@ -21,4 +21,8 @@ Non-negotiables, restated here only because they prevent damage before you've re
   add the next `NNNN_<description>.sql`.
 - **Verification gates** (a change isn't done until these pass): backend
   `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo build`;
-  frontend `npm run build`. UI work must also be exercised in the browser.
+  frontend `bun run build`. UI work must also be exercised in the browser.
+- **Cross-agent coordination is file-based**: there is no live channel between agents
+  (Claude Code, Codex, or others) working this tree — coordinate through git commits,
+  and write lessons from wasted time to `docs/agents/lessons.md` in the format given
+  in `docs/agents/maintenance.md`. That log is shared by all agents.

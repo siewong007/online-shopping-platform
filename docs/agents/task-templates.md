@@ -36,7 +36,7 @@ e.g. types in frontend/src/types.ts, API client in frontend/src/lib/api.ts,
 DB access under backend/src/db/, keep handlers thin, anyhow internally → HTTP status at boundary}.
 Out of scope: {explicitly}.
 Acceptance criteria: gates pass (backend: cargo fmt --check && cargo clippy --all-targets
--- -D warnings && cargo build; frontend: npm run build); behavior demonstrated once
+-- -D warnings && cargo build; frontend: bun run build); behavior demonstrated once
 ({test | curl | preview snapshot}); no new dependencies; migrations append-only (next: {NNNN}).
 Report format: files changed as path:line-range list; gate commands + last 3 lines of
 each output; the behavior evidence; open issues. Max 40 lines.

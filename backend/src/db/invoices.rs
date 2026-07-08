@@ -13,6 +13,9 @@ struct InvoiceRow {
     billing_name: String,
     billing_email: String,
     billing_address: String,
+    buyer_tin: Option<String>,
+    buyer_registration_number: Option<String>,
+    buyer_sst_registration_number: Option<String>,
     subtotal_cents: i32,
     discount_cents: i32,
     tax_cents: i32,
@@ -25,6 +28,7 @@ struct InvoiceRow {
 
 const INVOICE_ROW_SELECT: &str = r#"
     SELECT id, invoice_number, order_id, billing_name, billing_email, billing_address,
+           buyer_tin, buyer_registration_number, buyer_sst_registration_number,
            subtotal_cents, discount_cents, tax_cents, total_cents,
            issued_at::text AS issued_at, due_at::text AS due_at,
            voided_at::text AS voided_at,
@@ -84,6 +88,49 @@ async fn allocate_invoice_number(tx: &mut sqlx::Transaction<'_, sqlx::Postgres>)
     Ok(format!("{prefix}{sequence:06}"))
 }
 
+fn compute_invoice_line_tax_cents(
+    items: &[OrderItem],
+    subtotal_cents: i32,
+    discount_cents: i32,
+    invoice_tax_cents: i32,
+) -> Vec<i32> {
+    let mut taxable_lines = Vec::with_capacity(items.len());
+    let mut allocated_discount_cents = 0;
+
+    for (index, item) in items.iter().enumerate() {
+        let is_last = index + 1 == items.len();
+        let line_subtotal_cents = i64::from(item.unit_price_cents) * i64::from(item.quantity);
+        let line_discount_cents = if is_last {
+            discount_cents - allocated_discount_cents
+        } else if subtotal_cents > 0 {
+            ((line_subtotal_cents * i64::from(discount_cents)) / i64::from(subtotal_cents)) as i32
+        } else {
+            0
+        };
+        allocated_discount_cents += line_discount_cents;
+        taxable_lines.push((line_subtotal_cents - i64::from(line_discount_cents)).max(0));
+    }
+
+    let total_taxable_cents: i64 = taxable_lines.iter().sum();
+    let mut taxes = Vec::with_capacity(items.len());
+    let mut allocated_tax_cents = 0;
+
+    for (index, taxable_cents) in taxable_lines.iter().enumerate() {
+        let is_last = index + 1 == taxable_lines.len();
+        let line_tax_cents = if is_last {
+            invoice_tax_cents - allocated_tax_cents
+        } else if total_taxable_cents > 0 {
+            ((i64::from(invoice_tax_cents) * *taxable_cents) / total_taxable_cents) as i32
+        } else {
+            0
+        };
+        allocated_tax_cents += line_tax_cents;
+        taxes.push(line_tax_cents);
+    }
+
+    taxes
+}
+
 pub async fn create_invoice_from_order(
     pool: &PgPool,
     order_id: i32,
@@ -130,6 +177,7 @@ pub async fn create_invoice_from_order(
         )
         VALUES ($1, $2, $3, $4, '', $5, $6, $7, $8, now() + make_interval(days => $9))
         RETURNING id, invoice_number, order_id, billing_name, billing_email, billing_address,
+                  buyer_tin, buyer_registration_number, buyer_sst_registration_number,
                   subtotal_cents, discount_cents, tax_cents, total_cents,
                   issued_at::text AS issued_at, due_at::text AS due_at,
                   voided_at::text AS voided_at,
@@ -148,11 +196,21 @@ pub async fn create_invoice_from_order(
     .fetch_one(&mut *tx)
     .await?;
 
-    for item in &order.items {
+    let line_tax_cents = compute_invoice_line_tax_cents(
+        &order.items,
+        order.subtotal_cents,
+        discount_cents,
+        tax_cents,
+    );
+
+    for (index, item) in order.items.iter().enumerate() {
         sqlx::query(
             r#"
-            INSERT INTO invoice_line_items (invoice_id, product_id, product_name, unit_price_cents, quantity)
-            VALUES ($1, $2, $3, $4, $5)
+            INSERT INTO invoice_line_items (
+                invoice_id, product_id, product_name, unit_price_cents, quantity,
+                tax_rate_bps, tax_cents
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             "#,
         )
         .bind(row.id)
@@ -160,6 +218,8 @@ pub async fn create_invoice_from_order(
         .bind(&item.product_name)
         .bind(item.unit_price_cents)
         .bind(item.quantity)
+        .bind(tax_rate_bps)
+        .bind(line_tax_cents[index])
         .execute(&mut *tx)
         .await?;
     }
@@ -174,6 +234,9 @@ pub async fn create_invoice_from_order(
         billing_name: row.billing_name,
         billing_email: row.billing_email,
         billing_address: row.billing_address,
+        buyer_tin: row.buyer_tin,
+        buyer_registration_number: row.buyer_registration_number,
+        buyer_sst_registration_number: row.buyer_sst_registration_number,
         subtotal_cents: row.subtotal_cents,
         discount_cents: row.discount_cents,
         tax_cents: row.tax_cents,
@@ -185,35 +248,75 @@ pub async fn create_invoice_from_order(
         line_items: order
             .items
             .iter()
-            .map(|item| InvoiceLineItem {
+            .enumerate()
+            .map(|(index, item)| InvoiceLineItem {
                 product_id: item.product_id,
                 product_name: item.product_name.clone(),
                 unit_price_cents: item.unit_price_cents,
                 quantity: item.quantity,
+                tax_code: None,
+                tax_rate_bps: Some(tax_rate_bps),
+                tax_cents: line_tax_cents[index],
             })
             .collect(),
         payments: Vec::new(),
     })
 }
 
-pub async fn fetch_invoices(pool: &PgPool) -> Result<Vec<Invoice>> {
-    let query = format!("{INVOICE_ROW_SELECT} ORDER BY issued_at DESC");
-    let rows = sqlx::query_as::<_, InvoiceRow>(&query)
-        .fetch_all(pool)
-        .await?;
+pub async fn fetch_invoices(
+    pool: &PgPool,
+    limit: i64,
+    before: Option<i32>,
+) -> Result<Vec<Invoice>> {
+    let rows = match before {
+        Some(before_id) => {
+            let query = format!("{INVOICE_ROW_SELECT} WHERE id < $1 ORDER BY id DESC LIMIT $2");
+            sqlx::query_as::<_, InvoiceRow>(&query)
+                .bind(before_id)
+                .bind(limit)
+                .fetch_all(pool)
+                .await?
+        }
+        None => {
+            let query = format!("{INVOICE_ROW_SELECT} ORDER BY id DESC LIMIT $1");
+            sqlx::query_as::<_, InvoiceRow>(&query)
+                .bind(limit)
+                .fetch_all(pool)
+                .await?
+        }
+    };
 
-    let line_item_rows = sqlx::query_as::<_, (i32, i32, String, i32, i32)>(
-        r#"
-        SELECT invoice_id, product_id, product_name, unit_price_cents, quantity
-        FROM invoice_line_items
-        ORDER BY invoice_id, id
-        "#,
-    )
-    .fetch_all(pool)
-    .await?;
+    let invoice_ids = rows.iter().map(|row| row.id).collect::<Vec<_>>();
+
+    let line_item_rows = if invoice_ids.is_empty() {
+        Vec::new()
+    } else {
+        sqlx::query_as::<_, (i32, i32, String, i32, i32, Option<String>, Option<i32>, i32)>(
+            r#"
+            SELECT invoice_id, product_id, product_name, unit_price_cents, quantity,
+                   tax_code, tax_rate_bps, tax_cents
+            FROM invoice_line_items
+            WHERE invoice_id = ANY($1)
+            ORDER BY invoice_id, id
+            "#,
+        )
+        .bind(invoice_ids.as_slice())
+        .fetch_all(pool)
+        .await?
+    };
 
     let mut line_items_by_invoice: HashMap<i32, Vec<InvoiceLineItem>> = HashMap::new();
-    for (invoice_id, product_id, product_name, unit_price_cents, quantity) in line_item_rows {
+    for (
+        invoice_id,
+        product_id,
+        product_name,
+        unit_price_cents,
+        quantity,
+        tax_code,
+        tax_rate_bps,
+        tax_cents,
+    ) in line_item_rows
+    {
         line_items_by_invoice
             .entry(invoice_id)
             .or_default()
@@ -222,18 +325,27 @@ pub async fn fetch_invoices(pool: &PgPool) -> Result<Vec<Invoice>> {
                 product_name,
                 unit_price_cents,
                 quantity,
+                tax_code,
+                tax_rate_bps,
+                tax_cents,
             });
     }
 
-    let payment_rows = sqlx::query_as::<_, (i32, i32, i32, String, String, String)>(
-        r#"
-        SELECT invoice_id, id, amount_cents, method, paid_at::text AS paid_at, note
-        FROM invoice_payments
-        ORDER BY invoice_id, paid_at
-        "#,
-    )
-    .fetch_all(pool)
-    .await?;
+    let payment_rows = if invoice_ids.is_empty() {
+        Vec::new()
+    } else {
+        sqlx::query_as::<_, (i32, i32, i32, String, String, String)>(
+            r#"
+            SELECT invoice_id, id, amount_cents, method, paid_at::text AS paid_at, note
+            FROM invoice_payments
+            WHERE invoice_id = ANY($1)
+            ORDER BY invoice_id, paid_at
+            "#,
+        )
+        .bind(invoice_ids.as_slice())
+        .fetch_all(pool)
+        .await?
+    };
 
     let mut payments_by_invoice: HashMap<i32, Vec<InvoicePayment>> = HashMap::new();
     for (invoice_id, id, amount_cents, method, paid_at, note) in payment_rows {
@@ -270,6 +382,9 @@ pub async fn fetch_invoices(pool: &PgPool) -> Result<Vec<Invoice>> {
                 billing_name: row.billing_name,
                 billing_email: row.billing_email,
                 billing_address: row.billing_address,
+                buyer_tin: row.buyer_tin,
+                buyer_registration_number: row.buyer_registration_number,
+                buyer_sst_registration_number: row.buyer_sst_registration_number,
                 subtotal_cents: row.subtotal_cents,
                 discount_cents: row.discount_cents,
                 tax_cents: row.tax_cents,
@@ -295,7 +410,8 @@ async fn fetch_invoice_by_id(pool: &PgPool, invoice_id: i32) -> Result<Invoice> 
 
     let line_items = sqlx::query_as::<_, InvoiceLineItem>(
         r#"
-        SELECT product_id, product_name, unit_price_cents, quantity
+        SELECT product_id, product_name, unit_price_cents, quantity,
+               tax_code, tax_rate_bps, tax_cents
         FROM invoice_line_items
         WHERE invoice_id = $1
         ORDER BY id
@@ -333,6 +449,9 @@ async fn fetch_invoice_by_id(pool: &PgPool, invoice_id: i32) -> Result<Invoice> 
         billing_name: row.billing_name,
         billing_email: row.billing_email,
         billing_address: row.billing_address,
+        buyer_tin: row.buyer_tin,
+        buyer_registration_number: row.buyer_registration_number,
+        buyer_sst_registration_number: row.buyer_sst_registration_number,
         subtotal_cents: row.subtotal_cents,
         discount_cents: row.discount_cents,
         tax_cents: row.tax_cents,
@@ -354,12 +473,31 @@ pub async fn update_invoice_billing(
     let updated = sqlx::query_scalar::<_, i32>(
         r#"
         UPDATE invoices
-        SET billing_address = $1, updated_at = now()
-        WHERE id = $2
+        SET billing_address = $1,
+            buyer_tin = NULLIF($2, ''),
+            buyer_registration_number = NULLIF($3, ''),
+            buyer_sst_registration_number = NULLIF($4, ''),
+            updated_at = now()
+        WHERE id = $5
         RETURNING id
         "#,
     )
     .bind(input.billing_address.trim())
+    .bind(input.buyer_tin.as_deref().unwrap_or("").trim())
+    .bind(
+        input
+            .buyer_registration_number
+            .as_deref()
+            .unwrap_or("")
+            .trim(),
+    )
+    .bind(
+        input
+            .buyer_sst_registration_number
+            .as_deref()
+            .unwrap_or("")
+            .trim(),
+    )
     .bind(invoice_id)
     .fetch_optional(pool)
     .await?;

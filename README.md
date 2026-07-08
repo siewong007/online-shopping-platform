@@ -67,7 +67,7 @@ online-shopping-platform/
 ### Prerequisites
 
 - Rust `1.95+` (`rustup`)
-- Node.js `20+` and `npm`
+- Bun
 - Docker & Docker Compose
 
 ### 1. Start PostgreSQL
@@ -103,8 +103,8 @@ cargo run
 
 ```bash
 cd frontend
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 ## App URLs

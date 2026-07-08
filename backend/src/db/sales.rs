@@ -146,31 +146,71 @@ async fn cancel_fulfillment_for_sale(
     Ok(())
 }
 
-pub async fn fetch_sales(pool: &PgPool) -> Result<Vec<SalesRecord>> {
-    sqlx::query_as::<_, SalesRecord>(
-        r#"
-        SELECT
-            orders.id AS order_id,
-            orders.customer_name,
-            orders.customer_email,
-            orders.subtotal_cents,
-            COALESCE(meta.status, 'confirmed') AS status,
-            COALESCE(meta.payment_status, 'unpaid') AS payment_status,
-            COALESCE(meta.channel, 'web') AS channel,
-            COALESCE(meta.sales_rep, '') AS sales_rep,
-            COALESCE(meta.discount_cents, 0) AS discount_cents,
-            COALESCE(meta.tax_cents, 0) AS tax_cents,
-            COALESCE(meta.total_cents, orders.subtotal_cents) AS total_cents,
-            orders.created_at::text AS created_at,
-            COALESCE(meta.updated_at, orders.created_at)::text AS updated_at
-        FROM orders
-        LEFT JOIN order_sales_meta meta ON meta.order_id = orders.id
-        ORDER BY orders.created_at DESC
-        "#,
-    )
-    .fetch_all(pool)
-    .await
-    .map_err(Into::into)
+pub async fn fetch_sales(
+    pool: &PgPool,
+    limit: i64,
+    before: Option<i32>,
+) -> Result<Vec<SalesRecord>> {
+    let rows = match before {
+        Some(before_id) => {
+            sqlx::query_as::<_, SalesRecord>(
+                r#"
+                SELECT
+                    orders.id AS order_id,
+                    orders.customer_name,
+                    orders.customer_email,
+                    orders.subtotal_cents,
+                    COALESCE(meta.status, 'confirmed') AS status,
+                    COALESCE(meta.payment_status, 'unpaid') AS payment_status,
+                    COALESCE(meta.channel, 'web') AS channel,
+                    COALESCE(meta.sales_rep, '') AS sales_rep,
+                    COALESCE(meta.discount_cents, 0) AS discount_cents,
+                    COALESCE(meta.tax_cents, 0) AS tax_cents,
+                    COALESCE(meta.total_cents, orders.subtotal_cents) AS total_cents,
+                    orders.created_at::text AS created_at,
+                    COALESCE(meta.updated_at, orders.created_at)::text AS updated_at
+                FROM orders
+                LEFT JOIN order_sales_meta meta ON meta.order_id = orders.id
+                WHERE orders.id < $1
+                ORDER BY orders.id DESC
+                LIMIT $2
+                "#,
+            )
+            .bind(before_id)
+            .bind(limit)
+            .fetch_all(pool)
+            .await?
+        }
+        None => {
+            sqlx::query_as::<_, SalesRecord>(
+                r#"
+                SELECT
+                    orders.id AS order_id,
+                    orders.customer_name,
+                    orders.customer_email,
+                    orders.subtotal_cents,
+                    COALESCE(meta.status, 'confirmed') AS status,
+                    COALESCE(meta.payment_status, 'unpaid') AS payment_status,
+                    COALESCE(meta.channel, 'web') AS channel,
+                    COALESCE(meta.sales_rep, '') AS sales_rep,
+                    COALESCE(meta.discount_cents, 0) AS discount_cents,
+                    COALESCE(meta.tax_cents, 0) AS tax_cents,
+                    COALESCE(meta.total_cents, orders.subtotal_cents) AS total_cents,
+                    orders.created_at::text AS created_at,
+                    COALESCE(meta.updated_at, orders.created_at)::text AS updated_at
+                FROM orders
+                LEFT JOIN order_sales_meta meta ON meta.order_id = orders.id
+                ORDER BY orders.id DESC
+                LIMIT $1
+                "#,
+            )
+            .bind(limit)
+            .fetch_all(pool)
+            .await?
+        }
+    };
+
+    Ok(rows)
 }
 
 async fn fetch_sales_record(pool: &PgPool, order_id: i32) -> Result<SalesRecord> {

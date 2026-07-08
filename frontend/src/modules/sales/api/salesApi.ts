@@ -1,5 +1,11 @@
 import { fallbackSales, fallbackSalesSummary } from "../../../data/fallback";
 import { fetchJson, putJson } from "../../../shared/api/http";
+import {
+  adminListPath,
+  normalizePagedResponse,
+  type AdminListParams,
+  type PagedResponse
+} from "../../../shared/api/pagination";
 import type {
   SalesRecord,
   SalesSummaryPayload,
@@ -7,8 +13,11 @@ import type {
   UpdateSalesStatusInput
 } from "../types";
 
-export function fetchSales(): Promise<SalesRecord[]> {
-  return fetchJson("/api/admin/sales", fallbackSales);
+export function fetchSales(params: AdminListParams = {}): Promise<PagedResponse<SalesRecord>> {
+  return fetchJson<SalesRecord[] | PagedResponse<SalesRecord>>(
+    adminListPath("/api/admin/sales", params),
+    fallbackSales
+  ).then(normalizePagedResponse);
 }
 
 export function fetchSalesSummary(): Promise<SalesSummaryPayload> {

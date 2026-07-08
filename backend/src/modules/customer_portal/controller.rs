@@ -9,14 +9,15 @@ use crate::{
     error,
     models::{
         CustomerIdentity, CustomerTransactionsPayload, CustomerTransactionsQuery,
-        MembershipBenefitsPayload, MembershipPayload,
+        MembershipBenefitsPayload, MembershipPayload, Paged,
     },
     modules::{auth::model::AdminIdentity, permissions},
 };
 
 use super::{
     dto::{
-        CreateCustomerPortalProfileInput, CustomerLookupQuery, UpdateCustomerPortalProfileInput,
+        AdminListQuery, CreateCustomerPortalProfileInput, CustomerLookupQuery,
+        UpdateCustomerPortalProfileInput,
     },
     model::CustomerPortalProfile,
     service,
@@ -47,7 +48,8 @@ pub async fn lookup_customer_portal(
 pub async fn customer_portal_profiles(
     State(state): State<AppState>,
     identity: AdminIdentity,
-) -> Result<Json<Vec<CustomerPortalProfile>>, error::HttpError> {
+    Query(query): Query<AdminListQuery>,
+) -> Result<Json<Paged<CustomerPortalProfile>>, error::HttpError> {
     permissions::service::ensure_permission(
         &state.pool,
         &identity,
@@ -57,7 +59,7 @@ pub async fn customer_portal_profiles(
     )
     .await?;
 
-    service::fetch_customer_portal_profiles(&state.pool)
+    service::fetch_customer_portal_profiles(&state.pool, query.limit, query.before)
         .await
         .map(Json)
         .map_err(|error| error::map_admin_query_error("customer portal query failed", error))

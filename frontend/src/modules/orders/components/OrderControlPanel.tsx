@@ -29,8 +29,11 @@ type OrderControlPanelProps = {
   canCreate: boolean;
   canDelete: boolean;
   canUpdate: boolean;
+  hasMore: boolean;
+  isLoadingMore: boolean;
   onCreateOrder: (input: CreateOrderInput) => Promise<Order>;
   onDeleteOrder: (orderId: number) => Promise<void>;
+  onLoadMore: () => void;
   onUpdateOrder: (orderId: number, input: CreateOrderInput) => Promise<Order>;
   onUpdateFulfillment: (
     orderId: number,
@@ -150,8 +153,11 @@ export function OrderControlPanel({
   canCreate,
   canDelete,
   canUpdate,
+  hasMore,
+  isLoadingMore,
   onCreateOrder,
   onDeleteOrder,
+  onLoadMore,
   onUpdateOrder,
   onUpdateFulfillment,
   orders,
@@ -507,8 +513,11 @@ export function OrderControlPanel({
             columns={orderColumns}
             emptyMessage="No orders have been placed yet."
             getRowKey={(order) => order.id}
+            hasMore={hasMore}
             initialSortDirection="desc"
             initialSortKey="id"
+            isLoadingMore={isLoadingMore}
+            onLoadMore={onLoadMore}
             rows={orders}
             tableLabel="Order management table"
           />

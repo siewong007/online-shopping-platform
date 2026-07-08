@@ -1,7 +1,10 @@
 use anyhow::Result;
 use sqlx::PgPool;
 
-use crate::modules::{audit, auth::model::AdminIdentity};
+use crate::{
+    models::Paged,
+    modules::{audit, auth::model::AdminIdentity},
+};
 
 use super::{
     dto::{UpdateSalesDetailsInput, UpdateSalesStatusInput},
@@ -9,8 +12,27 @@ use super::{
     repository,
 };
 
-pub async fn fetch_sales(pool: &PgPool) -> Result<Vec<SalesRecord>> {
-    repository::fetch_sales(pool).await
+const DEFAULT_LIST_LIMIT: i64 = 50;
+const MAX_LIST_LIMIT: i64 = 100;
+
+pub async fn fetch_sales(
+    pool: &PgPool,
+    limit: Option<i64>,
+    before: Option<i32>,
+) -> Result<Paged<SalesRecord>> {
+    let limit = limit.unwrap_or(DEFAULT_LIST_LIMIT).clamp(1, MAX_LIST_LIMIT);
+    let mut items = repository::fetch_sales(pool, limit + 1, before).await?;
+    let has_more = items.len() > limit as usize;
+    if has_more {
+        items.truncate(limit as usize);
+    }
+    let next_cursor = if has_more {
+        items.last().map(|record| record.order_id)
+    } else {
+        None
+    };
+
+    Ok(Paged { items, next_cursor })
 }
 
 pub async fn update_sales_details(

@@ -6,8 +6,12 @@ use super::{
     model::Invoice,
 };
 
-pub async fn fetch_invoices(pool: &PgPool) -> Result<Vec<Invoice>> {
-    crate::db::fetch_invoices(pool).await
+pub async fn fetch_invoices(
+    pool: &PgPool,
+    limit: i64,
+    before: Option<i32>,
+) -> Result<Vec<Invoice>> {
+    crate::db::fetch_invoices(pool, limit, before).await
 }
 
 pub async fn create_invoice_from_order(

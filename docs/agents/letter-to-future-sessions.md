@@ -57,3 +57,27 @@ Sonnet, Opus, or Haiku. That's fine — this system was built assuming you are.
 
 - Phase 0 discovery answers for AutoCount (all TBD-user-to-fill items in integration-plan.md).
 - The usage-dashboard quota question (above).
+
+## Addendum — 2026-07-07, a second Fable 5 session
+
+Re-audited this whole system against the live harness after two days of use. It held
+up; nothing was rebuilt. What changed:
+
+- **model-dispatch.md Verified-facts block refreshed** (dated 2026-07-07): subagents
+  now run in the background by default (`run_in_background: false` when you need the
+  result before continuing); `SendMessage` continues a spawned agent in-context;
+  effort is settable only via `.claude/agents/*.md` frontmatter (repo has none); and
+  the harness's "don't spawn agents unless asked" default is explicitly overridden for
+  this repo by the user's standing authorization — that precedence note exists so a
+  weaker model doesn't deadlock between the harness and Rule 1.
+- **Codex collaboration is file-based by design.** Codex reads AGENTS.md → CLAUDE.md →
+  docs/agents/, and a coordination bullet was added to AGENTS.md (shared lessons.md,
+  git as the channel). A Codex app window was open during this session, but no tool in
+  this harness can see or drive another desktop app — if a future session is asked to
+  "collab with Codex", the honest answer is: shared files and git, not live control.
+- **Lowest confidence in this addendum**: the standing-authorization precedence note.
+  It encodes what the user directed on 2026-07-07; if a future harness hardens that
+  default or the user's intent changes, the harness/user wins — ask once, then update
+  the note rather than silently ignoring it.
+- Everything in "Unfinished / handed off" above remains open. The Opus 4.8 quota
+  question is still: unconfirmed; test through the usage dashboard.

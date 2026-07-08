@@ -13,14 +13,24 @@ import type {
 
 const paymentMethods = ["Card", "Cash", "ACH", "Check", "Store Credit"];
 
+type BillingDraft = {
+  billing_address: string;
+  buyer_tin: string;
+  buyer_registration_number: string;
+  buyer_sst_registration_number: string;
+};
+
 type InvoicesPanelProps = {
   canCreate: boolean;
   canUpdate: boolean;
+  hasMore: boolean;
   invoices: Invoice[];
+  isLoadingMore: boolean;
   onCreateInvoiceFromOrder: (
     orderId: number,
     input: CreateInvoiceFromOrderInput
   ) => Promise<Invoice>;
+  onLoadMore: () => void;
   onRecordInvoicePayment: (
     invoiceId: number,
     input: RecordInvoicePaymentInput
@@ -54,8 +64,11 @@ function statusPillClass(status: InvoiceStatus): string {
 export function InvoicesPanel({
   canCreate,
   canUpdate,
+  hasMore,
   invoices,
+  isLoadingMore,
   onCreateInvoiceFromOrder,
+  onLoadMore,
   onRecordInvoicePayment,
   onUpdateInvoiceBilling,
   onVoidInvoice,
@@ -69,7 +82,7 @@ export function InvoicesPanel({
     uninvoicedOrders[0] ? String(uninvoicedOrders[0].id) : ""
   );
   const [newInvoiceDiscount, setNewInvoiceDiscount] = useState("0.00");
-  const [billingDrafts, setBillingDrafts] = useState<Record<number, string>>({});
+  const [billingDrafts, setBillingDrafts] = useState<Record<number, BillingDraft>>({});
   const [paymentDrafts, setPaymentDrafts] = useState<
     Record<number, { amount: string; method: string; note: string }>
   >({});
@@ -82,7 +95,13 @@ export function InvoicesPanel({
   const companyAddress = settingValue(settings, "general.company_address", "");
   const paymentTermsDays = settingValue(settings, "invoicing.payment_terms_days", "30");
 
-  const billingDraftFor = (invoice: Invoice) => billingDrafts[invoice.id] ?? invoice.billing_address;
+  const billingDraftFor = (invoice: Invoice): BillingDraft =>
+    billingDrafts[invoice.id] ?? {
+      billing_address: invoice.billing_address,
+      buyer_tin: invoice.buyer_tin ?? "",
+      buyer_registration_number: invoice.buyer_registration_number ?? "",
+      buyer_sst_registration_number: invoice.buyer_sst_registration_number ?? ""
+    };
   const paymentDraftFor = (invoice: Invoice) =>
     paymentDrafts[invoice.id] ?? {
       amount: ((invoice.total_cents - invoice.amount_paid_cents) / 100).toFixed(2),
@@ -137,15 +156,27 @@ export function InvoicesPanel({
     setBusyInvoiceId(invoice.id);
 
     try {
+      const draft = billingDraftFor(invoice);
       const updated = await onUpdateInvoiceBilling(invoice.id, {
-        billing_address: billingDraftFor(invoice).trim()
+        billing_address: draft.billing_address.trim(),
+        buyer_tin: draft.buyer_tin.trim() || null,
+        buyer_registration_number: draft.buyer_registration_number.trim() || null,
+        buyer_sst_registration_number: draft.buyer_sst_registration_number.trim() || null
       });
-      setBillingDrafts((current) => ({ ...current, [updated.id]: updated.billing_address }));
-      setFeedback({ kind: "success", message: `Billing address updated for ${updated.invoice_number}.` });
+      setBillingDrafts((current) => ({
+        ...current,
+        [updated.id]: {
+          billing_address: updated.billing_address,
+          buyer_tin: updated.buyer_tin ?? "",
+          buyer_registration_number: updated.buyer_registration_number ?? "",
+          buyer_sst_registration_number: updated.buyer_sst_registration_number ?? ""
+        }
+      }));
+      setFeedback({ kind: "success", message: `Billing details updated for ${updated.invoice_number}.` });
     } catch (error) {
       setFeedback({
         kind: "error",
-        message: error instanceof Error ? error.message : "Unable to update billing address."
+        message: error instanceof Error ? error.message : "Unable to update billing details."
       });
     } finally {
       setBusyInvoiceId(null);
@@ -292,6 +323,7 @@ export function InvoicesPanel({
         <div className="invoices-list no-print">
           {invoices.map((invoice) => {
             const remainingCents = invoice.total_cents - invoice.amount_paid_cents;
+            const billingDraft = billingDraftFor(invoice);
             const paymentDraft = paymentDraftFor(invoice);
             const isBusy = busyInvoiceId === invoice.id;
             const canVoid = invoice.status !== "void" && invoice.amount_paid_cents === 0;
@@ -354,13 +386,64 @@ export function InvoicesPanel({
                     <input
                       disabled={!canUpdate}
                       onChange={(event) =>
-                        setBillingDrafts((current) => ({ ...current, [invoice.id]: event.target.value }))
+                        setBillingDrafts((current) => ({
+                          ...current,
+                          [invoice.id]: { ...billingDraft, billing_address: event.target.value }
+                        }))
                       }
-                      value={billingDraftFor(invoice)}
+                      value={billingDraft.billing_address}
+                    />
+                  </label>
+                  <label className="admin-field">
+                    Buyer TIN
+                    <input
+                      disabled={!canUpdate}
+                      onChange={(event) =>
+                        setBillingDrafts((current) => ({
+                          ...current,
+                          [invoice.id]: { ...billingDraft, buyer_tin: event.target.value }
+                        }))
+                      }
+                      placeholder="Optional"
+                      value={billingDraft.buyer_tin}
+                    />
+                  </label>
+                  <label className="admin-field">
+                    Registration no.
+                    <input
+                      disabled={!canUpdate}
+                      onChange={(event) =>
+                        setBillingDrafts((current) => ({
+                          ...current,
+                          [invoice.id]: {
+                            ...billingDraft,
+                            buyer_registration_number: event.target.value
+                          }
+                        }))
+                      }
+                      placeholder="Optional"
+                      value={billingDraft.buyer_registration_number}
+                    />
+                  </label>
+                  <label className="admin-field">
+                    SST no.
+                    <input
+                      disabled={!canUpdate}
+                      onChange={(event) =>
+                        setBillingDrafts((current) => ({
+                          ...current,
+                          [invoice.id]: {
+                            ...billingDraft,
+                            buyer_sst_registration_number: event.target.value
+                          }
+                        }))
+                      }
+                      placeholder="Optional"
+                      value={billingDraft.buyer_sst_registration_number}
                     />
                   </label>
                   <button className="outline-button" disabled={!canUpdate || isBusy} type="submit">
-                    Save address
+                    Save billing
                   </button>
                 </form>
 
@@ -442,6 +525,18 @@ export function InvoicesPanel({
               </article>
             );
           })}
+          {hasMore ? (
+            <div className="table-pagination-actions">
+              <button
+                className="outline-button"
+                disabled={isLoadingMore}
+                onClick={onLoadMore}
+                type="button"
+              >
+                {isLoadingMore ? "Loading..." : "Load more"}
+              </button>
+            </div>
+          ) : null}
         </div>
       )}
 
@@ -465,6 +560,13 @@ export function InvoicesPanel({
             <p>{printingInvoice.billing_name}</p>
             <p>{printingInvoice.billing_email}</p>
             {printingInvoice.billing_address ? <p>{printingInvoice.billing_address}</p> : null}
+            {printingInvoice.buyer_tin ? <p>TIN: {printingInvoice.buyer_tin}</p> : null}
+            {printingInvoice.buyer_registration_number ? (
+              <p>Registration: {printingInvoice.buyer_registration_number}</p>
+            ) : null}
+            {printingInvoice.buyer_sst_registration_number ? (
+              <p>SST: {printingInvoice.buyer_sst_registration_number}</p>
+            ) : null}
           </div>
 
           <table className="invoice-print-table">

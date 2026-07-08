@@ -10,7 +10,7 @@ backend:
 	cd backend && cargo run
 
 frontend:
-	cd frontend && npm run dev
+	cd frontend && bun run dev
 
 backend-check:
 	cd backend && cargo fmt --check
@@ -18,4 +18,4 @@ backend-check:
 	cd backend && cargo build
 
 frontend-build:
-	cd frontend && npm run build
+	cd frontend && bun run build

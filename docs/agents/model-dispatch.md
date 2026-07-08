@@ -3,19 +3,36 @@
 For the main-conversation model of any session in this repo. Goal: spend expensive
 context only on judgment; push volume work to cheap subagents.
 
-## Verified facts (checked 2026-07-04 — re-verify against your session's system reminder)
+## Verified facts (checked 2026-07-07 — re-verify against your session's system reminder)
 
 - Agent tool `model` accepts: `haiku` | `sonnet` | `opus` | `fable`. Omitted = inherit
   the parent model. `fable` only resolves when a Fable session is active — do NOT depend on it.
 - Model IDs (for direct API use only): claude-fable-5, claude-opus-4-8, claude-sonnet-5,
   claude-haiku-4-5-20251001.
-- The Agent tool has NO `effort` parameter (verified against the live tool schema
-  2026-07-04). Effort levels exist only inside specific skills (e.g. /code-review
-  low|medium|high|xhigh|max). Never invent an effort field in an Agent call.
+- Subagents run IN THE BACKGROUND by default (changed since 2026-07-04): you are
+  notified when one completes. Pass `run_in_background: false` when your next step
+  depends on the result. Silence right after spawning is normal, not a failure.
+- `SendMessage` continues an already-spawned agent with its context intact — use it for
+  follow-ups or a retry on the SAME model instead of re-explaining in a cold spawn.
+  Escalating to a DIFFERENT model still needs a new Agent call with the failure trail attached.
+- The Agent tool has NO per-call `effort` parameter (re-verified against the live tool
+  schema 2026-07-07). Per-agent model/effort defaults can only be set in
+  `.claude/agents/<name>.md` frontmatter — this repo currently defines none. Effort
+  levels inside skills (e.g. /code-review low|…|max) are unrelated. Never invent an
+  effort field in an Agent call.
+- Precedence, so you don't deadlock: the harness's default note says "do not spawn
+  agents unless the user asks." The user's standing authorization for delegation in
+  this repo lives in CLAUDE.md (see its "Read this first" bullet, added 2026-07-07) —
+  and per the harness's own preamble, CLAUDE.md instructions override default behavior.
+  Scope guard: this authorizes VOLUME work only (Rule 1's list); surgical edits stay in
+  the main conversation. If your session's system reminder forbids spawning in stronger
+  terms than quoted here, or the user objects even once, stop delegating and ask the
+  user to re-confirm — then update this note and CLAUDE.md with the answer.
 - Agent types available in this environment: Explore (read-only search), Plan
   (implementation planning), general-purpose (full tools), claude (catch-all),
-  claude-code-guide (questions about Claude Code / Claude API). The authoritative list
-  is printed in each session's system reminder — trust that over this file.
+  claude-code-guide (questions about Claude Code / Claude API), statusline-setup
+  (status-line config only — ignore). The authoritative list is printed in each
+  session's system reminder — trust that over this file.
 - UNVERIFIED (未確認 — user to check on the usage dashboard): whether requests
   auto-routed to Opus 4.8 consume the current window's quota. Also unmeasured: the
   actual cost saving of delegation itself (see letter-to-future-sessions.md). Follow

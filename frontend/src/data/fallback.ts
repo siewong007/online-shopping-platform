@@ -513,6 +513,9 @@ export const fallbackInvoices: Invoice[] = [
     billing_name: "Falcon Builders",
     billing_email: "ap@falconbuilders.com",
     billing_address: "",
+    buyer_tin: null,
+    buyer_registration_number: null,
+    buyer_sst_registration_number: null,
     subtotal_cents: 119800,
     discount_cents: 5000,
     tax_cents: 8323,
@@ -522,8 +525,24 @@ export const fallbackInvoices: Invoice[] = [
     due_at: "2026-07-29 09:00:00+00",
     voided_at: null,
     line_items: [
-      { product_id: 1, product_name: "Milwaukee M18 9-Tool Combo Kit", unit_price_cents: 64900, quantity: 1 },
-      { product_id: 2, product_name: "Pressure-Treated Decking Starter Pack", unit_price_cents: 54900, quantity: 1 }
+      {
+        product_id: 1,
+        product_name: "Milwaukee M18 9-Tool Combo Kit",
+        unit_price_cents: 64900,
+        quantity: 1,
+        tax_code: null,
+        tax_rate_bps: 725,
+        tax_cents: 4705
+      },
+      {
+        product_id: 2,
+        product_name: "Pressure-Treated Decking Starter Pack",
+        unit_price_cents: 54900,
+        quantity: 1,
+        tax_code: null,
+        tax_rate_bps: 725,
+        tax_cents: 3618
+      }
     ],
     payments: [
       {

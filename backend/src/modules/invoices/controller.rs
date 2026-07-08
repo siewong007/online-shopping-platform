@@ -1,17 +1,21 @@
 use axum::{
     Json,
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
 };
 
 use crate::{
     app_state::AppState,
     error,
+    models::Paged,
     modules::{auth::model::AdminIdentity, permissions},
 };
 
 use super::{
-    dto::{CreateInvoiceFromOrderInput, RecordInvoicePaymentInput, UpdateInvoiceBillingInput},
+    dto::{
+        AdminListQuery, CreateInvoiceFromOrderInput, RecordInvoicePaymentInput,
+        UpdateInvoiceBillingInput,
+    },
     model::Invoice,
     service,
 };
@@ -19,7 +23,8 @@ use super::{
 pub async fn admin_invoices(
     State(state): State<AppState>,
     identity: AdminIdentity,
-) -> Result<Json<Vec<Invoice>>, error::HttpError> {
+    Query(query): Query<AdminListQuery>,
+) -> Result<Json<Paged<Invoice>>, error::HttpError> {
     permissions::service::ensure_permission(
         &state.pool,
         &identity,
@@ -29,7 +34,7 @@ pub async fn admin_invoices(
     )
     .await?;
 
-    service::fetch_invoices(&state.pool)
+    service::fetch_invoices(&state.pool, query.limit, query.before)
         .await
         .map(Json)
         .map_err(|error| error::map_admin_query_error("admin invoices query failed", error))

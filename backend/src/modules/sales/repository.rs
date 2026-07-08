@@ -6,8 +6,12 @@ use super::{
     model::{SalesRecord, SalesSummaryPayload},
 };
 
-pub async fn fetch_sales(pool: &PgPool) -> Result<Vec<SalesRecord>> {
-    crate::db::fetch_sales(pool).await
+pub async fn fetch_sales(
+    pool: &PgPool,
+    limit: i64,
+    before: Option<i32>,
+) -> Result<Vec<SalesRecord>> {
+    crate::db::fetch_sales(pool, limit, before).await
 }
 
 pub async fn update_sales_details(

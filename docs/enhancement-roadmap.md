@@ -374,7 +374,7 @@ prod deploy.
   binary doesn't run `sqlx::migrate!`) → `cargo test` with
   `DATABASE_URL=postgres://project_depot:project_depot@localhost:5432/project_depot`.
   Cache: `Swatinem/rust-cache@v2` (halves the ~5 min cold build).
-- **Frontend job** (parallel): `npm ci` → `npm run build` (tsc is the type gate; there are no
+- **Frontend job** (parallel): `bun ci` → `bun run build` (tsc is the type gate; there are no
   frontend unit tests yet — see below).
 - Branch protection on `main` requiring both jobs keeps the workflow honest.
 

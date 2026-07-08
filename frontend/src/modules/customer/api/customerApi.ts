@@ -1,5 +1,11 @@
 import { fallbackCustomerPortalProfiles } from "../../../data/fallback";
 import { deleteJson, fetchJson, postJson, putJson, requestJson } from "../../../shared/api/http";
+import {
+  adminListPath,
+  normalizePagedResponse,
+  type AdminListParams,
+  type PagedResponse
+} from "../../../shared/api/pagination";
 import type {
   CreateCustomerPortalProfileInput,
   CustomerLookupPayload,
@@ -7,8 +13,13 @@ import type {
   UpdateCustomerPortalProfileInput
 } from "../types";
 
-export function fetchCustomerPortalProfiles(): Promise<CustomerPortalProfile[]> {
-  return fetchJson("/api/admin/customer-portal", fallbackCustomerPortalProfiles);
+export function fetchCustomerPortalProfiles(
+  params: AdminListParams = {}
+): Promise<PagedResponse<CustomerPortalProfile>> {
+  return fetchJson<CustomerPortalProfile[] | PagedResponse<CustomerPortalProfile>>(
+    adminListPath("/api/admin/customer-portal", params),
+    fallbackCustomerPortalProfiles
+  ).then(normalizePagedResponse);
 }
 
 export function lookupCustomer(email: string): Promise<CustomerLookupPayload> {

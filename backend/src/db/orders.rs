@@ -133,8 +133,23 @@ pub async fn create_order(
     .execute(&mut *tx)
     .await?;
 
-    let earned_points = subtotal_cents / 100;
     let customer_portal_email = customer_email.to_lowercase();
+    let earned_points = sqlx::query_scalar::<_, i32>(
+        r#"
+        SELECT FLOOR(($1::numeric / 100) * COALESCE((
+            SELECT membership_tiers.points_multiplier
+            FROM customer_portal_profiles
+            JOIN membership_tiers ON membership_tiers.name = customer_portal_profiles.membership_tier
+            WHERE customer_portal_profiles.customer_email = $2
+            LIMIT 1
+        ), 1.00))::int
+        "#,
+    )
+    .bind(subtotal_cents)
+    .bind(&customer_portal_email)
+    .fetch_one(&mut *tx)
+    .await?;
+
     sqlx::query(
         r#"
         INSERT INTO customer_portal_profiles
@@ -174,33 +189,68 @@ pub async fn create_order(
     })
 }
 
-pub async fn fetch_orders(pool: &PgPool) -> Result<Vec<Order>> {
-    let orders = sqlx::query_as::<_, (i32, String, String, i32, String, String, String)>(
-        r#"
-        SELECT
-            id,
-            customer_name,
-            customer_email,
-            subtotal_cents,
-            fulfillment_status,
-            fulfillment_method,
-            created_at::text
-        FROM orders
-        ORDER BY created_at DESC
-        "#,
-    )
-    .fetch_all(pool)
-    .await?;
+pub async fn fetch_orders(pool: &PgPool, limit: i64, before: Option<i32>) -> Result<Vec<Order>> {
+    let orders = match before {
+        Some(before_id) => {
+            sqlx::query_as::<_, (i32, String, String, i32, String, String, String)>(
+                r#"
+                SELECT
+                    id,
+                    customer_name,
+                    customer_email,
+                    subtotal_cents,
+                    fulfillment_status,
+                    fulfillment_method,
+                    created_at::text
+                FROM orders
+                WHERE id < $1
+                ORDER BY id DESC
+                LIMIT $2
+                "#,
+            )
+            .bind(before_id)
+            .bind(limit)
+            .fetch_all(pool)
+            .await?
+        }
+        None => {
+            sqlx::query_as::<_, (i32, String, String, i32, String, String, String)>(
+                r#"
+                SELECT
+                    id,
+                    customer_name,
+                    customer_email,
+                    subtotal_cents,
+                    fulfillment_status,
+                    fulfillment_method,
+                    created_at::text
+                FROM orders
+                ORDER BY id DESC
+                LIMIT $1
+                "#,
+            )
+            .bind(limit)
+            .fetch_all(pool)
+            .await?
+        }
+    };
 
-    let item_rows = sqlx::query_as::<_, (i32, i32, String, i32, i32)>(
-        r#"
-        SELECT order_id, product_id, product_name, unit_price_cents, quantity
-        FROM order_items
-        ORDER BY order_id, id
-        "#,
-    )
-    .fetch_all(pool)
-    .await?;
+    let order_ids = orders.iter().map(|(id, ..)| *id).collect::<Vec<_>>();
+    let item_rows = if order_ids.is_empty() {
+        Vec::new()
+    } else {
+        sqlx::query_as::<_, (i32, i32, String, i32, i32)>(
+            r#"
+            SELECT order_id, product_id, product_name, unit_price_cents, quantity
+            FROM order_items
+            WHERE order_id = ANY($1)
+            ORDER BY order_id, id
+            "#,
+        )
+        .bind(order_ids.as_slice())
+        .fetch_all(pool)
+        .await?
+    };
 
     let mut items_by_order: HashMap<i32, Vec<OrderItem>> = HashMap::new();
     for (order_id, product_id, product_name, unit_price_cents, quantity) in item_rows {
@@ -212,7 +262,6 @@ pub async fn fetch_orders(pool: &PgPool) -> Result<Vec<Order>> {
         });
     }
 
-    let order_ids = orders.iter().map(|(id, ..)| *id).collect::<Vec<_>>();
     let mut histories_by_order = fetch_fulfillment_histories_for_orders(pool, &order_ids).await?;
 
     Ok(orders

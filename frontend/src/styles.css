@@ -822,6 +822,13 @@ ul {
   overflow-x: auto;
 }
 
+.table-pagination-actions {
+  display: flex;
+  justify-content: center;
+  padding: 0.85rem;
+  border-top: 1px solid var(--line);
+}
+
 .management-table {
   width: 100%;
   min-width: 56rem;

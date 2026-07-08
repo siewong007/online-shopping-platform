@@ -51,7 +51,7 @@ Symptom: "clippy compiles so the feature works". Type-checking verifies code, no
 Fix (mechanical rules):
 - A change is done only when the gates in CLAUDE.md "Verifying changes" pass, run BY YOU
   in THIS session: backend `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`,
-  `cargo build`; frontend `npm run build`.
+  `cargo build`; frontend `bun run build`.
 - New behavior must be demonstrated once: a test, a `curl`, or a preview-tool snapshot.
 - Report format: paste each gate command + its final 3–5 lines of output. No evidence = not done.
 - If a gate fails for a reason unrelated to your change (concurrent session), say so

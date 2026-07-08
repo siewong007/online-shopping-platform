@@ -3,27 +3,63 @@ use anyhow::{Result, bail};
 use sqlx::PgPool;
 use std::collections::HashMap;
 
-pub async fn fetch_customer_portal_profiles(pool: &PgPool) -> Result<Vec<CustomerPortalProfile>> {
-    sqlx::query_as::<_, CustomerPortalProfile>(
-        r#"
-        SELECT
-            id,
-            customer_name,
-            customer_email,
-            membership_tier,
-            points_balance,
-            lifetime_purchase_cents,
-            total_orders,
-            last_purchase_at::text AS last_purchase_at,
-            created_at::text AS created_at,
-            updated_at::text AS updated_at
-        FROM customer_portal_profiles
-        ORDER BY updated_at DESC, customer_name
-        "#,
-    )
-    .fetch_all(pool)
-    .await
-    .map_err(Into::into)
+pub async fn fetch_customer_portal_profiles(
+    pool: &PgPool,
+    limit: i64,
+    before: Option<i32>,
+) -> Result<Vec<CustomerPortalProfile>> {
+    let rows = match before {
+        Some(before_id) => {
+            sqlx::query_as::<_, CustomerPortalProfile>(
+                r#"
+                SELECT
+                    id,
+                    customer_name,
+                    customer_email,
+                    membership_tier,
+                    points_balance,
+                    lifetime_purchase_cents,
+                    total_orders,
+                    last_purchase_at::text AS last_purchase_at,
+                    created_at::text AS created_at,
+                    updated_at::text AS updated_at
+                FROM customer_portal_profiles
+                WHERE id < $1
+                ORDER BY id DESC
+                LIMIT $2
+                "#,
+            )
+            .bind(before_id)
+            .bind(limit)
+            .fetch_all(pool)
+            .await?
+        }
+        None => {
+            sqlx::query_as::<_, CustomerPortalProfile>(
+                r#"
+                SELECT
+                    id,
+                    customer_name,
+                    customer_email,
+                    membership_tier,
+                    points_balance,
+                    lifetime_purchase_cents,
+                    total_orders,
+                    last_purchase_at::text AS last_purchase_at,
+                    created_at::text AS created_at,
+                    updated_at::text AS updated_at
+                FROM customer_portal_profiles
+                ORDER BY id DESC
+                LIMIT $1
+                "#,
+            )
+            .bind(limit)
+            .fetch_all(pool)
+            .await?
+        }
+    };
+
+    Ok(rows)
 }
 
 pub async fn lookup_customer_portal(pool: &PgPool, email: &str) -> Result<CustomerLookupPayload> {

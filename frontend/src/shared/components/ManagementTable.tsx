@@ -15,8 +15,11 @@ type ManagementTableProps<T> = {
   columns: ManagementTableColumn<T>[];
   emptyMessage: string;
   getRowKey: (row: T) => number | string;
+  hasMore?: boolean;
   initialSortDirection?: SortDirection;
   initialSortKey?: string;
+  isLoadingMore?: boolean;
+  onLoadMore?: () => void;
   rows: T[];
   tableLabel: string;
 };
@@ -76,8 +79,11 @@ export function ManagementTable<T>({
   columns,
   emptyMessage,
   getRowKey,
+  hasMore = false,
   initialSortDirection = "asc",
   initialSortKey,
+  isLoadingMore = false,
+  onLoadMore,
   rows,
   tableLabel
 }: ManagementTableProps<T>) {
@@ -199,6 +205,13 @@ export function ManagementTable<T>({
           </tbody>
         </table>
       </div>
+      {hasMore && onLoadMore ? (
+        <div className="table-pagination-actions">
+          <button className="outline-button" disabled={isLoadingMore} onClick={onLoadMore} type="button">
+            {isLoadingMore ? "Loading..." : "Load more"}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

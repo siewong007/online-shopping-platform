@@ -6,8 +6,12 @@ use super::{
     model::CustomerPortalProfile,
 };
 
-pub async fn fetch_customer_portal_profiles(pool: &PgPool) -> Result<Vec<CustomerPortalProfile>> {
-    crate::db::fetch_customer_portal_profiles(pool).await
+pub async fn fetch_customer_portal_profiles(
+    pool: &PgPool,
+    limit: i64,
+    before: Option<i32>,
+) -> Result<Vec<CustomerPortalProfile>> {
+    crate::db::fetch_customer_portal_profiles(pool, limit, before).await
 }
 
 pub async fn lookup_customer_portal(

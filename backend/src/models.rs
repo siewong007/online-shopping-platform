@@ -1,6 +1,18 @@
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
+#[derive(Debug, Clone, Serialize)]
+pub struct Paged<T> {
+    pub items: Vec<T>,
+    pub next_cursor: Option<i32>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct AdminListQuery {
+    pub limit: Option<i64>,
+    pub before: Option<i32>,
+}
+
 #[derive(Debug, Clone, Serialize, FromRow)]
 pub struct Category {
     pub slug: String,
@@ -660,6 +672,9 @@ pub struct InvoiceLineItem {
     pub product_name: String,
     pub unit_price_cents: i32,
     pub quantity: i32,
+    pub tax_code: Option<String>,
+    pub tax_rate_bps: Option<i32>,
+    pub tax_cents: i32,
 }
 
 #[derive(Debug, Clone, Serialize, FromRow)]
@@ -680,6 +695,9 @@ pub struct Invoice {
     pub billing_name: String,
     pub billing_email: String,
     pub billing_address: String,
+    pub buyer_tin: Option<String>,
+    pub buyer_registration_number: Option<String>,
+    pub buyer_sst_registration_number: Option<String>,
     pub subtotal_cents: i32,
     pub discount_cents: i32,
     pub tax_cents: i32,
@@ -700,6 +718,9 @@ pub struct CreateInvoiceFromOrderInput {
 #[derive(Debug, Clone, Deserialize)]
 pub struct UpdateInvoiceBillingInput {
     pub billing_address: String,
+    pub buyer_tin: Option<String>,
+    pub buyer_registration_number: Option<String>,
+    pub buyer_sst_registration_number: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

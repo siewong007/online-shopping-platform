@@ -22,6 +22,9 @@ const salesTransitions: Record<SalesStatus, SalesStatus[]> = {
 
 type SalesPanelProps = {
   canUpdate: boolean;
+  hasMore: boolean;
+  isLoadingMore: boolean;
+  onLoadMore: () => void;
   onUpdateSalesDetails: (orderId: number, input: UpdateSalesDetailsInput) => Promise<SalesRecord>;
   onUpdateSalesStatus: (orderId: number, input: UpdateSalesStatusInput) => Promise<SalesRecord>;
   sales: SalesRecord[];
@@ -56,6 +59,9 @@ function statusPillClass(status: SalesStatus): string {
 
 export function SalesPanel({
   canUpdate,
+  hasMore,
+  isLoadingMore,
+  onLoadMore,
   onUpdateSalesDetails,
   onUpdateSalesStatus,
   sales,
@@ -404,8 +410,11 @@ export function SalesPanel({
           columns={salesColumns}
           emptyMessage="No sales have been recorded yet."
           getRowKey={(sale) => sale.order_id}
+          hasMore={hasMore}
           initialSortDirection="desc"
           initialSortKey="updated"
+          isLoadingMore={isLoadingMore}
+          onLoadMore={onLoadMore}
           rows={sales}
           tableLabel="Sales management table"
         />

@@ -1,17 +1,18 @@
 use axum::{
     Json,
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
 };
 
 use crate::{
     app_state::AppState,
     error,
+    models::Paged,
     modules::{auth::model::AdminIdentity, customer_auth::model::CustomerIdentity, permissions},
 };
 
 use super::{
-    dto::{CreateOrderInput, UpdateOrderFulfillmentInput},
+    dto::{AdminListQuery, CreateOrderInput, UpdateOrderFulfillmentInput},
     model::Order,
     service,
 };
@@ -19,7 +20,8 @@ use super::{
 pub async fn admin_orders(
     State(state): State<AppState>,
     identity: AdminIdentity,
-) -> Result<Json<Vec<Order>>, error::HttpError> {
+    Query(query): Query<AdminListQuery>,
+) -> Result<Json<Paged<Order>>, error::HttpError> {
     permissions::service::ensure_permission(
         &state.pool,
         &identity,
@@ -29,7 +31,7 @@ pub async fn admin_orders(
     )
     .await?;
 
-    service::fetch_orders(&state.pool)
+    service::fetch_orders(&state.pool, query.limit, query.before)
         .await
         .map(Json)
         .map_err(|error| error::map_admin_query_error("admin orders query failed", error))

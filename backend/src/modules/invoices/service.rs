@@ -1,7 +1,10 @@
 use anyhow::Result;
 use sqlx::PgPool;
 
-use crate::modules::{audit, auth::model::AdminIdentity};
+use crate::{
+    models::Paged,
+    modules::{audit, auth::model::AdminIdentity},
+};
 
 use super::{
     dto::{CreateInvoiceFromOrderInput, RecordInvoicePaymentInput, UpdateInvoiceBillingInput},
@@ -9,8 +12,27 @@ use super::{
     repository,
 };
 
-pub async fn fetch_invoices(pool: &PgPool) -> Result<Vec<Invoice>> {
-    repository::fetch_invoices(pool).await
+const DEFAULT_LIST_LIMIT: i64 = 50;
+const MAX_LIST_LIMIT: i64 = 100;
+
+pub async fn fetch_invoices(
+    pool: &PgPool,
+    limit: Option<i64>,
+    before: Option<i32>,
+) -> Result<Paged<Invoice>> {
+    let limit = limit.unwrap_or(DEFAULT_LIST_LIMIT).clamp(1, MAX_LIST_LIMIT);
+    let mut items = repository::fetch_invoices(pool, limit + 1, before).await?;
+    let has_more = items.len() > limit as usize;
+    if has_more {
+        items.truncate(limit as usize);
+    }
+    let next_cursor = if has_more {
+        items.last().map(|invoice| invoice.id)
+    } else {
+        None
+    };
+
+    Ok(Paged { items, next_cursor })
 }
 
 pub async fn create_invoice_from_order(

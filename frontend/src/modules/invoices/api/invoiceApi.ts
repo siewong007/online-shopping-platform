@@ -1,5 +1,11 @@
 import { fallbackInvoices } from "../../../data/fallback";
 import { fetchJson, postJson, putJson } from "../../../shared/api/http";
+import {
+  adminListPath,
+  normalizePagedResponse,
+  type AdminListParams,
+  type PagedResponse
+} from "../../../shared/api/pagination";
 import type {
   CreateInvoiceFromOrderInput,
   Invoice,
@@ -7,8 +13,11 @@ import type {
   UpdateInvoiceBillingInput
 } from "../types";
 
-export function fetchInvoices(): Promise<Invoice[]> {
-  return fetchJson("/api/admin/invoices", fallbackInvoices);
+export function fetchInvoices(params: AdminListParams = {}): Promise<PagedResponse<Invoice>> {
+  return fetchJson<Invoice[] | PagedResponse<Invoice>>(
+    adminListPath("/api/admin/invoices", params),
+    fallbackInvoices
+  ).then(normalizePagedResponse);
 }
 
 export function createInvoiceFromOrder(

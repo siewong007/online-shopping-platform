@@ -14,8 +14,8 @@ pub async fn create_order(
     crate::db::create_order(pool, input, customer_account_id).await
 }
 
-pub async fn fetch_orders(pool: &PgPool) -> Result<Vec<Order>> {
-    crate::db::fetch_orders(pool).await
+pub async fn fetch_orders(pool: &PgPool, limit: i64, before: Option<i32>) -> Result<Vec<Order>> {
+    crate::db::fetch_orders(pool, limit, before).await
 }
 
 pub async fn update_order(pool: &PgPool, order_id: i32, input: &CreateOrderInput) -> Result<Order> {

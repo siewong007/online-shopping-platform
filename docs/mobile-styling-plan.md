@@ -93,7 +93,7 @@ Per CLAUDE.md, exercise flows in the browser, not just type-check:
 - `preview_start` web + api; `preview_resize` to mobile (375×812) and tablet
   (768×1024); walk all three views and all 12 admin tabs; screenshot key pages.
 - Check landscape-narrow (~480px) for the drawers.
-- `npm run build` must pass.
+- `bun run build` must pass.
 
 ## Sequencing / PR shape
 

@@ -1,16 +1,17 @@
 use axum::{
     Json,
-    extract::{Path, State},
+    extract::{Path, Query, State},
 };
 
 use crate::{
     app_state::AppState,
     error,
+    models::Paged,
     modules::{auth::model::AdminIdentity, permissions},
 };
 
 use super::{
-    dto::{UpdateSalesDetailsInput, UpdateSalesStatusInput},
+    dto::{AdminListQuery, UpdateSalesDetailsInput, UpdateSalesStatusInput},
     model::{SalesRecord, SalesSummaryPayload},
     service,
 };
@@ -18,7 +19,8 @@ use super::{
 pub async fn admin_sales(
     State(state): State<AppState>,
     identity: AdminIdentity,
-) -> Result<Json<Vec<SalesRecord>>, error::HttpError> {
+    Query(query): Query<AdminListQuery>,
+) -> Result<Json<Paged<SalesRecord>>, error::HttpError> {
     permissions::service::ensure_permission(
         &state.pool,
         &identity,
@@ -28,7 +30,7 @@ pub async fn admin_sales(
     )
     .await?;
 
-    service::fetch_sales(&state.pool)
+    service::fetch_sales(&state.pool, query.limit, query.before)
         .await
         .map(Json)
         .map_err(|error| error::map_admin_query_error("admin sales query failed", error))
