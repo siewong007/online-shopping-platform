@@ -34,8 +34,26 @@ basics — details live in the linked files. Load a linked file only when its tr
 Online Shopping Platform — a Home Depot-style storefront + admin console.
 
 - `backend/` — Rust 1.95, Axum 0.8, SQLx 0.8, PostgreSQL
-- `frontend/` — React 19.2, TypeScript, Vite 7
-- `docker-compose.yml` — PostgreSQL 18.3 (exposed on `localhost:5433`)
+- `frontend/` — React 19.2.7, TypeScript, Vite 8.x
+- `docker-compose.yml` — PostgreSQL 19beta1 (exposed on `localhost:5433`)
+
+## Graphify knowledge graph
+
+Graphify writes generated output to `graphify-out/`. Before repo-wide analysis,
+dependency tracing, architecture analysis, or impact analysis, consult
+`graphify query "<question>"` or `graphify-out/GRAPH_REPORT.md`. Treat the graph as
+an index that may be stale, and verify critical findings against the current source.
+After significant structural changes, regenerate with `graphify extract . --code-only`,
+then run `graphify cluster-only . --no-label` to refresh the report and visualization
+without an LLM call. Cargo dependency introspection is unavailable because this
+repository's `Cargo.toml` is under `backend/`, not at the repository root.
+
+Indexed scopes are `backend/src/`, `backend/tests/`, `backend/migrations/`,
+`frontend/src/`, selected frontend package/TypeScript/Vite configuration, root
+`src/`, and top-level JavaScript/JSX in `ekoway-landing/ekoway/`. The canonical
+exclusions are in `.graphifyignore`: documentation, other configuration, media,
+secrets, dependencies, and generated outputs are excluded, so the initial build is
+local code-only.
 
 ## Running locally
 

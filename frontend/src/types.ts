@@ -112,6 +112,7 @@ export type {
 } from "./modules/sales/types";
 
 export type {
+  AutoCountExportInput,
   CreateInvoiceFromOrderInput,
   Invoice,
   InvoiceLineItem,

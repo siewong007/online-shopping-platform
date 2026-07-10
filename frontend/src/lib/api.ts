@@ -76,6 +76,7 @@ export {
 } from "../modules/sales/api/salesApi";
 export {
   createInvoiceFromOrder,
+  exportAutoCountInvoices,
   fetchInvoices,
   recordInvoicePayment,
   updateInvoiceBilling,

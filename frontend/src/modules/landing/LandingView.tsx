@@ -157,6 +157,15 @@ export function LandingView({ onOpenShop }: LandingViewProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [lightbox, setLightbox] = useState<{ open: boolean; idx: number }>({ open: false, idx: 0 });
 
+  /* keep overscroll black behind the cream-on-black landing, not the storefront's light page bg */
+  useEffect(() => {
+    const previous = document.body.style.background;
+    document.body.style.background = "#000";
+    return () => {
+      document.body.style.background = previous;
+    };
+  }, []);
+
   /* intro curtain + load sequence */
   useEffect(() => {
     if (prefersReducedMotion()) {

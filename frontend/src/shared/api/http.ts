@@ -164,12 +164,60 @@ export async function requestJson<TResponse>(
   return (await response.json()) as TResponse;
 }
 
+export async function requestBlob(
+  path: string,
+  init: RequestInit = {},
+  scope: AuthScope = "admin"
+): Promise<Blob> {
+  let response: Response;
+
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      ...init,
+      headers: requestHeaders(false, init.headers, scope)
+    });
+  } catch (error) {
+    onApiUnavailable?.();
+    console.warn("Unable to reach the API for a download request.", error);
+    throw new ApiError("This download is temporarily unavailable. Please try again in a moment.", {
+      isNetworkError: true
+    });
+  }
+
+  if (response.status === 401 && scope === "admin") {
+    onUnauthorized?.();
+  }
+
+  if (!response.ok) {
+    const message = (await response.text()) || `Request failed for ${path}`;
+    throw new ApiError(message, { status: response.status });
+  }
+
+  return response.blob();
+}
+
 export async function postJson<TBody, TResponse>(
   path: string,
   body: TBody,
   scope: AuthScope = "admin"
 ): Promise<TResponse> {
   return requestJson<TResponse>(
+    path,
+    {
+      method: "POST",
+      headers: requestHeaders(true, undefined, scope),
+      body: JSON.stringify(body)
+    },
+    scope
+  );
+}
+
+export async function postBlob<TBody>(
+  path: string,
+  body: TBody,
+  scope: AuthScope = "admin"
+): Promise<Blob> {
+  return requestBlob(
     path,
     {
       method: "POST",

@@ -95,6 +95,16 @@ ul {
   padding: 1.25rem 0 4rem;
 }
 
+/* Ekoway landing is full-bleed edge-to-edge above mobile; the app-shell width
+   cap otherwise boxes its black background inside a light page canvas. */
+@media (min-width: 769px) {
+  .landing-shell {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+  }
+}
+
 .loading-shell {
   min-height: 100vh;
   display: grid;

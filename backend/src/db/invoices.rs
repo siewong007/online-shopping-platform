@@ -23,6 +23,7 @@ struct InvoiceRow {
     issued_at: String,
     due_at: String,
     voided_at: Option<String>,
+    exported_to_autocount_at: Option<String>,
     is_overdue: bool,
 }
 
@@ -32,6 +33,7 @@ const INVOICE_ROW_SELECT: &str = r#"
            subtotal_cents, discount_cents, tax_cents, total_cents,
            issued_at::text AS issued_at, due_at::text AS due_at,
            voided_at::text AS voided_at,
+           exported_to_autocount_at::text AS exported_to_autocount_at,
            (voided_at IS NULL AND due_at < now()) AS is_overdue
     FROM invoices
 "#;
@@ -131,6 +133,39 @@ fn compute_invoice_line_tax_cents(
     taxes
 }
 
+fn optional_trimmed(value: Option<&str>) -> Option<String> {
+    value
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(ToOwned::to_owned)
+}
+
+fn ensure_no_control_characters(label: &str, value: &str) -> Result<()> {
+    if value.chars().any(char::is_control) {
+        bail!("{label} cannot contain control characters.");
+    }
+
+    Ok(())
+}
+
+fn ensure_tax_identifier(label: &str, value: &str, min_len: usize, max_len: usize) -> Result<()> {
+    ensure_no_control_characters(label, value)?;
+
+    let len = value.chars().count();
+    if len < min_len || len > max_len {
+        bail!("{label} must be between {min_len} and {max_len} characters.");
+    }
+
+    if !value
+        .chars()
+        .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '/' | '_'))
+    {
+        bail!("{label} can only contain letters, numbers, hyphens, slashes or underscores.");
+    }
+
+    Ok(())
+}
+
 pub async fn create_invoice_from_order(
     pool: &PgPool,
     order_id: i32,
@@ -181,6 +216,7 @@ pub async fn create_invoice_from_order(
                   subtotal_cents, discount_cents, tax_cents, total_cents,
                   issued_at::text AS issued_at, due_at::text AS due_at,
                   voided_at::text AS voided_at,
+                  exported_to_autocount_at::text AS exported_to_autocount_at,
                   (voided_at IS NULL AND due_at < now()) AS is_overdue
         "#,
     )
@@ -245,6 +281,7 @@ pub async fn create_invoice_from_order(
         issued_at: row.issued_at,
         due_at: row.due_at,
         voided_at: row.voided_at,
+        exported_to_autocount_at: row.exported_to_autocount_at,
         line_items: order
             .items
             .iter()
@@ -393,6 +430,7 @@ pub async fn fetch_invoices(
                 issued_at: row.issued_at,
                 due_at: row.due_at,
                 voided_at: row.voided_at,
+                exported_to_autocount_at: row.exported_to_autocount_at,
                 line_items,
                 payments,
             }
@@ -460,6 +498,7 @@ async fn fetch_invoice_by_id(pool: &PgPool, invoice_id: i32) -> Result<Invoice> 
         issued_at: row.issued_at,
         due_at: row.due_at,
         voided_at: row.voided_at,
+        exported_to_autocount_at: row.exported_to_autocount_at,
         line_items,
         payments,
     })
@@ -470,6 +509,31 @@ pub async fn update_invoice_billing(
     invoice_id: i32,
     input: &UpdateInvoiceBillingInput,
 ) -> Result<Invoice> {
+    let billing_address = input.billing_address.trim();
+    ensure_no_control_characters("Billing address", billing_address)?;
+
+    let buyer_tin = optional_trimmed(input.buyer_tin.as_deref());
+    let buyer_registration_number = optional_trimmed(input.buyer_registration_number.as_deref());
+    let buyer_sst_registration_number =
+        optional_trimmed(input.buyer_sst_registration_number.as_deref());
+
+    let has_tax_identifier = buyer_tin.is_some()
+        || buyer_registration_number.is_some()
+        || buyer_sst_registration_number.is_some();
+    if has_tax_identifier && billing_address.is_empty() {
+        bail!("Billing address is required when tax identifiers are provided.");
+    }
+
+    if let Some(value) = &buyer_tin {
+        ensure_tax_identifier("Buyer TIN", value, 6, 20)?;
+    }
+    if let Some(value) = &buyer_registration_number {
+        ensure_tax_identifier("Buyer registration number", value, 4, 30)?;
+    }
+    if let Some(value) = &buyer_sst_registration_number {
+        ensure_tax_identifier("Buyer SST registration number", value, 4, 30)?;
+    }
+
     let updated = sqlx::query_scalar::<_, i32>(
         r#"
         UPDATE invoices
@@ -482,22 +546,10 @@ pub async fn update_invoice_billing(
         RETURNING id
         "#,
     )
-    .bind(input.billing_address.trim())
-    .bind(input.buyer_tin.as_deref().unwrap_or("").trim())
-    .bind(
-        input
-            .buyer_registration_number
-            .as_deref()
-            .unwrap_or("")
-            .trim(),
-    )
-    .bind(
-        input
-            .buyer_sst_registration_number
-            .as_deref()
-            .unwrap_or("")
-            .trim(),
-    )
+    .bind(billing_address)
+    .bind(buyer_tin.as_deref().unwrap_or(""))
+    .bind(buyer_registration_number.as_deref().unwrap_or(""))
+    .bind(buyer_sst_registration_number.as_deref().unwrap_or(""))
     .bind(invoice_id)
     .fetch_optional(pool)
     .await?;
@@ -623,4 +675,246 @@ pub async fn record_invoice_payment(
     tx.commit().await?;
 
     fetch_invoice_by_id(pool, invoice_id).await
+}
+
+#[derive(sqlx::FromRow)]
+struct AutoCountExportInvoiceRow {
+    id: i32,
+    invoice_number: String,
+    order_id: i32,
+    billing_name: String,
+    billing_email: String,
+    billing_address: String,
+    buyer_tin: Option<String>,
+    buyer_registration_number: Option<String>,
+    buyer_sst_registration_number: Option<String>,
+    subtotal_cents: i32,
+    discount_cents: i32,
+    tax_cents: i32,
+    total_cents: i32,
+    issued_date: String,
+}
+
+#[derive(sqlx::FromRow)]
+struct AutoCountExportLineRow {
+    invoice_id: i32,
+    product_id: i32,
+    product_name: String,
+    unit_price_cents: i32,
+    quantity: i32,
+    tax_code: Option<String>,
+    tax_rate_bps: Option<i32>,
+    tax_cents: i32,
+}
+
+fn debtor_code(invoice: &AutoCountExportInvoiceRow) -> String {
+    let code = invoice
+        .billing_email
+        .chars()
+        .filter(|character| character.is_ascii_alphanumeric())
+        .take(24)
+        .collect::<String>()
+        .to_ascii_uppercase();
+
+    if code.is_empty() {
+        format!("CUST{}", invoice.order_id)
+    } else {
+        code
+    }
+}
+
+fn cents_to_decimal(cents: i32) -> String {
+    let sign = if cents < 0 { "-" } else { "" };
+    let absolute = cents.abs();
+    format!("{sign}{}.{:02}", absolute / 100, absolute % 100)
+}
+
+fn csv_cell(value: impl AsRef<str>) -> String {
+    let value = value.as_ref();
+    if value.contains([',', '"', '\n', '\r']) {
+        format!("\"{}\"", value.replace('"', "\"\""))
+    } else {
+        value.to_string()
+    }
+}
+
+fn push_csv_row(csv: &mut String, values: &[String]) {
+    csv.push_str(&values.iter().map(csv_cell).collect::<Vec<_>>().join(","));
+    csv.push('\n');
+}
+
+fn build_autocount_invoice_csv(
+    invoices: &[AutoCountExportInvoiceRow],
+    lines_by_invoice: &mut HashMap<i32, Vec<AutoCountExportLineRow>>,
+) -> String {
+    let mut csv = String::new();
+    push_csv_row(
+        &mut csv,
+        &[
+            "DocumentNo".to_string(),
+            "DocumentDate".to_string(),
+            "DebtorCode".to_string(),
+            "DebtorName".to_string(),
+            "DebtorEmail".to_string(),
+            "BillingAddress".to_string(),
+            "BuyerTIN".to_string(),
+            "BuyerRegistrationNo".to_string(),
+            "BuyerSSTNo".to_string(),
+            "ItemCode".to_string(),
+            "Description".to_string(),
+            "Quantity".to_string(),
+            "UOM".to_string(),
+            "UnitPrice".to_string(),
+            "LineDiscount".to_string(),
+            "TaxCode".to_string(),
+            "TaxRatePercent".to_string(),
+            "TaxAmount".to_string(),
+            "LineTotal".to_string(),
+            "InvoiceSubtotal".to_string(),
+            "InvoiceDiscount".to_string(),
+            "InvoiceTax".to_string(),
+            "InvoiceTotal".to_string(),
+            "PlatformInvoiceId".to_string(),
+            "PlatformOrderId".to_string(),
+        ],
+    );
+
+    for invoice in invoices {
+        let lines = lines_by_invoice.remove(&invoice.id).unwrap_or_default();
+        let mut allocated_discount_cents = 0;
+
+        for (index, line) in lines.iter().enumerate() {
+            let is_last = index + 1 == lines.len();
+            let line_subtotal_cents = line.unit_price_cents * line.quantity;
+            let line_discount_cents = if is_last {
+                invoice.discount_cents - allocated_discount_cents
+            } else if invoice.subtotal_cents > 0 {
+                ((i64::from(line_subtotal_cents) * i64::from(invoice.discount_cents))
+                    / i64::from(invoice.subtotal_cents)) as i32
+            } else {
+                0
+            };
+            allocated_discount_cents += line_discount_cents;
+            let line_total_cents = line_subtotal_cents - line_discount_cents + line.tax_cents;
+            let tax_rate = line
+                .tax_rate_bps
+                .map(|rate| format!("{}.{:02}", rate / 100, rate % 100))
+                .unwrap_or_default();
+
+            push_csv_row(
+                &mut csv,
+                &[
+                    invoice.invoice_number.clone(),
+                    invoice.issued_date.clone(),
+                    debtor_code(invoice),
+                    invoice.billing_name.clone(),
+                    invoice.billing_email.clone(),
+                    invoice.billing_address.clone(),
+                    invoice.buyer_tin.clone().unwrap_or_default(),
+                    invoice
+                        .buyer_registration_number
+                        .clone()
+                        .unwrap_or_default(),
+                    invoice
+                        .buyer_sst_registration_number
+                        .clone()
+                        .unwrap_or_default(),
+                    format!("SKU-{}", line.product_id),
+                    line.product_name.clone(),
+                    line.quantity.to_string(),
+                    "UNIT".to_string(),
+                    cents_to_decimal(line.unit_price_cents),
+                    cents_to_decimal(line_discount_cents),
+                    line.tax_code.clone().unwrap_or_else(|| "SST".to_string()),
+                    tax_rate,
+                    cents_to_decimal(line.tax_cents),
+                    cents_to_decimal(line_total_cents),
+                    cents_to_decimal(invoice.subtotal_cents),
+                    cents_to_decimal(invoice.discount_cents),
+                    cents_to_decimal(invoice.tax_cents),
+                    cents_to_decimal(invoice.total_cents),
+                    invoice.id.to_string(),
+                    invoice.order_id.to_string(),
+                ],
+            );
+        }
+    }
+
+    csv
+}
+
+pub async fn export_autocount_invoices(
+    pool: &PgPool,
+    input: &AutoCountExportInput,
+) -> Result<String> {
+    let include_exported = input.include_exported.unwrap_or(false);
+    let mut tx = pool.begin().await?;
+
+    let invoices = sqlx::query_as::<_, AutoCountExportInvoiceRow>(
+        r#"
+        SELECT id, invoice_number, order_id, billing_name, billing_email, billing_address,
+               buyer_tin, buyer_registration_number, buyer_sst_registration_number,
+               subtotal_cents, discount_cents, tax_cents, total_cents,
+               issued_at::date::text AS issued_date
+        FROM invoices
+        WHERE voided_at IS NULL
+          AND ($1::timestamptz IS NULL OR issued_at >= $1::timestamptz)
+          AND ($2::timestamptz IS NULL OR issued_at <= $2::timestamptz)
+          AND ($3::bool OR exported_to_autocount_at IS NULL)
+        ORDER BY id
+        FOR UPDATE
+        "#,
+    )
+    .bind(input.issued_from.as_deref())
+    .bind(input.issued_to.as_deref())
+    .bind(include_exported)
+    .fetch_all(&mut *tx)
+    .await?;
+
+    if invoices.is_empty() {
+        bail!("No invoices are ready for AutoCount export.");
+    }
+
+    let invoice_ids = invoices
+        .iter()
+        .map(|invoice| invoice.id)
+        .collect::<Vec<_>>();
+    let line_rows = sqlx::query_as::<_, AutoCountExportLineRow>(
+        r#"
+        SELECT invoice_id, product_id, product_name, unit_price_cents, quantity,
+               tax_code, tax_rate_bps, tax_cents
+        FROM invoice_line_items
+        WHERE invoice_id = ANY($1)
+        ORDER BY invoice_id, id
+        "#,
+    )
+    .bind(invoice_ids.as_slice())
+    .fetch_all(&mut *tx)
+    .await?;
+
+    let mut lines_by_invoice: HashMap<i32, Vec<AutoCountExportLineRow>> = HashMap::new();
+    for line in line_rows {
+        lines_by_invoice
+            .entry(line.invoice_id)
+            .or_default()
+            .push(line);
+    }
+
+    let csv = build_autocount_invoice_csv(&invoices, &mut lines_by_invoice);
+
+    sqlx::query(
+        r#"
+        UPDATE invoices
+        SET exported_to_autocount_at = COALESCE(exported_to_autocount_at, now()),
+            updated_at = now()
+        WHERE id = ANY($1)
+        "#,
+    )
+    .bind(invoice_ids.as_slice())
+    .execute(&mut *tx)
+    .await?;
+
+    tx.commit().await?;
+
+    Ok(csv)
 }

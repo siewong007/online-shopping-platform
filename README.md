@@ -1,42 +1,44 @@
 # Online Shopping Platform
 
-A full-stack home-improvement storefront and operations console inspired by [The Home Depot](https://www.homedepot.com/), built with a Rust Axum API, a React 19 SPA, and PostgreSQL 18.
+A full-stack home-improvement storefront and operations console inspired by [The Home Depot](https://www.homedepot.com/), built with a Rust Axum API, a React 19 SPA, and PostgreSQL 19beta1.
 
 ![Rust](https://img.shields.io/badge/Rust-1.95-orange)
 ![React](https://img.shields.io/badge/React-19.2-61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18.3-336791)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-19beta1-336791)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ## Features
 
 ### Storefront
 - Department navigation with categories, promotions, and seasonal tags
-- Product catalog with pricing, badges, and featured flags
+- Product catalog with search, price filters, sorting, product imagery, stock-aware add-to-cart, badges, and featured flags
 - Services highlights (pickup, delivery, installation)
-- Pro-customer landing surfaces and stats
+- Pro-customer landing surfaces, account auth, membership tiers, points, order lookup, and recent transactions
 - Graceful offline fallback data when the API is unreachable
 
 ### Admin Console
-- Overview dashboard with key merchandising metrics
-- Inventory view grouped by department and region status
-- Fulfillment board grouped by stage (pickup / delivery / install)
+- Overview dashboard with live metrics and a persistent audit feed
+- Inventory view backed by product stock, low-stock thresholds, and supplier sync
+- Fulfillment board grouped by live order stage for pickup and delivery
 - Campaign planner with seasonal tags and regional cluster charts
-- Catalog editor — create categories and products from the UI
+- Catalog editor for categories, products, images, pricing, and stock
+- Orders, payments, sales pipeline, invoice management, settings, customer profiles, RBAC, and admin-user management
 
 ### API
 - Axum-based REST API backed by SQLx and PostgreSQL
 - Health endpoint reporting target versions for Rust, React, and Postgres
-- Storefront and admin dashboard payload endpoints
+- Storefront, checkout, customer account, admin dashboard, catalog, order, payment, sales, invoice, settings, permissions, audit, and customer portal endpoints
+- Admin RBAC plus separate customer-account authentication
 - CORS-enabled and structured request tracing via `tower-http`
 
 ## Tech stack
 
 | Layer      | Technology                                      |
 | ---------- | ----------------------------------------------- |
-| Frontend   | React 19.2, TypeScript 5, Vite 7                |
+| Frontend   | React 19.2, TypeScript 5, Vite 8.x              |
 | Backend    | Rust 1.95, Axum 0.8, SQLx 0.8, Tokio            |
-| Database   | PostgreSQL 18.3                                 |
+| Database   | PostgreSQL 19beta1                              |
 | Infra      | Docker Compose for local Postgres               |
 
 ## Project structure
@@ -45,20 +47,23 @@ A full-stack home-improvement storefront and operations console inspired by [The
 online-shopping-platform/
 ├── backend/            # Rust Axum API
 │   ├── src/
-│   │   ├── main.rs     # HTTP server + routes
-│   │   ├── db.rs       # Database access
+│   │   ├── main.rs     # HTTP server bootstrap
+│   │   ├── routes.rs   # Route wiring
+│   │   ├── db/         # Database access by domain area
+│   │   ├── modules/    # Controllers, services, repositories, DTOs
 │   │   └── models.rs   # Domain types
 │   ├── migrations/     # SQL schema & seed data
 │   └── Cargo.toml
 ├── frontend/           # React SPA (storefront + admin)
 │   ├── src/
 │   │   ├── App.tsx
-│   │   ├── components/
+│   │   ├── modules/    # Feature modules and typed API clients
+│   │   ├── shared/     # Shared API helpers and components
 │   │   ├── data/       # Fallback data
 │   │   ├── lib/api.ts  # API client
 │   │   └── types.ts
 │   └── package.json
-├── docker-compose.yml  # PostgreSQL 18.3
+├── docker-compose.yml  # PostgreSQL 19beta1
 └── README.md
 ```
 
@@ -85,11 +90,12 @@ cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-### 3. Apply the initial migration
+### 3. Apply migrations
 
 ```bash
-psql postgres://project_depot:project_depot@localhost:5433/project_depot \
-  -f backend/migrations/0001_initial.sql
+for migration in backend/migrations/*.sql; do
+  psql postgres://project_depot:project_depot@localhost:5433/project_depot -f "$migration"
+done
 ```
 
 ### 4. Run the API
@@ -115,20 +121,23 @@ bun run dev
 | API            | http://localhost:4000                 |
 | Health check   | http://localhost:4000/api/health      |
 
-## API endpoints
+## API surface
 
-| Method | Path                         | Description                      |
-| ------ | ---------------------------- | -------------------------------- |
-| GET    | `/api/health`                | Service health and target stack  |
-| GET    | `/api/storefront`            | Storefront payload (catalog + promos) |
-| GET    | `/api/admin/dashboard`       | Admin dashboard payload          |
-| POST   | `/api/admin/categories`      | Create a category                |
-| POST   | `/api/admin/products`        | Create a product                 |
+| Area | Representative endpoints |
+| ---- | ------------------------ |
+| Health/storefront | `GET /api/health`, `GET /api/storefront`, `POST /api/checkout` |
+| Customer account | `POST /api/account/register`, `POST /api/account/login`, `GET /api/account/me`, `GET /api/customer-portal/me/membership` |
+| Admin auth/RBAC | `POST /api/admin/login`, `GET /api/admin/me`, `GET /api/admin/users`, `GET /api/admin/permissions` |
+| Operations | `GET /api/admin/dashboard`, `GET /api/admin/orders`, `GET /api/admin/payments`, `GET /api/admin/sales`, `GET /api/admin/invoices` |
+| Merchandising | `GET /api/admin/catalog`, `POST /api/admin/categories`, `POST /api/admin/products`, `PUT /api/admin/products/{product_id}/stock` |
+| Governance | `GET /api/admin/audit-events`, `GET /api/admin/settings` |
 
 ## Development notes
 
 - The frontend ships with a fallback data set so the storefront still renders when the API is offline.
 - PostgreSQL maps to `localhost:5433`; the container mounts `./postgres-data` for persistence.
+- Backend list endpoints use keyset pagination where data volume can grow.
+- Admin and customer bearer tokens are separate; customer tokens cannot satisfy admin routes.
 - This is a direct Home Depot-style clone for learning / portfolio purposes — not affiliated with The Home Depot.
 
 ## Contributing

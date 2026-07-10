@@ -18,6 +18,7 @@ import {
   AUDIT_EVENTS_PAGE_SIZE,
   deleteProduct as deleteProductRequest,
   deleteRole as deleteRoleRequest,
+  exportAutoCountInvoices as exportAutoCountInvoicesRequest,
   fetchAdminCatalog,
   fetchAdminDashboard,
   fetchAdminUsers,
@@ -102,6 +103,7 @@ import type {
   AdminMetric,
   AdminResetPasswordInput,
   AdminUser,
+  AutoCountExportInput,
   AuditEvent,
   CampaignOption,
   CartItem,
@@ -156,6 +158,17 @@ import type {
 
 const CART_STORAGE_KEY = "depot-cart";
 const ACCOUNT_EMAIL_STORAGE_KEY = "depot-account-email";
+
+function downloadBlob(blob: Blob, filename: string): void {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}
 
 type View = "landing" | "store" | "admin";
 
@@ -1727,6 +1740,19 @@ export default function App() {
     return invoice;
   };
 
+  const exportAutoCountInvoices = async (input: AutoCountExportInput): Promise<void> => {
+    const blob = await exportAutoCountInvoicesRequest(input);
+    downloadBlob(blob, `autocount-invoices-${new Date().toISOString().slice(0, 10)}.csv`);
+
+    const page = await fetchInvoices();
+    setInvoices(page.items);
+    setInvoicesNextCursor(page.next_cursor);
+    setActivityFeed((current) => [
+      { happened_at: "Now", detail: "AutoCount invoice export was downloaded." },
+      ...current
+    ]);
+  };
+
   const updateSystemSetting = async (
     key: string,
     input: UpdateSystemSettingInput
@@ -2155,7 +2181,7 @@ export default function App() {
   // Show landing page immediately without waiting for storefront data
   if (view === "landing") {
     return (
-      <div className="app-shell">
+      <div className="app-shell landing-shell">
         <LandingView onOpenShop={openShop} />
       </div>
     );
@@ -2253,6 +2279,7 @@ export default function App() {
           onDeletePayment={deletePayment}
           onDeleteProduct={deleteProduct}
           onDeleteRole={deleteRole}
+          onExportAutoCountInvoices={exportAutoCountInvoices}
           onLogout={() => void handleAdminLogout()}
           onLoadMoreCustomerProfiles={() => void loadMoreCustomerProfiles()}
           onLoadMoreInvoices={() => void loadMoreInvoices()}
@@ -3831,6 +3858,7 @@ type AdminViewProps = {
   onDeletePayment: (paymentId: number) => Promise<void>;
   onDeleteProduct: (productId: number) => Promise<void>;
   onDeleteRole: (roleId: number) => Promise<void>;
+  onExportAutoCountInvoices: (input: AutoCountExportInput) => Promise<void>;
   onLogout: () => void;
   onLoadMoreCustomerProfiles: () => void;
   onLoadMoreInvoices: () => void;
@@ -3925,6 +3953,7 @@ function AdminView({
   onDeletePayment,
   onDeleteProduct,
   onDeleteRole,
+  onExportAutoCountInvoices,
   onLogout,
   onLoadMoreCustomerProfiles,
   onLoadMoreInvoices,
@@ -4404,6 +4433,7 @@ function AdminView({
             invoices={invoices}
             isLoadingMore={isLoadingMoreInvoices}
             onCreateInvoiceFromOrder={onCreateInvoiceFromOrder}
+            onExportAutoCountInvoices={onExportAutoCountInvoices}
             onLoadMore={onLoadMoreInvoices}
             onRecordInvoicePayment={onRecordInvoicePayment}
             onUpdateInvoiceBilling={onUpdateInvoiceBilling}

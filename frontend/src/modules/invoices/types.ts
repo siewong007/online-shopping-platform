@@ -37,6 +37,7 @@ export type Invoice = {
   issued_at: string;
   due_at: string;
   voided_at: string | null;
+  exported_to_autocount_at: string | null;
   line_items: InvoiceLineItem[];
   payments: InvoicePayment[];
 };
@@ -56,4 +57,10 @@ export type RecordInvoicePaymentInput = {
   amount_cents: number;
   method: string;
   note: string;
+};
+
+export type AutoCountExportInput = {
+  issued_from?: string;
+  issued_to?: string;
+  include_exported?: boolean;
 };

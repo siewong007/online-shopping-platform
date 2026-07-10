@@ -524,6 +524,7 @@ export const fallbackInvoices: Invoice[] = [
     issued_at: "2026-06-29 09:00:00+00",
     due_at: "2026-07-29 09:00:00+00",
     voided_at: null,
+    exported_to_autocount_at: null,
     line_items: [
       {
         product_id: 1,
