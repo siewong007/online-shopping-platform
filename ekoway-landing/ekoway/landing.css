@@ -28,7 +28,10 @@ body {
   font-weight: 400;
   font-size: 17px;
   line-height: 1.55;
+  /* clip, not hidden: hidden makes body a scroll container, which
+     un-sticks .store-stage and breaks the pinned gallery scroll */
   overflow-x: hidden;
+  overflow-x: clip;
   -webkit-font-smoothing: antialiased;
 }
 ::selection { background: var(--cream); color: #000; }

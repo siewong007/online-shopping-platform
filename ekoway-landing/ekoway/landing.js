@@ -273,10 +273,18 @@
         requestAnimationFrame(loop);
       }
       window.addEventListener("resize", layout);
+      window.addEventListener("load", layout);
       // re-measure once lazy images arrive (their width sets scrollWidth)
       track.querySelectorAll("img").forEach((img) => {
         if (!img.complete) img.addEventListener("load", layout, { once: true });
       });
+      // one-shot measurements race the first paint (stage height / track width
+      // can still be settling), which collapses the pin and kills the animation
+      if (window.ResizeObserver) {
+        const ro = new ResizeObserver(layout);
+        ro.observe(stage);
+        ro.observe(track);
+      }
       layout();
       setTimeout(layout, 400);
       requestAnimationFrame(loop);

@@ -179,6 +179,7 @@ function viewFromPath(pathname: string): View {
 type AdminAuthState = "checking" | "unauthenticated" | "authenticated" | "demo";
 type AdminTab =
   | "overview"
+  | "team-log"
   | "inventory"
   | "fulfillment"
   | "campaigns"
@@ -196,6 +197,7 @@ type AdminAuthSnapshot = AdminAuthPayload | AdminMePayload;
 
 const adminTabs: { tab: AdminTab; label: string; pageSlug: string }[] = [
   { tab: "overview", label: "Overview", pageSlug: "admin-overview" },
+  { tab: "team-log", label: "Team Log", pageSlug: "admin-overview" },
   { tab: "inventory", label: "Inventory", pageSlug: "admin-inventory" },
   { tab: "fulfillment", label: "Fulfillment", pageSlug: "admin-fulfillment" },
   { tab: "campaigns", label: "Campaigns", pageSlug: "admin-campaigns" },
@@ -4349,21 +4351,27 @@ function AdminView({
           </>
         ) : null}
 
-        {adminTab !== "overview" ? <section className="dashboard-panel activity-feed">
+        {adminTab === "team-log" ? <section className="dashboard-panel activity-feed" aria-labelledby="team-log-title">
           <div className="panel-header">
             <div>
               <p className="eyebrow">Recent activity</p>
-              <h3>Team log</h3>
+              <h3 id="team-log-title">Team log</h3>
             </div>
-            <span className="status-pill">Updated</span>
+            <span className="status-pill">
+              {activityFeed.length} {activityFeed.length === 1 ? "event" : "events"}
+            </span>
           </div>
           <div className="activity-list">
-            {activityFeed.map((item, index) => (
-              <div key={`${item.happened_at}-${item.detail}-${index}`}>
-                <strong>{item.happened_at}</strong>
-                <span>{item.detail}</span>
-              </div>
-            ))}
+            {activityFeed.length > 0 ? (
+              activityFeed.map((item, index) => (
+                <div key={`${item.happened_at}-${item.detail}-${index}`}>
+                  <strong>{item.happened_at}</strong>
+                  <span>{item.detail}</span>
+                </div>
+              ))
+            ) : (
+              <p>No team activity has been recorded yet.</p>
+            )}
           </div>
           {hasMoreActivity ? (
             <button

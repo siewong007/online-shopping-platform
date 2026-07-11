@@ -397,7 +397,7 @@ prod deploy.
 
 **Design (`.github/workflows/ci.yml`).**
 - Trigger: `pull_request` + `push` to `main`.
-- **Backend job**: postgres:18 service container (user/pass/db `project_depot`) — the stock
+- **Backend job**: postgres:19beta1 service container (user/pass/db `project_depot`) — the stock
   image's superuser satisfies the `CREATEDB` right that `#[sqlx::test]`'s per-test databases
   need. Steps: `cargo fmt --check` → `cargo clippy --all-targets -- -D warnings` →
   apply `backend/migrations/*.sql` in order via psql (mirrors the documented local flow; the
