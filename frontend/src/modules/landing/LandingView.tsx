@@ -368,14 +368,22 @@ export function LandingView({ onOpenShop }: LandingViewProps) {
         rafId = requestAnimationFrame(loop);
       };
       window.addEventListener("resize", layout);
+      window.addEventListener("load", layout);
       track.querySelectorAll("img").forEach((img) => {
         if (!img.complete) img.addEventListener("load", layout, { once: true });
       });
+      // one-shot measurements race the first paint (stage height / track width
+      // can still be settling), which collapses the pin and kills the animation
+      const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(layout) : null;
+      ro?.observe(stage);
+      ro?.observe(track);
       layout();
       const relayout = window.setTimeout(layout, 400);
       rafId = requestAnimationFrame(loop);
       return () => {
         window.removeEventListener("resize", layout);
+        window.removeEventListener("load", layout);
+        ro?.disconnect();
         window.clearTimeout(relayout);
         cancelAnimationFrame(rafId);
         pin.style.height = "";
