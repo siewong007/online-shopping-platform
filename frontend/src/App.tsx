@@ -67,6 +67,7 @@ import type { TranslationKey } from "./i18n/translations";
 import { TeamPanel } from "./modules/admin_users/components/TeamPanel";
 import { AdminLoginScreen } from "./modules/auth/components/AdminLoginScreen";
 import { CatalogPanel } from "./modules/catalog/components/CatalogPanel";
+import { OperationsConsole } from "./modules/dashboard/components/OperationsConsole";
 import { LandingView } from "./modules/landing/LandingView";
 import { InvoicesPanel } from "./modules/invoices/components/InvoicesPanel";
 import { OrderControlPanel } from "./modules/orders/components/OrderControlPanel";
@@ -86,13 +87,13 @@ import {
   getCustomerAuthToken,
   setAuthToken,
   setCustomerAuthToken,
-  setOnApiUnavailable,
   setOnUnauthorized
 } from "./shared/api/http";
 import type { PagedResponse } from "./shared/api/pagination";
 import { ManagementTable } from "./shared/components/ManagementTable";
 import { RecordForm, type RecordFormField, RecordModal } from "./shared/components/RecordModal";
 import { currencyFromCents, formatOrderDate, formatRelativeTime } from "./shared/formatters";
+import { normalizeError, useNotifications } from "./shared/notifications";
 import type {
   ActivityItem,
   AdminAuthPayload,
@@ -100,7 +101,6 @@ import type {
   AdminDashboardPayload,
   AdminLoginInput,
   AdminMePayload,
-  AdminMetric,
   AdminResetPasswordInput,
   AdminUser,
   AutoCountExportInput,
@@ -126,7 +126,6 @@ import type {
   FulfillmentMethod,
   FulfillmentStatus,
   Invoice,
-  LiveDashboardMetrics,
   MembershipBenefitsPayload,
   MembershipPayload,
   Order,
@@ -259,51 +258,6 @@ const quickServiceCalls: { key: TranslationKey; detail: TranslationKey }[] = [
   { key: "shop.svc.2.k", detail: "shop.svc.2.v" },
   { key: "shop.svc.3.k", detail: "shop.svc.3.v" }
 ];
-
-const storeClusterBars = [
-  { label: "Northeast", width: "82%" },
-  { label: "South", width: "91%" },
-  { label: "Midwest", width: "76%" },
-  { label: "West", width: "88%" }
-];
-
-const highValueAccounts = [
-  { name: "Falcon Builders", detail: "$28.4k in deck and siding orders this week" },
-  { name: "Northline Renovation", detail: "Kitchen appliance quote waiting on approval" },
-  { name: "Summit Install Group", detail: "Bath vanity install calendar nearly full" }
-];
-
-// Derives the Overview KPI cards from live aggregates. Only cards backed by a
-// real number are emitted — low-stock stays out until inventory (§3) exists.
-function buildLiveMetricCards(live: LiveDashboardMetrics): AdminMetric[] {
-  const revenueDelta =
-    live.revenue_yesterday_cents > 0
-      ? ((live.revenue_today_cents - live.revenue_yesterday_cents) /
-          live.revenue_yesterday_cents) *
-        100
-      : null;
-
-  return [
-    {
-      label: "Revenue today",
-      value: currencyFromCents(live.revenue_today_cents),
-      detail:
-        revenueDelta === null
-          ? "No sales recorded yesterday"
-          : `${revenueDelta >= 0 ? "+" : ""}${revenueDelta.toFixed(1)}% vs yesterday`
-    },
-    {
-      label: "Orders awaiting fulfillment",
-      value: live.orders_awaiting_fulfillment.toLocaleString(),
-      detail: "In the pick, pack and ship pipeline"
-    },
-    {
-      label: "Unpaid invoices",
-      value: live.unpaid_invoice_count.toLocaleString(),
-      detail: `${currencyFromCents(live.unpaid_invoice_amount_cents)} outstanding`
-    }
-  ];
-}
 
 function readStoredAccountEmail(): string {
   try {
@@ -533,11 +487,11 @@ function CustomerPortalPanel({
   orders,
   profiles
 }: CustomerPortalPanelProps) {
+  const { notify, notifyError } = useNotifications();
   const [createForm, setCreateForm] = useState<CustomerPortalFormState>(emptyCustomerPortalForm);
   const [editForm, setEditForm] = useState<CustomerPortalFormState | null>(null);
   const [editingProfileId, setEditingProfileId] = useState<number | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [feedback, setFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [savingProfileId, setSavingProfileId] = useState<number | null>(null);
   const [deletingProfileId, setDeletingProfileId] = useState<number | null>(null);
@@ -551,24 +505,20 @@ function CustomerPortalPanel({
 
   const handleCreate = async () => {
     if (!canCreate) {
-      setFeedback({ kind: "error", message: "The active role cannot create customer profiles." });
+      notify({ severity: "error", title: "Customer not created", message: "The active role cannot create customer profiles.", scope: "customer-profiles", dedupeKey: "customer-profiles:create:permission" });
       return;
     }
 
     setIsCreating(true);
-    setFeedback(null);
 
     try {
       const profile = await onCreateCustomerPortalProfile(customerPortalInputFromForm(createForm));
 
       setCreateForm(emptyCustomerPortalForm);
       setIsCreateOpen(false);
-      setFeedback({ kind: "success", message: `${profile.customer_name} was added.` });
+      notify({ severity: "success", title: "Customer created", message: `${profile.customer_name} was created successfully.`, scope: "customer-profiles", dedupeKey: `customer-profiles:${profile.id}:create:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to create customer profile."
-      });
+      notifyError(error, { operation: "create customer profile", scope: "customer-profiles", dedupeKey: "customer-profiles:create:error" });
     } finally {
       setIsCreating(false);
     }
@@ -577,7 +527,6 @@ function CustomerPortalPanel({
   const startEditing = (profile: CustomerPortalProfile) => {
     setEditingProfileId(profile.id);
     setEditForm(customerPortalFormFromProfile(profile));
-    setFeedback(null);
   };
 
   const handleUpdate = async () => {
@@ -586,12 +535,11 @@ function CustomerPortalPanel({
     }
 
     if (!canUpdate) {
-      setFeedback({ kind: "error", message: "The active role cannot update customer profiles." });
+      notify({ severity: "error", title: "Customer not updated", message: "The active role cannot update customer profiles.", scope: "customer-profiles", dedupeKey: "customer-profiles:update:permission" });
       return;
     }
 
     setSavingProfileId(editingProfileId);
-    setFeedback(null);
 
     try {
       const profile = await onUpdateCustomerPortalProfile(
@@ -601,12 +549,9 @@ function CustomerPortalPanel({
 
       setEditingProfileId(null);
       setEditForm(null);
-      setFeedback({ kind: "success", message: `${profile.customer_name} was updated.` });
+      notify({ severity: "success", title: "Customer updated", message: `${profile.customer_name} was updated successfully.`, scope: "customer-profiles", dedupeKey: `customer-profiles:${profile.id}:update:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to update customer profile."
-      });
+      notifyError(error, { operation: "update customer profile", scope: "customer-profiles", dedupeKey: `customer-profiles:${editingProfileId}:update:error` });
     } finally {
       setSavingProfileId(null);
     }
@@ -614,7 +559,7 @@ function CustomerPortalPanel({
 
   const handleDelete = async (profile: CustomerPortalProfile) => {
     if (!canDelete) {
-      setFeedback({ kind: "error", message: "The active role cannot delete customer profiles." });
+      notify({ severity: "error", title: "Customer not deleted", message: "The active role cannot delete customer profiles.", scope: "customer-profiles", dedupeKey: "customer-profiles:delete:permission" });
       return;
     }
 
@@ -623,16 +568,12 @@ function CustomerPortalPanel({
     }
 
     setDeletingProfileId(profile.id);
-    setFeedback(null);
 
     try {
       await onDeleteCustomerPortalProfile(profile.id);
-      setFeedback({ kind: "success", message: `${profile.customer_name} was deleted.` });
+      notify({ severity: "success", title: "Customer deleted", message: `${profile.customer_name} was deleted successfully.`, scope: "customer-profiles", dedupeKey: `customer-profiles:${profile.id}:delete:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to delete customer profile."
-      });
+      notifyError(error, { operation: "delete customer profile", scope: "customer-profiles", dedupeKey: `customer-profiles:${profile.id}:delete:error` });
     } finally {
       setDeletingProfileId(null);
     }
@@ -735,7 +676,6 @@ function CustomerPortalPanel({
   const closeEdit = () => {
     setEditingProfileId(null);
     setEditForm(null);
-    setFeedback(null);
   };
 
   return (
@@ -768,10 +708,6 @@ function CustomerPortalPanel({
         </article>
       </div>
 
-      {feedback && !isCreateOpen && !isEditOpen ? (
-        <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p>
-      ) : null}
-
       <article className="dashboard-panel">
         <div className="panel-header">
           <div>
@@ -785,7 +721,6 @@ function CustomerPortalPanel({
               disabled={!canCreate}
               onClick={() => {
                 setCreateForm(emptyCustomerPortalForm);
-                setFeedback(null);
                 setIsCreateOpen(true);
               }}
               type="button"
@@ -813,7 +748,6 @@ function CustomerPortalPanel({
         isOpen={isCreateOpen}
         onClose={() => {
           setIsCreateOpen(false);
-          setFeedback(null);
         }}
         statusLabel={canCreate ? "Writable" : "Read only"}
         statusTone={canCreate ? "live" : undefined}
@@ -821,12 +755,10 @@ function CustomerPortalPanel({
       >
         <RecordForm
           disabled={!canCreate}
-          feedback={feedback ? <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p> : null}
           fields={customerPortalFields}
           isSubmitting={isCreating}
           onCancel={() => {
             setIsCreateOpen(false);
-            setFeedback(null);
           }}
           onChange={setCreateForm}
           onSubmit={() => void handleCreate()}
@@ -846,7 +778,6 @@ function CustomerPortalPanel({
         {editForm && editingProfile ? (
           <RecordForm
             disabled={!canUpdate}
-            feedback={feedback ? <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p> : null}
             fields={customerPortalFields}
             isSubmitting={savingProfileId === editingProfile.id}
             onCancel={closeEdit}
@@ -1116,7 +1047,7 @@ export default function App() {
         ? "Ekoway Hardware — 永光五金 · Sibu, Sarawak"
         : view === "store"
           ? "Ekoway Hardware — Shop Online"
-          : "Ekoway Hardware — Ops Console";
+          : "Ekoway Hardware — OPT Console";
   }, [view]);
 
   useEffect(() => {
@@ -1449,11 +1380,9 @@ export default function App() {
     setOnUnauthorized(() => {
       resetAdminSession();
     });
-    setOnApiUnavailable(() => null);
 
     return () => {
       setOnUnauthorized(null);
-      setOnApiUnavailable(null);
     };
   }, []);
 
@@ -2251,7 +2180,6 @@ export default function App() {
           discount={discount}
           fulfillmentByStage={fulfillmentByStage}
           hasMoreActivity={hasMoreActivity}
-          highValueAccounts={highValueAccounts}
           isChangePasswordOpen={isChangePasswordOpen}
           isLoadingMoreActivity={isLoadingMoreActivity}
           isLoadingMoreCustomerProfiles={isLoadingMoreCustomerProfiles}
@@ -2319,7 +2247,6 @@ export default function App() {
           permissions={permissions}
           products={adminCatalog.products}
           selectedCampaign={selectedCampaign}
-          storeClusterBars={storeClusterBars}
           onUpdateCustomerPortalProfile={updateCustomerPortalProfile}
         />
       )}
@@ -2925,7 +2852,7 @@ function AccountDrawer({
       setAuthStatus("idle");
     } catch (error) {
       setAuthStatus("error");
-      setAuthError(error instanceof Error ? error.message : "Unable to sign in.");
+      setAuthError(normalizeError(error, { operation: "customer sign in", scope: "customer-auth" }).userMessage);
     }
   };
 
@@ -2942,7 +2869,7 @@ function AccountDrawer({
       setAuthStatus("idle");
     } catch (error) {
       setAuthStatus("error");
-      setAuthError(error instanceof Error ? error.message : "Unable to register.");
+      setAuthError(normalizeError(error, { operation: "customer registration", scope: "customer-auth" }).userMessage);
     }
   };
 
@@ -2984,7 +2911,7 @@ function AccountDrawer({
       setLookupStatus("success");
     } catch (error) {
       setLookupStatus("error");
-      setLookupError(error instanceof Error ? error.message : "Unable to look up orders.");
+      setLookupError(normalizeError(error, { operation: "look up customer orders", scope: "customer-lookup" }).userMessage);
     }
   };
 
@@ -3645,7 +3572,7 @@ function CartDrawer({
       setConfirmedOrder(order);
       onCompleted();
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "Checkout failed. Please try again.");
+      setFeedback(normalizeError(error, { operation: "checkout", scope: "checkout" }).userMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -3825,7 +3752,6 @@ type AdminViewProps = {
   hasMoreInvoices: boolean;
   hasMoreOrders: boolean;
   hasMoreSales: boolean;
-  highValueAccounts: { name: string; detail: string }[];
   isChangePasswordOpen: boolean;
   isLoadingMoreActivity: boolean;
   isLoadingMoreCustomerProfiles: boolean;
@@ -3905,7 +3831,6 @@ type AdminViewProps = {
   permissions: PermissionsPayload | null;
   products: Product[];
   selectedCampaign: CampaignOption | null;
-  storeClusterBars: { label: string; width: string }[];
 };
 
 function AdminView({
@@ -3925,7 +3850,6 @@ function AdminView({
   hasMoreInvoices,
   hasMoreOrders,
   hasMoreSales,
-  highValueAccounts,
   isChangePasswordOpen,
   isLoadingMoreActivity,
   isLoadingMoreCustomerProfiles,
@@ -3987,18 +3911,14 @@ function AdminView({
   systemSettings,
   permissions,
   products,
-  selectedCampaign,
-  storeClusterBars
+  selectedCampaign
 }: AdminViewProps) {
+  const { notify, notifyError } = useNotifications();
   const [permissionEditorRoleId, setPermissionEditorRoleId] = useState<number | null>(activeRoleId);
   const [changePasswordForm, setChangePasswordForm] = useState<ChangeOwnPasswordInput>({
     current_password: "",
     new_password: ""
   });
-  const [changePasswordFeedback, setChangePasswordFeedback] = useState<{
-    kind: "success" | "error";
-    message: string;
-  } | null>(null);
   const [isSavingChangePassword, setIsSavingChangePassword] = useState(false);
   const activeRole = currentAdmin?.role ?? permissions?.roles.find((role) => role.id === activeRoleId) ?? null;
   const canCreateCatalog = canAccess(permissions, activeRoleId, "admin-catalog", "create");
@@ -4024,17 +3944,14 @@ function AdminView({
 
   const handleChangeOwnPassword = async () => {
     setIsSavingChangePassword(true);
-    setChangePasswordFeedback(null);
 
     try {
       await onChangeOwnPassword(changePasswordForm);
       setChangePasswordForm({ current_password: "", new_password: "" });
       onCloseChangePassword();
+      notify({ severity: "success", title: "Password changed", message: "Your password was changed successfully.", scope: "admin-account", dedupeKey: "admin-account:password:success" });
     } catch (error) {
-      setChangePasswordFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to change password."
-      });
+      notifyError(error, { operation: "change own password", scope: "admin-account", dedupeKey: "admin-account:password:error" });
     } finally {
       setIsSavingChangePassword(false);
     }
@@ -4118,7 +4035,7 @@ function AdminView({
           <EkowayMark compact />
           <div>
             <p className="eyebrow">Internal Retail Tools</p>
-            <h1>Ops Console</h1>
+            <h1>OPT Console</h1>
           </div>
         </div>
 
@@ -4165,74 +4082,30 @@ function AdminView({
       </aside>
 
       <section className="admin-main">
-        <header className="admin-topbar">
-          <div>
-            <p className="eyebrow">Store Operations</p>
-            <h2>Merchandising, fulfillment and promo controls</h2>
-          </div>
-          <div className="admin-actions">
-            <button className="solid-button" disabled={!canRunOperationsSync} onClick={onRunSync}>
-              Run Supplier Sync
-            </button>
-          </div>
-        </header>
+        {adminTab !== "overview" ? <header className="admin-topbar">
+          <div><p className="eyebrow">Store operations</p><h2>{adminTabs.find((item) => item.tab === adminTab)?.label}</h2></div>
+          <div className="admin-actions"><button className="solid-button" disabled={!canRunOperationsSync} onClick={onRunSync}>Refresh data</button></div>
+        </header> : null}
 
-        {demoMode ? (
+        {demoMode && adminTab !== "overview" ? (
           <p className="admin-demo-banner">
             API unreachable. Showing fallback admin data with write controls disabled.
           </p>
         ) : null}
 
         {adminTab === "overview" ? (
-          <section className="admin-section active">
-            <div className="metric-grid">
-              {buildLiveMetricCards(dashboard.live_metrics).map((metric) => (
-                <article className="metric-card" key={metric.label}>
-                  <p>{metric.label}</p>
-                  <strong>{metric.value}</strong>
-                  <span>{metric.detail}</span>
-                </article>
-              ))}
-            </div>
-
-            <div className="admin-panels two-up">
-              <article className="dashboard-panel">
-                <div className="panel-header">
-                  <div>
-                    <p className="eyebrow">Regional performance</p>
-                    <h3>Store cluster momentum</h3>
-                  </div>
-                  <span className="status-pill live">Live</span>
-                </div>
-                <div className="bar-chart">
-                  {storeClusterBars.map((bar) => (
-                    <div key={bar.label}>
-                      <span>{bar.label}</span>
-                      <strong style={{ width: bar.width }}>{bar.width}</strong>
-                    </div>
-                  ))}
-                </div>
-              </article>
-
-              <article className="dashboard-panel">
-                <div className="panel-header">
-                  <div>
-                    <p className="eyebrow">Trade account radar</p>
-                    <h3>High-value customers</h3>
-                  </div>
-                  <span className="status-pill">Tracked</span>
-                </div>
-                <div className="customer-list">
-                  {highValueAccounts.map((account) => (
-                    <div key={account.name}>
-                      <strong>{account.name}</strong>
-                      <span>{account.detail}</span>
-                    </div>
-                  ))}
-                </div>
-              </article>
-            </div>
-          </section>
+          <OperationsConsole
+            activity={activityFeed}
+            canRefresh={canRunOperationsSync}
+            dashboard={dashboard}
+            demoMode={demoMode}
+            onOpenFulfillment={() => onChangeTab("fulfillment")}
+            onOpenOrders={() => onChangeTab("orders")}
+            onOpenPayments={() => onChangeTab("payments")}
+            onRefresh={onRunSync}
+            orders={orders}
+            payments={payments}
+          />
         ) : null}
 
         {adminTab === "inventory" ? (
@@ -4476,7 +4349,7 @@ function AdminView({
           </>
         ) : null}
 
-        <section className="dashboard-panel activity-feed">
+        {adminTab !== "overview" ? <section className="dashboard-panel activity-feed">
           <div className="panel-header">
             <div>
               <p className="eyebrow">Recent activity</p>
@@ -4502,7 +4375,7 @@ function AdminView({
               {isLoadingMoreActivity ? "Loading..." : "Load more"}
             </button>
           ) : null}
-        </section>
+        </section> : null}
       </section>
 
       <RecordModal
@@ -4510,23 +4383,14 @@ function AdminView({
         isOpen={isChangePasswordOpen}
         onClose={() => {
           onCloseChangePassword();
-          setChangePasswordFeedback(null);
         }}
         title="Change Password"
       >
         <RecordForm
-          feedback={
-            changePasswordFeedback ? (
-              <p className={`catalog-feedback ${changePasswordFeedback.kind}`}>
-                {changePasswordFeedback.message}
-              </p>
-            ) : null
-          }
           fields={changePasswordFields}
           isSubmitting={isSavingChangePassword}
           onCancel={() => {
             onCloseChangePassword();
-            setChangePasswordFeedback(null);
           }}
           onChange={setChangePasswordForm}
           onSubmit={() => void handleChangeOwnPassword()}

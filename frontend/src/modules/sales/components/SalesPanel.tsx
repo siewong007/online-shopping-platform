@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { ManagementTable } from "../../../shared/components/ManagementTable";
 import { currencyFromCents, formatOrderDate } from "../../../shared/formatters";
+import { useNotifications } from "../../../shared/notifications";
 import type {
   SalesRecord,
   SalesStatus,
@@ -67,9 +68,9 @@ export function SalesPanel({
   sales,
   summary
 }: SalesPanelProps) {
+  const { notify, notifyError } = useNotifications();
   const [detailsDrafts, setDetailsDrafts] = useState<Record<number, DetailsDraft>>({});
   const [statusDrafts, setStatusDrafts] = useState<Record<number, { status: string; note: string }>>({});
-  const [feedback, setFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
   const [savingOrderId, setSavingOrderId] = useState<number | null>(null);
 
   const draftFor = (sale: SalesRecord): DetailsDraft => detailsDrafts[sale.order_id] ?? detailsDraftFor(sale);
@@ -81,7 +82,7 @@ export function SalesPanel({
 
   const saveDetails = async (sale: SalesRecord) => {
     if (!canUpdate) {
-      setFeedback({ kind: "error", message: "The active role cannot update sales details." });
+      notify({ severity: "error", title: "Sale not updated", message: "The active role cannot update sales details.", scope: "sales", dedupeKey: "sales:details:permission" });
       return;
     }
 
@@ -89,11 +90,10 @@ export function SalesPanel({
     const discountCents = Math.round(Number(draft.discount) * 100);
 
     if (!Number.isFinite(discountCents) || discountCents < 0) {
-      setFeedback({ kind: "error", message: "Discount must be zero or greater." });
+      notify({ severity: "warning", title: "Check the discount", message: "Discount must be zero or greater.", scope: "sales", dedupeKey: `sales:${sale.order_id}:discount:validation` });
       return;
     }
 
-    setFeedback(null);
     setSavingOrderId(sale.order_id);
 
     try {
@@ -103,12 +103,9 @@ export function SalesPanel({
         discount_cents: discountCents
       });
       setDetailsDrafts((current) => ({ ...current, [updated.order_id]: detailsDraftFor(updated) }));
-      setFeedback({ kind: "success", message: `Sale #${updated.order_id} details were updated.` });
+      notify({ severity: "success", title: "Sale details updated", message: `Sale #${updated.order_id} details were updated successfully.`, scope: "sales", dedupeKey: `sales:${updated.order_id}:details:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to update sale details."
-      });
+      notifyError(error, { operation: "update sale details", scope: "sales", dedupeKey: `sales:${sale.order_id}:details:error` });
     } finally {
       setSavingOrderId(null);
     }
@@ -116,13 +113,12 @@ export function SalesPanel({
 
   const updateStatus = async (sale: SalesRecord) => {
     if (!canUpdate) {
-      setFeedback({ kind: "error", message: "The active role cannot change sales status." });
+      notify({ severity: "error", title: "Status not changed", message: "The active role cannot change sales status.", scope: "sales", dedupeKey: "sales:status:permission" });
       return;
     }
 
     const draft = statusDraftFor(sale);
 
-    setFeedback(null);
     setSavingOrderId(sale.order_id);
 
     try {
@@ -135,15 +131,9 @@ export function SalesPanel({
         delete next[updated.order_id];
         return next;
       });
-      setFeedback({
-        kind: "success",
-        message: `Sale #${updated.order_id} moved to ${updated.status}.`
-      });
+      notify({ severity: "success", title: "Sales status updated", message: `Sale #${updated.order_id} was moved to ${updated.status} successfully.`, scope: "sales", dedupeKey: `sales:${updated.order_id}:status:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to update sale status."
-      });
+      notifyError(error, { operation: "update sale status", scope: "sales", dedupeKey: `sales:${sale.order_id}:status:error` });
     } finally {
       setSavingOrderId(null);
     }
@@ -400,8 +390,6 @@ export function SalesPanel({
           ))}
         </div>
       ) : null}
-
-      {feedback ? <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p> : null}
 
       {sales.length === 0 ? (
         <p>No sales have been recorded yet.</p>

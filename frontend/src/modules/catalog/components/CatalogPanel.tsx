@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ManagementTable } from "../../../shared/components/ManagementTable";
 import { RecordForm, type RecordFormField, RecordModal } from "../../../shared/components/RecordModal";
 import { currencyFromCents } from "../../../shared/formatters";
+import { useNotifications } from "../../../shared/notifications";
 import type {
   Category,
   CreateCategoryInput,
@@ -265,6 +266,7 @@ export function CatalogPanel({
   onUpdateProduct,
   products
 }: CatalogPanelProps) {
+  const { notify, notifyError } = useNotifications();
   const [categoryForm, setCategoryForm] = useState<CreateCategoryInput>({
     slug: "",
     name: "",
@@ -280,7 +282,6 @@ export function CatalogPanel({
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isCategoryEditOpen, setIsCategoryEditOpen] = useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
-  const [feedback, setFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
   const [isSavingCategory, setIsSavingCategory] = useState(false);
   const [isSavingProduct, setIsSavingProduct] = useState(false);
   const [deletingCategorySlug, setDeletingCategorySlug] = useState<string | null>(null);
@@ -313,51 +314,44 @@ export function CatalogPanel({
 
   const openCreateCategory = () => {
     setCategoryForm({ slug: "", name: "", teaser: "" });
-    setFeedback(null);
     setIsCategoryModalOpen(true);
   };
 
   const openEditCategory = (category: Category) => {
     setEditingCategorySlug(category.slug);
     setCategoryEditForm({ name: category.name, teaser: category.teaser });
-    setFeedback(null);
     setIsCategoryEditOpen(true);
   };
 
   const closeCategoryEdit = () => {
     setIsCategoryEditOpen(false);
     setEditingCategorySlug(null);
-    setFeedback(null);
   };
 
   const openCreateProduct = () => {
     setEditingProductId(null);
     setProductForm(emptyProductForm(categories));
-    setFeedback(null);
     setIsProductModalOpen(true);
   };
 
   const openEditProduct = (product: Product) => {
     setEditingProductId(product.id);
     setProductForm(productFormFromProduct(product));
-    setFeedback(null);
     setIsProductModalOpen(true);
   };
 
   const closeProductModal = () => {
     setIsProductModalOpen(false);
     setEditingProductId(null);
-    setFeedback(null);
   };
 
   const handleCreateCategory = async () => {
     if (!canCreate) {
-      setFeedback({ kind: "error", message: "The active role cannot create catalog records." });
+      notify({ severity: "error", title: "Category not created", message: "The active role cannot create catalog records.", scope: "catalog", dedupeKey: "catalog:category:create:permission" });
       return;
     }
 
     setIsSavingCategory(true);
-    setFeedback(null);
 
     try {
       const category = await onCreateCategory({
@@ -369,12 +363,9 @@ export function CatalogPanel({
       setCategoryForm({ slug: "", name: "", teaser: "" });
       setProductForm((current) => ({ ...current, category_slug: category.slug }));
       setIsCategoryModalOpen(false);
-      setFeedback({ kind: "success", message: `${category.name} is ready for products.` });
+      notify({ severity: "success", title: "Category created", message: `${category.name} was created successfully and is ready for products.`, scope: "catalog", dedupeKey: `catalog:category:${category.slug}:create:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to create category."
-      });
+      notifyError(error, { operation: "create category", scope: "catalog", dedupeKey: "catalog:category:create:error" });
     } finally {
       setIsSavingCategory(false);
     }
@@ -382,12 +373,11 @@ export function CatalogPanel({
 
   const handleUpdateCategory = async () => {
     if (!editingCategorySlug || !canUpdate) {
-      setFeedback({ kind: "error", message: "The active role cannot update catalog records." });
+      notify({ severity: "error", title: "Category not updated", message: "The active role cannot update catalog records.", scope: "catalog", dedupeKey: "catalog:category:update:permission" });
       return;
     }
 
     setIsSavingCategory(true);
-    setFeedback(null);
 
     try {
       const category = await onUpdateCategory(editingCategorySlug, {
@@ -395,12 +385,9 @@ export function CatalogPanel({
         teaser: categoryEditForm.teaser.trim()
       });
       closeCategoryEdit();
-      setFeedback({ kind: "success", message: `${category.name} was updated.` });
+      notify({ severity: "success", title: "Category updated", message: `${category.name} was updated successfully.`, scope: "catalog", dedupeKey: `catalog:category:${category.slug}:update:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to update category."
-      });
+      notifyError(error, { operation: "update category", scope: "catalog", dedupeKey: `catalog:category:${editingCategorySlug}:update:error` });
     } finally {
       setIsSavingCategory(false);
     }
@@ -408,7 +395,7 @@ export function CatalogPanel({
 
   const handleDeleteCategory = async (category: Category) => {
     if (!canDelete) {
-      setFeedback({ kind: "error", message: "The active role cannot delete catalog records." });
+      notify({ severity: "error", title: "Category not deleted", message: "The active role cannot delete catalog records.", scope: "catalog", dedupeKey: "catalog:category:delete:permission" });
       return;
     }
 
@@ -418,16 +405,12 @@ export function CatalogPanel({
     }
 
     setDeletingCategorySlug(category.slug);
-    setFeedback(null);
 
     try {
       await onDeleteCategory(category.slug);
-      setFeedback({ kind: "success", message: `${category.name} was deleted.` });
+      notify({ severity: "success", title: "Category deleted", message: `${category.name} was deleted successfully.`, scope: "catalog", dedupeKey: `catalog:category:${category.slug}:delete:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to delete category."
-      });
+      notifyError(error, { operation: "delete category", scope: "catalog", dedupeKey: `catalog:category:${category.slug}:delete:error` });
     } finally {
       setDeletingCategorySlug(null);
     }
@@ -437,12 +420,12 @@ export function CatalogPanel({
     const canSave = editingProductId === null ? canCreate : canUpdate;
 
     if (!canSave) {
-      setFeedback({ kind: "error", message: "The active role cannot save catalog records." });
+      notify({ severity: "error", title: "Product not saved", message: "The active role cannot save catalog records.", scope: "catalog", dedupeKey: "catalog:product:save:permission" });
       return;
     }
 
     setIsSavingProduct(true);
-    setFeedback(null);
+    const wasCreating = editingProductId === null;
 
     try {
       const product =
@@ -452,16 +435,9 @@ export function CatalogPanel({
 
       setProductForm(emptyProductForm(categories));
       closeProductModal();
-      setFeedback({
-        kind: "success",
-        message:
-          editingProductId === null ? `${product.name} was created.` : `${product.name} was updated.`
-      });
+      notify({ severity: "success", title: wasCreating ? "Product created" : "Product updated", message: `${product.name} was ${wasCreating ? "created" : "updated"} successfully.`, scope: "catalog", dedupeKey: `catalog:product:${product.id}:${wasCreating ? "create" : "update"}:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to save product."
-      });
+      notifyError(error, { operation: wasCreating ? "create product" : "update product", scope: "catalog", dedupeKey: `catalog:product:${editingProductId ?? "new"}:save:error` });
     } finally {
       setIsSavingProduct(false);
     }
@@ -469,7 +445,7 @@ export function CatalogPanel({
 
   const handleDeleteProduct = async (product: Product) => {
     if (!canDelete) {
-      setFeedback({ kind: "error", message: "The active role cannot delete catalog records." });
+      notify({ severity: "error", title: "Product not deleted", message: "The active role cannot delete catalog records.", scope: "catalog", dedupeKey: "catalog:product:delete:permission" });
       return;
     }
 
@@ -479,19 +455,15 @@ export function CatalogPanel({
     }
 
     setDeletingProductId(product.id);
-    setFeedback(null);
 
     try {
       await onDeleteProduct(product.id);
       if (editingProductId === product.id) {
         closeProductModal();
       }
-      setFeedback({ kind: "success", message: `${product.name} was deleted.` });
+      notify({ severity: "success", title: "Product deleted", message: `${product.name} was deleted successfully.`, scope: "catalog", dedupeKey: `catalog:product:${product.id}:delete:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to delete product."
-      });
+      notifyError(error, { operation: "delete product", scope: "catalog", dedupeKey: `catalog:product:${product.id}:delete:error` });
     } finally {
       setDeletingProductId(null);
     }
@@ -651,10 +623,6 @@ export function CatalogPanel({
         </button>
       </div>
 
-      {feedback && !isCategoryModalOpen && !isCategoryEditOpen && !isProductModalOpen ? (
-        <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p>
-      ) : null}
-
       <div className="admin-panels two-up">
         <article className="dashboard-panel">
           <div className="panel-header">
@@ -696,7 +664,6 @@ export function CatalogPanel({
         isOpen={isCategoryModalOpen}
         onClose={() => {
           setIsCategoryModalOpen(false);
-          setFeedback(null);
         }}
         statusLabel={canCreate ? "Writable" : "Read only"}
         statusTone={canCreate ? "live" : undefined}
@@ -704,14 +671,10 @@ export function CatalogPanel({
       >
         <RecordForm
           disabled={!canCreate}
-          feedback={
-            feedback ? <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p> : null
-          }
           fields={categoryFields}
           isSubmitting={isSavingCategory}
           onCancel={() => {
             setIsCategoryModalOpen(false);
-            setFeedback(null);
           }}
           onChange={setCategoryForm}
           onSubmit={() => void handleCreateCategory()}
@@ -730,9 +693,6 @@ export function CatalogPanel({
       >
         <RecordForm
           disabled={!canUpdate}
-          feedback={
-            feedback ? <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p> : null
-          }
           fields={updateCategoryFields}
           isSubmitting={isSavingCategory}
           onCancel={closeCategoryEdit}
@@ -758,9 +718,6 @@ export function CatalogPanel({
       >
         <RecordForm
           disabled={editingProductId === null ? !canCreate : !canUpdate}
-          feedback={
-            feedback ? <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p> : null
-          }
           fields={productFieldList}
           isSubmitting={isSavingProduct}
           onCancel={closeProductModal}

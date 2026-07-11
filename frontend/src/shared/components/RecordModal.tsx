@@ -28,9 +28,9 @@ type RecordFormOption = {
   value: string;
 };
 
-type RecordFormErrors<TValues extends object> = Partial<
+export type RecordFormErrors<TValues extends object> = Partial<
   Record<keyof TValues & string, string | null | undefined>
->;
+> & Record<string, string | null | undefined>;
 
 export type RecordFormField<TValues extends object> = {
   description?: string;
@@ -125,6 +125,33 @@ function validateField<TValues extends object>(
   return field.validate?.(value, values) ?? null;
 }
 
+export function validateRecordFields<TValues extends object>(
+  fields: RecordFormField<TValues>[],
+  values: TValues,
+  validate?: (values: TValues) => RecordFormErrors<TValues> | null | undefined
+): RecordFormErrors<TValues> {
+  const errors: RecordFormErrors<TValues> = {};
+
+  for (const field of fields) {
+    const message = validateField(field, values);
+    if (message) errors[field.name] = message;
+  }
+
+  for (const [name, message] of Object.entries(validate?.(values) ?? {})) {
+    if (message) errors[name as keyof TValues & string] = message as string;
+  }
+
+  return errors;
+}
+
+export function hasRecordFormErrors<TValues extends object>(errors: RecordFormErrors<TValues>): boolean {
+  return Object.values(errors).some(Boolean);
+}
+
+function idSafeName(name: string): string {
+  return name.replace(/[^a-zA-Z0-9_-]/g, "-");
+}
+
 export function RecordModal({
   children,
   eyebrow,
@@ -198,7 +225,10 @@ export function RecordForm<TValues extends object>({
   validate,
   values
 }: RecordFormProps<TValues>) {
+  const formId = useId().replace(/:/g, "");
   const [errors, setErrors] = useState<RecordFormErrors<TValues>>({});
+
+  const fieldId = (name: keyof TValues & string) => `${formId}-${idSafeName(name)}`;
 
   const setFieldValue = (name: keyof TValues & string, value: string | boolean) => {
     onChange({ ...values, [name]: value } as TValues);
@@ -208,46 +238,83 @@ export function RecordForm<TValues extends object>({
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const fieldErrors = fields.reduce<RecordFormErrors<TValues>>((nextErrors, field) => {
-      const message = validateField(field, values);
-      return message ? { ...nextErrors, [field.name]: message } : nextErrors;
-    }, {});
-    const customErrors = validate?.(values) ?? {};
-    const nextErrors = { ...fieldErrors, ...customErrors };
+    const nextErrors = validateRecordFields(fields, values, validate);
 
     setErrors(nextErrors);
 
-    if (Object.values(nextErrors).some(Boolean)) {
-      return;
+    const hasErrors = hasRecordFormErrors(nextErrors);
+    const firstInvalidField = fields.find((field) => Boolean(nextErrors[field.name]));
+    if (firstInvalidField) {
+      const control = document.getElementById(fieldId(firstInvalidField.name));
+      control?.focus();
+      control?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
+
+    if (hasErrors) return;
 
     void onSubmit(values);
   };
 
   const controlsDisabled = disabled || isSubmitting;
+  const fieldErrorEntries = fields.flatMap((field) => {
+    const message = errors[field.name];
+    return message ? [{ field, message }] : [];
+  });
+  const fieldNames = new Set<string>(fields.map((field) => field.name));
+  const unmatchedErrorEntries = Object.entries(errors).flatMap(([name, message]) =>
+    message && !fieldNames.has(name) ? [{ name, message }] : []
+  );
+  const showErrorSummary = fieldErrorEntries.length > 1 || unmatchedErrorEntries.length > 0;
+  const summaryTitleId = `${formId}-error-summary-title`;
 
   return (
-    <form className="record-form" onSubmit={handleSubmit}>
+    <form className="record-form" noValidate onSubmit={handleSubmit}>
+      {showErrorSummary ? (
+        <section aria-labelledby={summaryTitleId} className="record-form-error-summary" role="alert">
+          <h4 id={summaryTitleId}>Review the highlighted fields</h4>
+          <p>Correct these items before submitting:</p>
+          <ul>
+            {fieldErrorEntries.map(({ field, message }) => (
+              <li key={field.name}>
+                <a href={`#${fieldId(field.name)}`}>{field.label}: {message}</a>
+              </li>
+            ))}
+            {unmatchedErrorEntries.map(({ name, message }) => (
+              <li key={name}>Form: {message}</li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       <div className="record-form-grid">
         {fields.map((field) => {
           const control = field.type ?? "text";
           const fieldDisabled = controlsDisabled || Boolean(field.disabled);
           const error = errors[field.name];
           const value = values[field.name];
+          const controlId = fieldId(field.name);
+          const helpId = `${controlId}-help`;
+          const errorId = `${controlId}-error`;
+          const describedBy = [field.helpText || field.description ? helpId : null, error ? errorId : null]
+            .filter(Boolean)
+            .join(" ") || undefined;
 
           if (control === "checkbox") {
             return (
-              <label className="record-checkbox-field" key={field.name}>
+              <label className="record-checkbox-field" htmlFor={controlId} key={field.name}>
                 <input
+                  aria-describedby={describedBy}
+                  aria-invalid={Boolean(error)}
                   checked={Boolean(value)}
                   disabled={fieldDisabled}
+                  id={controlId}
+                  name={field.name}
                   onChange={(event) => setFieldValue(field.name, event.target.checked)}
                   type="checkbox"
                 />
                 <span>
                   <strong>{field.label}</strong>
-                  {field.description ? <small>{field.description}</small> : null}
-                  {error ? <small className="record-field-error">{error}</small> : null}
+                  {field.description ? <small id={helpId}>{field.description}</small> : null}
+                  {error ? <small className="record-field-error" id={errorId}>{error}</small> : null}
                 </span>
               </label>
             );
@@ -255,10 +322,14 @@ export function RecordForm<TValues extends object>({
 
           if (control === "toggle") {
             return (
-              <label className="record-toggle-field" key={field.name}>
+              <label className="record-toggle-field" htmlFor={controlId} key={field.name}>
                 <input
+                  aria-describedby={describedBy}
+                  aria-invalid={Boolean(error)}
                   checked={Boolean(value)}
                   disabled={fieldDisabled}
+                  id={controlId}
+                  name={field.name}
                   onChange={(event) => setFieldValue(field.name, event.target.checked)}
                   role="switch"
                   type="checkbox"
@@ -268,19 +339,23 @@ export function RecordForm<TValues extends object>({
                 </span>
                 <span>
                   <strong>{field.label}</strong>
-                  {field.description ? <small>{field.description}</small> : null}
-                  {error ? <small className="record-field-error">{error}</small> : null}
+                  {field.description ? <small id={helpId}>{field.description}</small> : null}
+                  {error ? <small className="record-field-error" id={errorId}>{error}</small> : null}
                 </span>
               </label>
             );
           }
 
           return (
-            <label className="admin-field" key={field.name}>
+            <label className="admin-field" htmlFor={controlId} key={field.name}>
               {field.label}
               {control === "select" ? (
                 <select
+                  aria-describedby={describedBy}
+                  aria-invalid={Boolean(error)}
                   disabled={fieldDisabled}
+                  id={controlId}
+                  name={field.name}
                   onChange={(event) => setFieldValue(field.name, event.target.value)}
                   required={field.required}
                   value={typeof value === "string" ? value : ""}
@@ -293,9 +368,13 @@ export function RecordForm<TValues extends object>({
                 </select>
               ) : control === "textarea" ? (
                 <textarea
+                  aria-describedby={describedBy}
+                  aria-invalid={Boolean(error)}
                   disabled={fieldDisabled}
+                  id={controlId}
                   maxLength={field.maxLength}
                   minLength={field.minLength}
+                  name={field.name}
                   onChange={(event) => setFieldValue(field.name, event.target.value)}
                   placeholder={field.placeholder}
                   required={field.required}
@@ -304,11 +383,15 @@ export function RecordForm<TValues extends object>({
                 />
               ) : (
                 <input
+                  aria-describedby={describedBy}
+                  aria-invalid={Boolean(error)}
                   disabled={fieldDisabled}
+                  id={controlId}
                   max={field.max}
                   maxLength={field.maxLength}
                   min={field.min}
                   minLength={field.minLength}
+                  name={field.name}
                   onChange={(event) => setFieldValue(field.name, event.target.value)}
                   placeholder={field.placeholder}
                   required={field.required}
@@ -317,8 +400,8 @@ export function RecordForm<TValues extends object>({
                   value={typeof value === "string" ? value : ""}
                 />
               )}
-              {field.helpText ? <small className="record-field-help">{field.helpText}</small> : null}
-              {error ? <small className="record-field-error">{error}</small> : null}
+              {field.helpText ? <small className="record-field-help" id={helpId}>{field.helpText}</small> : null}
+              {error ? <small className="record-field-error" id={errorId}>{error}</small> : null}
             </label>
           );
         })}

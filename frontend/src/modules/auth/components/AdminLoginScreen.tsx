@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from "react";
 
+import { normalizeError } from "../../../shared/notifications";
 import type { AdminAuthPayload, AdminLoginInput } from "../types";
 
 type AdminLoginScreenProps = {
@@ -23,7 +24,7 @@ export function AdminLoginScreen({ onBackToStore, onLogin }: AdminLoginScreenPro
         password: form.password
       });
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "Unable to sign in.");
+      setFeedback(normalizeError(error, { operation: "admin sign in", scope: "admin-auth" }).userMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -38,7 +39,7 @@ export function AdminLoginScreen({ onBackToStore, onLogin }: AdminLoginScreenPro
           </div>
           <div>
             <p className="eyebrow">Internal Retail Tools</p>
-            <h1>Ops Console</h1>
+            <h1>OPT Console</h1>
           </div>
         </div>
 

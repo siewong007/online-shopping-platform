@@ -3,6 +3,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { ManagementTable } from "../../../shared/components/ManagementTable";
 import { RecordModal } from "../../../shared/components/RecordModal";
 import { currencyFromCents, formatOrderDate } from "../../../shared/formatters";
+import { useNotifications } from "../../../shared/notifications";
 import type {
   CreateOrderInput,
   FulfillmentMethod,
@@ -163,10 +164,10 @@ export function OrderControlPanel({
   orders,
   products
 }: OrderControlPanelProps) {
+  const { notify, notifyError } = useNotifications();
   const [editingOrderId, setEditingOrderId] = useState<number | null>(null);
   const [form, setForm] = useState<OrderFormState>(() => emptyOrderForm(products));
   const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [feedback, setFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingOrderId, setDeletingOrderId] = useState<number | null>(null);
   const [fulfillmentOrderId, setFulfillmentOrderId] = useState<number | null>(null);
@@ -213,7 +214,6 @@ export function OrderControlPanel({
   const resetForm = () => {
     setEditingOrderId(null);
     setForm(emptyOrderForm(products));
-    setFeedback(null);
     setIsEditorOpen(false);
   };
 
@@ -237,14 +237,12 @@ export function OrderControlPanel({
   const editOrder = (order: Order) => {
     setEditingOrderId(order.id);
     setForm(orderToForm(order));
-    setFeedback(null);
     setIsEditorOpen(true);
   };
 
   const createOrder = () => {
     setEditingOrderId(null);
     setForm(emptyOrderForm(products));
-    setFeedback(null);
     setIsEditorOpen(true);
   };
 
@@ -252,30 +250,28 @@ export function OrderControlPanel({
     const nextStatuses = nextFulfillmentStatuses(order);
 
     if (nextStatuses.length === 0) {
-      setFeedback({ kind: "error", message: `Order #${order.id} is already in a final state.` });
+      notify({ severity: "info", title: "Order already final", message: `Order #${order.id} is already in a final state, so no fulfillment change is needed.`, scope: "orders", dedupeKey: `orders:${order.id}:final` });
       return;
     }
 
     setFulfillmentOrderId(order.id);
     setFulfillmentDraft({ to_status: nextStatuses[0], note: "" });
-    setFeedback(null);
   };
 
   const closeFulfillmentEditor = () => {
     setFulfillmentOrderId(null);
     setFulfillmentDraft({ to_status: "picking", note: "" });
-    setFeedback(null);
   };
 
   const handleSubmitOrder = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!canSave) {
-      setFeedback({ kind: "error", message: "The active role cannot save this order change." });
+      notify({ severity: "error", title: "Order not saved", message: "The active role cannot save this order change.", scope: "orders", dedupeKey: "orders:save:permission" });
       return;
     }
 
-    setFeedback(null);
+    const wasCreating = editingOrderId === null;
     setIsSaving(true);
 
     try {
@@ -293,18 +289,9 @@ export function OrderControlPanel({
 
       setIsEditorOpen(false);
       setEditingOrderId(null);
-      setFeedback({
-        kind: "success",
-        message:
-          editingOrderId === null
-            ? `Order #${order.id} was created.`
-            : `Order #${order.id} was updated.`
-      });
+      notify({ severity: "success", title: wasCreating ? "Order created" : "Order updated", message: `Order #${order.id} was ${wasCreating ? "created" : "updated"} successfully.`, scope: "orders", dedupeKey: `orders:${order.id}:${wasCreating ? "create" : "update"}:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to save order."
-      });
+      notifyError(error, { operation: wasCreating ? "create order" : "update order", scope: "orders", dedupeKey: `orders:${editingOrderId ?? "new"}:save:error` });
     } finally {
       setIsSaving(false);
     }
@@ -314,11 +301,10 @@ export function OrderControlPanel({
     event.preventDefault();
 
     if (!fulfillmentOrder || !canUpdate) {
-      setFeedback({ kind: "error", message: "The active role cannot change fulfillment status." });
+      notify({ severity: "error", title: "Fulfillment not changed", message: "The active role cannot change fulfillment status.", scope: "orders", dedupeKey: "orders:fulfillment:permission" });
       return;
     }
 
-    setFeedback(null);
     setSavingFulfillmentId(fulfillmentOrder.id);
 
     try {
@@ -329,15 +315,9 @@ export function OrderControlPanel({
 
       setHistoryOrderId(updated.id);
       setFulfillmentOrderId(null);
-      setFeedback({
-        kind: "success",
-        message: `Order #${updated.id} moved to ${fulfillmentLabel(updated.fulfillment_status)}.`
-      });
+      notify({ severity: "success", title: "Fulfillment updated", message: `Order #${updated.id} was moved to ${fulfillmentLabel(updated.fulfillment_status)} successfully.`, scope: "orders", dedupeKey: `orders:${updated.id}:fulfillment:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to update fulfillment status."
-      });
+      notifyError(error, { operation: "update order fulfillment", scope: "orders", dedupeKey: `orders:${fulfillmentOrder.id}:fulfillment:error` });
     } finally {
       setSavingFulfillmentId(null);
     }
@@ -345,7 +325,7 @@ export function OrderControlPanel({
 
   const handleDeleteOrder = async (order: Order) => {
     if (!canDelete) {
-      setFeedback({ kind: "error", message: "The active role cannot delete orders." });
+      notify({ severity: "error", title: "Order not deleted", message: "The active role cannot delete orders.", scope: "orders", dedupeKey: "orders:delete:permission" });
       return;
     }
 
@@ -354,7 +334,6 @@ export function OrderControlPanel({
       return;
     }
 
-    setFeedback(null);
     setDeletingOrderId(order.id);
 
     try {
@@ -362,12 +341,9 @@ export function OrderControlPanel({
       if (editingOrderId === order.id) {
         resetForm();
       }
-      setFeedback({ kind: "success", message: `Order #${order.id} was deleted.` });
+      notify({ severity: "success", title: "Order deleted", message: `Order #${order.id} was deleted successfully.`, scope: "orders", dedupeKey: `orders:${order.id}:delete:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to delete order."
-      });
+      notifyError(error, { operation: "delete order", scope: "orders", dedupeKey: `orders:${order.id}:delete:error` });
     } finally {
       setDeletingOrderId(null);
     }
@@ -487,10 +463,6 @@ export function OrderControlPanel({
           {orders.length} total
         </span>
       </div>
-
-      {feedback && !isEditorOpen ? (
-        <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p>
-      ) : null}
 
       <article className="dashboard-panel">
         <div className="panel-header">
@@ -677,8 +649,6 @@ export function OrderControlPanel({
             <strong>{currencyFromCents(previewSubtotal)}</strong>
           </div>
 
-          {feedback ? <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p> : null}
-
           <div className="form-actions split-actions">
             <button className="solid-button" disabled={!canSave || isSaving} type="submit">
               {isSaving ? "Saving..." : editingOrderId === null ? "Create Order" : "Save Order"}
@@ -739,8 +709,6 @@ export function OrderControlPanel({
                 value={fulfillmentDraft.note}
               />
             </label>
-
-            {feedback ? <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p> : null}
 
             <div className="form-actions split-actions">
               <button

@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from "react";
 
 import { formatOrderDate } from "../../../shared/formatters";
+import { useNotifications } from "../../../shared/notifications";
 import type { SystemSetting, UpdateSystemSettingInput } from "../types";
 
 type SettingsPanelProps = {
@@ -66,8 +67,8 @@ function validateSettingValue(setting: SystemSetting, value: string): string | n
 }
 
 export function SettingsPanel({ canUpdate, onUpdateSetting, settings }: SettingsPanelProps) {
+  const { notify, notifyError } = useNotifications();
   const [drafts, setDrafts] = useState<Record<string, string>>({});
-  const [feedback, setFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const grouped = groupedByCategory(settings);
 
@@ -77,16 +78,14 @@ export function SettingsPanel({ canUpdate, onUpdateSetting, settings }: Settings
     event.preventDefault();
 
     if (!canUpdate) {
-      setFeedback({ kind: "error", message: "The active role cannot update system settings." });
+      notify({ severity: "error", title: "Setting not updated", message: "The active role cannot update system settings.", scope: "settings", dedupeKey: "settings:update:permission" });
       return;
     }
-
-    setFeedback(null);
 
     const value = draftFor(setting).trim();
     const validationError = validateSettingValue(setting, value);
     if (validationError) {
-      setFeedback({ kind: "error", message: validationError });
+      notify({ severity: "warning", title: "Check the setting value", message: validationError, scope: "settings", dedupeKey: `settings:${setting.key}:validation` });
       return;
     }
 
@@ -95,12 +94,9 @@ export function SettingsPanel({ canUpdate, onUpdateSetting, settings }: Settings
     try {
       const updated = await onUpdateSetting(setting.key, { value });
       setDrafts((current) => ({ ...current, [updated.key]: updated.value }));
-      setFeedback({ kind: "success", message: `${updated.key} was updated.` });
+      notify({ severity: "success", title: "Setting updated", message: `${updated.key} was updated successfully.`, scope: "settings", dedupeKey: `settings:${updated.key}:update:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to update setting."
-      });
+      notifyError(error, { operation: "update system setting", scope: "settings", dedupeKey: `settings:${setting.key}:update:error` });
     } finally {
       setSavingKey(null);
     }
@@ -117,8 +113,6 @@ export function SettingsPanel({ canUpdate, onUpdateSetting, settings }: Settings
           {canUpdate ? "Writable" : "Read only"}
         </span>
       </div>
-
-      {feedback ? <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p> : null}
 
       <div className="settings-category-grid">
         {Object.entries(grouped).map(([category, categorySettings]) => (

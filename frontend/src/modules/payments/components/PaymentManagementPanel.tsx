@@ -3,6 +3,7 @@ import { type FormEvent, useMemo, useState } from "react";
 import { ManagementTable } from "../../../shared/components/ManagementTable";
 import { RecordModal } from "../../../shared/components/RecordModal";
 import { currencyFromCents, formatOrderDate } from "../../../shared/formatters";
+import { useNotifications } from "../../../shared/notifications";
 import type { Order } from "../../orders/types";
 import type { CreatePaymentInput, Payment, PaymentStatus, UpdatePaymentInput } from "../types";
 
@@ -125,10 +126,10 @@ export function PaymentManagementPanel({
   orders,
   payments
 }: PaymentManagementPanelProps) {
+  const { notify, notifyError } = useNotifications();
   const [editingPaymentId, setEditingPaymentId] = useState<number | null>(null);
   const [form, setForm] = useState<PaymentFormState>(() => emptyPaymentForm(orders, payments));
   const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [feedback, setFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingPaymentId, setDeletingPaymentId] = useState<number | null>(null);
   const canSave = editingPaymentId === null ? canCreate : canUpdate;
@@ -159,7 +160,6 @@ export function PaymentManagementPanel({
   const resetForm = () => {
     setEditingPaymentId(null);
     setForm(emptyPaymentForm(orders, payments));
-    setFeedback(null);
     setIsEditorOpen(false);
   };
 
@@ -179,14 +179,12 @@ export function PaymentManagementPanel({
   const editPayment = (payment: Payment) => {
     setEditingPaymentId(payment.id);
     setForm(paymentToForm(payment));
-    setFeedback(null);
     setIsEditorOpen(true);
   };
 
   const createPayment = () => {
     setEditingPaymentId(null);
     setForm(emptyPaymentForm(orders, payments));
-    setFeedback(null);
     setIsEditorOpen(true);
   };
 
@@ -194,11 +192,11 @@ export function PaymentManagementPanel({
     event.preventDefault();
 
     if (!canSave) {
-      setFeedback({ kind: "error", message: "The active role cannot save this payment change." });
+      notify({ severity: "error", title: "Payment not saved", message: "The active role cannot save this payment change.", scope: "payments", dedupeKey: "payments:save:permission" });
       return;
     }
 
-    setFeedback(null);
+    const wasCreating = editingPaymentId === null;
     setIsSaving(true);
 
     try {
@@ -215,18 +213,9 @@ export function PaymentManagementPanel({
 
       setIsEditorOpen(false);
       setEditingPaymentId(null);
-      setFeedback({
-        kind: "success",
-        message:
-          editingPaymentId === null
-            ? `Payment #${payment.id} was recorded.`
-            : `Payment #${payment.id} was updated.`
-      });
+      notify({ severity: "success", title: wasCreating ? "Payment recorded" : "Payment updated", message: `Payment #${payment.id} was ${wasCreating ? "recorded" : "updated"} successfully.`, scope: "payments", dedupeKey: `payments:${payment.id}:${wasCreating ? "create" : "update"}:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to save payment."
-      });
+      notifyError(error, { operation: wasCreating ? "record payment" : "update payment", scope: "payments", dedupeKey: `payments:${editingPaymentId ?? "new"}:save:error` });
     } finally {
       setIsSaving(false);
     }
@@ -234,7 +223,7 @@ export function PaymentManagementPanel({
 
   const handleDeletePayment = async (payment: Payment) => {
     if (!canDelete) {
-      setFeedback({ kind: "error", message: "The active role cannot delete payments." });
+      notify({ severity: "error", title: "Payment not deleted", message: "The active role cannot delete payments.", scope: "payments", dedupeKey: "payments:delete:permission" });
       return;
     }
 
@@ -243,7 +232,6 @@ export function PaymentManagementPanel({
       return;
     }
 
-    setFeedback(null);
     setDeletingPaymentId(payment.id);
 
     try {
@@ -251,12 +239,9 @@ export function PaymentManagementPanel({
       if (editingPaymentId === payment.id) {
         resetForm();
       }
-      setFeedback({ kind: "success", message: `Payment #${payment.id} was deleted.` });
+      notify({ severity: "success", title: "Payment deleted", message: `Payment #${payment.id} was deleted successfully.`, scope: "payments", dedupeKey: `payments:${payment.id}:delete:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to delete payment."
-      });
+      notifyError(error, { operation: "delete payment", scope: "payments", dedupeKey: `payments:${payment.id}:delete:error` });
     } finally {
       setDeletingPaymentId(null);
     }
@@ -407,10 +392,6 @@ export function PaymentManagementPanel({
           <span>Available for payment matching</span>
         </article>
       </div>
-
-      {feedback && !isEditorOpen ? (
-        <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p>
-      ) : null}
 
       <article className="dashboard-panel">
         <div className="panel-header">
@@ -573,8 +554,6 @@ export function PaymentManagementPanel({
               </div>
             </div>
           ) : null}
-
-          {feedback ? <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p> : null}
 
           <div className="form-actions split-actions">
             <button className="solid-button" disabled={!canSave || isSaving} type="submit">

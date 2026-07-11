@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import type { Role } from "../../permissions/types";
 import { ManagementTable } from "../../../shared/components/ManagementTable";
 import { RecordForm, type RecordFormField, RecordModal } from "../../../shared/components/RecordModal";
+import { useNotifications } from "../../../shared/notifications";
 import type {
   AdminResetPasswordInput,
   AdminUser,
@@ -125,6 +126,7 @@ export function TeamPanel({
   roles,
   users
 }: TeamPanelProps) {
+  const { notify, notifyError } = useNotifications();
   const [createForm, setCreateForm] = useState<CreateUserFormState>(() => emptyCreateUserForm(roles));
   const [editForm, setEditForm] = useState<EditProfileFormState>({ display_name: "", role_id: "" });
   const [resetForm, setResetForm] = useState<ResetPasswordFormState>({ new_password: "" });
@@ -133,7 +135,6 @@ export function TeamPanel({
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isResetOpen, setIsResetOpen] = useState(false);
-  const [feedback, setFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
   const [isSavingCreate, setIsSavingCreate] = useState(false);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isSavingReset, setIsSavingReset] = useState(false);
@@ -147,49 +148,42 @@ export function TeamPanel({
 
   const openCreate = () => {
     setCreateForm(emptyCreateUserForm(roles));
-    setFeedback(null);
     setIsCreateOpen(true);
   };
 
   const closeCreate = () => {
     setIsCreateOpen(false);
-    setFeedback(null);
   };
 
   const openEdit = (user: AdminUser) => {
     setEditingUserId(user.id);
     setEditForm(editProfileFormFromUser(user));
-    setFeedback(null);
     setIsEditOpen(true);
   };
 
   const closeEdit = () => {
     setIsEditOpen(false);
     setEditingUserId(null);
-    setFeedback(null);
   };
 
   const openReset = (user: AdminUser) => {
     setResettingUserId(user.id);
     setResetForm({ new_password: "" });
-    setFeedback(null);
     setIsResetOpen(true);
   };
 
   const closeReset = () => {
     setIsResetOpen(false);
     setResettingUserId(null);
-    setFeedback(null);
   };
 
   const handleCreateUser = async () => {
     if (!canCreate) {
-      setFeedback({ kind: "error", message: "The active role cannot create admin users." });
+      notify({ severity: "error", title: "Admin user not created", message: "The active role cannot create admin users.", scope: "admin-users", dedupeKey: "admin-users:create:permission" });
       return;
     }
 
     setIsSavingCreate(true);
-    setFeedback(null);
 
     try {
       const user = await onCreateUser({
@@ -200,12 +194,9 @@ export function TeamPanel({
       });
 
       closeCreate();
-      setFeedback({ kind: "success", message: `${user.display_name} was created.` });
+      notify({ severity: "success", title: "Admin user created", message: `${user.display_name} was created successfully.`, scope: "admin-users", dedupeKey: `admin-users:${user.id}:create:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to create admin user."
-      });
+      notifyError(error, { operation: "create admin user", scope: "admin-users", dedupeKey: "admin-users:create:error" });
     } finally {
       setIsSavingCreate(false);
     }
@@ -213,12 +204,11 @@ export function TeamPanel({
 
   const handleUpdateProfile = async () => {
     if (!editingUserId || !canUpdate) {
-      setFeedback({ kind: "error", message: "The active role cannot update admin users." });
+      notify({ severity: "error", title: "Admin user not updated", message: "The active role cannot update admin users.", scope: "admin-users", dedupeKey: "admin-users:update:permission" });
       return;
     }
 
     setIsSavingEdit(true);
-    setFeedback(null);
 
     try {
       const user = await onUpdateUserProfile(editingUserId, {
@@ -226,12 +216,9 @@ export function TeamPanel({
         role_id: Number(editForm.role_id)
       });
       closeEdit();
-      setFeedback({ kind: "success", message: `${user.display_name} was updated.` });
+      notify({ severity: "success", title: "Admin user updated", message: `${user.display_name} was updated successfully.`, scope: "admin-users", dedupeKey: `admin-users:${user.id}:update:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to update admin user."
-      });
+      notifyError(error, { operation: "update admin user", scope: "admin-users", dedupeKey: `admin-users:${editingUserId}:update:error` });
     } finally {
       setIsSavingEdit(false);
     }
@@ -239,23 +226,19 @@ export function TeamPanel({
 
   const handleResetPassword = async () => {
     if (!resettingUserId || !canUpdate) {
-      setFeedback({ kind: "error", message: "The active role cannot reset admin passwords." });
+      notify({ severity: "error", title: "Password not reset", message: "The active role cannot reset admin passwords.", scope: "admin-users", dedupeKey: "admin-users:password:permission" });
       return;
     }
 
     setIsSavingReset(true);
-    setFeedback(null);
 
     try {
       await onResetUserPassword(resettingUserId, { new_password: resetForm.new_password });
       const name = resettingUser?.display_name ?? "The user";
       closeReset();
-      setFeedback({ kind: "success", message: `${name}'s password was reset.` });
+      notify({ severity: "success", title: "Password reset", message: `${name}'s password was reset successfully.`, scope: "admin-users", dedupeKey: `admin-users:${resettingUserId}:password:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to reset the password."
-      });
+      notifyError(error, { operation: "reset admin password", scope: "admin-users", dedupeKey: `admin-users:${resettingUserId}:password:error` });
     } finally {
       setIsSavingReset(false);
     }
@@ -278,19 +261,12 @@ export function TeamPanel({
     }
 
     setTogglingUserId(user.id);
-    setFeedback(null);
 
     try {
       await onSetUserActive(user.id, { is_active: nextActive });
-      setFeedback({
-        kind: "success",
-        message: `${user.display_name} was ${nextActive ? "reactivated" : "deactivated"}.`
-      });
+      notify({ severity: "success", title: nextActive ? "Admin user reactivated" : "Admin user deactivated", message: `${user.display_name} was ${nextActive ? "reactivated" : "deactivated"} successfully.`, scope: "admin-users", dedupeKey: `admin-users:${user.id}:active:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to update this admin user."
-      });
+      notifyError(error, { operation: "change admin user status", scope: "admin-users", dedupeKey: `admin-users:${user.id}:active:error` });
     } finally {
       setTogglingUserId(null);
     }
@@ -377,10 +353,6 @@ export function TeamPanel({
         </button>
       </div>
 
-      {feedback && !isCreateOpen && !isEditOpen && !isResetOpen ? (
-        <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p>
-      ) : null}
-
       <ManagementTable
         columns={userColumns}
         emptyMessage="No admin users have been created yet."
@@ -400,9 +372,6 @@ export function TeamPanel({
       >
         <RecordForm
           disabled={!canCreate}
-          feedback={
-            feedback ? <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p> : null
-          }
           fields={createUserFields(roles)}
           isSubmitting={isSavingCreate}
           onCancel={closeCreate}
@@ -423,9 +392,6 @@ export function TeamPanel({
       >
         <RecordForm
           disabled={!canUpdate}
-          feedback={
-            feedback ? <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p> : null
-          }
           fields={editProfileFields(roles)}
           isSubmitting={isSavingEdit}
           onCancel={closeEdit}
@@ -446,9 +412,6 @@ export function TeamPanel({
       >
         <RecordForm
           disabled={!canUpdate}
-          feedback={
-            feedback ? <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p> : null
-          }
           fields={resetPasswordFields}
           isSubmitting={isSavingReset}
           onCancel={closeReset}

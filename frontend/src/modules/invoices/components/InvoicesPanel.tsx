@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from "react";
 
 import { currencyFromCents, formatOrderDate } from "../../../shared/formatters";
+import { useNotifications } from "../../../shared/notifications";
 import type { Order } from "../../orders/types";
 import type { SystemSetting } from "../../settings/types";
 import type {
@@ -78,6 +79,7 @@ export function InvoicesPanel({
   orders,
   settings
 }: InvoicesPanelProps) {
+  const { notify, notifyError } = useNotifications();
   const invoicedOrderIds = new Set(invoices.map((invoice) => invoice.order_id));
   const uninvoicedOrders = orders.filter((order) => !invoicedOrderIds.has(order.id));
 
@@ -89,7 +91,6 @@ export function InvoicesPanel({
   const [paymentDrafts, setPaymentDrafts] = useState<
     Record<number, { amount: string; method: string; note: string }>
   >({});
-  const [feedback, setFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
   const [busyInvoiceId, setBusyInvoiceId] = useState<number | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -122,7 +123,7 @@ export function InvoicesPanel({
     event.preventDefault();
 
     if (!canCreate) {
-      setFeedback({ kind: "error", message: "The active role cannot create invoices." });
+      notify({ severity: "error", title: "Invoice not created", message: "The active role cannot create invoices.", scope: "invoices", dedupeKey: "invoices:create:permission" });
       return;
     }
 
@@ -130,11 +131,10 @@ export function InvoicesPanel({
     const discountCents = Math.round(Number(newInvoiceDiscount) * 100);
 
     if (!Number.isInteger(orderId) || orderId <= 0) {
-      setFeedback({ kind: "error", message: "Select an order to invoice." });
+      notify({ severity: "warning", title: "Select an order", message: "Select an order before creating an invoice.", scope: "invoices", dedupeKey: "invoices:create:validation" });
       return;
     }
 
-    setFeedback(null);
     setIsCreating(true);
 
     try {
@@ -142,12 +142,9 @@ export function InvoicesPanel({
         discount_cents: Number.isFinite(discountCents) && discountCents > 0 ? discountCents : undefined
       });
       setNewInvoiceDiscount("0.00");
-      setFeedback({ kind: "success", message: `Invoice ${invoice.invoice_number} was created.` });
+      notify({ severity: "success", title: "Invoice created", message: `Invoice ${invoice.invoice_number} was created successfully.`, scope: "invoices", dedupeKey: `invoices:${invoice.id}:create:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to create invoice."
-      });
+      notifyError(error, { operation: "create invoice", scope: "invoices", dedupeKey: `invoices:order:${orderId}:create:error` });
     } finally {
       setIsCreating(false);
     }
@@ -157,11 +154,10 @@ export function InvoicesPanel({
     event.preventDefault();
 
     if (!canUpdate) {
-      setFeedback({ kind: "error", message: "The active role cannot update billing details." });
+      notify({ severity: "error", title: "Billing not updated", message: "The active role cannot update billing details.", scope: "invoices", dedupeKey: "invoices:billing:permission" });
       return;
     }
 
-    setFeedback(null);
     setBusyInvoiceId(invoice.id);
 
     try {
@@ -181,12 +177,9 @@ export function InvoicesPanel({
           buyer_sst_registration_number: updated.buyer_sst_registration_number ?? ""
         }
       }));
-      setFeedback({ kind: "success", message: `Billing details updated for ${updated.invoice_number}.` });
+      notify({ severity: "success", title: "Billing details updated", message: `Billing details for ${updated.invoice_number} were updated successfully.`, scope: "invoices", dedupeKey: `invoices:${updated.id}:billing:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to update billing details."
-      });
+      notifyError(error, { operation: "update invoice billing", scope: "invoices", dedupeKey: `invoices:${invoice.id}:billing:error` });
     } finally {
       setBusyInvoiceId(null);
     }
@@ -196,7 +189,7 @@ export function InvoicesPanel({
     event.preventDefault();
 
     if (!canUpdate) {
-      setFeedback({ kind: "error", message: "The active role cannot record invoice payments." });
+      notify({ severity: "error", title: "Payment not recorded", message: "The active role cannot record invoice payments.", scope: "invoices", dedupeKey: "invoices:payment:permission" });
       return;
     }
 
@@ -204,11 +197,10 @@ export function InvoicesPanel({
     const amountCents = Math.round(Number(draft.amount) * 100);
 
     if (!Number.isFinite(amountCents) || amountCents <= 0) {
-      setFeedback({ kind: "error", message: "Enter a payment amount above zero." });
+      notify({ severity: "warning", title: "Check the payment amount", message: "Enter a payment amount above zero.", scope: "invoices", dedupeKey: `invoices:${invoice.id}:payment:validation` });
       return;
     }
 
-    setFeedback(null);
     setBusyInvoiceId(invoice.id);
 
     try {
@@ -222,12 +214,9 @@ export function InvoicesPanel({
         delete next[updated.id];
         return next;
       });
-      setFeedback({ kind: "success", message: `Payment recorded for ${updated.invoice_number}.` });
+      notify({ severity: "success", title: "Payment recorded", message: `Payment for ${updated.invoice_number} was recorded successfully.`, scope: "invoices", dedupeKey: `invoices:${updated.id}:payment:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to record payment."
-      });
+      notifyError(error, { operation: "record invoice payment", scope: "invoices", dedupeKey: `invoices:${invoice.id}:payment:error` });
     } finally {
       setBusyInvoiceId(null);
     }
@@ -235,7 +224,7 @@ export function InvoicesPanel({
 
   const handleVoidInvoice = async (invoice: Invoice) => {
     if (!canUpdate) {
-      setFeedback({ kind: "error", message: "The active role cannot void invoices." });
+      notify({ severity: "error", title: "Invoice not voided", message: "The active role cannot void invoices.", scope: "invoices", dedupeKey: "invoices:void:permission" });
       return;
     }
 
@@ -244,17 +233,13 @@ export function InvoicesPanel({
       return;
     }
 
-    setFeedback(null);
     setBusyInvoiceId(invoice.id);
 
     try {
       const updated = await onVoidInvoice(invoice.id);
-      setFeedback({ kind: "success", message: `${updated.invoice_number} was voided.` });
+      notify({ severity: "success", title: "Invoice voided", message: `${updated.invoice_number} was voided successfully.`, scope: "invoices", dedupeKey: `invoices:${updated.id}:void:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to void invoice."
-      });
+      notifyError(error, { operation: "void invoice", scope: "invoices", dedupeKey: `invoices:${invoice.id}:void:error` });
     } finally {
       setBusyInvoiceId(null);
     }
@@ -269,7 +254,7 @@ export function InvoicesPanel({
     event.preventDefault();
 
     if (!canUpdate) {
-      setFeedback({ kind: "error", message: "The active role cannot export invoices." });
+      notify({ severity: "error", title: "Invoices not exported", message: "The active role cannot export invoices.", scope: "invoices", dedupeKey: "invoices:export:permission" });
       return;
     }
 
@@ -280,7 +265,6 @@ export function InvoicesPanel({
       ? `${exportDraft.issued_to}T23:59:59Z`
       : undefined;
 
-    setFeedback(null);
     setIsExporting(true);
 
     try {
@@ -289,12 +273,9 @@ export function InvoicesPanel({
         issued_to: issuedTo,
         include_exported: exportDraft.include_exported
       });
-      setFeedback({ kind: "success", message: "AutoCount invoice export downloaded." });
+      notify({ severity: "success", title: "Invoices exported", message: "The AutoCount invoice export was downloaded successfully.", scope: "invoices", dedupeKey: "invoices:export:success" });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to export invoices."
-      });
+      notifyError(error, { operation: "export invoices", scope: "invoices", dedupeKey: "invoices:export:error" });
     } finally {
       setIsExporting(false);
     }
@@ -309,10 +290,6 @@ export function InvoicesPanel({
         </div>
         <span className="status-pill">{invoices.length} invoices</span>
       </div>
-
-      {feedback ? (
-        <p className={`catalog-feedback no-print ${feedback.kind}`}>{feedback.message}</p>
-      ) : null}
 
       <article className="dashboard-panel no-print">
         <div className="panel-header">

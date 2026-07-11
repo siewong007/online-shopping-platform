@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useState } from "react";
 
 import { RecordForm, type RecordFormField, RecordModal } from "../../../shared/components/RecordModal";
+import { useNotifications } from "../../../shared/notifications";
 import type {
   CreateRoleInput,
   PermissionsPayload,
@@ -59,11 +60,11 @@ export function PermissionsPanel({
   onUpdateRolePermission,
   permissions
 }: PermissionsPanelProps) {
+  const { notify, notifyError } = useNotifications();
   const [roleForm, setRoleForm] = useState<CreateRoleInput>({ name: "", description: "" });
   const [editForm, setEditForm] = useState<UpdateRoleInput>({ name: "", description: "" });
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [feedback, setFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
   const [isCreatingRole, setIsCreatingRole] = useState(false);
   const [isSavingRole, setIsSavingRole] = useState(false);
   const [isDeletingRole, setIsDeletingRole] = useState(false);
@@ -82,7 +83,6 @@ export function PermissionsPanel({
   }, [activeRole]);
 
   const handleCreateRole = async () => {
-    setFeedback(null);
     setIsCreatingRole(true);
 
     try {
@@ -93,12 +93,9 @@ export function PermissionsPanel({
       setRoleForm({ name: "", description: "" });
       setIsCreateOpen(false);
       onChangeRole(role.id);
-      setFeedback({ kind: "success", message: `${role.name} was created.` });
+      notify({ severity: "success", title: "Role created", message: `${role.name} was created successfully.`, scope: "permissions", dedupeKey: `permissions:role:${role.id}:create:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to create role."
-      });
+      notifyError(error, { operation: "create role", scope: "permissions", dedupeKey: "permissions:role:create:error" });
     } finally {
       setIsCreatingRole(false);
     }
@@ -109,7 +106,6 @@ export function PermissionsPanel({
       return;
     }
 
-    setFeedback(null);
     setIsSavingRole(true);
 
     try {
@@ -118,12 +114,9 @@ export function PermissionsPanel({
         description: editForm.description.trim()
       });
       setIsEditOpen(false);
-      setFeedback({ kind: "success", message: `${role.name} was updated.` });
+      notify({ severity: "success", title: "Role updated", message: `${role.name} was updated successfully.`, scope: "permissions", dedupeKey: `permissions:role:${role.id}:update:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to update role."
-      });
+      notifyError(error, { operation: "update role", scope: "permissions", dedupeKey: `permissions:role:${activeRole.id}:update:error` });
     } finally {
       setIsSavingRole(false);
     }
@@ -139,7 +132,6 @@ export function PermissionsPanel({
       return;
     }
 
-    setFeedback(null);
     setIsDeletingRole(true);
 
     try {
@@ -149,12 +141,9 @@ export function PermissionsPanel({
       if (nextRoleId !== null) {
         onChangeRole(nextRoleId);
       }
-      setFeedback({ kind: "success", message: `${activeRole.name} was deleted.` });
+      notify({ severity: "success", title: "Role deleted", message: `${activeRole.name} was deleted successfully.`, scope: "permissions", dedupeKey: `permissions:role:${activeRole.id}:delete:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to delete role."
-      });
+      notifyError(error, { operation: "delete role", scope: "permissions", dedupeKey: `permissions:role:${activeRole.id}:delete:error` });
     } finally {
       setIsDeletingRole(false);
     }
@@ -214,16 +203,13 @@ export function PermissionsPanel({
     }
 
     const key = `${nextPermission.role_id}-${nextPermission.page_id}-${action}`;
-    setFeedback(null);
     setSavingPermissionKey(key);
 
     try {
       await onUpdateRolePermission(nextPermission);
+      notify({ severity: "success", title: "Permission updated", message: `The ${action} permission was updated successfully.`, scope: "permissions", dedupeKey: `permissions:${key}:success` });
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Unable to update permission."
-      });
+      notifyError(error, { operation: "update role permission", scope: "permissions", dedupeKey: `permissions:${key}:error` });
     } finally {
       setSavingPermissionKey(null);
     }
@@ -342,8 +328,6 @@ export function PermissionsPanel({
                 rows={4}
               />
             </label>
-
-            {feedback ? <p className={`catalog-feedback ${feedback.kind}`}>{feedback.message}</p> : null}
 
             <div className="form-actions">
               <button className="solid-button" disabled={isCreatingRole} type="submit">
