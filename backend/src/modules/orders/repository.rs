@@ -2,9 +2,13 @@ use anyhow::Result;
 use sqlx::PgPool;
 
 use super::{
-    dto::{CreateOrderInput, UpdateOrderFulfillmentInput},
+    dto::{CheckoutQuote, CheckoutQuoteInput, CreateOrderInput, UpdateOrderFulfillmentInput},
     model::Order,
 };
+
+pub async fn quote(pool: &PgPool, input: &CheckoutQuoteInput) -> Result<CheckoutQuote> {
+    crate::db::quote_checkout(pool, input).await
+}
 
 pub async fn create_order(
     pool: &PgPool,

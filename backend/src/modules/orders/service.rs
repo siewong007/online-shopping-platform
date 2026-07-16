@@ -7,7 +7,7 @@ use crate::{
 };
 
 use super::{
-    dto::{CreateOrderInput, UpdateOrderFulfillmentInput},
+    dto::{CheckoutQuote, CheckoutQuoteInput, CreateOrderInput, UpdateOrderFulfillmentInput},
     model::Order,
     repository,
 };
@@ -52,6 +52,10 @@ pub async fn create_order(
     )
     .await;
     Ok(order)
+}
+
+pub async fn quote(pool: &PgPool, input: &CheckoutQuoteInput) -> Result<CheckoutQuote> {
+    repository::quote(pool, input).await
 }
 
 pub async fn update_order(

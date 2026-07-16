@@ -174,6 +174,19 @@ pub struct CreateOrderInput {
     pub customer_email: String,
     pub fulfillment_method: Option<String>,
     pub items: Vec<CreateOrderItemInput>,
+    #[serde(default)]
+    pub promotion_id: Option<i32>,
+    #[serde(default)]
+    pub voucher_code: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct CheckoutQuoteInput {
+    pub items: Vec<CreateOrderItemInput>,
+    #[serde(default)]
+    pub promotion_id: Option<i32>,
+    #[serde(default)]
+    pub voucher_code: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, FromRow)]
@@ -196,16 +209,39 @@ pub struct OrderFulfillmentHistory {
 }
 
 #[derive(Debug, Clone, Serialize)]
+pub struct AppliedOffer {
+    pub promotion_id: Option<i32>,
+    pub voucher_id: Option<i32>,
+    pub discount_cents: i32,
+    pub label: String,
+    pub code: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CheckoutQuote {
+    pub items: Vec<OrderItem>,
+    pub subtotal_cents: i32,
+    pub discount_cents: i32,
+    pub tax_cents: i32,
+    pub total_cents: i32,
+    pub applied_offers: Vec<AppliedOffer>,
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct Order {
     pub id: i32,
     pub customer_name: String,
     pub customer_email: String,
     pub subtotal_cents: i32,
+    pub discount_cents: i32,
+    pub tax_cents: i32,
+    pub total_cents: i32,
     pub fulfillment_status: String,
     pub fulfillment_method: String,
     pub created_at: String,
     pub items: Vec<OrderItem>,
     pub fulfillment_history: Vec<OrderFulfillmentHistory>,
+    pub applied_offers: Vec<AppliedOffer>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -771,4 +807,102 @@ pub struct ProductRestockResult {
     pub product_id: i32,
     pub name: String,
     pub added: i32,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct SupportConversation {
+    pub id: i32,
+    pub guest_name: String,
+    pub guest_email: String,
+    pub customer_account_id: Option<i32>,
+    pub assigned_admin_user_id: Option<i32>,
+    pub assigned_admin_display_name: Option<String>,
+    pub status: String,
+    pub created_at: String,
+    pub updated_at: String,
+    pub last_message_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct SupportMessage {
+    pub id: i32,
+    pub conversation_id: i32,
+    pub author_kind: String,
+    pub admin_user_id: Option<i32>,
+    pub body: String,
+    pub created_at: String,
+}
+
+#[derive(Debug, Clone, FromRow)]
+pub struct SupportIdentity {
+    pub conversation_id: i32,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct SupportInboxItem {
+    pub id: i32,
+    pub guest_name: String,
+    pub guest_email: String,
+    pub customer_account_id: Option<i32>,
+    pub assigned_admin_user_id: Option<i32>,
+    pub assigned_admin_display_name: Option<String>,
+    pub status: String,
+    pub created_at: String,
+    pub updated_at: String,
+    pub last_message_at: String,
+    pub last_message_preview: String,
+    pub last_message_author_kind: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct CreateSupportConversationInput {
+    pub guest_name: String,
+    pub guest_email: String,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct CreateSupportMessageInput {
+    pub body: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct UpdateSupportConversationInput {
+    pub status: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct SupportMessagesQuery {
+    pub after_id: Option<i32>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct AdminSupportInboxQuery {
+    pub status: Option<String>,
+    pub limit: Option<i64>,
+    pub before: Option<i32>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct UpdateAdminSupportConversationInput {
+    pub status: Option<String>,
+    pub assigned_admin_user_id: Option<i32>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CreateSupportConversationPayload {
+    pub token: String,
+    pub conversation: SupportConversation,
+    pub messages: Vec<SupportMessage>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SupportMessagesPayload {
+    pub messages: Vec<SupportMessage>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct AdminSupportThreadPayload {
+    pub conversation: SupportConversation,
+    pub messages: Vec<SupportMessage>,
 }

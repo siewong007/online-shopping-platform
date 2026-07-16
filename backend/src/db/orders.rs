@@ -76,6 +76,308 @@ fn ensure_valid_fulfillment_transition(from: &str, to: &str, method: &str) -> Re
     Ok(())
 }
 
+#[derive(Debug, sqlx::FromRow)]
+struct OfferRule {
+    id: i32,
+    label: String,
+    code: Option<String>,
+    discount_type: Option<String>,
+    discount_value: Option<i32>,
+    minimum_subtotal_cents: i32,
+    is_active: bool,
+    is_stackable: bool,
+    max_redemptions: Option<i32>,
+    redemption_count: i32,
+    has_started: bool,
+    has_not_ended: bool,
+}
+
+const PROMOTION_RULE_SELECT: &str = r#"
+    SELECT
+        id,
+        label,
+        NULL::text AS code,
+        discount_type,
+        discount_value,
+        minimum_subtotal_cents,
+        is_active,
+        is_stackable,
+        max_redemptions,
+        redemption_count,
+        (starts_at IS NULL OR starts_at <= now()) AS has_started,
+        (ends_at IS NULL OR ends_at >= now()) AS has_not_ended
+    FROM promotions
+    WHERE id = $1
+"#;
+
+const VOUCHER_RULE_SELECT: &str = r#"
+    SELECT
+        id,
+        title AS label,
+        code,
+        discount_type,
+        discount_value,
+        minimum_subtotal_cents,
+        is_active,
+        is_stackable,
+        max_redemptions,
+        redemption_count,
+        (starts_at IS NULL OR starts_at <= now()) AS has_started,
+        (ends_at IS NULL OR ends_at >= now()) AS has_not_ended
+    FROM vouchers
+    WHERE lower(code) = lower($1)
+"#;
+
+fn normalized_voucher_code(voucher_code: Option<&str>) -> Option<&str> {
+    voucher_code.map(str::trim).filter(|code| !code.is_empty())
+}
+
+async fn fetch_promotion_rule(
+    conn: &mut PgConnection,
+    promotion_id: i32,
+    lock_rules: bool,
+) -> Result<OfferRule> {
+    let query = if lock_rules {
+        format!("{PROMOTION_RULE_SELECT} FOR UPDATE")
+    } else {
+        PROMOTION_RULE_SELECT.to_string()
+    };
+    let rule = sqlx::query_as::<_, OfferRule>(&query)
+        .bind(promotion_id)
+        .fetch_optional(conn)
+        .await?
+        .ok_or_else(|| anyhow!("Promotion {promotion_id} is not available."))?;
+
+    Ok(rule)
+}
+
+async fn fetch_voucher_rule(
+    conn: &mut PgConnection,
+    voucher_code: &str,
+    lock_rules: bool,
+) -> Result<OfferRule> {
+    let query = if lock_rules {
+        format!("{VOUCHER_RULE_SELECT} FOR UPDATE")
+    } else {
+        VOUCHER_RULE_SELECT.to_string()
+    };
+    let rule = sqlx::query_as::<_, OfferRule>(&query)
+        .bind(voucher_code)
+        .fetch_optional(conn)
+        .await?
+        .ok_or_else(|| anyhow!("Voucher code is not valid."))?;
+
+    Ok(rule)
+}
+
+fn validate_offer_rule(rule: &OfferRule, offer_kind: &str, subtotal_cents: i32) -> Result<()> {
+    let Some(discount_type) = rule.discount_type.as_deref() else {
+        bail!("{offer_kind} is not configured for checkout.");
+    };
+    let Some(discount_value) = rule.discount_value else {
+        bail!("{offer_kind} is not configured for checkout.");
+    };
+
+    if !matches!(discount_type, "fixed_cents" | "percent_bps") || discount_value <= 0 {
+        bail!("{offer_kind} is not configured for checkout.");
+    }
+    if !rule.is_active {
+        bail!("{offer_kind} is not active.");
+    }
+    if !rule.has_started || !rule.has_not_ended {
+        bail!("{offer_kind} is outside its redemption window.");
+    }
+    if subtotal_cents < rule.minimum_subtotal_cents {
+        bail!(
+            "{offer_kind} requires a minimum subtotal of {} cents.",
+            rule.minimum_subtotal_cents
+        );
+    }
+    if let Some(max_redemptions) = rule.max_redemptions
+        && rule.redemption_count >= max_redemptions
+    {
+        bail!("{offer_kind} has reached its redemption limit.");
+    }
+
+    Ok(())
+}
+
+fn calculate_offer_discount(rule: &OfferRule, remaining_cents: i32) -> Result<i32> {
+    let discount_type = rule
+        .discount_type
+        .as_deref()
+        .ok_or_else(|| anyhow!("Offer is not configured for checkout."))?;
+    let discount_value = rule
+        .discount_value
+        .ok_or_else(|| anyhow!("Offer is not configured for checkout."))?;
+
+    let discount_cents = match discount_type {
+        "fixed_cents" => i64::from(discount_value).min(i64::from(remaining_cents)),
+        "percent_bps" => {
+            (i64::from(remaining_cents) * i64::from(discount_value)) / 10_000
+        }
+        _ => bail!("Offer is not configured for checkout."),
+    };
+
+    i32::try_from(discount_cents.min(i64::from(remaining_cents)))
+        .map_err(|_| anyhow!("Offer discount exceeds the supported maximum."))
+}
+
+async fn resolve_checkout_offers(
+    conn: &mut PgConnection,
+    promotion_id: Option<i32>,
+    voucher_code: Option<&str>,
+    subtotal_cents: i32,
+    lock_rules: bool,
+) -> Result<Vec<AppliedOffer>> {
+    let promotion = match promotion_id {
+        Some(promotion_id) => Some(fetch_promotion_rule(conn, promotion_id, lock_rules).await?),
+        None => None,
+    };
+    let voucher = match normalized_voucher_code(voucher_code) {
+        Some(voucher_code) => Some(fetch_voucher_rule(conn, voucher_code, lock_rules).await?),
+        None => None,
+    };
+
+    if let Some(rule) = &promotion {
+        validate_offer_rule(rule, "Promotion", subtotal_cents)?;
+    }
+    if let Some(rule) = &voucher {
+        validate_offer_rule(rule, "Voucher", subtotal_cents)?;
+    }
+    if let (Some(promotion), Some(voucher)) = (&promotion, &voucher)
+        && !(promotion.is_stackable && voucher.is_stackable)
+    {
+        bail!("Promotion and voucher cannot be combined unless both offers are stackable.");
+    }
+
+    let mut remaining_cents = subtotal_cents;
+    let mut applied_offers = Vec::with_capacity(usize::from(promotion.is_some() || voucher.is_some()) + 1);
+
+    if let Some(rule) = promotion {
+        let discount_cents = calculate_offer_discount(&rule, remaining_cents)?;
+        remaining_cents -= discount_cents;
+        applied_offers.push(AppliedOffer {
+            promotion_id: Some(rule.id),
+            voucher_id: None,
+            discount_cents,
+            label: rule.label,
+            code: None,
+        });
+    }
+    if let Some(rule) = voucher {
+        let discount_cents = calculate_offer_discount(&rule, remaining_cents)?;
+        applied_offers.push(AppliedOffer {
+            promotion_id: None,
+            voucher_id: Some(rule.id),
+            discount_cents,
+            label: rule.label,
+            code: rule.code,
+        });
+    }
+
+    Ok(applied_offers)
+}
+
+async fn increment_offer_redemption_counts(
+    conn: &mut PgConnection,
+    applied_offers: &[AppliedOffer],
+) -> Result<()> {
+    for offer in applied_offers {
+        let rows_affected = if let Some(promotion_id) = offer.promotion_id {
+            sqlx::query(
+                r#"
+                UPDATE promotions
+                SET redemption_count = redemption_count + 1,
+                    updated_at = now()
+                WHERE id = $1
+                  AND (max_redemptions IS NULL OR redemption_count < max_redemptions)
+                "#,
+            )
+            .bind(promotion_id)
+            .execute(&mut *conn)
+            .await?
+            .rows_affected()
+        } else if let Some(voucher_id) = offer.voucher_id {
+            sqlx::query(
+                r#"
+                UPDATE vouchers
+                SET redemption_count = redemption_count + 1,
+                    updated_at = now()
+                WHERE id = $1
+                  AND (max_redemptions IS NULL OR redemption_count < max_redemptions)
+                "#,
+            )
+            .bind(voucher_id)
+            .execute(&mut *conn)
+            .await?
+            .rows_affected()
+        } else {
+            bail!("Offer redemption is missing its source.");
+        };
+
+        if rows_affected == 0 {
+            bail!("Offer is no longer available.");
+        }
+    }
+
+    Ok(())
+}
+
+async fn insert_offer_redemptions(
+    conn: &mut PgConnection,
+    order_id: i32,
+    applied_offers: &[AppliedOffer],
+) -> Result<()> {
+    for offer in applied_offers {
+        sqlx::query(
+            r#"
+            INSERT INTO order_offer_redemptions
+                (order_id, promotion_id, voucher_id, discount_snapshot_cents, label_snapshot, code_snapshot)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            "#,
+        )
+        .bind(order_id)
+        .bind(offer.promotion_id)
+        .bind(offer.voucher_id)
+        .bind(offer.discount_cents)
+        .bind(&offer.label)
+        .bind(&offer.code)
+        .execute(&mut *conn)
+        .await?;
+    }
+
+    Ok(())
+}
+
+pub async fn quote_checkout(pool: &PgPool, input: &CheckoutQuoteInput) -> Result<CheckoutQuote> {
+    validate_order_items(&input.items)?;
+    let tax_rate_bps = fetch_setting_int(pool, "sales.default_tax_rate_bps", 0).await?;
+    let mut conn = pool.acquire().await?;
+    let (subtotal_cents, items) =
+        resolve_order_line_items(&mut conn, &input.items, DecrementStock::No).await?;
+    let applied_offers = resolve_checkout_offers(
+        &mut conn,
+        input.promotion_id,
+        input.voucher_code.as_deref(),
+        subtotal_cents,
+        false,
+    )
+    .await?;
+    let discount_cents = applied_offers.iter().map(|offer| offer.discount_cents).sum();
+    let (tax_cents, total_cents) =
+        compute_tax_and_total(subtotal_cents, discount_cents, tax_rate_bps);
+
+    Ok(CheckoutQuote {
+        items,
+        subtotal_cents,
+        discount_cents,
+        tax_cents,
+        total_cents,
+        applied_offers,
+    })
+}
+
 pub async fn create_order(
     pool: &PgPool,
     input: &CreateOrderInput,
@@ -83,11 +385,23 @@ pub async fn create_order(
 ) -> Result<Order> {
     let (customer_name, customer_email) = validate_order_input(input)?;
     let fulfillment_method = normalize_fulfillment_method(input.fulfillment_method.as_deref())?;
+    let tax_rate_bps = fetch_setting_int(pool, "sales.default_tax_rate_bps", 0).await?;
 
     let mut tx = pool.begin().await?;
 
     let (subtotal_cents, line_items) =
-        resolve_order_line_items(&mut tx, input, DecrementStock::Yes).await?;
+        resolve_order_line_items(&mut tx, &input.items, DecrementStock::Yes).await?;
+    let applied_offers = resolve_checkout_offers(
+        &mut tx,
+        input.promotion_id,
+        input.voucher_code.as_deref(),
+        subtotal_cents,
+        true,
+    )
+    .await?;
+    let discount_cents = applied_offers.iter().map(|offer| offer.discount_cents).sum();
+    let (tax_cents, total_cents) =
+        compute_tax_and_total(subtotal_cents, discount_cents, tax_rate_bps);
 
     let (order_id, fulfillment_status, fulfillment_method, created_at) =
         sqlx::query_as::<_, (i32, String, String, String)>(
@@ -123,17 +437,24 @@ pub async fn create_order(
 
     sqlx::query(
         r#"
-        INSERT INTO order_sales_meta (order_id, status, payment_status, channel, total_cents)
-        VALUES ($1, 'confirmed', 'unpaid', 'web', $2)
+        INSERT INTO order_sales_meta
+            (order_id, status, payment_status, channel, discount_cents, tax_cents, total_cents, manual_discount_cents)
+        VALUES ($1, 'confirmed', 'unpaid', 'web', $2, $3, $4, 0)
         ON CONFLICT (order_id) DO NOTHING
         "#,
     )
     .bind(order_id)
-    .bind(subtotal_cents)
+    .bind(discount_cents)
+    .bind(tax_cents)
+    .bind(total_cents)
     .execute(&mut *tx)
     .await?;
 
+    increment_offer_redemption_counts(&mut tx, &applied_offers).await?;
+    insert_offer_redemptions(&mut tx, order_id, &applied_offers).await?;
+
     let customer_portal_email = customer_email.to_lowercase();
+    let discounted_merchandise_cents = (subtotal_cents - discount_cents).max(0);
     let earned_points = sqlx::query_scalar::<_, i32>(
         r#"
         SELECT FLOOR(($1::numeric / 100) * COALESCE((
@@ -145,7 +466,7 @@ pub async fn create_order(
         ), 1.00))::int
         "#,
     )
-    .bind(subtotal_cents)
+    .bind(discounted_merchandise_cents)
     .bind(&customer_portal_email)
     .fetch_one(&mut *tx)
     .await?;
@@ -168,7 +489,7 @@ pub async fn create_order(
     .bind(customer_name)
     .bind(customer_portal_email)
     .bind(earned_points)
-    .bind(subtotal_cents)
+    .bind(discounted_merchandise_cents)
     .bind(&created_at)
     .bind(customer_account_id)
     .execute(&mut *tx)
@@ -181,30 +502,38 @@ pub async fn create_order(
         customer_name: customer_name.to_string(),
         customer_email: customer_email.to_string(),
         subtotal_cents,
+        discount_cents,
+        tax_cents,
+        total_cents,
         fulfillment_status,
         fulfillment_method,
         created_at,
         items: line_items,
         fulfillment_history: Vec::new(),
+        applied_offers,
     })
 }
 
 pub async fn fetch_orders(pool: &PgPool, limit: i64, before: Option<i32>) -> Result<Vec<Order>> {
     let orders = match before {
         Some(before_id) => {
-            sqlx::query_as::<_, (i32, String, String, i32, String, String, String)>(
+            sqlx::query_as::<_, (i32, String, String, i32, i32, i32, i32, String, String, String)>(
                 r#"
                 SELECT
-                    id,
-                    customer_name,
-                    customer_email,
-                    subtotal_cents,
-                    fulfillment_status,
-                    fulfillment_method,
-                    created_at::text
+                    orders.id,
+                    orders.customer_name,
+                    orders.customer_email,
+                    orders.subtotal_cents,
+                    COALESCE(meta.discount_cents, 0) AS discount_cents,
+                    COALESCE(meta.tax_cents, 0) AS tax_cents,
+                    COALESCE(meta.total_cents, orders.subtotal_cents) AS total_cents,
+                    orders.fulfillment_status,
+                    orders.fulfillment_method,
+                    orders.created_at::text
                 FROM orders
-                WHERE id < $1
-                ORDER BY id DESC
+                LEFT JOIN order_sales_meta meta ON meta.order_id = orders.id
+                WHERE orders.id < $1
+                ORDER BY orders.id DESC
                 LIMIT $2
                 "#,
             )
@@ -214,18 +543,22 @@ pub async fn fetch_orders(pool: &PgPool, limit: i64, before: Option<i32>) -> Res
             .await?
         }
         None => {
-            sqlx::query_as::<_, (i32, String, String, i32, String, String, String)>(
+            sqlx::query_as::<_, (i32, String, String, i32, i32, i32, i32, String, String, String)>(
                 r#"
                 SELECT
-                    id,
-                    customer_name,
-                    customer_email,
-                    subtotal_cents,
-                    fulfillment_status,
-                    fulfillment_method,
-                    created_at::text
+                    orders.id,
+                    orders.customer_name,
+                    orders.customer_email,
+                    orders.subtotal_cents,
+                    COALESCE(meta.discount_cents, 0) AS discount_cents,
+                    COALESCE(meta.tax_cents, 0) AS tax_cents,
+                    COALESCE(meta.total_cents, orders.subtotal_cents) AS total_cents,
+                    orders.fulfillment_status,
+                    orders.fulfillment_method,
+                    orders.created_at::text
                 FROM orders
-                ORDER BY id DESC
+                LEFT JOIN order_sales_meta meta ON meta.order_id = orders.id
+                ORDER BY orders.id DESC
                 LIMIT $1
                 "#,
             )
@@ -263,6 +596,7 @@ pub async fn fetch_orders(pool: &PgPool, limit: i64, before: Option<i32>) -> Res
     }
 
     let mut histories_by_order = fetch_fulfillment_histories_for_orders(pool, &order_ids).await?;
+    let mut offers_by_order = fetch_applied_offers_for_orders(pool, &order_ids).await?;
 
     Ok(orders
         .into_iter()
@@ -272,6 +606,9 @@ pub async fn fetch_orders(pool: &PgPool, limit: i64, before: Option<i32>) -> Res
                 customer_name,
                 customer_email,
                 subtotal_cents,
+                discount_cents,
+                tax_cents,
+                total_cents,
                 fulfillment_status,
                 fulfillment_method,
                 created_at,
@@ -280,11 +617,15 @@ pub async fn fetch_orders(pool: &PgPool, limit: i64, before: Option<i32>) -> Res
                 customer_name,
                 customer_email,
                 subtotal_cents,
+                discount_cents,
+                tax_cents,
+                total_cents,
                 fulfillment_status,
                 fulfillment_method,
                 created_at,
                 items: items_by_order.remove(&id).unwrap_or_default(),
                 fulfillment_history: histories_by_order.remove(&id).unwrap_or_default(),
+                applied_offers: offers_by_order.remove(&id).unwrap_or_default(),
             },
         )
         .collect())

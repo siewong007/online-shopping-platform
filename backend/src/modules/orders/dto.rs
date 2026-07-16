@@ -1,1 +1,4 @@
-pub use crate::models::{AdminListQuery, CreateOrderInput, UpdateOrderFulfillmentInput};
+pub use crate::models::{
+    AdminListQuery, CheckoutQuote, CheckoutQuoteInput, CreateOrderInput,
+    UpdateOrderFulfillmentInput,
+};

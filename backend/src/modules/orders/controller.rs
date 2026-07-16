@@ -12,7 +12,10 @@ use crate::{
 };
 
 use super::{
-    dto::{AdminListQuery, CreateOrderInput, UpdateOrderFulfillmentInput},
+    dto::{
+        AdminListQuery, CheckoutQuote, CheckoutQuoteInput, CreateOrderInput,
+        UpdateOrderFulfillmentInput,
+    },
     model::Order,
     service,
 };
@@ -128,5 +131,15 @@ pub async fn checkout(
     service::create_order(&state.pool, "customer", &input, customer_account_id)
         .await
         .map(|order| (StatusCode::CREATED, Json(order)))
+        .map_err(error::map_admin_error)
+}
+
+pub async fn quote(
+    State(state): State<AppState>,
+    Json(input): Json<CheckoutQuoteInput>,
+) -> Result<Json<CheckoutQuote>, error::HttpError> {
+    service::quote(&state.pool, &input)
+        .await
+        .map(Json)
         .map_err(error::map_admin_error)
 }

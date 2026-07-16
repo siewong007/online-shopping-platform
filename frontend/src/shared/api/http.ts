@@ -4,9 +4,10 @@ import type { ValidationFieldError } from "../notifications/types";
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 const AUTH_TOKEN_STORAGE_KEY = "depot_admin_token";
 const CUSTOMER_TOKEN_STORAGE_KEY = "depot_customer_token";
+const SUPPORT_TOKEN_STORAGE_KEY = "depot_support_token";
 const REQUEST_TIMEOUT_MS = 15_000;
 
-export type AuthScope = "admin" | "customer";
+export type AuthScope = "admin" | "customer" | "support" | "public";
 
 type ApiErrorOptions = {
   code?: string;
@@ -56,6 +57,7 @@ type TimedSignal = {
 
 let authToken = readStoredToken(AUTH_TOKEN_STORAGE_KEY);
 let customerAuthToken = readStoredToken(CUSTOMER_TOKEN_STORAGE_KEY);
+let supportAuthToken = readStoredToken(SUPPORT_TOKEN_STORAGE_KEY);
 let onUnauthorized: (() => void) | null = null;
 let onApiUnavailable: (() => void) | null = null;
 
@@ -74,7 +76,14 @@ function requestHeaders(includeJson: boolean, extra?: HeadersInit, scope: AuthSc
     headers.set("Content-Type", "application/json");
   }
 
-  const token = scope === "customer" ? customerAuthToken : authToken;
+  const token =
+    scope === "admin"
+      ? authToken
+      : scope === "customer"
+        ? customerAuthToken
+        : scope === "support"
+          ? supportAuthToken
+          : null;
   if (token && !headers.has("Authorization")) {
     headers.set("Authorization", `Bearer ${token}`);
   }
@@ -254,6 +263,24 @@ export function setCustomerAuthToken(token: string | null): void {
       window.localStorage.setItem(CUSTOMER_TOKEN_STORAGE_KEY, token);
     } else {
       window.localStorage.removeItem(CUSTOMER_TOKEN_STORAGE_KEY);
+    }
+  } catch {
+    // localStorage unavailable (private browsing, etc.) — in-memory token above still applies.
+  }
+}
+
+export function getSupportAuthToken(): string | null {
+  return supportAuthToken;
+}
+
+export function setSupportAuthToken(token: string | null): void {
+  supportAuthToken = token;
+
+  try {
+    if (token) {
+      window.localStorage.setItem(SUPPORT_TOKEN_STORAGE_KEY, token);
+    } else {
+      window.localStorage.removeItem(SUPPORT_TOKEN_STORAGE_KEY);
     }
   } catch {
     // localStorage unavailable (private browsing, etc.) — in-memory token above still applies.

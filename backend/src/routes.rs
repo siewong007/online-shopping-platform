@@ -9,7 +9,7 @@ use crate::{
     app_state::AppState,
     modules::{
         admin_users, audit, auth, catalog, customer_auth, customer_portal, dashboard, health,
-        invoices, orders, payments, permissions, sales, settings, storefront,
+        invoices, offers, orders, payments, permissions, sales, settings, storefront, support,
     },
 };
 
@@ -22,6 +22,20 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
     Router::new()
         .route("/api/health", get(health::controller::health))
         .route("/api/storefront", get(storefront::controller::storefront))
+        .route(
+            "/api/support/conversations",
+            post(support::controller::create_conversation),
+        )
+        .route(
+            "/api/support/conversation",
+            get(support::controller::support_conversation)
+                .put(support::controller::close_conversation),
+        )
+        .route(
+            "/api/support/messages",
+            get(support::controller::support_messages)
+                .post(support::controller::post_guest_message),
+        )
         .route(
             "/api/customer-portal/lookup",
             get(customer_portal::controller::lookup_customer_portal),
@@ -68,6 +82,34 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
         .route(
             "/api/admin/audit-events",
             get(audit::controller::admin_audit_events),
+        )
+        .route(
+            "/api/admin/support/conversations",
+            get(support::controller::admin_inbox),
+        )
+        .route(
+            "/api/admin/support/conversations/{conversation_id}",
+            put(support::controller::update_admin_conversation),
+        )
+        .route(
+            "/api/admin/support/conversations/{conversation_id}/messages",
+            get(support::controller::admin_thread).post(support::controller::post_admin_message),
+        )
+        .route(
+            "/api/admin/promotions",
+            get(offers::controller::admin_promotions).post(offers::controller::create_promotion),
+        )
+        .route(
+            "/api/admin/promotions/{promotion_id}",
+            put(offers::controller::update_promotion).delete(offers::controller::delete_promotion),
+        )
+        .route(
+            "/api/admin/vouchers",
+            get(offers::controller::admin_vouchers).post(offers::controller::create_voucher),
+        )
+        .route(
+            "/api/admin/vouchers/{voucher_id}",
+            put(offers::controller::update_voucher).delete(offers::controller::delete_voucher),
         )
         .route(
             "/api/admin/orders",
