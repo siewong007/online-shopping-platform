@@ -70,11 +70,36 @@ import { CatalogPanel } from "./modules/catalog/components/CatalogPanel";
 import { OperationsConsole } from "./modules/dashboard/components/OperationsConsole";
 import { LandingView } from "./modules/landing/LandingView";
 import { InvoicesPanel } from "./modules/invoices/components/InvoicesPanel";
+import {
+  createPromotion as createPromotionRequest,
+  createVoucher as createVoucherRequest,
+  deletePromotion as deletePromotionRequest,
+  deleteVoucher as deleteVoucherRequest,
+  fetchPublicOffers,
+  fetchPromotions,
+  fetchVouchers,
+  updatePromotion as updatePromotionRequest,
+  updateVoucher as updateVoucherRequest
+} from "./modules/offers/api/offersApi";
+import { OfferManagementPanel } from "./modules/offers/components/OfferManagementPanel";
+import type {
+  CreatePromotionInput,
+  CreateVoucherInput,
+  Promotion,
+  PublicOffersPayload,
+  UpdatePromotionInput,
+  UpdateVoucherInput,
+  Voucher
+} from "./modules/offers/types";
+import { quoteCheckout } from "./modules/orders/api/orderApi";
 import { OrderControlPanel } from "./modules/orders/components/OrderControlPanel";
+import type { CheckoutQuote } from "./modules/orders/types";
 import { PaymentManagementPanel } from "./modules/payments/components/PaymentManagementPanel";
 import { PermissionsPanel } from "./modules/permissions/components/PermissionsPanel";
 import { SalesPanel } from "./modules/sales/components/SalesPanel";
 import { SettingsPanel } from "./modules/settings/components/SettingsPanel";
+import { SupportChatWidget } from "./modules/support/components/SupportChatWidget";
+import { SupportInboxPanel } from "./modules/support/components/SupportInboxPanel";
 import {
   fallbackCustomerPortalBenefits,
   fallbackCustomerPortalMembership,
@@ -105,7 +130,6 @@ import type {
   AdminUser,
   AutoCountExportInput,
   AuditEvent,
-  CampaignOption,
   CartItem,
   Category,
   ChangeOwnPasswordInput,
@@ -185,6 +209,7 @@ type AdminTab =
   | "campaigns"
   | "catalog"
   | "customers"
+  | "support"
   | "orders"
   | "payments"
   | "sales"
@@ -203,6 +228,7 @@ const adminTabs: { tab: AdminTab; label: string; pageSlug: string }[] = [
   { tab: "campaigns", label: "Campaigns", pageSlug: "admin-campaigns" },
   { tab: "catalog", label: "Catalog", pageSlug: "admin-catalog" },
   { tab: "customers", label: "Customers", pageSlug: "admin-customers" },
+  { tab: "support", label: "Support", pageSlug: "admin-support" },
   { tab: "orders", label: "Orders", pageSlug: "admin-orders" },
   { tab: "payments", label: "Payments", pageSlug: "admin-payments" },
   { tab: "sales", label: "Sales", pageSlug: "admin-sales" },
@@ -990,7 +1016,10 @@ function EkowayMark({ compact = false }: { compact?: boolean }) {
 export default function App() {
   const [view, setView] = useState<View>(() => viewFromPath(window.location.pathname));
   const [storefront, setStorefront] = useState<StorefrontPayload | null>(null);
+  const [publicOffers, setPublicOffers] = useState<PublicOffersPayload | null>(null);
   const [dashboard, setDashboard] = useState<AdminDashboardPayload | null>(null);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [minPriceCents, setMinPriceCents] = useState<number | null>(null);
@@ -1004,12 +1033,12 @@ export default function App() {
       return [];
     }
   });
+  const [selectedPromotionId, setSelectedPromotionId] = useState<number | null>(null);
+  const [voucherCode, setVoucherCode] = useState("");
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [adminTab, setAdminTab] = useState<AdminTab>("overview");
-  const [selectedCampaign, setSelectedCampaign] = useState<CampaignOption | null>(null);
-  const [discount, setDiscount] = useState(25);
   const [activityFeed, setActivityFeed] = useState<ActivityItem[]>([]);
   const [oldestAuditEventId, setOldestAuditEventId] = useState<number | null>(null);
   const [hasMoreActivity, setHasMoreActivity] = useState(false);
@@ -1058,6 +1087,10 @@ export default function App() {
 
   useEffect(() => {
     void fetchStorefront().then(setStorefront);
+  }, []);
+
+  useEffect(() => {
+    void fetchPublicOffers().then(setPublicOffers);
   }, []);
 
   useEffect(() => {
@@ -1118,10 +1151,12 @@ export default function App() {
     ordersData,
     paymentsData,
     permissionsData,
+    promotionsData,
     salesData,
     salesSummaryData,
     systemSettingsData,
-    customerProfileData
+    customerProfileData,
+    vouchersData
   }: {
     adminUsersData: AdminUser[];
     auditEventsData: AuditEvent[];
@@ -1131,15 +1166,18 @@ export default function App() {
     ordersData: PagedResponse<Order>;
     paymentsData: Payment[];
     permissionsData: PermissionsPayload;
+    promotionsData: Promotion[];
     salesData: PagedResponse<SalesRecord>;
     salesSummaryData: SalesSummaryPayload;
     systemSettingsData: SystemSetting[];
     customerProfileData: PagedResponse<CustomerPortalProfile>;
+    vouchersData: Voucher[];
   }) => {
     setAdminUsers(adminUsersData);
     setAdminCatalog(catalogData);
     setDashboard(dashboardData);
-    setSelectedCampaign(dashboardData.campaigns[0] ?? null);
+    setPromotions(promotionsData);
+    setVouchers(vouchersData);
     setActivityFeed(auditEventsData.map(auditEventToActivityItem));
     setOldestAuditEventId(
       auditEventsData.length > 0
@@ -1186,11 +1224,13 @@ export default function App() {
       dashboardData,
       ordersData,
       paymentsData,
+      promotionsData,
       salesData,
       salesSummaryData,
       invoicesData,
       systemSettingsData,
       customerProfileData,
+      vouchersData,
       permissionsData
     ] = await Promise.all([
       fetchAdminUsers(),
@@ -1199,11 +1239,13 @@ export default function App() {
       fetchAdminDashboard(),
       fetchOrders(),
       fetchPayments(),
+      fetchPromotions(),
       fetchSales(),
       fetchSalesSummary(),
       fetchInvoices(),
       fetchSystemSettings(),
       fetchCustomerPortalProfiles(),
+      fetchVouchers(),
       canReadPermissionMatrix ? fetchPermissions() : Promise.resolve(ownPermissions)
     ]);
 
@@ -1214,11 +1256,13 @@ export default function App() {
       dashboardData,
       ordersData,
       paymentsData,
+      promotionsData,
       salesData,
       salesSummaryData,
       invoicesData,
       systemSettingsData,
       customerProfileData,
+      vouchersData,
       permissionsData
     });
   };
@@ -1231,11 +1275,13 @@ export default function App() {
       dashboardData,
       ordersData,
       paymentsData,
+      promotionsData,
       salesData,
       salesSummaryData,
       invoicesData,
       systemSettingsData,
-      customerProfileData
+      customerProfileData,
+      vouchersData
     ] = await Promise.all([
       fetchAdminUsers(),
       fetchAuditEvents(),
@@ -1243,11 +1289,13 @@ export default function App() {
       fetchAdminDashboard(),
       fetchOrders(),
       fetchPayments(),
+      fetchPromotions(),
       fetchSales(),
       fetchSalesSummary(),
       fetchInvoices(),
       fetchSystemSettings(),
-      fetchCustomerPortalProfiles()
+      fetchCustomerPortalProfiles(),
+      fetchVouchers()
     ]);
 
     setCurrentAdmin(null);
@@ -1259,11 +1307,13 @@ export default function App() {
       dashboardData,
       ordersData,
       paymentsData,
+      promotionsData,
       salesData,
       salesSummaryData,
       invoicesData,
       systemSettingsData,
       customerProfileData,
+      vouchersData,
       permissionsData: fallbackPermissions
     });
   };
@@ -1421,7 +1471,17 @@ export default function App() {
     );
   };
 
-  const clearCart = () => setCart([]);
+  const clearCart = () => {
+    setCart([]);
+    setSelectedPromotionId(null);
+    setVoucherCode("");
+  };
+
+  const grabPromotion = (promotionId: number) => {
+    setSelectedPromotionId(promotionId);
+    setIsAccountOpen(false);
+    setIsCartOpen(true);
+  };
 
   const lookupCustomer = async (email: string): Promise<CustomerLookupPayload> => {
     const normalizedEmail = email.trim().toLowerCase();
@@ -1449,7 +1509,9 @@ export default function App() {
     setActivityFeed((current) => [
       {
         happened_at: "Now",
-        detail: `Order #${order.id} placed for ${currencyFromCents(order.subtotal_cents)}.`
+        detail: `Order #${order.id} placed for ${currencyFromCents(
+          order.total_cents ?? order.subtotal_cents
+        )}.`
       },
       ...current
     ]);
@@ -1805,10 +1867,89 @@ export default function App() {
     await handleAdminLogout();
   };
 
-  const applyCampaign = () => {
-    if (!selectedCampaign) {
-      return;
-    }
+  const createPromotion = async (input: CreatePromotionInput): Promise<Promotion> => {
+    const promotion = await createPromotionRequest(input);
+
+    setPromotions((current) =>
+      current.some((item) => item.id === promotion.id)
+        ? current.map((item) => (item.id === promotion.id ? promotion : item))
+        : [promotion, ...current]
+    );
+    setActivityFeed((current) => [
+      { happened_at: "Now", detail: `Promotion created: ${promotion.title}.` },
+      ...current
+    ]);
+
+    return promotion;
+  };
+
+  const updatePromotion = async (
+    promotionId: number,
+    input: UpdatePromotionInput
+  ): Promise<Promotion> => {
+    const promotion = await updatePromotionRequest(promotionId, input);
+
+    setPromotions((current) =>
+      current.map((item) => (item.id === promotion.id ? promotion : item))
+    );
+    setActivityFeed((current) => [
+      { happened_at: "Now", detail: `Promotion updated: ${promotion.title}.` },
+      ...current
+    ]);
+
+    return promotion;
+  };
+
+  const deletePromotion = async (promotionId: number): Promise<void> => {
+    const promotion = promotions.find((item) => item.id === promotionId);
+
+    await deletePromotionRequest(promotionId);
+
+    setPromotions((current) => current.filter((item) => item.id !== promotionId));
+    setActivityFeed((current) => [
+      { happened_at: "Now", detail: `Promotion deleted: ${promotion?.title ?? `#${promotionId}`}.` },
+      ...current
+    ]);
+  };
+
+  const createVoucher = async (input: CreateVoucherInput): Promise<Voucher> => {
+    const voucher = await createVoucherRequest(input);
+
+    setVouchers((current) =>
+      current.some((item) => item.id === voucher.id)
+        ? current.map((item) => (item.id === voucher.id ? voucher : item))
+        : [voucher, ...current]
+    );
+    setActivityFeed((current) => [
+      { happened_at: "Now", detail: `Voucher created: ${voucher.code}.` },
+      ...current
+    ]);
+
+    return voucher;
+  };
+
+  const updateVoucher = async (voucherId: number, input: UpdateVoucherInput): Promise<Voucher> => {
+    const voucher = await updateVoucherRequest(voucherId, input);
+
+    setVouchers((current) => current.map((item) => (item.id === voucher.id ? voucher : item)));
+    setActivityFeed((current) => [
+      { happened_at: "Now", detail: `Voucher updated: ${voucher.code}.` },
+      ...current
+    ]);
+
+    return voucher;
+  };
+
+  const deleteVoucher = async (voucherId: number): Promise<void> => {
+    const voucher = vouchers.find((item) => item.id === voucherId);
+
+    await deleteVoucherRequest(voucherId);
+
+    setVouchers((current) => current.filter((item) => item.id !== voucherId));
+    setActivityFeed((current) => [
+      { happened_at: "Now", detail: `Voucher deleted: ${voucher?.code ?? `#${voucherId}`}.` },
+      ...current
+    ]);
   };
 
   const runSupplierSync = async () => {
@@ -2154,12 +2295,18 @@ export default function App() {
             setIsAccountOpen(false);
             setIsCartOpen(true);
           }}
+          onGrabPromotion={grabPromotion}
+          onPromotionChange={setSelectedPromotionId}
           onRemoveFromCart={removeFromCart}
           onUpdateQuantity={updateQuantity}
+          onVoucherCodeChange={setVoucherCode}
+          publicOffers={publicOffers}
           searchTerm={searchTerm}
           selectedCategory={selectedCategory}
+          selectedPromotionId={selectedPromotionId}
           sortOption={sortOption}
           storefront={storefront}
+          voucherCode={voucherCode}
         />
       ) : adminAuth === "unauthenticated" ? (
         <AdminLoginScreen
@@ -2179,7 +2326,6 @@ export default function App() {
           customerProfiles={customerProfiles}
           dashboard={dashboard}
           demoMode={adminAuth === "demo"}
-          discount={discount}
           fulfillmentByStage={fulfillmentByStage}
           hasMoreActivity={hasMoreActivity}
           isChangePasswordOpen={isChangePasswordOpen}
@@ -2188,10 +2334,8 @@ export default function App() {
           isLoadingMoreInvoices={isLoadingMoreInvoices}
           isLoadingMoreOrders={isLoadingMoreOrders}
           isLoadingMoreSales={isLoadingMoreSales}
-          onApplyCampaign={applyCampaign}
           onLoadMoreActivity={() => void loadMoreActivity()}
           onBackToStore={() => openView("store")}
-          onChangeDiscount={setDiscount}
           onChangeOwnPassword={changeOwnPassword}
           onChangeTab={setAdminTab}
           onCloseChangePassword={() => setIsChangePasswordOpen(false)}
@@ -2202,13 +2346,17 @@ export default function App() {
           onCreateInvoiceFromOrder={createInvoiceFromOrder}
           onCreatePayment={createPayment}
           onCreateProduct={createProduct}
+          onCreatePromotion={createPromotion}
           onCreateRole={createRole}
+          onCreateVoucher={createVoucher}
           onDeleteAdminOrder={deleteAdminOrder}
           onDeleteCategory={deleteCategory}
           onDeleteCustomerPortalProfile={deleteCustomerPortalProfile}
           onDeletePayment={deletePayment}
           onDeleteProduct={deleteProduct}
+          onDeletePromotion={deletePromotion}
           onDeleteRole={deleteRole}
+          onDeleteVoucher={deleteVoucher}
           onExportAutoCountInvoices={exportAutoCountInvoices}
           onLogout={() => void handleAdminLogout()}
           onLoadMoreCustomerProfiles={() => void loadMoreCustomerProfiles()}
@@ -2219,9 +2367,6 @@ export default function App() {
           onRecordInvoicePayment={recordInvoicePayment}
           onResetAdminUserPassword={resetAdminUserPassword}
           onRunSync={runSupplierSync}
-          onSelectCampaign={(name) =>
-            setSelectedCampaign(dashboard.campaigns.find((item) => item.name === name) ?? null)
-          }
           onSetAdminUserActive={setAdminUserActive}
           onUpdateAdminOrder={updateAdminOrder}
           onUpdateAdminUserProfile={updateAdminUserProfile}
@@ -2230,11 +2375,13 @@ export default function App() {
           onUpdateInvoiceBilling={updateInvoiceBilling}
           onUpdatePayment={updatePayment}
           onUpdateProduct={updateProduct}
+          onUpdatePromotion={updatePromotion}
           onUpdateRole={updateRole}
           onUpdateRolePermission={updateRolePermission}
           onUpdateSalesDetails={updateSalesDetails}
           onUpdateSalesStatus={updateSalesStatus}
           onUpdateSystemSetting={updateSystemSetting}
+          onUpdateVoucher={updateVoucher}
           onVoidInvoice={voidInvoice}
           hasMoreCustomerProfiles={customerProfilesNextCursor !== null}
           hasMoreInvoices={invoicesNextCursor !== null}
@@ -2248,8 +2395,9 @@ export default function App() {
           systemSettings={systemSettings}
           permissions={permissions}
           products={adminCatalog.products}
-          selectedCampaign={selectedCampaign}
+          promotions={promotions}
           onUpdateCustomerPortalProfile={updateCustomerPortalProfile}
+          vouchers={vouchers}
         />
       )}
     </div>
@@ -2279,12 +2427,18 @@ type StorefrontViewProps = {
   onOpenAdmin: () => void;
   onOpenAccount: () => void;
   onOpenCart: () => void;
+  onGrabPromotion: (promotionId: number) => void;
+  onPromotionChange: (promotionId: number | null) => void;
   onRemoveFromCart: (productId: number) => void;
   onUpdateQuantity: (productId: number, quantity: number) => void;
+  onVoucherCodeChange: (code: string) => void;
+  publicOffers: PublicOffersPayload | null;
   searchTerm: string;
   selectedCategory: string;
+  selectedPromotionId: number | null;
   sortOption: StorefrontSort;
   storefront: StorefrontPayload;
+  voucherCode: string;
 };
 
 function StorefrontView({
@@ -2310,12 +2464,18 @@ function StorefrontView({
   onOpenAdmin,
   onOpenAccount,
   onOpenCart,
+  onGrabPromotion,
+  onPromotionChange,
   onRemoveFromCart,
   onUpdateQuantity,
+  onVoucherCodeChange,
+  publicOffers,
   searchTerm,
   selectedCategory,
+  selectedPromotionId,
   sortOption,
-  storefront
+  storefront,
+  voucherCode
 }: StorefrontViewProps) {
   const { t } = useI18n();
   const activeCategory =
@@ -2435,13 +2595,30 @@ function StorefrontView({
         </section>
 
         <section className="promo-rail" id="deals">
-          {storefront.promotions.map((promotion) => (
-            <article key={promotion.title}>
-              <p className="eyebrow">{promotion.label}</p>
-              <h3>{promotion.title}</h3>
-              <p>{promotion.description}</p>
-            </article>
-          ))}
+          {publicOffers?.promotions.length ? (
+            publicOffers.promotions.map((promotion) => (
+              <article key={promotion.id}>
+                <p className="eyebrow">{promotion.label}</p>
+                <h3>{promotion.title}</h3>
+                <p>{promotion.description}</p>
+                <button
+                  className="solid-button"
+                  onClick={() => onGrabPromotion(promotion.id)}
+                  type="button"
+                >
+                  Grab deal
+                </button>
+              </article>
+            ))
+          ) : (
+            storefront.promotions.map((promotion) => (
+              <article key={promotion.title}>
+                <p className="eyebrow">{promotion.label}</p>
+                <h3>{promotion.title}</h3>
+                <p>{promotion.description}</p>
+              </article>
+            ))
+          )}
         </section>
 
         <section className="seasonal-band" aria-label="Seasonal highlights">
@@ -2629,14 +2806,23 @@ function StorefrontView({
         onCheckout={onCheckout}
         onClose={onCloseCart}
         onCompleted={onClearCart}
+        onPromotionChange={onPromotionChange}
         onRemoveFromCart={onRemoveFromCart}
         onUpdateQuantity={onUpdateQuantity}
+        onVoucherCodeChange={onVoucherCodeChange}
+        publicOffers={publicOffers}
+        selectedPromotionId={selectedPromotionId}
+        voucherCode={voucherCode}
       />
       <AccountDrawer
         open={isAccountOpen}
         customerAccountEmail={customerAccountEmail}
         onLookupCustomer={onLookupCustomer}
         onClose={onCloseAccount}
+      />
+      <SupportChatWidget
+        customerEmail={customerAccountEmail}
+        isSuppressed={isCartOpen || isAccountOpen}
       />
     </div>
   );
@@ -3501,8 +3687,13 @@ type CartDrawerProps = {
   onCheckout: (input: CreateOrderInput) => Promise<Order>;
   onClose: () => void;
   onCompleted: () => void;
+  onPromotionChange: (promotionId: number | null) => void;
   onRemoveFromCart: (productId: number) => void;
   onUpdateQuantity: (productId: number, quantity: number) => void;
+  onVoucherCodeChange: (code: string) => void;
+  publicOffers: PublicOffersPayload | null;
+  selectedPromotionId: number | null;
+  voucherCode: string;
 };
 
 function CartDrawer({
@@ -3512,8 +3703,13 @@ function CartDrawer({
   onCheckout,
   onClose,
   onCompleted,
+  onPromotionChange,
   onRemoveFromCart,
-  onUpdateQuantity
+  onUpdateQuantity,
+  onVoucherCodeChange,
+  publicOffers,
+  selectedPromotionId,
+  voucherCode
 }: CartDrawerProps) {
   const { t } = useI18n();
   const [stage, setStage] = useState<"cart" | "checkout">("cart");
@@ -3525,6 +3721,9 @@ function CartDrawer({
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null);
+  const [quote, setQuote] = useState<CheckoutQuote | null>(null);
+  const [quoteFeedback, setQuoteFeedback] = useState<string | null>(null);
+  const [isQuoting, setIsQuoting] = useState(false);
 
   useEffect(() => {
     if (!open) {
@@ -3545,11 +3744,67 @@ function CartDrawer({
     });
   }, [customerAccountEmail, open]);
 
+  useEffect(() => {
+    if (!open || cart.length === 0) {
+      setQuote(null);
+      setQuoteFeedback(null);
+      setIsQuoting(false);
+      return;
+    }
+
+    let cancelled = false;
+    setQuote(null);
+    setQuoteFeedback(null);
+    setIsQuoting(true);
+
+    const timeout = window.setTimeout(() => {
+      void quoteCheckout({
+        items: cart.map((item) => ({
+          product_id: item.product.id,
+          quantity: item.quantity
+        })),
+        promotion_id: selectedPromotionId ?? undefined,
+        voucher_code: voucherCode.trim() || undefined
+      })
+        .then((nextQuote) => {
+          if (!cancelled) {
+            setQuote(nextQuote);
+          }
+        })
+        .catch((error) => {
+          if (!cancelled) {
+            setQuoteFeedback(
+              normalizeError(error, {
+                operation: "calculate checkout total",
+                scope: "checkout"
+              }).userMessage
+            );
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setIsQuoting(false);
+          }
+        });
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [cart, open, selectedPromotionId, voucherCode]);
+
   if (!open) {
     return null;
   }
 
   const subtotalCents = cart.reduce((sum, item) => sum + item.product.price_cents * item.quantity, 0);
+  const eligiblePromotions =
+    publicOffers?.promotions.filter(
+      (promotion) => subtotalCents >= promotion.minimum_subtotal_cents
+    ) ?? [];
+  const eligibleVouchers =
+    publicOffers?.vouchers.filter((voucher) => subtotalCents >= voucher.minimum_subtotal_cents) ?? [];
 
   const close = () => {
     setStage("cart");
@@ -3567,9 +3822,11 @@ function CartDrawer({
     try {
       const order = await onCheckout({
         customer_name: form.customer_name,
-        customer_email: form.customer_email,
-        fulfillment_method: form.fulfillment_method,
-        items: cart.map((item) => ({ product_id: item.product.id, quantity: item.quantity }))
+      customer_email: form.customer_email,
+      fulfillment_method: form.fulfillment_method,
+        items: cart.map((item) => ({ product_id: item.product.id, quantity: item.quantity })),
+        promotion_id: selectedPromotionId ?? undefined,
+        voucher_code: voucherCode.trim() || undefined
       });
       setConfirmedOrder(order);
       onCompleted();
@@ -3586,6 +3843,42 @@ function CartDrawer({
   } else if (stage === "checkout") {
     title = "Checkout";
   }
+
+  const renderTotals = () => {
+    if (!quote) {
+      return (
+        <div className="cart-subtotal">
+          <span>{t("shop.cartd.subtotal")}</span>
+          <strong>{currencyFromCents(subtotalCents)}</strong>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <div className="cart-subtotal">
+          <span>Subtotal</span>
+          <strong>{currencyFromCents(quote.subtotal_cents)}</strong>
+        </div>
+        {quote.discount_cents !== 0 ? (
+          <div className="cart-subtotal">
+            <span>Discount</span>
+            <strong>-{currencyFromCents(quote.discount_cents)}</strong>
+          </div>
+        ) : null}
+        {quote.tax_cents !== 0 ? (
+          <div className="cart-subtotal">
+            <span>Tax</span>
+            <strong>{currencyFromCents(quote.tax_cents)}</strong>
+          </div>
+        ) : null}
+        <div className="cart-subtotal">
+          <span>Total</span>
+          <strong>{currencyFromCents(quote.total_cents)}</strong>
+        </div>
+      </>
+    );
+  };
 
   return (
     <div className="cart-overlay" role="dialog" aria-modal="true" aria-label="Shopping cart">
@@ -3605,7 +3898,9 @@ function CartDrawer({
               Thanks, {confirmedOrder.customer_name}! A confirmation is on its way to{" "}
               {confirmedOrder.customer_email}.
             </p>
-            <p className="cart-confirm-total">{currencyFromCents(confirmedOrder.subtotal_cents)} total</p>
+            <p className="cart-confirm-total">
+              {currencyFromCents(confirmedOrder.total_cents ?? confirmedOrder.subtotal_cents)} total
+            </p>
             <p>{fulfillmentLabel(confirmedOrder.fulfillment_method)} order</p>
             <button className="solid-button" onClick={close}>
               Continue Shopping
@@ -3671,12 +3966,85 @@ function CartDrawer({
                 </li>
               ))}
             </ul>
+            <section className="cart-checkout-form" aria-labelledby="cart-deals-title">
+              <h3 id="cart-deals-title">Deals &amp; vouchers</h3>
+              <label>
+                <span>Promotion</span>
+                <select
+                  aria-label="Select a promotion"
+                  onChange={(event) =>
+                    onPromotionChange(event.target.value ? Number(event.target.value) : null)
+                  }
+                  value={selectedPromotionId ?? ""}
+                >
+                  <option value="">No promotion</option>
+                  {eligiblePromotions.map((promotion) => (
+                    <option key={promotion.id} value={promotion.id}>
+                      {promotion.label}: {promotion.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {selectedPromotionId !== null ? (
+                <button
+                  className="outline-button"
+                  onClick={() => onPromotionChange(null)}
+                  type="button"
+                >
+                  Remove selected promotion
+                </button>
+              ) : null}
+              <label>
+                <span>Voucher code</span>
+                <input
+                  aria-label="Voucher code"
+                  onChange={(event) => onVoucherCodeChange(event.target.value)}
+                  placeholder="Enter voucher code"
+                  value={voucherCode}
+                />
+              </label>
+              {voucherCode.trim() ? (
+                <button
+                  className="outline-button"
+                  onClick={() => onVoucherCodeChange("")}
+                  type="button"
+                >
+                  Remove voucher
+                </button>
+              ) : null}
+              {eligibleVouchers.length ? (
+                <div>
+                  <strong>Public vouchers</strong>
+                  <div className="cart-checkout-actions">
+                    {eligibleVouchers.map((voucher) => (
+                      <button
+                        aria-label={`Apply public voucher ${voucher.code}`}
+                        className="outline-button"
+                        disabled={isQuoting}
+                        key={voucher.id}
+                        onClick={() => onVoucherCodeChange(voucher.code)}
+                        type="button"
+                      >
+                        Apply {voucher.code}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              {isQuoting ? <p className="cart-feedback">Updating checkout total…</p> : null}
+              {quoteFeedback ? (
+                <p className="cart-feedback" role="alert">
+                  {quoteFeedback}
+                </p>
+              ) : null}
+            </section>
             <footer className="cart-drawer-foot">
-              <div className="cart-subtotal">
-                <span>{t("shop.cartd.subtotal")}</span>
-                <strong>{currencyFromCents(subtotalCents)}</strong>
-              </div>
-              <button className="solid-button" onClick={() => setStage("checkout")}>
+              {renderTotals()}
+              <button
+                className="solid-button"
+                disabled={isQuoting}
+                onClick={() => setStage("checkout")}
+              >
                 Proceed to Checkout
               </button>
             </footer>
@@ -3718,15 +4086,18 @@ function CartDrawer({
               </select>
             </label>
             {feedback ? <p className="cart-feedback">{feedback}</p> : null}
-            <div className="cart-subtotal">
-              <span>{t("shop.cartd.subtotal")}</span>
-              <strong>{currencyFromCents(subtotalCents)}</strong>
-            </div>
+            {isQuoting ? <p className="cart-feedback">Updating checkout total…</p> : null}
+            {quoteFeedback ? (
+              <p className="cart-feedback" role="alert">
+                {quoteFeedback}
+              </p>
+            ) : null}
+            {renderTotals()}
             <div className="cart-checkout-actions">
               <button type="button" className="outline-button" onClick={() => setStage("cart")}>
                 Back to cart
               </button>
-              <button type="submit" className="solid-button" disabled={isSubmitting}>
+              <button type="submit" className="solid-button" disabled={isSubmitting || isQuoting}>
                 {isSubmitting ? "Placing order..." : "Place Order"}
               </button>
             </div>
@@ -3747,7 +4118,6 @@ type AdminViewProps = {
   customerProfiles: CustomerPortalProfile[];
   dashboard: AdminDashboardPayload;
   demoMode: boolean;
-  discount: number;
   fulfillmentByStage: Record<FulfillmentStatus, Order[]>;
   hasMoreCustomerProfiles: boolean;
   hasMoreActivity: boolean;
@@ -3760,9 +4130,7 @@ type AdminViewProps = {
   isLoadingMoreInvoices: boolean;
   isLoadingMoreOrders: boolean;
   isLoadingMoreSales: boolean;
-  onApplyCampaign: () => void;
   onBackToStore: () => void;
-  onChangeDiscount: (value: number) => void;
   onChangeOwnPassword: (input: ChangeOwnPasswordInput) => Promise<void>;
   onChangeTab: (tab: AdminTab) => void;
   onCloseChangePassword: () => void;
@@ -3779,13 +4147,17 @@ type AdminViewProps = {
   ) => Promise<Invoice>;
   onCreatePayment: (input: CreatePaymentInput) => Promise<Payment>;
   onCreateProduct: (input: CreateProductInput) => Promise<Product>;
+  onCreatePromotion: (input: CreatePromotionInput) => Promise<Promotion>;
   onCreateRole: (input: CreateRoleInput) => Promise<Role>;
+  onCreateVoucher: (input: CreateVoucherInput) => Promise<Voucher>;
   onDeleteAdminOrder: (orderId: number) => Promise<void>;
   onDeleteCategory: (slug: string) => Promise<void>;
   onDeleteCustomerPortalProfile: (profileId: number) => Promise<void>;
   onDeletePayment: (paymentId: number) => Promise<void>;
   onDeleteProduct: (productId: number) => Promise<void>;
+  onDeletePromotion: (promotionId: number) => Promise<void>;
   onDeleteRole: (roleId: number) => Promise<void>;
+  onDeleteVoucher: (voucherId: number) => Promise<void>;
   onExportAutoCountInvoices: (input: AutoCountExportInput) => Promise<void>;
   onLogout: () => void;
   onLoadMoreCustomerProfiles: () => void;
@@ -3799,7 +4171,6 @@ type AdminViewProps = {
   ) => Promise<Invoice>;
   onResetAdminUserPassword: (userId: number, input: AdminResetPasswordInput) => Promise<void>;
   onRunSync: () => void;
-  onSelectCampaign: (name: string) => void;
   onSetAdminUserActive: (userId: number, input: SetAdminUserActiveInput) => Promise<AdminUser>;
   onUpdateAdminOrder: (orderId: number, input: CreateOrderInput) => Promise<Order>;
   onUpdateAdminUserProfile: (
@@ -3814,6 +4185,7 @@ type AdminViewProps = {
   onUpdateInvoiceBilling: (invoiceId: number, input: UpdateInvoiceBillingInput) => Promise<Invoice>;
   onUpdatePayment: (paymentId: number, input: UpdatePaymentInput) => Promise<Payment>;
   onUpdateProduct: (productId: number, input: UpdateProductInput) => Promise<Product>;
+  onUpdatePromotion: (promotionId: number, input: UpdatePromotionInput) => Promise<Promotion>;
   onUpdateOrderFulfillment: (
     orderId: number,
     input: UpdateOrderFulfillmentInput
@@ -3823,6 +4195,7 @@ type AdminViewProps = {
   onUpdateSalesDetails: (orderId: number, input: UpdateSalesDetailsInput) => Promise<SalesRecord>;
   onUpdateSalesStatus: (orderId: number, input: UpdateSalesStatusInput) => Promise<SalesRecord>;
   onUpdateSystemSetting: (key: string, input: UpdateSystemSettingInput) => Promise<SystemSetting>;
+  onUpdateVoucher: (voucherId: number, input: UpdateVoucherInput) => Promise<Voucher>;
   onVoidInvoice: (invoiceId: number) => Promise<Invoice>;
   orders: Order[];
   payments: Payment[];
@@ -3832,7 +4205,8 @@ type AdminViewProps = {
   systemSettings: SystemSetting[];
   permissions: PermissionsPayload | null;
   products: Product[];
-  selectedCampaign: CampaignOption | null;
+  promotions: Promotion[];
+  vouchers: Voucher[];
 };
 
 function AdminView({
@@ -3845,7 +4219,6 @@ function AdminView({
   customerProfiles,
   dashboard,
   demoMode,
-  discount,
   fulfillmentByStage,
   hasMoreCustomerProfiles,
   hasMoreActivity,
@@ -3858,9 +4231,7 @@ function AdminView({
   isLoadingMoreInvoices,
   isLoadingMoreOrders,
   isLoadingMoreSales,
-  onApplyCampaign,
   onBackToStore,
-  onChangeDiscount,
   onChangeOwnPassword,
   onChangeTab,
   onCloseChangePassword,
@@ -3872,13 +4243,17 @@ function AdminView({
   onCreateInvoiceFromOrder,
   onCreatePayment,
   onCreateProduct,
+  onCreatePromotion,
   onCreateRole,
+  onCreateVoucher,
   onDeleteAdminOrder,
   onDeleteCategory,
   onDeleteCustomerPortalProfile,
   onDeletePayment,
   onDeleteProduct,
+  onDeletePromotion,
   onDeleteRole,
+  onDeleteVoucher,
   onExportAutoCountInvoices,
   onLogout,
   onLoadMoreCustomerProfiles,
@@ -3889,7 +4264,6 @@ function AdminView({
   onRecordInvoicePayment,
   onResetAdminUserPassword,
   onRunSync,
-  onSelectCampaign,
   onSetAdminUserActive,
   onUpdateAdminOrder,
   onUpdateAdminUserProfile,
@@ -3898,12 +4272,14 @@ function AdminView({
   onUpdateInvoiceBilling,
   onUpdatePayment,
   onUpdateProduct,
+  onUpdatePromotion,
   onUpdateOrderFulfillment,
   onUpdateRole,
   onUpdateRolePermission,
   onUpdateSalesDetails,
   onUpdateSalesStatus,
   onUpdateSystemSetting,
+  onUpdateVoucher,
   onVoidInvoice,
   orders,
   payments,
@@ -3913,7 +4289,8 @@ function AdminView({
   systemSettings,
   permissions,
   products,
-  selectedCampaign
+  promotions,
+  vouchers
 }: AdminViewProps) {
   const { notify, notifyError } = useNotifications();
   const [permissionEditorRoleId, setPermissionEditorRoleId] = useState<number | null>(activeRoleId);
@@ -3929,6 +4306,8 @@ function AdminView({
   const canCreateCustomers = canAccess(permissions, activeRoleId, "admin-customers", "create");
   const canUpdateCustomers = canAccess(permissions, activeRoleId, "admin-customers", "update");
   const canDeleteCustomers = canAccess(permissions, activeRoleId, "admin-customers", "delete");
+  const canReadSupport = canAccess(permissions, activeRoleId, "admin-support", "read");
+  const canUpdateSupport = canAccess(permissions, activeRoleId, "admin-support", "update");
   const canCreateOrders = canAccess(permissions, activeRoleId, "admin-orders", "create");
   const canUpdateOrders = canAccess(permissions, activeRoleId, "admin-orders", "update");
   const canDeleteOrders = canAccess(permissions, activeRoleId, "admin-orders", "delete");
@@ -3939,7 +4318,9 @@ function AdminView({
   const canCreateInvoices = canAccess(permissions, activeRoleId, "admin-invoices", "create");
   const canUpdateInvoices = canAccess(permissions, activeRoleId, "admin-invoices", "update");
   const canUpdateSettings = canAccess(permissions, activeRoleId, "admin-settings", "update");
+  const canCreateCampaigns = canAccess(permissions, activeRoleId, "admin-campaigns", "create");
   const canUpdateCampaigns = canAccess(permissions, activeRoleId, "admin-campaigns", "update");
+  const canDeleteCampaigns = canAccess(permissions, activeRoleId, "admin-campaigns", "delete");
   const canRunOperationsSync = canAccess(permissions, activeRoleId, "admin-overview", "update");
   const canCreateAdminUsers = canAccess(permissions, activeRoleId, "admin-permissions", "create");
   const canUpdateAdminUsers = canAccess(permissions, activeRoleId, "admin-permissions", "update");
@@ -4169,60 +4550,20 @@ function AdminView({
         ) : null}
 
         {adminTab === "campaigns" ? (
-          <section className="admin-section active">
-            <div className="admin-panels two-up">
-              <article className="dashboard-panel">
-                <div className="panel-header">
-                  <div>
-                    <p className="eyebrow">Campaign composer</p>
-                    <h3>Promo controls</h3>
-                  </div>
-                  <span className={`status-pill ${canUpdateCampaigns ? "live" : ""}`}>
-                    {canUpdateCampaigns ? "Editable" : "Read only"}
-                  </span>
-                </div>
-                <div className="campaign-controls">
-                  <label>
-                    Featured department
-                    <select
-                      value={selectedCampaign?.name ?? ""}
-                      onChange={(event) => onSelectCampaign(event.target.value)}
-                    >
-                      {dashboard.campaigns.map((campaign) => (
-                        <option key={campaign.name} value={campaign.name}>
-                          {campaign.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    Offer intensity
-                    <input
-                      max={40}
-                      min={10}
-                      onChange={(event) => onChangeDiscount(Number(event.target.value))}
-                      type="range"
-                      value={discount}
-                    />
-                  </label>
-                  <button
-                    className="solid-button"
-                    disabled={!canUpdateCampaigns}
-                    onClick={onApplyCampaign}
-                  >
-                    Apply Campaign Update
-                  </button>
-                </div>
-              </article>
-
-              <article className="dashboard-panel campaign-preview">
-                <p className="eyebrow">Live preview</p>
-                <h3>{selectedCampaign?.name ?? "Campaign"}</h3>
-                <strong>{discount}% off</strong>
-                <p>{selectedCampaign?.description ?? "Select a campaign to update the preview."}</p>
-              </article>
-            </div>
-          </section>
+          <OfferManagementPanel
+            canCreate={canCreateCampaigns}
+            canDelete={canDeleteCampaigns}
+            canUpdate={canUpdateCampaigns}
+            demoMode={demoMode}
+            onCreatePromotion={onCreatePromotion}
+            onCreateVoucher={onCreateVoucher}
+            onDeletePromotion={onDeletePromotion}
+            onDeleteVoucher={onDeleteVoucher}
+            onUpdatePromotion={onUpdatePromotion}
+            onUpdateVoucher={onUpdateVoucher}
+            promotions={promotions}
+            vouchers={vouchers}
+          />
         ) : null}
 
         {adminTab === "catalog" ? (
@@ -4254,6 +4595,13 @@ function AdminView({
             onUpdateCustomerPortalProfile={onUpdateCustomerPortalProfile}
             orders={orders}
             profiles={customerProfiles}
+          />
+        ) : null}
+
+        {adminTab === "support" && canReadSupport ? (
+          <SupportInboxPanel
+            canUpdate={canUpdateSupport}
+            currentAdminUserId={currentAdmin?.user.id ?? null}
           />
         ) : null}
 

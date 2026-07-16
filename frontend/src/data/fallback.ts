@@ -660,10 +660,11 @@ export const fallbackPermissions: PermissionsPayload = {
     { id: 10, slug: "storefront", name: "Storefront", description: "Customer-facing shopping experience." },
     { id: 11, slug: "admin-sales", name: "Sales", description: "Sales pipeline status, channel and payment tracking." },
     { id: 12, slug: "admin-invoices", name: "Invoices", description: "Invoice generation, billing details and payment records." },
-    { id: 13, slug: "admin-settings", name: "Settings", description: "System-wide configuration for tax, invoicing and branding." }
+    { id: 13, slug: "admin-settings", name: "Settings", description: "System-wide configuration for tax, invoicing and branding." },
+    { id: 14, slug: "admin-support", name: "Support", description: "Guest support conversation inbox and replies." }
   ],
   permissions: [
-    ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map((pageId) => ({
+    ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map((pageId) => ({
       role_id: 1,
       page_id: pageId,
       can_create: true,
@@ -685,6 +686,7 @@ export const fallbackPermissions: PermissionsPayload = {
       [2, 11, true, true, true, false],
       [2, 12, true, true, true, false],
       [2, 13, false, true, false, false],
+      [2, 14, true, true, true, false],
       [3, 1, false, true, false, false],
       [3, 2, false, false, false, false],
       [3, 3, false, false, false, false],
@@ -698,6 +700,7 @@ export const fallbackPermissions: PermissionsPayload = {
       [3, 11, false, false, false, false],
       [3, 12, false, false, false, false],
       [3, 13, false, false, false, false],
+      [3, 14, false, false, false, false],
       [4, 1, false, true, false, false],
       [4, 2, false, true, true, false],
       [4, 3, true, true, true, false],
@@ -710,7 +713,8 @@ export const fallbackPermissions: PermissionsPayload = {
       [4, 10, false, false, false, false],
       [4, 11, false, false, false, false],
       [4, 12, false, false, false, false],
-      [4, 13, false, false, false, false]
+      [4, 13, false, false, false, false],
+      [4, 14, false, false, false, false]
     ].map(([roleId, pageId, canCreate, canRead, canUpdate, canDelete]) => ({
       role_id: Number(roleId),
       page_id: Number(pageId),

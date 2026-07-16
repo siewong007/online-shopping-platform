@@ -190,7 +190,7 @@ pub async fn create_invoice_from_order(
         bail!("Order {order_id} already has an invoice.");
     }
 
-    let discount_cents = input.discount_cents.unwrap_or(0);
+    let discount_cents = input.discount_cents.unwrap_or(order.discount_cents);
     if discount_cents < 0 || discount_cents > order.subtotal_cents {
         bail!("Discount must be between zero and the order subtotal.");
     }

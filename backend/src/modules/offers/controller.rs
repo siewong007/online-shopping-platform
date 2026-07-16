@@ -12,9 +12,18 @@ use crate::{
 
 use super::{
     dto::{CreatePromotionInput, CreateVoucherInput, UpdatePromotionInput, UpdateVoucherInput},
-    model::{Promotion, Voucher},
+    model::{Promotion, PublicOffersPayload, Voucher},
     service,
 };
+
+pub async fn public_offers(
+    State(state): State<AppState>,
+) -> Result<Json<PublicOffersPayload>, StatusCode> {
+    service::fetch_public_offers(&state.pool)
+        .await
+        .map(Json)
+        .map_err(|error| error::map_query_error("public offers query failed", error))
+}
 
 pub async fn admin_promotions(
     State(state): State<AppState>,

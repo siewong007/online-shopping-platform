@@ -122,7 +122,7 @@ pub async fn post_admin_message(
         &state.pool,
         &identity,
         ADMIN_SUPPORT_PAGE,
-        PermissionAction::Create,
+        PermissionAction::Update,
         "support",
     )
     .await?;

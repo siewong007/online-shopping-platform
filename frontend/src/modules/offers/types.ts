@@ -1,5 +1,32 @@
 export type DiscountType = "fixed_cents" | "percent_bps";
 
+export type PublicPromotion = {
+  id: number;
+  label: string;
+  title: string;
+  description: string;
+  discount_type: DiscountType;
+  discount_value: number;
+  minimum_subtotal_cents: number;
+  is_stackable: boolean;
+};
+
+export type PublicVoucher = {
+  id: number;
+  code: string;
+  title: string;
+  description: string;
+  discount_type: DiscountType;
+  discount_value: number;
+  minimum_subtotal_cents: number;
+  is_stackable: boolean;
+};
+
+export type PublicOffersPayload = {
+  promotions: PublicPromotion[];
+  vouchers: PublicVoucher[];
+};
+
 export type Promotion = {
   id: number;
   label: string;

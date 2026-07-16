@@ -147,25 +147,98 @@ pub async fn fetch_support_messages(
     after_id: Option<i32>,
     limit: i64,
 ) -> Result<Vec<SupportMessage>> {
-    sqlx::query_as::<_, SupportMessage>(
+    match after_id {
+        Some(after_id) => {
+            sqlx::query_as::<_, SupportMessage>(
+                r#"
+            SELECT id,
+                   conversation_id,
+                   author_kind,
+                   admin_user_id,
+                   body,
+                   created_at::text AS created_at
+            FROM support_messages
+            WHERE conversation_id = $1
+              AND id > $2
+            ORDER BY id ASC
+            LIMIT $3
+            "#,
+            )
+            .bind(conversation_id)
+            .bind(after_id)
+            .bind(limit)
+            .fetch_all(pool)
+            .await
+        }
+        None => {
+            sqlx::query_as::<_, SupportMessage>(
+                r#"
+            SELECT id,
+                   conversation_id,
+                   author_kind,
+                   admin_user_id,
+                   body,
+                   created_at
+            FROM (
+                SELECT id,
+                       conversation_id,
+                       author_kind,
+                       admin_user_id,
+                       body,
+                       created_at::text AS created_at
+                FROM support_messages
+                WHERE conversation_id = $1
+                ORDER BY id DESC
+                LIMIT $2
+            ) AS latest_messages
+            ORDER BY id ASC
+            "#,
+            )
+            .bind(conversation_id)
+            .bind(limit)
+            .fetch_all(pool)
+            .await
+        }
+    }
+    .map_err(Into::into)
+}
+
+pub async fn count_recent_support_conversations_for_guest_email(
+    pool: &PgPool,
+    guest_email: &str,
+) -> Result<i64> {
+    sqlx::query_scalar::<_, i64>(
         r#"
-        SELECT id,
-               conversation_id,
-               author_kind,
-               admin_user_id,
-               body,
-               created_at::text AS created_at
+        SELECT COUNT(*)
+        FROM support_conversations
+        WHERE LOWER(guest_email) = LOWER($1)
+          AND created_at >= now() - INTERVAL '10 minutes'
+        "#,
+    )
+    .bind(guest_email)
+    .fetch_one(pool)
+    .await
+    .map_err(Into::into)
+}
+
+pub async fn count_recent_guest_support_messages(
+    pool: &PgPool,
+    conversation_id: i32,
+) -> Result<i64> {
+    sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT COUNT(*)
         FROM support_messages
-        WHERE conversation_id = $1
-          AND ($2::INTEGER IS NULL OR id > $2)
-        ORDER BY id ASC
-        LIMIT $3
+        JOIN support_conversations
+            ON support_conversations.id = support_messages.conversation_id
+        WHERE support_messages.conversation_id = $1
+          AND support_messages.author_kind = 'guest'
+          AND support_messages.created_at >= now() - INTERVAL '1 minute'
+          AND support_conversations.status IN ('open', 'pending')
         "#,
     )
     .bind(conversation_id)
-    .bind(after_id)
-    .bind(limit)
-    .fetch_all(pool)
+    .fetch_one(pool)
     .await
     .map_err(Into::into)
 }
@@ -275,24 +348,27 @@ pub async fn active_admin_user_exists(pool: &PgPool, admin_user_id: i32) -> Resu
 pub async fn update_support_conversation(
     pool: &PgPool,
     conversation_id: i32,
-    status: &str,
+    expected_status: &str,
+    requested_status: Option<&str>,
     update_assignee: bool,
     assigned_admin_user_id: Option<i32>,
 ) -> Result<bool> {
     let result = sqlx::query(
         r#"
         UPDATE support_conversations
-        SET status = $2,
+        SET status = COALESCE($3::TEXT, status),
             assigned_admin_user_id = CASE
-                WHEN $3 THEN $4
+                WHEN $4 THEN $5
                 ELSE assigned_admin_user_id
             END,
             updated_at = now()
         WHERE id = $1
+          AND status = $2
         "#,
     )
     .bind(conversation_id)
-    .bind(status)
+    .bind(expected_status)
+    .bind(requested_status)
     .bind(update_assignee)
     .bind(assigned_admin_user_id)
     .execute(pool)

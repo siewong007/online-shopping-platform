@@ -21,6 +21,14 @@ export type CreateOrderInput = {
   customer_email: string;
   fulfillment_method?: FulfillmentMethod;
   items: CreateOrderItemInput[];
+  promotion_id?: number;
+  voucher_code?: string;
+};
+
+export type CheckoutQuoteInput = {
+  items: CreateOrderItemInput[];
+  promotion_id?: number;
+  voucher_code?: string;
 };
 
 export type OrderItem = {
@@ -28,6 +36,23 @@ export type OrderItem = {
   product_name: string;
   unit_price_cents: number;
   quantity: number;
+};
+
+export type AppliedOffer = {
+  promotion_id: number | null;
+  voucher_id: number | null;
+  discount_cents: number;
+  label: string;
+  code: string | null;
+};
+
+export type CheckoutQuote = {
+  items: OrderItem[];
+  subtotal_cents: number;
+  discount_cents: number;
+  tax_cents: number;
+  total_cents: number;
+  applied_offers: AppliedOffer[];
 };
 
 export type OrderFulfillmentHistory = {
@@ -45,11 +70,15 @@ export type Order = {
   customer_name: string;
   customer_email: string;
   subtotal_cents: number;
+  discount_cents?: number;
+  tax_cents?: number;
+  total_cents?: number;
   fulfillment_status: FulfillmentStatus;
   fulfillment_method: FulfillmentMethod;
   created_at: string;
   items: OrderItem[];
   fulfillment_history: OrderFulfillmentHistory[];
+  applied_offers?: AppliedOffer[];
 };
 
 export type UpdateOrderFulfillmentInput = {

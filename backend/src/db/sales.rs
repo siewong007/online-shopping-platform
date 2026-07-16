@@ -255,47 +255,69 @@ pub async fn update_sales_details(
         bail!("Discount must be zero or greater.");
     }
 
+    let tax_rate_bps = fetch_setting_int(pool, "sales.default_tax_rate_bps", 0).await?;
+    let mut tx = pool.begin().await?;
+
     let subtotal_cents = sqlx::query_scalar::<_, i32>(
         r#"
         SELECT subtotal_cents
         FROM orders
         WHERE id = $1
+        FOR UPDATE
         "#,
     )
     .bind(order_id)
-    .fetch_optional(pool)
+    .fetch_optional(&mut *tx)
     .await?
     .ok_or_else(|| anyhow::anyhow!("Order {order_id} does not exist."))?;
 
-    if input.discount_cents > subtotal_cents {
-        bail!("Discount cannot exceed the order subtotal.");
+    let offer_discount_cents = sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT COALESCE(SUM(discount_snapshot_cents), 0)::bigint
+        FROM order_offer_redemptions
+        WHERE order_id = $1
+        "#,
+    )
+    .bind(order_id)
+    .fetch_one(&mut *tx)
+    .await?;
+    let maximum_manual_discount_cents = (i64::from(subtotal_cents) - offer_discount_cents).max(0);
+
+    if i64::from(input.discount_cents) > maximum_manual_discount_cents {
+        bail!("Discount cannot exceed the order subtotal after applied offers.");
     }
 
-    let tax_rate_bps = fetch_setting_int(pool, "sales.default_tax_rate_bps", 0).await?;
+    let discount_cents = i32::try_from(offer_discount_cents + i64::from(input.discount_cents))
+        .map_err(|_| anyhow::anyhow!("Discount exceeds the supported maximum."))?;
     let (tax_cents, total_cents) =
-        compute_tax_and_total(subtotal_cents, input.discount_cents, tax_rate_bps);
+        compute_tax_and_total(subtotal_cents, discount_cents, tax_rate_bps);
 
     sqlx::query(
         r#"
-        INSERT INTO order_sales_meta (order_id, channel, sales_rep, discount_cents, tax_cents, total_cents)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO order_sales_meta
+            (order_id, channel, sales_rep, discount_cents, tax_cents, total_cents, manual_discount_cents)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         ON CONFLICT (order_id) DO UPDATE SET
             channel = EXCLUDED.channel,
             sales_rep = EXCLUDED.sales_rep,
             discount_cents = EXCLUDED.discount_cents,
             tax_cents = EXCLUDED.tax_cents,
             total_cents = EXCLUDED.total_cents,
+            manual_discount_cents = EXCLUDED.manual_discount_cents,
             updated_at = now()
         "#,
     )
     .bind(order_id)
     .bind(channel)
     .bind(input.sales_rep.trim())
-    .bind(input.discount_cents)
+    .bind(discount_cents)
     .bind(tax_cents)
     .bind(total_cents)
-    .execute(pool)
+    .bind(input.discount_cents)
+    .execute(&mut *tx)
     .await?;
+
+    tx.commit().await?;
 
     fetch_sales_record(pool, order_id).await
 }

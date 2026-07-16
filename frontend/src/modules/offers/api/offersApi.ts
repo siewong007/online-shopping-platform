@@ -3,6 +3,7 @@ import type {
   CreatePromotionInput,
   CreateVoucherInput,
   Promotion,
+  PublicOffersPayload,
   UpdatePromotionInput,
   UpdateVoucherInput,
   Voucher
@@ -10,6 +11,11 @@ import type {
 
 const fallbackPromotions: Promotion[] = [];
 const fallbackVouchers: Voucher[] = [];
+const fallbackPublicOffers: PublicOffersPayload = { promotions: [], vouchers: [] };
+
+export function fetchPublicOffers(): Promise<PublicOffersPayload> {
+  return fetchJson("/api/offers", fallbackPublicOffers, "customer");
+}
 
 export function fetchPromotions(): Promise<Promotion[]> {
   return fetchJson("/api/admin/promotions", fallbackPromotions);

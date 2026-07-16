@@ -5,9 +5,13 @@ use crate::modules::{audit, auth::model::AdminIdentity};
 
 use super::{
     dto::{CreatePromotionInput, CreateVoucherInput, UpdatePromotionInput, UpdateVoucherInput},
-    model::{Promotion, Voucher},
+    model::{Promotion, PublicOffersPayload, Voucher},
     repository,
 };
+
+pub async fn fetch_public_offers(pool: &PgPool) -> Result<PublicOffersPayload> {
+    repository::fetch_public_offers(pool).await
+}
 
 pub async fn fetch_promotions(pool: &PgPool) -> Result<Vec<Promotion>> {
     repository::fetch_promotions(pool).await

@@ -3,8 +3,12 @@ use sqlx::PgPool;
 
 use super::{
     dto::{CreatePromotionInput, CreateVoucherInput, UpdatePromotionInput, UpdateVoucherInput},
-    model::{Promotion, Voucher},
+    model::{Promotion, PublicOffersPayload, Voucher},
 };
+
+pub async fn fetch_public_offers(pool: &PgPool) -> Result<PublicOffersPayload> {
+    crate::db::fetch_public_offers(pool).await
+}
 
 pub async fn fetch_promotions(pool: &PgPool) -> Result<Vec<Promotion>> {
     crate::db::fetch_admin_promotions(pool).await

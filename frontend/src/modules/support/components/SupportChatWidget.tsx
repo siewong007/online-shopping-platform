@@ -77,6 +77,7 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
   const resumeAbortRef = useRef<AbortController | null>(null);
   const resumeInFlightRef = useRef(false);
   const pollInFlightRef = useRef(false);
+  const hasHydratedCollapsedPollRef = useRef(false);
   const mountedRef = useRef(true);
 
   const replaceMessages = useCallback((next: SupportMessage[]) => {
@@ -87,7 +88,7 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
     setMessages(ordered);
   }, []);
 
-  const appendMessages = useCallback((incoming: SupportMessage[]) => {
+  const appendMessages = useCallback((incoming: SupportMessage[], markCollapsedRepliesAsUnread = true) => {
     if (incoming.length === 0) {
       return;
     }
@@ -96,7 +97,12 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
     let receivedReplyWhileCollapsed = false;
 
     for (const message of incoming) {
-      if (!byId.has(message.id) && message.author_kind === "admin" && !isOpenRef.current) {
+      if (
+        markCollapsedRepliesAsUnread &&
+        !byId.has(message.id) &&
+        message.author_kind === "admin" &&
+        !isOpenRef.current
+      ) {
         receivedReplyWhileCollapsed = true;
       }
       byId.set(message.id, message);
@@ -114,6 +120,8 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
 
   const recoverFromExpiredSession = useCallback(() => {
     setSupportAuthToken(null);
+    hasHydratedCollapsedPollRef.current = false;
+    setHasUnread(false);
     setConversation(null);
     replaceMessages([]);
     setLoadState("expired");
@@ -283,9 +291,9 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
   }, [closePanel, isOpen]);
 
   const pollMessages = useCallback(
-    async (signal: AbortSignal) => {
+    async (signal: AbortSignal, markCollapsedRepliesAsUnread = true): Promise<boolean> => {
       if (pollInFlightRef.current || !getSupportAuthToken()) {
-        return;
+        return false;
       }
 
       pollInFlightRef.current = true;
@@ -293,22 +301,26 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
       try {
         const incoming = await fetchSupportMessages(latestMessageIdRef.current || undefined, signal);
         if (!signal.aborted && mountedRef.current) {
-          appendMessages(incoming);
+          appendMessages(incoming, markCollapsedRepliesAsUnread);
+          return true;
         }
       } catch (caught) {
         if (signal.aborted || !mountedRef.current) {
-          return;
+          return false;
         }
 
         if (isUnauthorized(caught)) {
           recoverFromExpiredSession();
-          return;
+          return false;
         }
 
         setError(messageForError(caught));
+        return false;
       } finally {
         pollInFlightRef.current = false;
       }
+
+      return false;
     },
     [appendMessages, messageForError, recoverFromExpiredSession]
   );
@@ -336,6 +348,37 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
       controller.abort();
     };
   }, [conversation, isOpen, pollMessages]);
+
+  useEffect(() => {
+    if (isOpen || !getSupportAuthToken()) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const poll = () => {
+      if (document.visibilityState !== "visible") {
+        return;
+      }
+
+      const shouldHydrate = !hasHydratedCollapsedPollRef.current;
+      void pollMessages(controller.signal, !shouldHydrate).then((didPoll) => {
+        if (didPoll && shouldHydrate) {
+          hasHydratedCollapsedPollRef.current = true;
+        }
+      });
+    };
+    const onVisibilityChange = () => poll();
+
+    poll();
+    const interval = window.setInterval(poll, 15_000);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      controller.abort();
+    };
+  }, [isOpen, pollMessages]);
 
   const startConversation = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -368,6 +411,7 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
       }
 
       setSupportAuthToken(response.token);
+      hasHydratedCollapsedPollRef.current = false;
       setConversation(response.conversation);
       replaceMessages(response.messages);
       setInitialMessage("");

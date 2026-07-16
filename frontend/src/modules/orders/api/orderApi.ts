@@ -6,7 +6,13 @@ import {
   type AdminListParams,
   type PagedResponse
 } from "../../../shared/api/pagination";
-import type { CreateOrderInput, Order, UpdateOrderFulfillmentInput } from "../types";
+import type {
+  CheckoutQuote,
+  CheckoutQuoteInput,
+  CreateOrderInput,
+  Order,
+  UpdateOrderFulfillmentInput
+} from "../types";
 
 export function fetchOrders(params: AdminListParams = {}): Promise<PagedResponse<Order>> {
   return fetchJson<Order[] | PagedResponse<Order>>(
@@ -17,6 +23,10 @@ export function fetchOrders(params: AdminListParams = {}): Promise<PagedResponse
 
 export function checkout(input: CreateOrderInput): Promise<Order> {
   return postJson<CreateOrderInput, Order>("/api/checkout", input, "customer");
+}
+
+export function quoteCheckout(input: CheckoutQuoteInput): Promise<CheckoutQuote> {
+  return postJson<CheckoutQuoteInput, CheckoutQuote>("/api/checkout/quote", input, "customer");
 }
 
 export function createAdminOrder(input: CreateOrderInput): Promise<Order> {

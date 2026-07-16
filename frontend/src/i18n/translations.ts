@@ -433,7 +433,84 @@ export const translations = {
   "shop.cartd.subtotal": { en: "Subtotal", bm: "Jumlah kecil", zh: "小计" },
   "shop.cartd.checkout": { en: "Checkout", bm: "Bayar", zh: "结算" },
   "shop.cartd.remove": { en: "Remove", bm: "Buang", zh: "移除" },
-  "shop.cartd.close": { en: "Close", bm: "Tutup", zh: "关闭" }
+  "shop.cartd.close": { en: "Close", bm: "Tutup", zh: "关闭" },
+
+  /* ---- storefront support chat ---- */
+  "support.launcher": { en: "Chat with support", bm: "Chat dengan sokongan", zh: "联系支持" },
+  "support.closePanel": { en: "Close support chat", bm: "Tutup chat sokongan", zh: "关闭支持聊天" },
+  "support.eyebrow": { en: "Customer care", bm: "Khidmat pelanggan", zh: "客户服务" },
+  "support.title": { en: "Chat with support", bm: "Chat dengan sokongan", zh: "联系支持" },
+  "support.instructions": {
+    en: "Leave a message and our team will reply here. We do not show live availability.",
+    bm: "Tinggalkan mesej dan pasukan kami akan membalas di sini. Kami tidak memaparkan ketersediaan langsung.",
+    zh: "请留言，我们的团队会在这里回复。我们不会显示在线状态。"
+  },
+  "support.welcome": { en: "How can we help?", bm: "Bagaimana kami boleh membantu?", zh: "我们怎样帮您？" },
+  "support.name": { en: "Your name", bm: "Nama anda", zh: "您的姓名" },
+  "support.email": { en: "Email address", bm: "Alamat e-mel", zh: "电子邮箱" },
+  "support.firstMessage": { en: "Your message", bm: "Mesej anda", zh: "您的留言" },
+  "support.firstMessagePlaceholder": {
+    en: "Tell us what you need help with",
+    bm: "Beritahu kami perkara yang anda perlukan bantuan",
+    zh: "请告诉我们您需要什么帮助"
+  },
+  "support.start": { en: "Start conversation", bm: "Mulakan perbualan", zh: "开始对话" },
+  "support.starting": { en: "Starting…", bm: "Sedang bermula…", zh: "正在开始…" },
+  "support.loading": { en: "Loading your conversation…", bm: "Memuatkan perbualan anda…", zh: "正在加载您的对话…" },
+  "support.retry": { en: "Try again", bm: "Cuba lagi", zh: "重试" },
+  "support.status.open": { en: "Open", bm: "Terbuka", zh: "进行中" },
+  "support.status.pending": { en: "Pending", bm: "Menunggu", zh: "待处理" },
+  "support.status.closed": { en: "Closed", bm: "Ditutup", zh: "已关闭" },
+  "support.closeConversation": { en: "Close conversation", bm: "Tutup perbualan", zh: "关闭对话" },
+  "support.closing": { en: "Closing…", bm: "Sedang ditutup…", zh: "正在关闭…" },
+  "support.closed": {
+    en: "This conversation is closed. Start a new conversation if you need more help.",
+    bm: "Perbualan ini telah ditutup. Mulakan perbualan baharu jika anda perlukan bantuan lagi.",
+    zh: "此对话已关闭。如需更多帮助，请开始新的对话。"
+  },
+  "support.newConversation": {
+    en: "Your previous support session has ended. You can start a new conversation below.",
+    bm: "Sesi sokongan terdahulu anda telah tamat. Anda boleh mulakan perbualan baharu di bawah.",
+    zh: "您之前的支持会话已结束。您可以在下方开始新的对话。"
+  },
+  "support.thread": { en: "Support conversation", bm: "Perbualan sokongan", zh: "支持对话" },
+  "support.you": { en: "You", bm: "Anda", zh: "您" },
+  "support.team": { en: "Support team", bm: "Pasukan sokongan", zh: "支持团队" },
+  "support.message": { en: "Message", bm: "Mesej", zh: "消息" },
+  "support.messagePlaceholder": { en: "Write a reply", bm: "Tulis balasan", zh: "输入回复" },
+  "support.sendHint": {
+    en: "Press Enter to send · Shift+Enter for a new line",
+    bm: "Tekan Enter untuk hantar · Shift+Enter untuk baris baharu",
+    zh: "按 Enter 发送 · Shift+Enter 换行"
+  },
+  "support.send": { en: "Send", bm: "Hantar", zh: "发送" },
+  "support.sending": { en: "Sending…", bm: "Sedang menghantar…", zh: "正在发送…" },
+  "support.unread": { en: "New support reply", bm: "Balasan sokongan baharu", zh: "新的支持回复" },
+  "support.error.required": {
+    en: "Complete the required fields before sending your message.",
+    bm: "Lengkapkan ruangan wajib sebelum menghantar mesej anda.",
+    zh: "请填写必填项后再发送消息。"
+  },
+  "support.error.email": {
+    en: "Enter a valid email address.",
+    bm: "Masukkan alamat e-mel yang sah.",
+    zh: "请输入有效的电子邮箱。"
+  },
+  "support.error.connection": {
+    en: "We could not reach support right now. Check your connection and try again.",
+    bm: "Kami tidak dapat menghubungi sokongan sekarang. Semak sambungan anda dan cuba lagi.",
+    zh: "目前无法连接支持服务。请检查网络后重试。"
+  },
+  "support.error.sessionExpired": {
+    en: "Your support session has expired. Start a new conversation to continue.",
+    bm: "Sesi sokongan anda telah tamat. Mulakan perbualan baharu untuk teruskan.",
+    zh: "您的支持会话已过期。请开始新的对话以继续。"
+  },
+  "support.error.generic": {
+    en: "We could not complete that support request. Try again.",
+    bm: "Kami tidak dapat menyelesaikan permintaan sokongan itu. Cuba lagi.",
+    zh: "无法完成该支持请求。请重试。"
+  }
 } as const satisfies Record<string, Entry>;
 
 export type TranslationKey = keyof typeof translations;

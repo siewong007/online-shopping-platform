@@ -3,7 +3,7 @@ use sqlx::PgPool;
 
 use crate::modules::offers::{
     dto::{CreatePromotionInput, CreateVoucherInput, UpdatePromotionInput, UpdateVoucherInput},
-    model::{Promotion, Voucher},
+    model::{Promotion, PublicOffersPayload, PublicPromotion, PublicVoucher, Voucher},
 };
 
 const FIXED_CENTS: &str = "fixed_cents";
@@ -44,54 +44,36 @@ fn normalize_optional_text(value: Option<&str>) -> Option<String> {
     value.map(normalize_text).filter(|value| !value.is_empty())
 }
 
-fn normalize_rule(
-    discount_type: Option<String>,
-    discount_value: Option<i32>,
-    minimum_subtotal_cents: i32,
-    starts_at: Option<String>,
-    ends_at: Option<String>,
-    is_active: bool,
-    is_stackable: bool,
-    max_redemptions: Option<i32>,
-) -> Result<RuleValues> {
-    if let Some(discount_type) = discount_type.as_deref()
+fn normalize_rule(rule: RuleValues) -> Result<RuleValues> {
+    if let Some(discount_type) = rule.discount_type.as_deref()
         && !matches!(discount_type, FIXED_CENTS | PERCENT_BPS)
     {
         bail!("Discount type must be fixed_cents or percent_bps.");
     }
 
-    if discount_type.is_some() != discount_value.is_some() {
+    if rule.discount_type.is_some() != rule.discount_value.is_some() {
         bail!("Discount type and discount value must be supplied together.");
     }
 
-    if let Some(discount_value) = discount_value {
+    if let Some(discount_value) = rule.discount_value {
         if discount_value <= 0 {
             bail!("Discount value must be greater than zero.");
         }
 
-        if discount_type.as_deref() == Some(PERCENT_BPS) && discount_value > 10_000 {
+        if rule.discount_type.as_deref() == Some(PERCENT_BPS) && discount_value > 10_000 {
             bail!("Percentage discounts cannot exceed 10000 basis points.");
         }
     }
 
-    if minimum_subtotal_cents < 0 {
+    if rule.minimum_subtotal_cents < 0 {
         bail!("Minimum cart subtotal cannot be negative.");
     }
 
-    if max_redemptions.is_some_and(|limit| limit <= 0) {
+    if rule.max_redemptions.is_some_and(|limit| limit <= 0) {
         bail!("Maximum redemptions must be greater than zero when set.");
     }
 
-    Ok(RuleValues {
-        discount_type,
-        discount_value,
-        minimum_subtotal_cents,
-        starts_at,
-        ends_at,
-        is_active,
-        is_stackable,
-        max_redemptions,
-    })
+    Ok(rule)
 }
 
 fn normalize_promotion_input(input: &CreatePromotionInput) -> Result<PromotionValues> {
@@ -100,16 +82,16 @@ fn normalize_promotion_input(input: &CreatePromotionInput) -> Result<PromotionVa
         bail!("Promotion title cannot be blank.");
     }
 
-    let rule = normalize_rule(
-        input.discount_type.as_deref().map(normalize_text),
-        input.discount_value,
-        input.minimum_subtotal_cents,
-        normalize_optional_text(input.starts_at.as_deref()),
-        normalize_optional_text(input.ends_at.as_deref()),
-        input.is_active,
-        input.is_stackable,
-        input.max_redemptions,
-    )?;
+    let rule = normalize_rule(RuleValues {
+        discount_type: input.discount_type.as_deref().map(normalize_text),
+        discount_value: input.discount_value,
+        minimum_subtotal_cents: input.minimum_subtotal_cents,
+        starts_at: normalize_optional_text(input.starts_at.as_deref()),
+        ends_at: normalize_optional_text(input.ends_at.as_deref()),
+        is_active: input.is_active,
+        is_stackable: input.is_stackable,
+        max_redemptions: input.max_redemptions,
+    })?;
 
     Ok(PromotionValues {
         label: normalize_text(&input.label),
@@ -131,16 +113,16 @@ fn normalize_voucher_input(input: &CreateVoucherInput) -> Result<VoucherValues> 
         bail!("Voucher title cannot be blank.");
     }
 
-    let rule = normalize_rule(
-        Some(normalize_text(&input.discount_type)),
-        Some(input.discount_value),
-        input.minimum_subtotal_cents,
-        normalize_optional_text(input.starts_at.as_deref()),
-        normalize_optional_text(input.ends_at.as_deref()),
-        input.is_active,
-        input.is_stackable,
-        input.max_redemptions,
-    )?;
+    let rule = normalize_rule(RuleValues {
+        discount_type: Some(normalize_text(&input.discount_type)),
+        discount_value: Some(input.discount_value),
+        minimum_subtotal_cents: input.minimum_subtotal_cents,
+        starts_at: normalize_optional_text(input.starts_at.as_deref()),
+        ends_at: normalize_optional_text(input.ends_at.as_deref()),
+        is_active: input.is_active,
+        is_stackable: input.is_stackable,
+        max_redemptions: input.max_redemptions,
+    })?;
 
     Ok(VoucherValues {
         code,
@@ -176,6 +158,64 @@ async fn validate_active_window(
     }
 
     Ok(())
+}
+
+pub async fn fetch_public_offers(pool: &PgPool) -> Result<PublicOffersPayload> {
+    let promotions = sqlx::query_as::<_, PublicPromotion>(
+        r#"
+        SELECT id,
+               label,
+               title,
+               description,
+               discount_type,
+               discount_value,
+               minimum_subtotal_cents,
+               is_stackable
+        FROM promotions
+        WHERE is_active = TRUE
+          AND discount_type IN ('fixed_cents', 'percent_bps')
+          AND discount_value > 0
+          AND (discount_type <> 'percent_bps' OR discount_value <= 10000)
+          AND minimum_subtotal_cents >= 0
+          AND (starts_at IS NULL OR starts_at <= now())
+          AND (ends_at IS NULL OR ends_at >= now())
+          AND (max_redemptions IS NULL OR redemption_count < max_redemptions)
+        ORDER BY sort_order, id
+        "#,
+    )
+    .fetch_all(pool)
+    .await?;
+
+    let vouchers = sqlx::query_as::<_, PublicVoucher>(
+        r#"
+        SELECT id,
+               code,
+               title,
+               description,
+               discount_type,
+               discount_value,
+               minimum_subtotal_cents,
+               is_stackable
+        FROM vouchers
+        WHERE is_public = TRUE
+          AND is_active = TRUE
+          AND discount_type IN ('fixed_cents', 'percent_bps')
+          AND discount_value > 0
+          AND (discount_type <> 'percent_bps' OR discount_value <= 10000)
+          AND minimum_subtotal_cents >= 0
+          AND (starts_at IS NULL OR starts_at <= now())
+          AND (ends_at IS NULL OR ends_at >= now())
+          AND (max_redemptions IS NULL OR redemption_count < max_redemptions)
+        ORDER BY code
+        "#,
+    )
+    .fetch_all(pool)
+    .await?;
+
+    Ok(PublicOffersPayload {
+        promotions,
+        vouchers,
+    })
 }
 
 pub async fn fetch_admin_promotions(pool: &PgPool) -> Result<Vec<Promotion>> {

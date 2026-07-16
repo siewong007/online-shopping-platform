@@ -89,3 +89,14 @@ export {
 export {
   fetchStorefront
 } from "../modules/storefront/api/storefrontApi";
+export {
+  closeSupportConversation,
+  createSupportConversation,
+  fetchAdminSupportConversationThread,
+  fetchAdminSupportConversations,
+  fetchSupportConversation,
+  fetchSupportMessages,
+  sendAdminSupportMessage,
+  sendSupportMessage,
+  updateAdminSupportConversation
+} from "../modules/support/api/supportApi";

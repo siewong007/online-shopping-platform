@@ -30,6 +30,8 @@ use super::{
 const DEFAULT_INBOX_LIMIT: i64 = 50;
 const MAX_INBOX_LIMIT: i64 = 100;
 const MESSAGE_FETCH_LIMIT: i64 = 100;
+const MAX_NEW_CONVERSATIONS_PER_EMAIL_10_MINUTES: i64 = 3;
+const MAX_GUEST_MESSAGES_PER_CONVERSATION_PER_MINUTE: i64 = 20;
 
 pub async fn create_conversation(
     pool: &PgPool,
@@ -40,6 +42,13 @@ pub async fn create_conversation(
     let guest_email = valid_guest_email(&input.guest_email)?;
     let body = valid_message_body(&input.message)?;
     let customer_identity = optional_customer_identity(pool, headers).await?;
+    let recent_conversations =
+        repository::count_recent_support_conversations_for_guest_email(pool, &guest_email)
+            .await
+            .map_err(map_support_error)?;
+    if recent_conversations >= MAX_NEW_CONVERSATIONS_PER_EMAIL_10_MINUTES {
+        return Err(new_conversation_rate_limit_error());
+    }
     let token = generate_session_token();
 
     let (conversation, message) = repository::create_support_conversation(
@@ -90,6 +99,13 @@ pub async fn post_guest_message(
     input: &CreateSupportMessageInput,
 ) -> Result<SupportMessage, HttpError> {
     let body = valid_message_body(&input.body)?;
+    let recent_guest_messages =
+        repository::count_recent_guest_support_messages(pool, identity.conversation_id)
+            .await
+            .map_err(map_support_error)?;
+    if recent_guest_messages >= MAX_GUEST_MESSAGES_PER_CONVERSATION_PER_MINUTE {
+        return Err(guest_message_rate_limit_error());
+    }
     repository::insert_guest_support_message(pool, identity.conversation_id, &body)
         .await
         .map_err(map_support_error)?
@@ -130,10 +146,19 @@ pub async fn admin_inbox(
         None => None,
     };
     let limit = inbox_limit(query.limit)?;
-    let items = repository::fetch_support_inbox(pool, status.as_deref(), query.before, limit)
-        .await
-        .map_err(map_support_error)?;
-    let next_cursor = items.last().map(|conversation| conversation.id);
+    let mut items =
+        repository::fetch_support_inbox(pool, status.as_deref(), query.before, limit + 1)
+            .await
+            .map_err(map_support_error)?;
+    let has_more = items.len() > limit as usize;
+    if has_more {
+        items.truncate(limit as usize);
+    }
+    let next_cursor = if has_more {
+        items.last().map(|conversation| conversation.id)
+    } else {
+        None
+    };
 
     Ok(Paged { items, next_cursor })
 }
@@ -186,11 +211,8 @@ pub async fn update_admin_conversation(
     }
 
     let current = fetch_conversation(pool, conversation_id).await?;
+    let expected_status = current.status.clone();
     let requested_status = input.status.as_deref().map(valid_status).transpose()?;
-    let next_status = requested_status
-        .as_deref()
-        .unwrap_or(&current.status)
-        .to_string();
 
     if let Some(status) = requested_status.as_deref() {
         validate_status_transition(&current.status, status)?;
@@ -208,7 +230,9 @@ pub async fn update_admin_conversation(
         }
     }
 
-    let status_changed = next_status != current.status;
+    let status_changed = requested_status
+        .as_deref()
+        .is_some_and(|status| status != current.status);
     let assignment_changed = input
         .assigned_admin_user_id
         .is_some_and(|assigned_admin_user_id| {
@@ -218,7 +242,8 @@ pub async fn update_admin_conversation(
     let updated = repository::update_support_conversation(
         pool,
         conversation_id,
-        &next_status,
+        &expected_status,
+        requested_status.as_deref(),
         input.assigned_admin_user_id.is_some(),
         input.assigned_admin_user_id,
     )
@@ -226,8 +251,9 @@ pub async fn update_admin_conversation(
     .map_err(map_support_error)?;
     if !updated {
         return Err((
-            StatusCode::NOT_FOUND,
-            "Support conversation not found.".to_string(),
+            StatusCode::CONFLICT,
+            "This support conversation changed before your update. Reload and try again."
+                .to_string(),
         ));
     }
 
@@ -394,7 +420,11 @@ fn validate_status_transition(current: &str, requested: &str) -> Result<(), Http
 
     if matches!(
         (current, requested),
-        ("open", "pending") | ("pending", "open") | ("open", "closed") | ("pending", "closed")
+        ("open", "pending")
+            | ("pending", "open")
+            | ("open", "closed")
+            | ("pending", "closed")
+            | ("closed", "open")
     ) {
         return Ok(());
     }
@@ -451,6 +481,22 @@ fn closed_conversation_error() -> HttpError {
     (
         StatusCode::BAD_REQUEST,
         "This support conversation is closed.".to_string(),
+    )
+}
+
+fn new_conversation_rate_limit_error() -> HttpError {
+    (
+        StatusCode::TOO_MANY_REQUESTS,
+        "Too many support conversations were started recently for this email. Please wait a few minutes and try again."
+            .to_string(),
+    )
+}
+
+fn guest_message_rate_limit_error() -> HttpError {
+    (
+        StatusCode::TOO_MANY_REQUESTS,
+        "Too many messages were sent to this support conversation. Please wait a minute and try again."
+            .to_string(),
     )
 }
 

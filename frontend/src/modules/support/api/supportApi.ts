@@ -1,8 +1,10 @@
 import {
+  ApiError,
   getCustomerAuthToken,
   postJson,
   putJson,
   requestJson,
+  setCustomerAuthToken,
   type AuthScope
 } from "../../../shared/api/http";
 import type {
@@ -60,14 +62,32 @@ export function normalizeSupportConversationPage(
   return Array.isArray(payload) ? { items: payload, next_cursor: null } : payload;
 }
 
-export function createSupportConversation(
-  input: CreateSupportConversationInput
+async function createSupportConversationWithScope(
+  input: CreateSupportConversationInput,
+  scope: AuthScope
 ): Promise<CreateSupportConversationResponse> {
   return postJson<CreateSupportConversationInput, CreateSupportConversationResponse>(
     "/api/support/conversations",
     input,
-    createConversationScope()
+    scope
   );
+}
+
+export async function createSupportConversation(
+  input: CreateSupportConversationInput
+): Promise<CreateSupportConversationResponse> {
+  const scope = createConversationScope();
+
+  try {
+    return await createSupportConversationWithScope(input, scope);
+  } catch (error) {
+    if (scope !== "customer" || !(error instanceof ApiError) || error.status !== 401) {
+      throw error;
+    }
+
+    setCustomerAuthToken(null);
+    return createSupportConversationWithScope(input, "public");
+  }
 }
 
 export function fetchSupportConversation(signal?: AbortSignal): Promise<SupportConversation> {

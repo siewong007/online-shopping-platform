@@ -22,6 +22,7 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
     Router::new()
         .route("/api/health", get(health::controller::health))
         .route("/api/storefront", get(storefront::controller::storefront))
+        .route("/api/offers", get(offers::controller::public_offers))
         .route(
             "/api/support/conversations",
             post(support::controller::create_conversation),
@@ -234,6 +235,7 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
             post(catalog::controller::supplier_sync),
         )
         .route("/api/checkout", post(orders::controller::checkout))
+        .route("/api/checkout/quote", post(orders::controller::quote))
         .route(
             "/api/account/register",
             post(customer_auth::controller::register),

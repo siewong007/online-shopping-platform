@@ -40,3 +40,33 @@ pub struct Voucher {
     pub created_at: String,
     pub updated_at: String,
 }
+
+#[derive(Debug, Clone, Serialize)]
+pub struct PublicOffersPayload {
+    pub promotions: Vec<PublicPromotion>,
+    pub vouchers: Vec<PublicVoucher>,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct PublicPromotion {
+    pub id: i32,
+    pub label: String,
+    pub title: String,
+    pub description: String,
+    pub discount_type: String,
+    pub discount_value: i32,
+    pub minimum_subtotal_cents: i32,
+    pub is_stackable: bool,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct PublicVoucher {
+    pub id: i32,
+    pub code: String,
+    pub title: String,
+    pub description: String,
+    pub discount_type: String,
+    pub discount_value: i32,
+    pub minimum_subtotal_cents: i32,
+    pub is_stackable: bool,
+}

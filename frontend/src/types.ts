@@ -123,3 +123,18 @@ export type {
 } from "./modules/invoices/types";
 
 export type { SystemSetting, UpdateSystemSettingInput } from "./modules/settings/types";
+
+export type {
+  CreateSupportConversationInput,
+  CreateSupportConversationResponse,
+  SupportAdminConversationThread,
+  SupportConversation,
+  SupportConversationPage,
+  SupportConversationPageResponse,
+  SupportConversationStatus,
+  SupportConversationUpdateInput,
+  SupportInboxConversation,
+  SupportMessage,
+  SupportMessageAuthorKind,
+  SupportMessageListResponse
+} from "./modules/support/types";

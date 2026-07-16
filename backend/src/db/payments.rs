@@ -9,7 +9,7 @@ pub async fn fetch_payments(pool: &PgPool) -> Result<Vec<Payment>> {
                payments.order_id,
                orders.customer_name AS order_customer_name,
                orders.customer_email AS order_customer_email,
-               orders.subtotal_cents AS order_subtotal_cents,
+               COALESCE(meta.total_cents, orders.subtotal_cents) AS order_subtotal_cents,
                payments.idempotency_key,
                payments.amount_cents,
                payments.method,
@@ -21,6 +21,7 @@ pub async fn fetch_payments(pool: &PgPool) -> Result<Vec<Payment>> {
                payments.updated_at::text AS updated_at
         FROM payments
         JOIN orders ON orders.id = payments.order_id
+        LEFT JOIN order_sales_meta meta ON meta.order_id = orders.id
         ORDER BY payments.created_at DESC, payments.id DESC
         "#,
     )
@@ -39,7 +40,7 @@ pub async fn create_payment(pool: &PgPool, input: &CreatePaymentInput) -> Result
                payments.order_id,
                orders.customer_name AS order_customer_name,
                orders.customer_email AS order_customer_email,
-               orders.subtotal_cents AS order_subtotal_cents,
+               COALESCE(meta.total_cents, orders.subtotal_cents) AS order_subtotal_cents,
                payments.idempotency_key,
                payments.amount_cents,
                payments.method,
@@ -51,6 +52,7 @@ pub async fn create_payment(pool: &PgPool, input: &CreatePaymentInput) -> Result
                payments.updated_at::text AS updated_at
         FROM payments
         JOIN orders ON orders.id = payments.order_id
+        LEFT JOIN order_sales_meta meta ON meta.order_id = orders.id
         WHERE payments.idempotency_key = $1
         FOR UPDATE OF payments
         "#,
@@ -90,7 +92,7 @@ pub async fn create_payment(pool: &PgPool, input: &CreatePaymentInput) -> Result
                inserted.order_id,
                orders.customer_name AS order_customer_name,
                orders.customer_email AS order_customer_email,
-               orders.subtotal_cents AS order_subtotal_cents,
+               COALESCE(meta.total_cents, orders.subtotal_cents) AS order_subtotal_cents,
                inserted.idempotency_key,
                inserted.amount_cents,
                inserted.method,
@@ -102,6 +104,7 @@ pub async fn create_payment(pool: &PgPool, input: &CreatePaymentInput) -> Result
                inserted.updated_at::text AS updated_at
         FROM inserted
         JOIN orders ON orders.id = inserted.order_id
+        LEFT JOIN order_sales_meta meta ON meta.order_id = orders.id
         "#,
     )
     .bind(normalized.order_id)
@@ -174,7 +177,7 @@ pub async fn update_payment(
                updated.order_id,
                orders.customer_name AS order_customer_name,
                orders.customer_email AS order_customer_email,
-               orders.subtotal_cents AS order_subtotal_cents,
+               COALESCE(meta.total_cents, orders.subtotal_cents) AS order_subtotal_cents,
                updated.idempotency_key,
                updated.amount_cents,
                updated.method,
@@ -186,6 +189,7 @@ pub async fn update_payment(
                updated.updated_at::text AS updated_at
         FROM updated
         JOIN orders ON orders.id = updated.order_id
+        LEFT JOIN order_sales_meta meta ON meta.order_id = orders.id
         "#,
     )
     .bind(normalized.amount_cents)
@@ -366,19 +370,20 @@ async fn validate_payment_capacity(
     status: &str,
     excluding_payment_id: Option<i32>,
 ) -> Result<()> {
-    let order_subtotal_cents = sqlx::query_scalar::<_, i32>(
+    let order_total_cents = sqlx::query_scalar::<_, i32>(
         r#"
-        SELECT subtotal_cents
+        SELECT COALESCE(meta.total_cents, orders.subtotal_cents)
         FROM orders
-        WHERE id = $1
-        FOR UPDATE
+        LEFT JOIN order_sales_meta meta ON meta.order_id = orders.id
+        WHERE orders.id = $1
+        FOR UPDATE OF orders
         "#,
     )
     .bind(order_id)
     .fetch_optional(&mut **tx)
     .await?;
 
-    let Some(order_subtotal_cents) = order_subtotal_cents else {
+    let Some(order_total_cents) = order_total_cents else {
         bail!("Order {order_id} does not exist.");
     };
 
@@ -401,8 +406,8 @@ async fn validate_payment_capacity(
     .await?;
 
     let next_total = captured_total_cents + i64::from(amount_cents);
-    if next_total > i64::from(order_subtotal_cents) {
-        bail!("Captured payments cannot exceed the order subtotal.");
+    if next_total > i64::from(order_total_cents) {
+        bail!("Captured payments cannot exceed the order total.");
     }
 
     Ok(())

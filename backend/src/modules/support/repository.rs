@@ -45,6 +45,20 @@ pub async fn fetch_support_messages(
     crate::db::fetch_support_messages(pool, conversation_id, after_id, limit).await
 }
 
+pub async fn count_recent_support_conversations_for_guest_email(
+    pool: &PgPool,
+    guest_email: &str,
+) -> Result<i64> {
+    crate::db::count_recent_support_conversations_for_guest_email(pool, guest_email).await
+}
+
+pub async fn count_recent_guest_support_messages(
+    pool: &PgPool,
+    conversation_id: i32,
+) -> Result<i64> {
+    crate::db::count_recent_guest_support_messages(pool, conversation_id).await
+}
+
 pub async fn insert_guest_support_message(
     pool: &PgPool,
     conversation_id: i32,
@@ -82,14 +96,16 @@ pub async fn active_admin_user_exists(pool: &PgPool, admin_user_id: i32) -> Resu
 pub async fn update_support_conversation(
     pool: &PgPool,
     conversation_id: i32,
-    status: &str,
+    expected_status: &str,
+    requested_status: Option<&str>,
     update_assignee: bool,
     assigned_admin_user_id: Option<i32>,
 ) -> Result<bool> {
     crate::db::update_support_conversation(
         pool,
         conversation_id,
-        status,
+        expected_status,
+        requested_status,
         update_assignee,
         assigned_admin_user_id,
     )
