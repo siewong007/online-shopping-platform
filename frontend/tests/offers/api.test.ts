@@ -74,8 +74,17 @@ const promotionInput: CreatePromotionInput = {
 };
 
 const promotionUpdate: UpdatePromotionInput = {
+  label: "Extended weekend savings",
+  title: "$20 off tools",
+  description: "Save on qualifying tools throughout the extended weekend.",
+  discount_type: "fixed_cents",
+  discount_value: 2000,
+  minimum_subtotal_cents: 10000,
+  starts_at: "2026-07-21T00:00:00Z",
+  ends_at: null,
   is_active: false,
-  max_redemptions: null
+  is_stackable: false,
+  max_redemptions: 100
 };
 
 const voucherInput: CreateVoucherInput = {
@@ -95,7 +104,16 @@ const voucherInput: CreateVoucherInput = {
 
 const voucherUpdate: UpdateVoucherInput = {
   code: "WEEKEND15",
+  title: "$15 off",
+  description: "Save $15 on qualifying purchases this weekend.",
+  discount_type: "fixed_cents",
   discount_value: 1500,
+  minimum_subtotal_cents: 7500,
+  starts_at: "2026-07-21T00:00:00Z",
+  ends_at: null,
+  is_active: false,
+  is_stackable: false,
+  max_redemptions: 100,
   is_public: false
 };
 
@@ -194,6 +212,39 @@ describe("offers API client", () => {
     expect(requests).toEqual([
       {
         authorization: "Bearer customer-token",
+        body: JSON.stringify(quoteInput),
+        contentType: "application/json",
+        method: "POST",
+        url: "http://localhost:4000/api/checkout/quote"
+      }
+    ]);
+  });
+
+  test("keeps anonymous guest offer and quote requests free of admin authorization", async () => {
+    setAuthToken("admin-token");
+    setCustomerAuthToken(null);
+    const requests: CapturedRequest[] = [];
+    globalThis.fetch = mock((input: RequestInfo | URL, init?: RequestInit) => {
+      const request = captureRequest(input, init);
+      requests.push(request);
+      return Promise.resolve(Response.json(
+        request.url.endsWith("/api/offers") ? publicOffers : quoteResponse
+      ));
+    });
+
+    await expect(fetchPublicOffers()).resolves.toEqual(publicOffers);
+    await expect(quoteCheckout(quoteInput)).resolves.toEqual(quoteResponse);
+
+    expect(requests).toEqual([
+      {
+        authorization: null,
+        body: null,
+        contentType: null,
+        method: "GET",
+        url: "http://localhost:4000/api/offers"
+      },
+      {
+        authorization: null,
         body: JSON.stringify(quoteInput),
         contentType: "application/json",
         method: "POST",
