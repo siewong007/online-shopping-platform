@@ -255,6 +255,103 @@ async fn permissioned_admin_can_reply_assign_and_change_status(pool: PgPool) {
 }
 
 #[sqlx::test]
+async fn read_only_support_admin_can_view_but_cannot_reply_or_update(pool: PgPool) {
+    sqlx::query(
+        r#"
+        INSERT INTO role_page_permissions (
+            role_id,
+            page_id,
+            can_create,
+            can_read,
+            can_update,
+            can_delete
+        )
+        SELECT roles.id, permission_pages.id, FALSE, TRUE, FALSE, FALSE
+        FROM roles
+        CROSS JOIN permission_pages
+        WHERE roles.name = 'Fulfillment Lead'
+          AND permission_pages.slug = 'admin-support'
+        ON CONFLICT (role_id, page_id) DO UPDATE SET
+            can_create = EXCLUDED.can_create,
+            can_read = EXCLUDED.can_read,
+            can_update = EXCLUDED.can_update,
+            can_delete = EXCLUDED.can_delete
+        "#,
+    )
+    .execute(&pool)
+    .await
+    .expect("read-only support permission should be granted");
+
+    common::create_admin(
+        &pool,
+        "Fulfillment Lead",
+        "read-only-support-admin",
+        "secret123",
+    )
+    .await;
+    let app = common::app(pool);
+    let admin_token = common::login(app.clone(), "read-only-support-admin", "secret123").await;
+    let (support_token, created) =
+        create_guest_conversation(&app, "Guest", "guest@example.com", "Need help").await;
+    let conversation_id = created["conversation"]["id"]
+        .as_i64()
+        .expect("conversation id");
+
+    let (inbox_status, inbox) = common::request(
+        app.clone(),
+        Method::GET,
+        "/api/admin/support/conversations?status=open",
+        Some(&admin_token),
+        None,
+    )
+    .await;
+    assert_eq!(inbox_status, StatusCode::OK, "{inbox}");
+    assert_eq!(inbox["items"][0]["id"].as_i64(), Some(conversation_id));
+
+    let (thread_status, thread) = common::request(
+        app.clone(),
+        Method::GET,
+        &format!("/api/admin/support/conversations/{conversation_id}/messages"),
+        Some(&admin_token),
+        None,
+    )
+    .await;
+    assert_eq!(thread_status, StatusCode::OK, "{thread}");
+    assert_eq!(thread["messages"].as_array().map(Vec::len), Some(1));
+
+    let (reply_status, reply) = common::request(
+        app.clone(),
+        Method::POST,
+        &format!("/api/admin/support/conversations/{conversation_id}/messages"),
+        Some(&admin_token),
+        Some(json!({ "body": "This reply must be rejected." })),
+    )
+    .await;
+    assert_eq!(reply_status, StatusCode::FORBIDDEN, "{reply}");
+
+    let (update_status, updated) = common::request(
+        app.clone(),
+        Method::PUT,
+        &format!("/api/admin/support/conversations/{conversation_id}"),
+        Some(&admin_token),
+        Some(json!({ "status": "pending" })),
+    )
+    .await;
+    assert_eq!(update_status, StatusCode::FORBIDDEN, "{updated}");
+
+    let (guest_messages_status, guest_messages) = common::request(
+        app,
+        Method::GET,
+        "/api/support/messages",
+        Some(&support_token),
+        None,
+    )
+    .await;
+    assert_eq!(guest_messages_status, StatusCode::OK, "{guest_messages}");
+    assert_eq!(guest_messages["messages"].as_array().map(Vec::len), Some(1));
+}
+
+#[sqlx::test]
 async fn admin_support_access_requires_authentication_and_permission(pool: PgPool) {
     common::create_admin(
         &pool,
