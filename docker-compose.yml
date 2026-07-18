@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:19beta1
-    container_name: home-depot-clone-db
+    container_name: online-shopping-db
     restart: unless-stopped
     environment:
       POSTGRES_DB: project_depot
