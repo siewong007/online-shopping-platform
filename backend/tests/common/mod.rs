@@ -5,8 +5,8 @@ use axum::{
     body::Body,
     http::{HeaderValue, Method, Request, StatusCode, header::AUTHORIZATION, header::CONTENT_TYPE},
 };
-use home_depot_clone_api::{app_state::AppState, db, routes, security::hash_password};
 use http_body_util::BodyExt;
+use online_shopping_api::{app_state::AppState, db, routes, security::hash_password};
 use serde_json::{Value, json};
 use sqlx::PgPool;
 use tower::ServiceExt;

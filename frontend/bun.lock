@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "home-depot-clone-web",
+      "name": "online-shopping-web",
       "dependencies": {
         "react": "latest",
         "react-dom": "latest",

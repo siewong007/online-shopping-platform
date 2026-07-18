@@ -39,10 +39,16 @@ pub async fn lookup_customer_portal(
         ));
     }
 
-    service::lookup_customer_portal(&state.pool, email)
+    let Some(order_id) = query.order_id else {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "An order ID is required to look up your account.".to_string(),
+        ));
+    };
+
+    service::lookup_customer_portal(&state.pool, email, order_id)
         .await
         .map(Json)
-        .map_err(|error| error::map_public_query_error("customer lookup query failed", error))
 }
 
 pub async fn customer_portal_profiles(

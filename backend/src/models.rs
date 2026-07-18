@@ -305,6 +305,10 @@ pub struct CustomerPortalProfile {
 #[derive(Debug, Clone, Deserialize)]
 pub struct CustomerLookupQuery {
     pub email: String,
+    /// Required to prove the caller owns this email: an order ID that belongs to it.
+    /// Without this, the endpoint would let anyone harvest a customer's order history and
+    /// spend just by guessing their email address.
+    pub order_id: Option<i32>,
 }
 
 #[derive(Debug, Clone, Serialize, FromRow)]

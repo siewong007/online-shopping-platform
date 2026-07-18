@@ -29,11 +29,16 @@ async fn create_checkout_order(
     body["id"].as_i64().expect("order id")
 }
 
-async fn lookup_customer(app: &Router, email: &str, token: Option<&str>) -> (StatusCode, Value) {
+async fn lookup_customer(
+    app: &Router,
+    email: &str,
+    order_id: i64,
+    token: Option<&str>,
+) -> (StatusCode, Value) {
     common::request(
         app.clone(),
         Method::GET,
-        &format!("/api/customer-portal/lookup?email={email}"),
+        &format!("/api/customer-portal/lookup?email={email}&order_id={order_id}"),
         token,
         None,
     )
@@ -839,7 +844,7 @@ async fn public_customer_lookup_scopes_orders_by_email_case_insensitively(pool: 
         create_checkout_order(&app, "Other Buyer", "other-buyer@example.com", 2).await;
 
     let (lookup_status, lookup_body) =
-        lookup_customer(&app, "casecustomer@example.com", None).await;
+        lookup_customer(&app, "casecustomer@example.com", matching_order_id, None).await;
     assert_eq!(lookup_status, StatusCode::OK, "{lookup_body}");
     assert_eq!(
         lookup_body["profile"]["customer_email"],
@@ -878,27 +883,43 @@ async fn public_customer_lookup_rejects_missing_blank_and_invalid_email(pool: Pg
     .await;
     assert_eq!(missing_status, StatusCode::BAD_REQUEST);
 
-    let (blank_status, blank_body) = lookup_customer(&app, "%20%20", None).await;
+    let (blank_status, blank_body) = lookup_customer(&app, "%20%20", 1, None).await;
     assert_eq!(blank_status, StatusCode::BAD_REQUEST);
     assert_eq!(blank_body, "Email is required.");
 
-    let (invalid_status, invalid_body) = lookup_customer(&app, "not-an-email", None).await;
+    let (invalid_status, invalid_body) = lookup_customer(&app, "not-an-email", 1, None).await;
     assert_eq!(invalid_status, StatusCode::BAD_REQUEST);
     assert_eq!(invalid_body, "Email must be a valid address.");
+
+    let (missing_order_status, missing_order_body) = common::request(
+        app.clone(),
+        Method::GET,
+        "/api/customer-portal/lookup?email=someone@example.com",
+        None,
+        None,
+    )
+    .await;
+    assert_eq!(missing_order_status, StatusCode::BAD_REQUEST);
+    assert_eq!(
+        missing_order_body,
+        "An order ID is required to look up your account."
+    );
 }
 
 #[sqlx::test]
-async fn public_customer_lookup_returns_empty_payload_for_unknown_email(pool: PgPool) {
+async fn public_customer_lookup_rejects_unmatched_email_and_order_id(pool: PgPool) {
     let app = common::app(pool);
 
-    let (status, body) = lookup_customer(&app, "missing-customer@example.com", None).await;
-    assert_eq!(status, StatusCode::OK, "{body}");
-    assert!(body["profile"].is_null());
-    assert_eq!(body["orders"].as_array().expect("orders array").len(), 0);
+    let (status, body) = lookup_customer(&app, "missing-customer@example.com", 999_999, None).await;
+    assert_eq!(status, StatusCode::NOT_FOUND, "{body}");
+    assert_eq!(
+        body,
+        "No matching order was found for that email and order ID."
+    );
 }
 
 #[sqlx::test]
-async fn public_customer_lookup_supports_profile_only_customers(pool: PgPool) {
+async fn public_customer_lookup_rejects_profile_only_customers_without_an_order(pool: PgPool) {
     let app = common::app(pool.clone());
 
     sqlx::query(
@@ -912,12 +933,10 @@ async fn public_customer_lookup_supports_profile_only_customers(pool: PgPool) {
     .await
     .expect("profile should insert");
 
-    let (status, body) = lookup_customer(&app, "profile-only@example.com", None).await;
-    assert_eq!(status, StatusCode::OK, "{body}");
-    assert_eq!(body["profile"]["customer_name"], "Profile Only");
-    assert_eq!(body["profile"]["membership_tier"], "Gold");
-    assert_eq!(body["profile"]["points_balance"], 250);
-    assert_eq!(body["orders"].as_array().expect("orders array").len(), 0);
+    // No order exists for this email, so there is nothing to prove ownership with — a
+    // profile with zero orders can no longer be retrieved through the public lookup.
+    let (status, body) = lookup_customer(&app, "profile-only@example.com", 1, None).await;
+    assert_eq!(status, StatusCode::NOT_FOUND, "{body}");
 }
 
 #[sqlx::test]
@@ -935,7 +954,7 @@ async fn public_customer_lookup_supports_order_without_profile(pool: PgPool) {
     .await
     .expect("profile should delete");
 
-    let (status, body) = lookup_customer(&app, "order-only@example.com", None).await;
+    let (status, body) = lookup_customer(&app, "order-only@example.com", order_id, None).await;
     assert_eq!(status, StatusCode::OK, "{body}");
     assert!(body["profile"].is_null());
 
@@ -960,7 +979,10 @@ async fn public_customer_lookup_caps_orders_at_twenty_newest_first(pool: PgPool)
         created_order_ids.push(order_id);
     }
 
-    let (status, body) = lookup_customer(&app, "limit-buyer@example.com", None).await;
+    // Use the oldest order (outside the 20-row display window) to prove that ownership
+    // verification checks all of a customer's orders, not just the ones later returned.
+    let (status, body) =
+        lookup_customer(&app, "limit-buyer@example.com", created_order_ids[0], None).await;
     assert_eq!(status, StatusCode::OK, "{body}");
     assert_eq!(body["profile"]["total_orders"], 22);
 
@@ -994,7 +1016,13 @@ async fn public_customer_lookup_ignores_admin_token_for_scope(pool: PgPool) {
     let other_order_id =
         create_checkout_order(&app, "Private Buyer", "private@example.com", 2).await;
 
-    let (status, body) = lookup_customer(&app, "requested@example.com", Some(&token)).await;
+    let (status, body) = lookup_customer(
+        &app,
+        "requested@example.com",
+        requested_order_id,
+        Some(&token),
+    )
+    .await;
     assert_eq!(status, StatusCode::OK, "{body}");
 
     let orders = body["orders"].as_array().expect("orders array");

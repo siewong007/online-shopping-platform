@@ -3,7 +3,7 @@ use axum::http::StatusCode;
 use sqlx::PgPool;
 
 use crate::{
-    error::HttpError,
+    error::{HttpError, map_public_query_error},
     models::{
         CustomerIdentity, CustomerTransactionsPayload, MembershipBenefitsPayload,
         MembershipPayload, NextMembershipTier, Paged,
@@ -44,8 +44,25 @@ pub async fn fetch_customer_portal_profiles(
     Ok(Paged { items, next_cursor })
 }
 
-pub async fn lookup_customer_portal(pool: &PgPool, email: &str) -> Result<CustomerLookupPayload> {
-    repository::lookup_customer_portal(pool, email).await
+pub async fn lookup_customer_portal(
+    pool: &PgPool,
+    email: &str,
+    order_id: i32,
+) -> Result<CustomerLookupPayload, HttpError> {
+    let owns_order = repository::verify_customer_order_ownership(pool, email, order_id)
+        .await
+        .map_err(|error| map_public_query_error("customer lookup ownership check failed", error))?;
+
+    if !owns_order {
+        return Err((
+            StatusCode::NOT_FOUND,
+            "No matching order was found for that email and order ID.".to_string(),
+        ));
+    }
+
+    repository::lookup_customer_portal(pool, email)
+        .await
+        .map_err(|error| map_public_query_error("customer lookup query failed", error))
 }
 
 pub async fn create_customer_portal_profile(

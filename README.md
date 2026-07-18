@@ -1,6 +1,6 @@
 # Online Shopping Platform
 
-A full-stack home-improvement storefront and operations console inspired by [The Home Depot](https://www.homedepot.com/), built with a Rust Axum API, a React 19 SPA, and PostgreSQL 19beta1.
+A full-stack home-improvement storefront and operations console, built with a Rust Axum API, a React 19 SPA, and PostgreSQL 19beta1.
 
 ![Rust](https://img.shields.io/badge/Rust-1.95-orange)
 ![React](https://img.shields.io/badge/React-19.2-61dafb)
@@ -138,7 +138,7 @@ bun run dev
 - PostgreSQL maps to `localhost:5433`; the container mounts `./postgres-data` for persistence.
 - Backend list endpoints use keyset pagination where data volume can grow.
 - Admin and customer bearer tokens are separate; customer tokens cannot satisfy admin routes.
-- This is a direct Home Depot-style clone for learning / portfolio purposes — not affiliated with The Home Depot.
+- This is an original online shopping platform built for learning / portfolio purposes.
 
 ## Contributing
 

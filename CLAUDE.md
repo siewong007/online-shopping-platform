@@ -31,7 +31,7 @@ basics — details live in the linked files. Load a linked file only when its tr
 
 ## Project
 
-Online Shopping Platform — a Home Depot-style storefront + admin console.
+Online Shopping Platform — a home-improvement storefront + admin console.
 
 - `backend/` — Rust 1.95, Axum 0.8, SQLx 0.8, PostgreSQL
 - `frontend/` — React 19.2.7, TypeScript, Vite 8.x

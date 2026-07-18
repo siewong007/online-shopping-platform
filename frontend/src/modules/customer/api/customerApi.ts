@@ -22,9 +22,9 @@ export function fetchCustomerPortalProfiles(
   ).then(normalizePagedResponse);
 }
 
-export function lookupCustomer(email: string): Promise<CustomerLookupPayload> {
+export function lookupCustomer(email: string, orderId: number): Promise<CustomerLookupPayload> {
   return requestJson<CustomerLookupPayload>(
-    `/api/customer-portal/lookup?email=${encodeURIComponent(email)}`
+    `/api/customer-portal/lookup?email=${encodeURIComponent(email)}&order_id=${orderId}`
   );
 }
 

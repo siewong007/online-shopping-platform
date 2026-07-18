@@ -62,6 +62,28 @@ pub async fn fetch_customer_portal_profiles(
     Ok(rows)
 }
 
+pub async fn verify_customer_order_ownership(
+    pool: &PgPool,
+    email: &str,
+    order_id: i32,
+) -> Result<bool> {
+    let email = email.trim();
+    let owns_order = sqlx::query_scalar::<_, bool>(
+        r#"
+        SELECT EXISTS(
+            SELECT 1 FROM orders
+            WHERE id = $1 AND lower(customer_email) = lower($2)
+        )
+        "#,
+    )
+    .bind(order_id)
+    .bind(email)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(owns_order)
+}
+
 pub async fn lookup_customer_portal(pool: &PgPool, email: &str) -> Result<CustomerLookupPayload> {
     let email = email.trim();
     let profile = sqlx::query_as::<_, CustomerLookupProfile>(

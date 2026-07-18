@@ -4,7 +4,7 @@ use axum::{
     Router,
     http::{Method, StatusCode},
 };
-use home_depot_clone_api::db;
+use online_shopping_api::db;
 use serde_json::{Value, json};
 use sqlx::PgPool;
 

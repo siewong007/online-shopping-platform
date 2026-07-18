@@ -1,7 +1,7 @@
 use std::{env, net::SocketAddr};
 
 use anyhow::Context;
-use home_depot_clone_api::{app_state::AppState, modules::auth, routes};
+use online_shopping_api::{app_state::AppState, modules::auth, routes};
 use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -40,7 +40,7 @@ async fn main() -> anyhow::Result<()> {
     let address: SocketAddr = format!("{app_host}:{app_port}").parse()?;
     let listener = TcpListener::bind(address).await?;
 
-    tracing::info!("Home Depot clone API listening on http://{address}");
+    tracing::info!("Online Shopping API listening on http://{address}");
     axum::serve(listener, app).await?;
 
     Ok(())

@@ -181,6 +181,7 @@ import type {
 
 const CART_STORAGE_KEY = "depot-cart";
 const ACCOUNT_EMAIL_STORAGE_KEY = "depot-account-email";
+const ACCOUNT_ORDER_ID_STORAGE_KEY = "depot-account-order-id";
 
 function downloadBlob(blob: Blob, filename: string): void {
   const url = window.URL.createObjectURL(blob);
@@ -298,6 +299,24 @@ function readStoredAccountEmail(): string {
 function rememberAccountEmail(email: string) {
   try {
     window.localStorage.setItem(ACCOUNT_EMAIL_STORAGE_KEY, email);
+  } catch {
+    return;
+  }
+}
+
+function readStoredAccountOrderId(): number | null {
+  try {
+    const stored = window.localStorage.getItem(ACCOUNT_ORDER_ID_STORAGE_KEY);
+    const parsed = stored ? Number.parseInt(stored, 10) : NaN;
+    return Number.isFinite(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function rememberAccountOrderId(orderId: number) {
+  try {
+    window.localStorage.setItem(ACCOUNT_ORDER_ID_STORAGE_KEY, String(orderId));
   } catch {
     return;
   }
@@ -1059,6 +1078,7 @@ export default function App() {
   const [customerProfilesNextCursor, setCustomerProfilesNextCursor] = useState<number | null>(null);
   const [isLoadingMoreCustomerProfiles, setIsLoadingMoreCustomerProfiles] = useState(false);
   const [customerAccountEmail, setCustomerAccountEmail] = useState(readStoredAccountEmail);
+  const [customerAccountOrderId, setCustomerAccountOrderId] = useState(readStoredAccountOrderId);
   const [permissions, setPermissions] = useState<PermissionsPayload | null>(null);
   const [activeRoleId, setActiveRoleId] = useState<number | null>(null);
   const [adminAuth, setAdminAuth] = useState<AdminAuthState>(() =>
@@ -1483,13 +1503,18 @@ export default function App() {
     setIsCartOpen(true);
   };
 
-  const lookupCustomer = async (email: string): Promise<CustomerLookupPayload> => {
+  const lookupCustomer = async (
+    email: string,
+    orderId: number
+  ): Promise<CustomerLookupPayload> => {
     const normalizedEmail = email.trim().toLowerCase();
-    const payload = await lookupCustomerRequest(normalizedEmail);
+    const payload = await lookupCustomerRequest(normalizedEmail, orderId);
 
     if (payload.profile !== null || payload.orders.length > 0) {
       setCustomerAccountEmail(normalizedEmail);
       rememberAccountEmail(normalizedEmail);
+      setCustomerAccountOrderId(orderId);
+      rememberAccountOrderId(orderId);
     }
 
     return payload;
@@ -1501,6 +1526,8 @@ export default function App() {
 
     setCustomerAccountEmail(checkoutEmail);
     rememberAccountEmail(checkoutEmail);
+    setCustomerAccountOrderId(order.id);
+    rememberAccountOrderId(order.id);
     setOrders((current) => [order, ...current]);
     void fetchCustomerPortalProfiles().then((page) => {
       setCustomerProfiles(page.items);
@@ -2270,6 +2297,7 @@ export default function App() {
           cart={cart}
           cartCount={cartCount}
           customerAccountEmail={customerAccountEmail}
+          customerAccountOrderId={customerAccountOrderId}
           filteredProducts={filteredProducts}
           isCartOpen={isCartOpen}
           isAccountOpen={isAccountOpen}
@@ -2408,6 +2436,7 @@ type StorefrontViewProps = {
   cart: CartItem[];
   cartCount: number;
   customerAccountEmail: string;
+  customerAccountOrderId: number | null;
   filteredProducts: Product[];
   isAccountOpen: boolean;
   isCartOpen: boolean;
@@ -2423,7 +2452,7 @@ type StorefrontViewProps = {
   onCloseAccount: () => void;
   onClearCart: () => void;
   onCloseCart: () => void;
-  onLookupCustomer: (email: string) => Promise<CustomerLookupPayload>;
+  onLookupCustomer: (email: string, orderId: number) => Promise<CustomerLookupPayload>;
   onOpenAdmin: () => void;
   onOpenAccount: () => void;
   onOpenCart: () => void;
@@ -2445,6 +2474,7 @@ function StorefrontView({
   cart,
   cartCount,
   customerAccountEmail,
+  customerAccountOrderId,
   filteredProducts,
   isAccountOpen,
   isCartOpen,
@@ -2817,6 +2847,7 @@ function StorefrontView({
       <AccountDrawer
         open={isAccountOpen}
         customerAccountEmail={customerAccountEmail}
+        customerAccountOrderId={customerAccountOrderId}
         onLookupCustomer={onLookupCustomer}
         onClose={onCloseAccount}
       />
@@ -2831,7 +2862,8 @@ function StorefrontView({
 type AccountDrawerProps = {
   open: boolean;
   customerAccountEmail: string;
-  onLookupCustomer: (email: string) => Promise<CustomerLookupPayload>;
+  customerAccountOrderId: number | null;
+  onLookupCustomer: (email: string, orderId: number) => Promise<CustomerLookupPayload>;
   onClose: () => void;
 };
 
@@ -2856,16 +2888,20 @@ const emptyCustomerAuthForm: CustomerRegisterInput = {
 function AccountDrawer({
   open,
   customerAccountEmail,
+  customerAccountOrderId,
   onLookupCustomer,
   onClose
 }: AccountDrawerProps) {
   const [lookupEmail, setLookupEmail] = useState(customerAccountEmail);
+  const [lookupOrderId, setLookupOrderId] = useState(
+    customerAccountOrderId !== null ? String(customerAccountOrderId) : ""
+  );
   const [lookupPayload, setLookupPayload] = useState<CustomerLookupPayload>(
     emptyCustomerLookupPayload
   );
   const [lookupStatus, setLookupStatus] = useState<AccountLookupStatus>("idle");
   const [lookupError, setLookupError] = useState("");
-  const lastAutoLookupEmailRef = useRef<string | null>(null);
+  const lastAutoLookupKeyRef = useRef<string | null>(null);
 
   const [session, setSession] = useState<CustomerMePayload | null>(null);
   const [authView, setAuthView] = useState<AccountAuthView>("login");
@@ -3080,10 +3116,11 @@ function AccountDrawer({
     }
   };
 
-  const runLookup = async (email: string) => {
+  const runLookup = async (email: string, orderIdInput: string) => {
     const trimmedEmail = email.trim();
+    const parsedOrderId = Number.parseInt(orderIdInput, 10);
 
-    if (!trimmedEmail) {
+    if (!trimmedEmail || !Number.isFinite(parsedOrderId) || parsedOrderId <= 0) {
       setLookupPayload(emptyCustomerLookupPayload);
       setLookupStatus("idle");
       setLookupError("");
@@ -3094,7 +3131,7 @@ function AccountDrawer({
     setLookupError("");
 
     try {
-      const payload = await onLookupCustomer(trimmedEmail);
+      const payload = await onLookupCustomer(trimmedEmail, parsedOrderId);
       setLookupPayload(payload);
       setLookupStatus("success");
     } catch (error) {
@@ -3109,26 +3146,29 @@ function AccountDrawer({
     }
 
     const storedEmail = customerAccountEmail.trim().toLowerCase();
+    const autoLookupKey =
+      customerAccountOrderId !== null ? `${storedEmail}|${customerAccountOrderId}` : "";
 
-    // Skip when this is the email a manual submit (or a prior run of this
-    // effect) already fetched, so a successful lookupCustomer call that
-    // updates customerAccountEmail doesn't trigger a second request.
-    if (storedEmail === (lastAutoLookupEmailRef.current ?? "")) {
+    // Skip when this is the email/order pairing a manual submit (or a prior run of this
+    // effect) already fetched, so a successful lookupCustomer call that updates
+    // customerAccountEmail/customerAccountOrderId doesn't trigger a second request.
+    if (autoLookupKey === (lastAutoLookupKeyRef.current ?? "")) {
       return;
     }
 
-    lastAutoLookupEmailRef.current = storedEmail;
+    lastAutoLookupKeyRef.current = autoLookupKey;
     setLookupEmail(storedEmail);
+    setLookupOrderId(customerAccountOrderId !== null ? String(customerAccountOrderId) : "");
 
-    if (storedEmail) {
-      void runLookup(storedEmail);
+    if (storedEmail && customerAccountOrderId !== null) {
+      void runLookup(storedEmail, String(customerAccountOrderId));
       return;
     }
 
     setLookupPayload(emptyCustomerLookupPayload);
     setLookupStatus("idle");
     setLookupError("");
-  }, [open, customerAccountEmail]);
+  }, [open, customerAccountEmail, customerAccountOrderId]);
 
   if (!open) {
     return null;
@@ -3150,8 +3190,9 @@ function AccountDrawer({
 
   const submitLookup = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    lastAutoLookupEmailRef.current = lookupEmail.trim().toLowerCase();
-    void runLookup(lookupEmail);
+    const trimmedEmail = lookupEmail.trim().toLowerCase();
+    lastAutoLookupKeyRef.current = `${trimmedEmail}|${lookupOrderId.trim()}`;
+    void runLookup(lookupEmail, lookupOrderId);
   };
 
   const close = () => {
@@ -3578,6 +3619,17 @@ function AccountDrawer({
                   value={lookupEmail}
                   onChange={(event) => setLookupEmail(event.target.value)}
                   placeholder="orders@example.com"
+                  required
+                />
+              </label>
+              <label>
+                <span>Order #</span>
+                <input
+                  type="number"
+                  value={lookupOrderId}
+                  onChange={(event) => setLookupOrderId(event.target.value)}
+                  placeholder="e.g. 1024"
+                  min={1}
                   required
                 />
               </label>

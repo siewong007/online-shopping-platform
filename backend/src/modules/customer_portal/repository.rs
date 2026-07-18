@@ -14,6 +14,14 @@ pub async fn fetch_customer_portal_profiles(
     crate::db::fetch_customer_portal_profiles(pool, limit, before).await
 }
 
+pub async fn verify_customer_order_ownership(
+    pool: &PgPool,
+    email: &str,
+    order_id: i32,
+) -> Result<bool> {
+    crate::db::verify_customer_order_ownership(pool, email, order_id).await
+}
+
 pub async fn lookup_customer_portal(
     pool: &PgPool,
     email: &str,
