@@ -1186,7 +1186,9 @@ async fn dashboard_live_metrics_reflect_orders_and_unpaid_invoices(pool: PgPool)
     .await;
     assert_eq!(order_status, StatusCode::CREATED, "{order_body}");
     let order_id = order_body["id"].as_i64().expect("order id");
-    let order_subtotal = order_body["subtotal_cents"].as_i64().expect("subtotal");
+    // order_sales_meta.total_cents (tax-inclusive) is written at checkout time, so the
+    // dashboard's revenue_today_cents reflects tax, not the pre-tax subtotal.
+    let order_total = order_body["total_cents"].as_i64().expect("total");
 
     let (invoice_status, invoice_body) = common::request(
         app.clone(),
@@ -1204,7 +1206,7 @@ async fn dashboard_live_metrics_reflect_orders_and_unpaid_invoices(pool: PgPool)
     assert_eq!(status, StatusCode::OK, "{body}");
 
     let live = &body["live_metrics"];
-    assert_eq!(live["revenue_today_cents"].as_i64(), Some(order_subtotal));
+    assert_eq!(live["revenue_today_cents"].as_i64(), Some(order_total));
     assert_eq!(live["orders_awaiting_fulfillment"].as_i64(), Some(1));
     assert_eq!(live["unpaid_invoice_count"].as_i64(), Some(1));
     assert_eq!(
