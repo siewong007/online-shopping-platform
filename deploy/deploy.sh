@@ -262,6 +262,7 @@ CADDY
 
   rm -f "$site_tmp" "$main_backup"
   [[ -n "$site_backup" ]] && rm -f "$site_backup"
+  return 0
 }
 
 cleanup_old_releases() {
