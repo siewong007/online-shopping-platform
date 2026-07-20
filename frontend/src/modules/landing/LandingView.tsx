@@ -468,7 +468,7 @@ export function LandingView({ onOpenShop }: LandingViewProps) {
         <div className={`intro ${introState === "play" ? "play" : ""} ${introState === "done" ? "done" : ""}`} aria-hidden="true">
           <div className="intro-word">
             <span>
-              Ekoway<sup>*</sup>
+              <img src="/ekoway/ekoway-logo.jpeg" alt="Ekoway logo" />
             </span>
           </div>
         </div>
