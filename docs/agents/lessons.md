@@ -2,6 +2,13 @@
 
 Format: see [maintenance.md](maintenance.md). One entry per incident, no essays.
 
+## 2026-07-22 — PostgreSQL utility repeatedly prompted for a password during UI test setup
+- Wrong path taken: ran `dropdb` without supplying the repository's configured database
+  password non-interactively, producing thousands of prompts before the command timed out.
+- Rule that would have prevented it: pass `PGPASSWORD` or use the complete configured
+  connection URI for every non-interactive PostgreSQL utility command.
+- Written back to: lessons only.
+
 ## 2026-07-07 — rubric hardcoded "next migration is 0017" while 0017 already existed on disk
 - Wrong path taken: judgment-rubrics.md R5 cached a repo state (migration count) that a
   concurrent session outdated within 3 days; a trusting model would have created a

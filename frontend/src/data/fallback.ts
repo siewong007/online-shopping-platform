@@ -613,7 +613,47 @@ export const fallbackSystemSettings: SystemSetting[] = [
     category: "invoicing",
     description: "Default number of days until an invoice is due.",
     updated_at: "2026-06-29 08:00:00+00"
-  }
+  },
+  {
+    key: "shipping.standard.enabled",
+    value: "true",
+    value_type: "bool",
+    category: "shipping",
+    description: "Whether Standard delivery is available to customers at checkout.",
+    updated_at: "2026-06-29 08:00:00+00"
+  },
+  {
+    key: "shipping.express.enabled",
+    value: "true",
+    value_type: "bool",
+    category: "shipping",
+    description: "Whether Express delivery is available to customers at checkout.",
+    updated_at: "2026-06-29 08:00:00+00"
+  },
+  ...[
+    ["standard", "Standard delivery", "parcel", 699, 99],
+    ["standard", "Standard delivery", "bulky", 2499, 499],
+    ["standard", "Standard delivery", "freight", 7999, 1499],
+    ["express", "Express delivery", "parcel", 1299, 149],
+    ["express", "Express delivery", "bulky", 3999, 799]
+  ].flatMap(([code, name, shippingClass, baseCents, perItemCents]) => [
+    {
+      key: `shipping.${code}.${shippingClass}.base_cents`,
+      value: String(baseCents),
+      value_type: "int",
+      category: "shipping",
+      description: `${name} base charge for ${shippingClass} items, in cents.`,
+      updated_at: "2026-06-29 08:00:00+00"
+    },
+    {
+      key: `shipping.${code}.${shippingClass}.per_item_cents`,
+      value: String(perItemCents),
+      value_type: "int",
+      category: "shipping",
+      description: `${name} charge per ${shippingClass} item, in cents.`,
+      updated_at: "2026-06-29 08:00:00+00"
+    }
+  ])
 ];
 
 export const fallbackPermissions: PermissionsPayload = {

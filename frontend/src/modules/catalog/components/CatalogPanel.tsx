@@ -38,6 +38,7 @@ type CatalogPanelProps = {
   onUpdateCategory: (slug: string, input: UpdateCategoryInput) => Promise<Category>;
   onUpdateProduct: (productId: number, input: UpdateProductInput) => Promise<Product>;
   products: Product[];
+  variant?: "catalog" | "inventory";
 };
 
 const categoryFields: RecordFormField<CreateCategoryInput>[] = [
@@ -264,7 +265,8 @@ export function CatalogPanel({
   onDeleteProduct,
   onUpdateCategory,
   onUpdateProduct,
-  products
+  products,
+  variant = "catalog"
 }: CatalogPanelProps) {
   const { notify, notifyError } = useNotifications();
   const [categoryForm, setCategoryForm] = useState<CreateCategoryInput>({
@@ -544,19 +546,26 @@ export function CatalogPanel({
         categoryNameBySlug.get(product.category_slug) ?? product.category_slug
     },
     {
-      key: "price",
-      label: "Price",
+      key: "stock",
+      label: "On hand",
       align: "right" as const,
-      sortValue: (product: Product) => product.price_cents,
-      render: (product: Product) => currencyFromCents(product.price_cents)
+      sortValue: (product: Product) => product.stock_quantity,
+      render: (product: Product) => product.stock_quantity
     },
     {
-      key: "visibility",
-      label: "Visibility",
-      sortValue: (product: Product) => product.featured,
+      key: "threshold",
+      label: "Low-stock at",
+      align: "right" as const,
+      sortValue: (product: Product) => product.low_stock_threshold,
+      render: (product: Product) => product.low_stock_threshold
+    },
+    {
+      key: "status",
+      label: "Stock status",
+      sortValue: (product: Product) => product.stock_quantity <= product.low_stock_threshold,
       render: (product: Product) => (
-        <span className={`status-pill ${product.featured ? "live" : ""}`}>
-          {product.featured ? "Live" : "Hidden"}
+        <span className={`status-pill ${product.stock_quantity <= product.low_stock_threshold ? "warning" : "live"}`}>
+          {product.stock_quantity <= product.low_stock_threshold ? "Low" : "Healthy"}
         </span>
       )
     },
@@ -606,8 +615,8 @@ export function CatalogPanel({
     <section className="admin-section active">
       <div className="panel-header">
         <div>
-          <p className="eyebrow">Catalog manager</p>
-          <h3>Manage categories and products</h3>
+          <p className="eyebrow">{variant === "inventory" ? "Inventory manager" : "Catalog manager"}</p>
+          <h3>{variant === "inventory" ? "Manage product stock and replenishment" : "Manage categories and products"}</h3>
         </div>
         <span className={`status-pill ${canCreate || canUpdate || canDelete ? "live" : ""}`}>
           {canCreate || canUpdate || canDelete ? "Writable" : "Read only"}
@@ -615,16 +624,19 @@ export function CatalogPanel({
       </div>
 
       <div className="record-toolbar">
-        <button className="outline-button" disabled={!canCreate} onClick={openCreateCategory} type="button">
-          Create Category
-        </button>
+        {variant === "catalog" ? (
+          <button className="outline-button" disabled={!canCreate} onClick={openCreateCategory} type="button">
+            Create Category
+          </button>
+        ) : null}
         <button className="solid-button" disabled={!canCreate} onClick={openCreateProduct} type="button">
-          Create Product
+          {variant === "inventory" ? "Add Inventory Item" : "Create Product"}
         </button>
       </div>
 
-      <div className="admin-panels two-up">
-        <article className="dashboard-panel">
+      <div className={variant === "catalog" ? "admin-panels two-up" : "admin-panels"}>
+        {variant === "catalog" ? (
+          <article className="dashboard-panel">
           <div className="panel-header">
             <div>
               <p className="eyebrow">Current categories</p>
@@ -639,13 +651,14 @@ export function CatalogPanel({
             rows={categories}
             tableLabel="Category management table"
           />
-        </article>
+          </article>
+        ) : null}
 
         <article className="dashboard-panel">
           <div className="panel-header">
             <div>
-              <p className="eyebrow">Storefront products</p>
-              <h3>Product inventory table</h3>
+              <p className="eyebrow">{variant === "inventory" ? "Stock records" : "Storefront products"}</p>
+              <h3>{variant === "inventory" ? "Inventory management table" : "Product inventory table"}</h3>
             </div>
           </div>
           <ManagementTable
@@ -659,7 +672,8 @@ export function CatalogPanel({
         </article>
       </div>
 
-      <RecordModal
+      {variant === "catalog" ? (
+        <RecordModal
         eyebrow="New category"
         isOpen={isCategoryModalOpen}
         onClose={() => {
@@ -681,9 +695,11 @@ export function CatalogPanel({
           submitLabel="Create Category"
           values={categoryForm}
         />
-      </RecordModal>
+        </RecordModal>
+      ) : null}
 
-      <RecordModal
+      {variant === "catalog" ? (
+        <RecordModal
         eyebrow="Editing category"
         isOpen={isCategoryEditOpen}
         onClose={closeCategoryEdit}
@@ -701,7 +717,8 @@ export function CatalogPanel({
           submitLabel="Save Category"
           values={categoryEditForm}
         />
-      </RecordModal>
+        </RecordModal>
+      ) : null}
 
       <RecordModal
         eyebrow={editingProductId === null ? "New product" : "Editing product"}
@@ -712,7 +729,7 @@ export function CatalogPanel({
         statusTone={editingProductId === null ? (canCreate ? "live" : undefined) : canUpdate ? "live" : undefined}
         title={
           editingProductId === null
-            ? "Publish a new storefront item"
+            ? variant === "inventory" ? "Add inventory item" : "Publish a new storefront item"
             : editingProduct?.name ?? "Edit storefront item"
         }
       >

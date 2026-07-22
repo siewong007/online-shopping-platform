@@ -42,6 +42,7 @@ type OrderControlPanelProps = {
   ) => Promise<Order>;
   orders: Order[];
   products: Product[];
+  variant?: "orders" | "fulfillment";
 };
 
 // Mirrors FULFILLMENT_PICKUP_TRANSITIONS / FULFILLMENT_DELIVERY_TRANSITIONS in
@@ -162,7 +163,8 @@ export function OrderControlPanel({
   onUpdateOrder,
   onUpdateFulfillment,
   orders,
-  products
+  products,
+  variant = "orders"
 }: OrderControlPanelProps) {
   const { notify, notifyError } = useNotifications();
   const [editingOrderId, setEditingOrderId] = useState<number | null>(null);
@@ -456,8 +458,8 @@ export function OrderControlPanel({
     <section className="admin-section active">
       <div className="panel-header">
         <div>
-          <p className="eyebrow">Order control</p>
-          <h3>Create, edit and remove checkout orders</h3>
+          <p className="eyebrow">{variant === "fulfillment" ? "Fulfillment management" : "Order control"}</p>
+          <h3>{variant === "fulfillment" ? "Manage orders and their fulfillment flow" : "Create, edit and remove checkout orders"}</h3>
         </div>
         <span className={`status-pill ${canCreate || canUpdate || canDelete ? "live" : ""}`}>
           {orders.length} total
@@ -467,8 +469,8 @@ export function OrderControlPanel({
       <article className="dashboard-panel">
         <div className="panel-header">
           <div>
-            <p className="eyebrow">Order book</p>
-            <h3>Recent checkout orders</h3>
+              <p className="eyebrow">{variant === "fulfillment" ? "Fulfillment queue" : "Order book"}</p>
+              <h3>{variant === "fulfillment" ? "Fulfillment management table" : "Recent checkout orders"}</h3>
           </div>
           <div className="admin-actions">
             <span className="status-pill">{orders.length} rows</span>
@@ -491,7 +493,7 @@ export function OrderControlPanel({
             isLoadingMore={isLoadingMore}
             onLoadMore={onLoadMore}
             rows={orders}
-            tableLabel="Order management table"
+            tableLabel={variant === "fulfillment" ? "Fulfillment management table" : "Order management table"}
           />
         )}
 

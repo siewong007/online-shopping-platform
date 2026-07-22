@@ -975,17 +975,6 @@ function applyPermissionUpdate(
   };
 }
 
-const fulfillmentBoardStages: FulfillmentStatus[] = [
-  "received",
-  "picking",
-  "packed",
-  "ready_for_pickup",
-  "out_for_delivery",
-  "completed",
-  "delivered",
-  "canceled"
-];
-
 function fulfillmentLabel(value: string): string {
   return value
     .split("_")
@@ -1002,24 +991,6 @@ function auditEventToActivityItem(event: AuditEvent): ActivityItem {
     happened_at: formatRelativeTime(event.happened_at),
     detail: event.detail ? `${summary} — ${event.detail}` : summary
   };
-}
-
-function groupedFulfillment(orders: Order[]): Record<FulfillmentStatus, Order[]> {
-  const groups = fulfillmentBoardStages.reduce(
-    (accumulator, stage) => ({ ...accumulator, [stage]: [] }),
-    {} as Record<FulfillmentStatus, Order[]>
-  );
-
-  for (const order of orders) {
-    groups[order.fulfillment_status]?.push(order);
-  }
-
-  return groups;
-}
-
-function numericText(value: string): number {
-  const parsed = Number(value.replace(/[^0-9.-]+/g, ""));
-  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function priceInputToCents(value: string): number | null {
@@ -1162,8 +1133,6 @@ export default function App() {
   }, []);
 
   const filteredProducts = storefront?.products ?? [];
-
-  const fulfillmentByStage = groupedFulfillment(orders);
 
   const openView = (nextView: Extract<View, "landing" | "store" | "admin">) => {
     startTransition(() => {
@@ -2310,7 +2279,7 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
+    <div className={view === "admin" ? "app-shell admin-shell" : "app-shell"}>
       {view === "store" ? (
         <StorefrontView
           cart={cart}
@@ -2373,7 +2342,6 @@ export default function App() {
           customerProfiles={customerProfiles}
           dashboard={dashboard}
           demoMode={adminAuth === "demo"}
-          fulfillmentByStage={fulfillmentByStage}
           hasMoreActivity={hasMoreActivity}
           isChangePasswordOpen={isChangePasswordOpen}
           isLoadingMoreActivity={isLoadingMoreActivity}
@@ -2534,14 +2502,13 @@ function StorefrontView({
     <div className="storefront-shell">
       <div className="top-strip">
         <p>{t("shop.strip")}</p>
-        <button className="top-link" onClick={onOpenAdmin}>
-          {t("shop.strip.cta")}
-        </button>
       </div>
 
       <header className="site-header">
         <div className="brand-block">
-          <EkowayMark />
+          <a className="brand-logo-link" href="/" aria-label="Back to the main page">
+            <EkowayMark />
+          </a>
           <div className="brand-copy">
             <p className="eyebrow">{t("shop.eyebrow")}</p>
             <h1>{t("shop.brand")}</h1>
@@ -4353,7 +4320,6 @@ type AdminViewProps = {
   customerProfiles: CustomerPortalProfile[];
   dashboard: AdminDashboardPayload;
   demoMode: boolean;
-  fulfillmentByStage: Record<FulfillmentStatus, Order[]>;
   hasMoreCustomerProfiles: boolean;
   hasMoreActivity: boolean;
   hasMoreInvoices: boolean;
@@ -4454,7 +4420,6 @@ function AdminView({
   customerProfiles,
   dashboard,
   demoMode,
-  fulfillmentByStage,
   hasMoreCustomerProfiles,
   hasMoreActivity,
   hasMoreInvoices,
@@ -4603,49 +4568,6 @@ function AdminView({
     }
   }, [activeRoleId, adminTab, onChangeTab, permissions]);
 
-  const inventoryColumns = [
-    {
-      key: "department",
-      label: "Department",
-      sortValue: (item: AdminDashboardPayload["inventory"][number]) => item.department,
-      render: (item: AdminDashboardPayload["inventory"][number]) => (
-        <strong>{item.department}</strong>
-      )
-    },
-    {
-      key: "on_hand",
-      label: "On hand",
-      align: "right" as const,
-      sortValue: (item: AdminDashboardPayload["inventory"][number]) => numericText(item.on_hand),
-      render: (item: AdminDashboardPayload["inventory"][number]) => item.on_hand
-    },
-    {
-      key: "lead_region",
-      label: "Lead region",
-      sortValue: (item: AdminDashboardPayload["inventory"][number]) => item.lead_region,
-      render: (item: AdminDashboardPayload["inventory"][number]) => item.lead_region
-    },
-    {
-      key: "status",
-      label: "Status",
-      sortValue: (item: AdminDashboardPayload["inventory"][number]) => item.status,
-      render: (item: AdminDashboardPayload["inventory"][number]) => (
-        <span
-          className={`status-pill ${
-            item.status === "Healthy" ? "live" : item.status === "Low" ? "warning" : ""
-          }`}
-        >
-          {item.status}
-        </span>
-      )
-    },
-    {
-      key: "note",
-      label: "Notes",
-      sortValue: (item: AdminDashboardPayload["inventory"][number]) => item.note,
-      render: (item: AdminDashboardPayload["inventory"][number]) => item.note
-    }
-  ];
   return (
     <main className="admin-layout">
       <aside className="admin-sidebar">
@@ -4727,61 +4649,38 @@ function AdminView({
         ) : null}
 
         {adminTab === "inventory" ? (
-          <section className="admin-section active">
-            <div className="panel-header">
-              <div>
-                <p className="eyebrow">Inventory health</p>
-                <h3>Replenishment watchlist</h3>
-              </div>
-              <span className="status-pill warning">Attention</span>
-            </div>
-            <ManagementTable
-              columns={inventoryColumns}
-              emptyMessage="No inventory records are available."
-              getRowKey={(item) => item.department}
-              initialSortKey="department"
-              rows={dashboard.inventory}
-              tableLabel="Inventory management table"
-            />
-          </section>
+          <CatalogPanel
+            canCreate={canCreateCatalog}
+            canDelete={canDeleteCatalog}
+            canUpdate={canUpdateCatalog}
+            categories={categories}
+            onCreateCategory={onCreateCategory}
+            onCreateProduct={onCreateProduct}
+            onDeleteCategory={onDeleteCategory}
+            onDeleteProduct={onDeleteProduct}
+            onUpdateCategory={onUpdateCategory}
+            onUpdateProduct={onUpdateProduct}
+            products={products}
+            variant="inventory"
+          />
         ) : null}
 
         {adminTab === "fulfillment" ? (
-          <section className="admin-section active">
-            <div className="panel-header">
-              <div>
-                <p className="eyebrow">Fulfillment board</p>
-                <h3>Order flow by stage</h3>
-              </div>
-              <span className="status-pill live">{orders.length} orders</span>
-            </div>
-            <div className="fulfillment-grid">
-              {fulfillmentBoardStages.map((stage) => {
-                const stageOrders = fulfillmentByStage[stage];
-
-                return (
-                <article className="fulfillment-column" key={stage}>
-                  <div className="fulfillment-column-head">
-                    <h4>{fulfillmentLabel(stage)}</h4>
-                    <span className="status-pill">{stageOrders.length}</span>
-                  </div>
-                  {stageOrders.length === 0 ? (
-                    <p className="table-muted">No orders</p>
-                  ) : (
-                    stageOrders.map((order) => (
-                      <div className="task-card fulfillment-order-card" key={order.id}>
-                        <strong>#{order.id} {order.customer_name}</strong>
-                        <span>{fulfillmentLabel(order.fulfillment_method)}</span>
-                        <span>{currencyFromCents(order.subtotal_cents)}</span>
-                        <small>{formatOrderDate(order.created_at)}</small>
-                      </div>
-                    ))
-                  )}
-                </article>
-                );
-              })}
-            </div>
-          </section>
+          <OrderControlPanel
+            canCreate={canCreateOrders}
+            canDelete={canDeleteOrders}
+            canUpdate={canUpdateOrders}
+            hasMore={hasMoreOrders}
+            isLoadingMore={isLoadingMoreOrders}
+            onCreateOrder={onCreateAdminOrder}
+            onDeleteOrder={onDeleteAdminOrder}
+            onLoadMore={onLoadMoreOrders}
+            onUpdateOrder={onUpdateAdminOrder}
+            onUpdateFulfillment={onUpdateOrderFulfillment}
+            orders={orders}
+            products={products}
+            variant="fulfillment"
+          />
         ) : null}
 
         {adminTab === "campaigns" ? (

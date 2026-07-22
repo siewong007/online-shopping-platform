@@ -74,7 +74,11 @@ pub(crate) async fn quote_delivery(
             shipping_services.code,
             shipping_services.name,
             shipping_services.carrier,
-            SUM(shipping_service_rates.base_cents + shipping_service_rates.per_item_cents * requested_items.quantity)::int AS shipping_cents,
+            SUM(
+                COALESCE(base_setting.value::int, shipping_service_rates.base_cents)
+                + COALESCE(per_item_setting.value::int, shipping_service_rates.per_item_cents)
+                    * requested_items.quantity
+            )::int AS shipping_cents,
             shipping_services.min_delivery_days,
             shipping_services.max_delivery_days
         FROM requested_items
@@ -83,7 +87,15 @@ pub(crate) async fn quote_delivery(
             ON shipping_service_rates.shipping_class = products.shipping_class
         JOIN shipping_services
             ON shipping_services.id = shipping_service_rates.service_id
-           AND shipping_services.is_active
+        LEFT JOIN system_settings enabled_setting
+            ON enabled_setting.key = 'shipping.' || shipping_services.code || '.enabled'
+        LEFT JOIN system_settings base_setting
+            ON base_setting.key = 'shipping.' || shipping_services.code || '.'
+                || shipping_service_rates.shipping_class || '.base_cents'
+        LEFT JOIN system_settings per_item_setting
+            ON per_item_setting.key = 'shipping.' || shipping_services.code || '.'
+                || shipping_service_rates.shipping_class || '.per_item_cents'
+        WHERE COALESCE(enabled_setting.value::boolean, shipping_services.is_active)
         GROUP BY
             shipping_services.id,
             shipping_services.code,

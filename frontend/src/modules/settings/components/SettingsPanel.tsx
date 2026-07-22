@@ -13,7 +13,8 @@ type SettingsPanelProps = {
 const categoryLabels: Record<string, string> = {
   general: "General",
   sales: "Sales",
-  invoicing: "Invoicing"
+  invoicing: "Invoicing",
+  shipping: "Shipping"
 };
 
 function groupedByCategory(settings: SystemSetting[]): Record<string, SystemSetting[]> {
@@ -28,6 +29,18 @@ function groupedByCategory(settings: SystemSetting[]): Record<string, SystemSett
 function validateSettingValue(setting: SystemSetting, value: string): string | null {
   if (value === "") {
     return "Setting value cannot be empty.";
+  }
+
+  if (setting.key.startsWith("shipping.") && setting.key.endsWith("_cents")) {
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed < 0 || parsed > 100000000) {
+      return "Shipping rates must be whole cents between 0 and 100000000.";
+    }
+    return null;
+  }
+
+  if (setting.value_type === "bool" && value !== "true" && value !== "false") {
+    return `${setting.key} must be true or false.`;
   }
 
   switch (setting.key) {
@@ -107,7 +120,7 @@ export function SettingsPanel({ canUpdate, onUpdateSetting, settings }: Settings
       <div className="panel-header">
         <div>
           <p className="eyebrow">System configuration</p>
-          <h3>Tax, invoicing and branding settings</h3>
+          <h3>Tax, invoicing, shipping and branding settings</h3>
         </div>
         <span className={`status-pill ${canUpdate ? "live" : ""}`}>
           {canUpdate ? "Writable" : "Read only"}
@@ -133,13 +146,28 @@ export function SettingsPanel({ canUpdate, onUpdateSetting, settings }: Settings
                 >
                   <label className="admin-field">
                     {setting.key}
-                    <input
-                      disabled={!canUpdate}
-                      onChange={(event) =>
-                        setDrafts((current) => ({ ...current, [setting.key]: event.target.value }))
-                      }
-                      value={draftFor(setting)}
-                    />
+                    {setting.value_type === "bool" ? (
+                      <select
+                        disabled={!canUpdate}
+                        onChange={(event) =>
+                          setDrafts((current) => ({ ...current, [setting.key]: event.target.value }))
+                        }
+                        value={draftFor(setting)}
+                      >
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                      </select>
+                    ) : (
+                      <input
+                        disabled={!canUpdate}
+                        min={setting.key.endsWith("_cents") ? 0 : undefined}
+                        onChange={(event) =>
+                          setDrafts((current) => ({ ...current, [setting.key]: event.target.value }))
+                        }
+                        type={setting.value_type === "int" ? "number" : "text"}
+                        value={draftFor(setting)}
+                      />
+                    )}
                   </label>
                   <p className="settings-row-description">{setting.description}</p>
                   <div className="settings-row-footer">

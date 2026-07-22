@@ -1075,6 +1075,51 @@ async fn settings_update_roundtrip(pool: PgPool) {
 }
 
 #[sqlx::test]
+async fn admin_shipping_rate_update_changes_checkout_quote(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "shipping-settings", "secret123").await;
+    let app = common::app(pool);
+    let token = common::login(app.clone(), "shipping-settings", "secret123").await;
+
+    let (update_status, update_body) = common::request(
+        app.clone(),
+        Method::PUT,
+        "/api/admin/settings/shipping.standard.parcel.base_cents",
+        Some(&token),
+        Some(json!({ "value": "1000" })),
+    )
+    .await;
+    assert_eq!(update_status, StatusCode::OK, "{update_body}");
+
+    let (quote_status, quote_body) = common::request(
+        app,
+        Method::POST,
+        "/api/checkout/quote",
+        None,
+        Some(json!({
+            "fulfillment_method": "delivery",
+            "shipping_address": {
+                "recipient_name": "Shipping Buyer",
+                "phone": "555-0100",
+                "address_line1": "100 Main Street",
+                "city": "Atlanta",
+                "state": "GA",
+                "postal_code": "30303",
+                "country_code": "US"
+            },
+            "items": [{ "product_id": 1, "quantity": 1 }]
+        })),
+    )
+    .await;
+    assert_eq!(quote_status, StatusCode::OK, "{quote_body}");
+
+    let standard = quote_body["shipping_options"]
+        .as_array()
+        .and_then(|options| options.iter().find(|option| option["code"] == "standard"))
+        .expect("standard shipping option");
+    assert_eq!(standard["shipping_cents"], 1099);
+}
+
+#[sqlx::test]
 async fn settings_update_rejects_out_of_range_tax_rate(pool: PgPool) {
     common::create_admin(&pool, "Super Admin", "settings-tax", "secret123").await;
     let app = common::app(pool);

@@ -54,6 +54,16 @@ fn validate_setting_value(
     current_value: &str,
     value: &str,
 ) -> Result<()> {
+    if key.starts_with("shipping.") && key.ends_with("_cents") {
+        let parsed: i64 = value
+            .parse()
+            .map_err(|_| anyhow::anyhow!("Shipping rates must be whole cents."))?;
+        if !(0..=100_000_000).contains(&parsed) {
+            bail!("Shipping rates must be between 0 and 100000000 cents.");
+        }
+        return Ok(());
+    }
+
     match key {
         "sales.default_tax_rate_bps" => {
             let parsed: i64 = value
@@ -85,6 +95,9 @@ fn validate_setting_value(
             if !is_valid {
                 bail!("Currency code must be three uppercase letters (e.g. USD).");
             }
+        }
+        _ if value_type == "bool" && !matches!(value, "true" | "false") => {
+            bail!("Setting {key} must be true or false.");
         }
         _ if value_type == "int" => {
             value
