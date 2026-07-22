@@ -3,7 +3,7 @@ use axum::http::StatusCode;
 use sqlx::PgPool;
 
 use crate::{
-    error::HttpError,
+    error::{self, HttpError},
     modules::{audit, auth::model::AdminIdentity},
 };
 
@@ -112,8 +112,17 @@ pub async fn update_role_page_permission(
     pool: &PgPool,
     identity: &AdminIdentity,
     input: &UpdateRolePagePermissionInput,
-) -> Result<RolePagePermission> {
-    let permission = repository::update_role_page_permission(pool, input).await?;
+) -> Result<RolePagePermission, HttpError> {
+    if !identity.is_super_admin && input.role_id == identity.role_id {
+        return Err((
+            StatusCode::FORBIDDEN,
+            "Administrators cannot change their own role permissions.".to_string(),
+        ));
+    }
+
+    let permission = repository::update_role_page_permission(pool, input)
+        .await
+        .map_err(error::map_admin_error)?;
     audit::service::record_event(
         pool,
         &identity.username,

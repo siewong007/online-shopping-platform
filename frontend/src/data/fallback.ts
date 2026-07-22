@@ -406,6 +406,7 @@ export const fallbackCustomerPortalTransactions: CustomerTransactionsPayload = {
       created_at: "2026-06-29 07:15:00+00",
       status: "received",
       subtotal_cents: 64900,
+      total_cents: 64900,
       fulfillment_method: "delivery",
       items: [
         { product_name: "Milwaukee M18 9-Tool Combo Kit", quantity: 1, unit_price_cents: 64900 }
@@ -418,7 +419,19 @@ export const fallbackCustomerPortalTransactions: CustomerTransactionsPayload = {
           reference: "ach-dana-1041",
           processed_at: null
         }
-      ]
+      ],
+      fulfillment_history: [
+        {
+          id: 1,
+          order_id: 1041,
+          from_status: null,
+          to_status: "received",
+          note: "Order received and awaiting fulfillment.",
+          changed_by: "system",
+          happened_at: "2026-06-29 07:15:00+00"
+        }
+      ],
+      applied_offers: []
     }
   ]
 };

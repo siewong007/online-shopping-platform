@@ -109,15 +109,17 @@ pub async fn fetch_customer_transactions(
     .fetch_one(pool)
     .await?;
 
-    let order_rows = sqlx::query_as::<_, (i32, String, String, i32, String)>(
+    let order_rows = sqlx::query_as::<_, (i32, String, String, i32, i32, String)>(
         r#"
         SELECT
             id,
             created_at::text AS created_at,
             fulfillment_status,
             subtotal_cents,
+            COALESCE(order_sales_meta.total_cents, orders.subtotal_cents) AS total_cents,
             fulfillment_method
         FROM orders
+        LEFT JOIN order_sales_meta ON order_sales_meta.order_id = orders.id
         WHERE customer_account_id = $1
         ORDER BY created_at DESC, id DESC
         LIMIT $2 OFFSET $3
@@ -131,8 +133,8 @@ pub async fn fetch_customer_transactions(
 
     let order_ids = order_rows.iter().map(|(id, ..)| *id).collect::<Vec<_>>();
 
-    let (item_rows, payment_rows) = if order_ids.is_empty() {
-        (Vec::new(), Vec::new())
+    let (item_rows, payment_rows, history_rows, offer_rows) = if order_ids.is_empty() {
+        (Vec::new(), Vec::new(), Vec::new(), Vec::new())
     } else {
         let items = sqlx::query_as::<_, (i32, String, i32, i32)>(
             r#"
@@ -159,7 +161,34 @@ pub async fn fetch_customer_transactions(
         .fetch_all(pool)
         .await?;
 
-        (items, payments)
+        let history = sqlx::query_as::<_, OrderFulfillmentHistory>(
+            r#"
+            SELECT id, order_id, from_status, to_status, note, changed_by,
+                   happened_at::text AS happened_at
+            FROM order_fulfillment_history
+            WHERE order_id = ANY($1)
+            ORDER BY order_id, happened_at, id
+            "#,
+        )
+        .bind(order_ids.as_slice())
+        .fetch_all(pool)
+        .await?;
+
+        let offers =
+            sqlx::query_as::<_, (i32, Option<i32>, Option<i32>, i32, String, Option<String>)>(
+                r#"
+            SELECT order_id, promotion_id, voucher_id, discount_snapshot_cents,
+                   label_snapshot, code_snapshot
+            FROM order_offer_redemptions
+            WHERE order_id = ANY($1)
+            ORDER BY order_id, id
+            "#,
+            )
+            .bind(order_ids.as_slice())
+            .fetch_all(pool)
+            .await?;
+
+        (items, payments, history, offers)
     };
 
     let mut items_by_order: HashMap<i32, Vec<CustomerTransactionItem>> = HashMap::new();
@@ -188,17 +217,44 @@ pub async fn fetch_customer_transactions(
             });
     }
 
+    let mut history_by_order: HashMap<i32, Vec<OrderFulfillmentHistory>> = HashMap::new();
+    for history in history_rows {
+        history_by_order
+            .entry(history.order_id)
+            .or_default()
+            .push(history);
+    }
+
+    let mut offers_by_order: HashMap<i32, Vec<AppliedOffer>> = HashMap::new();
+    for (order_id, promotion_id, voucher_id, discount_cents, label, code) in offer_rows {
+        offers_by_order
+            .entry(order_id)
+            .or_default()
+            .push(AppliedOffer {
+                promotion_id,
+                voucher_id,
+                discount_cents,
+                label,
+                code,
+            });
+    }
+
     let transactions = order_rows
         .into_iter()
         .map(
-            |(id, created_at, status, subtotal_cents, fulfillment_method)| CustomerTransaction {
-                id,
-                created_at,
-                status,
-                subtotal_cents,
-                fulfillment_method,
-                items: items_by_order.remove(&id).unwrap_or_default(),
-                payments: payments_by_order.remove(&id).unwrap_or_default(),
+            |(id, created_at, status, subtotal_cents, total_cents, fulfillment_method)| {
+                CustomerTransaction {
+                    id,
+                    created_at,
+                    status,
+                    subtotal_cents,
+                    total_cents,
+                    fulfillment_method,
+                    items: items_by_order.remove(&id).unwrap_or_default(),
+                    payments: payments_by_order.remove(&id).unwrap_or_default(),
+                    fulfillment_history: history_by_order.remove(&id).unwrap_or_default(),
+                    applied_offers: offers_by_order.remove(&id).unwrap_or_default(),
+                }
             },
         )
         .collect();

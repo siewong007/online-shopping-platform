@@ -109,5 +109,4 @@ pub async fn update_role_permission(
     service::update_role_page_permission(&state.pool, &identity, &input)
         .await
         .map(Json)
-        .map_err(error::map_admin_error)
 }

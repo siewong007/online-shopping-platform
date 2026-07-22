@@ -2395,6 +2395,42 @@ ul {
   border-top: 1px dashed var(--line);
 }
 
+.account-fulfillment-timeline {
+  border-top: 1px solid var(--line);
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+}
+
+.account-fulfillment-timeline > strong {
+  color: var(--ink);
+  font-size: 0.82rem;
+}
+
+.account-fulfillment-timeline ol {
+  display: grid;
+  gap: 0.45rem;
+  list-style: none;
+  margin: 0.65rem 0 0;
+  padding: 0;
+}
+
+.account-fulfillment-timeline li {
+  align-items: baseline;
+  display: flex;
+  gap: 0.55rem;
+  justify-content: space-between;
+}
+
+.account-fulfillment-timeline li span {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.account-fulfillment-timeline li small {
+  color: var(--muted);
+  text-align: right;
+}
+
 .account-payment-list li {
   display: flex;
   align-items: flex-start;

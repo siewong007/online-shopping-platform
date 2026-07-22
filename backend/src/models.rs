@@ -522,9 +522,12 @@ pub struct CustomerTransaction {
     pub created_at: String,
     pub status: String,
     pub subtotal_cents: i32,
+    pub total_cents: i32,
     pub fulfillment_method: String,
     pub items: Vec<CustomerTransactionItem>,
     pub payments: Vec<CustomerTransactionPayment>,
+    pub fulfillment_history: Vec<OrderFulfillmentHistory>,
+    pub applied_offers: Vec<AppliedOffer>,
 }
 
 #[derive(Debug, Clone, Serialize)]

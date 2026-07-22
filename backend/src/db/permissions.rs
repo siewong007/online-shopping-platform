@@ -1,6 +1,6 @@
 use crate::models::*;
 use anyhow::{Result, anyhow, bail};
-use sqlx::PgPool;
+use sqlx::{PgPool, Postgres, Transaction};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy)]
@@ -303,7 +303,9 @@ pub async fn update_role_page_permission(
     pool: &PgPool,
     input: &UpdateRolePagePermissionInput,
 ) -> Result<RolePagePermission> {
-    ensure_role_is_editable(pool, input.role_id).await?;
+    let mut tx = pool.begin().await?;
+    crate::db::acquire_admin_management_lock(&mut tx).await?;
+    ensure_role_is_editable_in_transaction(&mut tx, input.role_id).await?;
 
     let page_exists = sqlx::query_scalar::<_, bool>(
         r#"
@@ -311,7 +313,7 @@ pub async fn update_role_page_permission(
         "#,
     )
     .bind(input.page_id)
-    .fetch_one(pool)
+    .fetch_one(&mut *tx)
     .await?;
 
     if !page_exists {
@@ -320,7 +322,7 @@ pub async fn update_role_page_permission(
 
     let (can_create, can_read, can_update, can_delete) = normalize_permission_flags(input);
 
-    sqlx::query_as::<_, RolePagePermission>(
+    let permission = sqlx::query_as::<_, RolePagePermission>(
         r#"
         INSERT INTO role_page_permissions
             (role_id, page_id, can_create, can_read, can_update, can_delete)
@@ -339,9 +341,11 @@ pub async fn update_role_page_permission(
     .bind(can_read)
     .bind(can_update)
     .bind(can_delete)
-    .fetch_one(pool)
-    .await
-    .map_err(Into::into)
+    .fetch_one(&mut *tx)
+    .await?;
+
+    tx.commit().await?;
+    Ok(permission)
 }
 
 fn validate_role_input(name: &str) -> Result<()> {
@@ -366,6 +370,32 @@ async fn ensure_role_is_editable(pool: &PgPool, role_id: i32) -> Result<()> {
     )
     .bind(role_id)
     .fetch_optional(pool)
+    .await?;
+
+    let Some((is_super_admin,)) = role else {
+        bail!("Role does not exist.");
+    };
+
+    if is_super_admin {
+        bail!("Super Admin is reserved and always has full access.");
+    }
+
+    Ok(())
+}
+
+async fn ensure_role_is_editable_in_transaction(
+    tx: &mut Transaction<'_, Postgres>,
+    role_id: i32,
+) -> Result<()> {
+    let role = sqlx::query_as::<_, (bool,)>(
+        r#"
+        SELECT is_super_admin
+        FROM roles
+        WHERE id = $1
+        "#,
+    )
+    .bind(role_id)
+    .fetch_optional(&mut **tx)
     .await?;
 
     let Some((is_super_admin,)) = role else {

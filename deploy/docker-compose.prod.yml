@@ -12,7 +12,7 @@
 # this stack rather than letting the kernel OOM-killer pick an arbitrary
 # victim if this app misbehaves.
 #
-# deploy.sh supplies IMAGE_TAG and POSTGRES_PASSWORD. Images are loaded
+# deploy.sh supplies IMAGE_TAG, POSTGRES_PASSWORD, and ADMIN_SEED_PASSWORD. Images are loaded
 # directly from a release bundle; no registry or additional AWS service is
 # involved.
 
@@ -75,6 +75,7 @@ services:
       APP_HOST: "0.0.0.0"
       APP_PORT: "4000"
       DATABASE_URL: "postgres://shop_admin:${POSTGRES_PASSWORD}@postgres:5432/online_shopping"
+      ADMIN_SEED_PASSWORD: "${ADMIN_SEED_PASSWORD:?ADMIN_SEED_PASSWORD is required}"
       FRONTEND_ORIGIN: "https://ekowayhardware.com"
       RUST_LOG: warn
     depends_on:

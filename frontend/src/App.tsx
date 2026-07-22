@@ -2296,6 +2296,11 @@ export default function App() {
           maxPriceCents={maxPriceCents}
           minPriceCents={minPriceCents}
           onAddToCart={addToCart}
+          onAccountAuthenticated={(email) => {
+            const normalizedEmail = email.trim().toLowerCase();
+            setCustomerAccountEmail(normalizedEmail);
+            rememberAccountEmail(normalizedEmail);
+          }}
           onChangeCategory={setSelectedCategory}
           onChangeMaxPrice={setMaxPriceCents}
           onChangeMinPrice={setMinPriceCents}
@@ -2434,6 +2439,7 @@ type StorefrontViewProps = {
   maxPriceCents: number | null;
   minPriceCents: number | null;
   onAddToCart: (product: Product) => void;
+  onAccountAuthenticated: (email: string) => void;
   onChangeCategory: (slug: string) => void;
   onChangeMaxPrice: (value: number | null) => void;
   onChangeMinPrice: (value: number | null) => void;
@@ -2472,6 +2478,7 @@ function StorefrontView({
   maxPriceCents,
   minPriceCents,
   onAddToCart,
+  onAccountAuthenticated,
   onChangeCategory,
   onChangeMaxPrice,
   onChangeMinPrice,
@@ -2845,6 +2852,7 @@ function StorefrontView({
         customerAccountEmail={customerAccountEmail}
         customerAccountOrderId={customerAccountOrderId}
         onLookupCustomer={onLookupCustomer}
+        onAuthenticated={onAccountAuthenticated}
         onClose={onCloseAccount}
       />
       <SupportChatWidget
@@ -2860,6 +2868,7 @@ type AccountDrawerProps = {
   customerAccountEmail: string;
   customerAccountOrderId: number | null;
   onLookupCustomer: (email: string, orderId: number) => Promise<CustomerLookupPayload>;
+  onAuthenticated: (email: string) => void;
   onClose: () => void;
 };
 
@@ -2913,6 +2922,7 @@ function AccountDrawer({
   customerAccountEmail,
   customerAccountOrderId,
   onLookupCustomer,
+  onAuthenticated,
   onClose
 }: AccountDrawerProps) {
   const [lookupEmail, setLookupEmail] = useState(customerAccountEmail);
@@ -2947,6 +2957,12 @@ function AccountDrawer({
   const [customerSessionsStatus, setCustomerSessionsStatus] = useState<PortalLoadStatus>("idle");
   const [customerSessionsError, setCustomerSessionsError] = useState("");
   const [sessionActionId, setSessionActionId] = useState<number | "others" | null>(null);
+
+  useEffect(() => {
+    if (session) {
+      onAuthenticated(session.account.email);
+    }
+  }, [onAuthenticated, session]);
 
   useEffect(() => {
     if (!open) {
@@ -3365,7 +3381,7 @@ function AccountDrawer({
                 className={`text-link${portalTab === "transactions" ? " active" : ""}`}
                 onClick={() => setPortalTab("transactions")}
               >
-                Transactions
+                Orders & cart history
               </button>
               <button
                 role="tab"
@@ -3396,7 +3412,7 @@ function AccountDrawer({
             {portalTab === "transactions" ? (
               <section className="account-section" aria-label="Transactions">
                 <div className="account-section-head">
-                  <p className="eyebrow">Transactions</p>
+                  <p className="eyebrow">Orders & cart history</p>
                   <span className="status-pill">
                     {transactions ? `${transactions.total} found` : `${sessionOrders.length} found`}
                   </span>
@@ -3417,7 +3433,7 @@ function AccountDrawer({
                               <span>{formatOrderDate(transaction.created_at)}</span>
                             </div>
                             <div className="account-order-total">
-                              <strong>{currencyFromCents(transaction.subtotal_cents)}</strong>
+                              <strong>{currencyFromCents(transaction.total_cents)}</strong>
                               <span>{fulfillmentLabel(transaction.status)}</span>
                             </div>
                           </div>
@@ -3431,6 +3447,29 @@ function AccountDrawer({
                               </li>
                             ))}
                           </ul>
+                          {transaction.fulfillment_history.length > 0 ? (
+                            <div className="account-fulfillment-timeline" aria-label={`Order ${transaction.id} delivery progress`}>
+                              <strong>Delivery progress</strong>
+                              <ol>
+                                {transaction.fulfillment_history.map((event) => (
+                                  <li key={event.id}>
+                                    <span>{fulfillmentLabel(event.to_status as FulfillmentStatus)}</span>
+                                    <small>{formatOrderDate(event.happened_at)}{event.note ? ` — ${event.note}` : ""}</small>
+                                  </li>
+                                ))}
+                              </ol>
+                            </div>
+                          ) : null}
+                          {transaction.applied_offers.length > 0 ? (
+                            <ul className="account-payment-list" aria-label="Redeemed offers">
+                              {transaction.applied_offers.map((offer, index) => (
+                                <li key={`${transaction.id}-offer-${index}`}>
+                                  <span>{offer.code ? `Voucher ${offer.code}` : offer.label}</span>
+                                  <strong>-{currencyFromCents(offer.discount_cents)}</strong>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : null}
                           {transaction.payments.length > 0 ? (
                             <ul className="account-payment-list">
                               {transaction.payments.map((payment, index) => (

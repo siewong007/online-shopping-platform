@@ -49,14 +49,35 @@ export type CustomerTransactionPayment = {
   processed_at: string | null;
 };
 
+export type CustomerFulfillmentEvent = {
+  id: number;
+  order_id: number;
+  from_status: string | null;
+  to_status: string;
+  note: string;
+  changed_by: string;
+  happened_at: string;
+};
+
+export type CustomerAppliedOffer = {
+  promotion_id: number | null;
+  voucher_id: number | null;
+  discount_cents: number;
+  label: string;
+  code: string | null;
+};
+
 export type CustomerTransaction = {
   id: number;
   created_at: string;
   status: string;
   subtotal_cents: number;
+  total_cents: number;
   fulfillment_method: string;
   items: CustomerTransactionItem[];
   payments: CustomerTransactionPayment[];
+  fulfillment_history: CustomerFulfillmentEvent[];
+  applied_offers: CustomerAppliedOffer[];
 };
 
 export type CustomerTransactionsPayload = {

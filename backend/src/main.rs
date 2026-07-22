@@ -1,4 +1,4 @@
-use std::{env, net::SocketAddr};
+use std::{env, io::ErrorKind, net::SocketAddr};
 
 use anyhow::Context;
 use online_shopping_api::{app_state::AppState, modules::auth, routes};
@@ -38,10 +38,56 @@ async fn main() -> anyhow::Result<()> {
     let app = routes::build_router(AppState::new(pool), frontend_origin);
 
     let address: SocketAddr = format!("{app_host}:{app_port}").parse()?;
-    let listener = TcpListener::bind(address).await?;
+    let listener = match TcpListener::bind(address).await {
+        Ok(listener) => listener,
+        Err(error) if error.kind() == ErrorKind::AddrInUse => {
+            tracing::warn!(
+                "{address} is already in use; selecting an available port automatically"
+            );
+            TcpListener::bind(SocketAddr::new(address.ip(), 0))
+                .await
+                .context("failed to bind to an available port")?
+        }
+        Err(error) => return Err(error).context("failed to bind API listener"),
+    };
+    let address = listener
+        .local_addr()
+        .context("failed to determine the API listener address")?;
 
     tracing::info!("Online Shopping API listening on http://{address}");
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await?;
 
     Ok(())
+}
+
+async fn shutdown_signal() {
+    #[cfg(unix)]
+    {
+        let mut terminate =
+            match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
+                Ok(signal) => signal,
+                Err(error) => {
+                    tracing::warn!(%error, "unable to listen for SIGTERM; waiting for Ctrl-C");
+                    wait_for_ctrl_c().await;
+                    return;
+                }
+            };
+
+        tokio::select! {
+            () = wait_for_ctrl_c() => {},
+            _ = terminate.recv() => tracing::info!("received SIGTERM, starting graceful shutdown"),
+        }
+    }
+
+    #[cfg(not(unix))]
+    wait_for_ctrl_c().await;
+}
+
+async fn wait_for_ctrl_c() {
+    match tokio::signal::ctrl_c().await {
+        Ok(()) => tracing::info!("received Ctrl-C, starting graceful shutdown"),
+        Err(error) => tracing::error!(%error, "failed to listen for Ctrl-C"),
+    }
 }

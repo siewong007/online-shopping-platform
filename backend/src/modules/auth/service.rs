@@ -1,6 +1,6 @@
 use std::env;
 
-use anyhow::Result;
+use anyhow::{Result, bail};
 use axum::{
     extract::FromRequestParts,
     http::{HeaderMap, StatusCode, request::Parts},
@@ -22,16 +22,16 @@ use super::{
 
 const DEFAULT_ADMIN_USERNAME: &str = "admin";
 const DEFAULT_ADMIN_DISPLAY_NAME: &str = "Admin";
-const DEFAULT_ADMIN_PASSWORD: &str = "admin123";
+const MIN_ADMIN_SEED_PASSWORD_LENGTH: usize = 16;
 
 pub async fn ensure_seed_admin(pool: &PgPool) -> Result<()> {
     if repository::count_admin_users(pool).await? > 0 {
         return Ok(());
     }
 
+    let password = validated_seed_password(env::var("ADMIN_SEED_PASSWORD").ok())?;
+
     let role = repository::fetch_super_admin_role(pool).await?;
-    let password =
-        env::var("ADMIN_SEED_PASSWORD").unwrap_or_else(|_| DEFAULT_ADMIN_PASSWORD.to_string());
     let password_hash = hash_password(&password)?;
 
     repository::create_admin_user(
@@ -44,6 +44,20 @@ pub async fn ensure_seed_admin(pool: &PgPool) -> Result<()> {
     .await?;
 
     Ok(())
+}
+
+fn validated_seed_password(configured_password: Option<String>) -> Result<String> {
+    let Some(password) = configured_password else {
+        bail!("ADMIN_SEED_PASSWORD must be set before initializing the first admin user");
+    };
+
+    if password.len() < MIN_ADMIN_SEED_PASSWORD_LENGTH {
+        bail!(
+            "ADMIN_SEED_PASSWORD must be at least {MIN_ADMIN_SEED_PASSWORD_LENGTH} characters long"
+        );
+    }
+
+    Ok(password)
 }
 
 pub async fn login(pool: &PgPool, input: &AdminLoginInput) -> Result<AdminAuthPayload, HttpError> {
@@ -230,4 +244,20 @@ fn map_auth_lookup_error(error: anyhow::Error) -> HttpError {
         StatusCode::INTERNAL_SERVER_ERROR,
         "Unable to verify admin credentials.".to_string(),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::validated_seed_password;
+
+    #[test]
+    fn seed_password_is_required_and_minimum_length() {
+        assert!(validated_seed_password(None).is_err());
+        assert!(validated_seed_password(Some("short".to_string())).is_err());
+        assert_eq!(
+            validated_seed_password(Some("0123456789abcdef".to_string()))
+                .expect("a 16-character seed password should be accepted"),
+            "0123456789abcdef"
+        );
+    }
 }
