@@ -236,11 +236,12 @@ export const translations = {
   "foot.c3": { en: "Contact", bm: "Hubungi", zh: "联系我们" },
 
   /* ---- storefront chrome ---- */
-  "shop.strip": {
-    en: "Genuine brands at counter prices — shop online or WhatsApp us at 017-405 6993.",
-    bm: "Jenama tulen pada harga kaunter — beli online atau WhatsApp kami di 017-405 6993.",
-    zh: "正品品牌门市价 — 在线购买或 WhatsApp 017-405 6993。"
+  "shop.strip.before": {
+    en: "Genuine brands at counter prices — shop online or WhatsApp ",
+    bm: "Jenama tulen pada harga kaunter — beli online atau WhatsApp ",
+    zh: "正品品牌门市价 — 在线购买或 WhatsApp "
   },
+  "shop.strip.after": { en: ".", bm: ".", zh: "。" },
   "shop.strip.cta": { en: "Open Ops Console", bm: "Buka Konsol Operasi", zh: "打开运营控制台" },
   "shop.eyebrow": {
     en: "Sibu’s hardware counter since 2017",

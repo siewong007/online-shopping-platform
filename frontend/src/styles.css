@@ -94,6 +94,12 @@ ul {
   padding: 1.25rem 0 4rem;
 }
 
+.app-shell.storefront-app-shell {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
 /* Ekoway landing is full-bleed edge-to-edge above mobile; the app-shell width
    cap otherwise boxes its black background inside a light page canvas. */
 @media (min-width: 769px) {
@@ -127,6 +133,12 @@ ul {
 
 .top-strip p {
   color: rgba(255, 255, 255, 0.82);
+}
+
+.top-strip a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
 }
 
 .site-header {

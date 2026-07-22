@@ -2279,7 +2279,11 @@ export default function App() {
   }
 
   return (
-    <div className={view === "admin" ? "app-shell admin-shell" : "app-shell"}>
+    <div
+      className={
+        view === "admin" ? "app-shell admin-shell" : view === "store" ? "app-shell storefront-app-shell" : "app-shell"
+      }
+    >
       {view === "store" ? (
         <StorefrontView
           cart={cart}
@@ -2501,7 +2505,13 @@ function StorefrontView({
   return (
     <div className="storefront-shell">
       <div className="top-strip">
-        <p>{t("shop.strip")}</p>
+        <p>
+          {t("shop.strip.before")}
+          <a href="https://wa.me/60174056993" target="_blank" rel="noopener">
+            017-405 6993
+          </a>
+          {t("shop.strip.after")}
+        </p>
       </div>
 
       <header className="site-header">
