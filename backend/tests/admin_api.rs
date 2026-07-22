@@ -549,12 +549,12 @@ async fn fulfillment_status_flow_writes_history_and_advances_sales(pool: PgPool)
             "fulfillment_method": "delivery",
             "shipping_address": {
                 "recipient_name": "Fulfillment Buyer",
-                "phone": "555-0100",
-                "address_line1": "100 Main Street",
-                "city": "Atlanta",
-                "state": "GA",
-                "postal_code": "30303",
-                "country_code": "US"
+                "phone": "017-4050100",
+                "address_line1": "100 Jalan Main",
+                "city": "Sibu",
+                "state": "Sarawak",
+                "postal_code": "96000",
+                "country_code": "MY"
             },
             "shipping_service_code": "standard",
             "items": [{ "product_id": 1, "quantity": 1 }]
@@ -1099,12 +1099,12 @@ async fn admin_shipping_rate_update_changes_checkout_quote(pool: PgPool) {
             "fulfillment_method": "delivery",
             "shipping_address": {
                 "recipient_name": "Shipping Buyer",
-                "phone": "555-0100",
-                "address_line1": "100 Main Street",
-                "city": "Atlanta",
-                "state": "GA",
-                "postal_code": "30303",
-                "country_code": "US"
+                "phone": "017-4050100",
+                "address_line1": "100 Jalan Main",
+                "city": "Sibu",
+                "state": "Sarawak",
+                "postal_code": "96000",
+                "country_code": "MY"
             },
             "items": [{ "product_id": 1, "quantity": 1 }]
         })),
