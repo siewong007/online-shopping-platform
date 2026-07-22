@@ -302,19 +302,30 @@ ul {
 
 .mega-nav {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.7rem;
+  overflow-x: auto;
   padding: 0.95rem 0 1.35rem;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
+  scrollbar-width: none;
+}
+
+.mega-nav::-webkit-scrollbar {
+  display: none;
 }
 
 .mega-nav a {
+  flex: 0 0 auto;
   padding: 0.72rem 0.9rem;
   background: var(--surface);
   border: 1px solid var(--line);
   font-size: 0.92rem;
   font-weight: 700;
+}
+
+.mega-nav .nav-button {
+  flex: 0 0 auto;
 }
 
 .hero-grid,
@@ -881,6 +892,25 @@ ul {
   border-bottom: 0;
 }
 
+.management-table-row-clickable {
+  cursor: pointer;
+}
+
+.management-table-row-clickable:hover td {
+  background: var(--surface-soft);
+}
+
+.management-selection-cell {
+  width: 2.75rem;
+  vertical-align: middle !important;
+}
+
+.management-selection-cell input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--orange-deep);
+}
+
 .management-cell-center {
   text-align: center;
 }
@@ -960,6 +990,51 @@ ul {
   padding: 0.52rem 0.72rem;
   font-size: 0.88rem;
   white-space: nowrap;
+}
+
+.table-icon-action {
+  display: inline-grid;
+  width: 2.35rem;
+  place-items: center;
+  padding: 0.45rem;
+}
+
+.table-icon-action svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.inventory-bulk-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--line);
+  background: var(--surface-soft);
+}
+
+.inventory-bulk-actions > span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.inventory-bulk-actions > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.45rem;
+}
+
+.inventory-bulk-actions button {
+  min-height: 2.15rem;
+  padding: 0.42rem 0.65rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 750;
 }
 
 .table-input,
@@ -1452,6 +1527,18 @@ ul {
   border: 1px solid var(--line);
   border-radius: 0.4rem;
   background: var(--surface-soft);
+}
+
+.product-image-upload {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 700;
+}
+
+.product-image-upload small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 500;
 }
 
 .image-url-preview > span {
@@ -3177,10 +3264,12 @@ ul {
 
 /* ---------- Shop: department chip bar ---------- */
 .dept-chip-bar {
+  width: min(1280px, calc(100% - 2rem));
+  margin: 0 auto;
   display: flex;
   gap: 0.5rem;
   overflow-x: auto;
-  padding: 0.6rem 2.5rem 0.9rem;
+  padding: 0.6rem 0 0.9rem;
   scrollbar-width: none;
 }
 
@@ -3618,34 +3707,6 @@ ul {
   font-size: 0.82rem;
   color: #a9b8ad;
   text-align: center;
-}
-
-/* ---------- Shop: WhatsApp floating action button ---------- */
-.wa-fab {
-  position: fixed;
-  left: max(1.1rem, env(safe-area-inset-left));
-  bottom: max(1.1rem, env(safe-area-inset-bottom));
-  z-index: 50;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--green);
-  color: #fff;
-  border-radius: 999px;
-  padding: 0.7rem 1.1rem;
-  font-weight: 800;
-  font-size: 0.9rem;
-  box-shadow: 0 10px 26px rgba(21, 63, 40, 0.35);
-}
-
-.wa-fab:hover {
-  background: var(--green-deep);
-  color: #fff;
-}
-
-.wa-fab svg {
-  width: 20px;
-  height: 20px;
 }
 
 /* ---------- Shop: product detail page ---------- */
@@ -4579,6 +4640,9 @@ ul {
 .support-chat-closed-note { margin: 0; padding: 0.65rem; border: 1px solid rgba(217, 231, 221, 0.25); border-radius: 0.45rem; color: #d5e0da; font-size: 0.8rem; line-height: 1.45; }
 .support-chat-composer,
 .support-chat-start-form { display: grid; gap: 0.5rem; }
+.support-chat-details { display: grid; gap: 0.5rem; margin: 0; padding: 0.65rem; border: 1px solid rgba(217, 231, 221, 0.25); border-radius: 0.45rem; }
+.support-chat-details legend { padding: 0 0.25rem; color: #e7c878; font-size: 0.76rem; font-weight: 800; }
+.support-chat-details p { margin: 0; color: #bed0c7; font-size: 0.72rem; line-height: 1.4; }
 .support-chat-composer label,
 .support-chat-start-form label { display: grid; gap: 0.3rem; color: #e7eee9; font-size: 0.78rem; font-weight: 750; }
 .support-chat-composer textarea,

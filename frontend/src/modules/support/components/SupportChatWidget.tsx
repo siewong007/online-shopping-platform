@@ -57,6 +57,7 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
   const [loadState, setLoadState] = useState<ChatLoadState>("idle");
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState(customerEmail);
+  const [guestOrderNumber, setGuestOrderNumber] = useState("");
   const [initialMessage, setInitialMessage] = useState("");
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
@@ -385,6 +386,7 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
     const name = guestName.trim();
     const email = guestEmail.trim().toLowerCase();
     const message = initialMessage.trim();
+    const orderNumber = guestOrderNumber.trim();
 
     if (!name || !email || !message) {
       setError(t("support.error.required"));
@@ -403,7 +405,7 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
       const response = await createSupportConversation({
         guest_name: name,
         guest_email: email,
-        message
+        message: orderNumber ? `Guest order #${orderNumber}\n\n${message}` : message
       });
 
       if (!mountedRef.current) {
@@ -625,29 +627,48 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
             <form className="support-chat-start-form" onSubmit={startConversation}>
               {loadState === "expired" ? <p className="support-chat-expired">{t("support.newConversation")}</p> : null}
               <p className="support-chat-welcome">{t("support.welcome")}</p>
-              <label>
-                <span>{t("support.name")}</span>
-                <input
-                  autoComplete="name"
-                  disabled={isStarting}
-                  onChange={(event) => setGuestName(event.target.value)}
-                  ref={guestNameRef}
-                  required
-                  value={guestName}
-                />
-              </label>
-              <label>
-                <span>{t("support.email")}</span>
-                <input
-                  autoComplete="email"
-                  disabled={isStarting}
-                  onChange={(event) => setGuestEmail(event.target.value)}
-                  ref={guestEmailRef}
-                  required
-                  type="email"
-                  value={guestEmail}
-                />
-              </label>
+              <fieldset className="support-chat-details">
+                <legend>Guest details</legend>
+                <label>
+                  <span>{t("support.name")}</span>
+                  <input
+                    autoComplete="name"
+                    disabled={isStarting}
+                    onChange={(event) => setGuestName(event.target.value)}
+                    ref={guestNameRef}
+                    required
+                    value={guestName}
+                  />
+                </label>
+                <label>
+                  <span>{t("support.email")}</span>
+                  <input
+                    autoComplete="email"
+                    disabled={isStarting}
+                    onChange={(event) => setGuestEmail(event.target.value)}
+                    ref={guestEmailRef}
+                    required
+                    type="email"
+                    value={guestEmail}
+                  />
+                </label>
+              </fieldset>
+              <fieldset className="support-chat-details">
+                <legend>Guest order lookup</legend>
+                <label>
+                  <span>Order number (optional)</span>
+                  <input
+                    disabled={isStarting}
+                    inputMode="numeric"
+                    min="1"
+                    onChange={(event) => setGuestOrderNumber(event.target.value)}
+                    placeholder="e.g. 1024"
+                    type="number"
+                    value={guestOrderNumber}
+                  />
+                </label>
+                <p>Enter an order number and our support team will look into it in this chat.</p>
+              </fieldset>
               <label>
                 <span>{t("support.firstMessage")}</span>
                 <textarea

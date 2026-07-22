@@ -4,8 +4,22 @@ use sqlx::PgPool;
 
 fn validate_image_url(image_url: &str) -> Result<()> {
     let lower = image_url.to_ascii_lowercase();
-    if !image_url.is_empty() && !lower.starts_with("http://") && !lower.starts_with("https://") {
-        bail!("Image URL must be empty or start with http:// or https://.");
+    let supported_local_image = [
+        "data:image/png;base64,",
+        "data:image/jpeg;base64,",
+        "data:image/jpg;base64,",
+        "data:image/webp;base64,",
+        "data:image/gif;base64,",
+    ]
+    .iter()
+    .any(|prefix| lower.starts_with(prefix));
+
+    if !image_url.is_empty()
+        && !lower.starts_with("http://")
+        && !lower.starts_with("https://")
+        && !supported_local_image
+    {
+        bail!("Product image must be an uploaded PNG, JPEG, WebP, GIF, or a valid http/https URL.");
     }
 
     Ok(())

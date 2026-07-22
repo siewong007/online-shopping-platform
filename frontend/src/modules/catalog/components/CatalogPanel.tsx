@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { type ChangeEvent, useEffect, useMemo, useState } from "react";
 
 import { ManagementTable } from "../../../shared/components/ManagementTable";
 import { RecordForm, type RecordFormField, RecordModal } from "../../../shared/components/RecordModal";
@@ -12,6 +12,9 @@ import type {
   UpdateCategoryInput,
   UpdateProductInput
 } from "../types";
+
+const MAX_PRODUCT_IMAGE_BYTES = 1_000_000;
+const ACCEPTED_PRODUCT_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
 
 type ProductFormState = {
   badge: string;
@@ -139,10 +142,6 @@ function productInputFromForm(form: ProductFormState): CreateProductInput {
 
   const imageUrl = form.image_url.trim() || undefined;
 
-  if (imageUrl && !imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
-    throw new Error("Image URL must be empty or start with http:// or https://");
-  }
-
   return {
     name: form.name.trim(),
     category_slug: form.category_slug,
@@ -236,13 +235,6 @@ function productFields(categories: Category[]): RecordFormField<ProductFormState
           ? null
           : "Enter a valid low stock threshold."
     },
-    {
-      name: "image_url",
-      label: "Image URL",
-      type: "text",
-      placeholder: "https://example.com/product.jpg",
-      helpText: "Optional. Must be a valid http or https URL. Leave empty to use tone fallback."
-    }
   ];
 }
 
@@ -252,6 +244,14 @@ function slugify(value: string): string {
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function TrashIcon() {
+  return (
+    <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
+      <path d="M4 7h16M10 11v6m4-6v6M9 7l1-2h4l1 2m-9 0 1 13h10l1-13" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
+    </svg>
+  );
 }
 
 export function CatalogPanel({
@@ -288,6 +288,8 @@ export function CatalogPanel({
   const [isSavingProduct, setIsSavingProduct] = useState(false);
   const [deletingCategorySlug, setDeletingCategorySlug] = useState<string | null>(null);
   const [deletingProductId, setDeletingProductId] = useState<number | null>(null);
+  const [selectedProductIds, setSelectedProductIds] = useState<Set<number | string>>(new Set());
+  const [isBulkActionRunning, setIsBulkActionRunning] = useState(false);
   const productFieldList = useMemo(() => productFields(categories), [categories]);
   const categoryNameBySlug = useMemo(
     () => new Map(categories.map((category) => [category.slug, category.name])),
@@ -313,6 +315,10 @@ export function CatalogPanel({
         : { ...current, category_slug: categories[0].slug }
     );
   }, [categories]);
+
+  useEffect(() => {
+    setSelectedProductIds((current) => new Set([...current].filter((id) => products.some((product) => product.id === id))));
+  }, [products]);
 
   const openCreateCategory = () => {
     setCategoryForm({ slug: "", name: "", teaser: "" });
@@ -346,6 +352,34 @@ export function CatalogPanel({
     setIsProductModalOpen(false);
     setEditingProductId(null);
   };
+
+  const handleImageFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!ACCEPTED_PRODUCT_IMAGE_TYPES.has(file.type)) {
+      notify({ severity: "error", title: "Image not selected", message: "Choose a PNG, JPEG, WebP, or GIF image.", scope: "catalog", dedupeKey: "catalog:product:image:type" });
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_PRODUCT_IMAGE_BYTES) {
+      notify({ severity: "error", title: "Image too large", message: "Choose an image smaller than 1 MB.", scope: "catalog", dedupeKey: "catalog:product:image:size" });
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      const imageData = reader.result;
+      if (typeof imageData === "string") {
+        setProductForm((current) => ({ ...current, image_url: imageData }));
+      }
+    });
+    reader.readAsDataURL(file);
+  };
+
+  const clearProductImage = () => setProductForm((current) => ({ ...current, image_url: "" }));
 
   const handleCreateCategory = async () => {
     if (!canCreate) {
@@ -471,6 +505,42 @@ export function CatalogPanel({
     }
   };
 
+  const selectedProducts = products.filter((product) => selectedProductIds.has(product.id));
+
+  const handleBulkDelete = async (scope: "selected" | "all") => {
+    const targets = scope === "all" ? products : selectedProducts;
+    if (!canDelete || targets.length === 0) return;
+
+    const confirmed = window.confirm(`Delete ${targets.length} ${targets.length === 1 ? "inventory record" : "inventory records"}?`);
+    if (!confirmed) return;
+
+    setIsBulkActionRunning(true);
+    try {
+      await Promise.all(targets.map((product) => onDeleteProduct(product.id)));
+      setSelectedProductIds(new Set());
+      notify({ severity: "success", title: "Inventory deleted", message: `${targets.length} ${targets.length === 1 ? "record was" : "records were"} deleted successfully.`, scope: "catalog", dedupeKey: `catalog:product:bulk-delete:${scope}:success` });
+    } catch (error) {
+      notifyError(error, { operation: `delete ${scope} inventory records`, scope: "catalog", dedupeKey: `catalog:product:bulk-delete:${scope}:error` });
+    } finally {
+      setIsBulkActionRunning(false);
+    }
+  };
+
+  const handlePublishSelected = async () => {
+    if (!canUpdate || selectedProducts.length === 0) return;
+
+    setIsBulkActionRunning(true);
+    try {
+      await Promise.all(selectedProducts.map((product) => onUpdateProduct(product.id, { ...product, featured: true })));
+      setSelectedProductIds(new Set());
+      notify({ severity: "success", title: "Storefront activated", message: `${selectedProducts.length} ${selectedProducts.length === 1 ? "product is" : "products are"} now visible on the storefront.`, scope: "catalog", dedupeKey: "catalog:product:bulk-publish:success" });
+    } catch (error) {
+      notifyError(error, { operation: "activate selected products on the storefront", scope: "catalog", dedupeKey: "catalog:product:bulk-publish:error" });
+    } finally {
+      setIsBulkActionRunning(false);
+    }
+  };
+
   const categoryColumns = [
     {
       key: "name",
@@ -505,20 +575,14 @@ export function CatalogPanel({
       render: (category: Category) => (
         <div className="management-action-stack">
           <button
-            className="outline-button table-action"
-            disabled={!canUpdate}
-            onClick={() => openEditCategory(category)}
-            type="button"
-          >
-            Edit
-          </button>
-          <button
-            className="outline-button table-action danger-button"
+            aria-label={`Delete ${category.name}`}
+            className="outline-button table-action table-icon-action danger-button"
             disabled={!canDelete || deletingCategorySlug === category.slug}
             onClick={() => void handleDeleteCategory(category)}
+            title={`Delete ${category.name}`}
             type="button"
           >
-            {deletingCategorySlug === category.slug ? "Deleting..." : "Delete"}
+            {deletingCategorySlug === category.slug ? "…" : <TrashIcon />}
           </button>
         </div>
       )
@@ -591,20 +655,14 @@ export function CatalogPanel({
       render: (product: Product) => (
         <div className="management-action-stack">
           <button
-            className="outline-button table-action"
-            disabled={!canUpdate}
-            onClick={() => openEditProduct(product)}
-            type="button"
-          >
-            Edit
-          </button>
-          <button
-            className="outline-button table-action danger-button"
+            aria-label={`Delete ${product.name}`}
+            className="outline-button table-action table-icon-action danger-button"
             disabled={!canDelete || deletingProductId === product.id}
             onClick={() => void handleDeleteProduct(product)}
+            title={`Delete ${product.name}`}
             type="button"
           >
-            {deletingProductId === product.id ? "Deleting..." : "Delete"}
+            {deletingProductId === product.id ? "…" : <TrashIcon />}
           </button>
         </div>
       )
@@ -649,6 +707,7 @@ export function CatalogPanel({
             getRowKey={(category) => category.slug}
             initialSortKey="name"
             rows={categories}
+            onRowClick={canUpdate ? openEditCategory : undefined}
             tableLabel="Category management table"
           />
           </article>
@@ -661,12 +720,32 @@ export function CatalogPanel({
               <h3>{variant === "inventory" ? "Inventory management table" : "Product inventory table"}</h3>
             </div>
           </div>
+          {variant === "inventory" ? (
+            <div className="inventory-bulk-actions" aria-label="Inventory bulk actions">
+              <span>{selectedProducts.length ? `${selectedProducts.length} selected` : "Select inventory records to run a bulk action"}</span>
+              <div>
+                <button disabled={!canUpdate || selectedProducts.length === 0 || isBulkActionRunning} onClick={() => void handlePublishSelected()} type="button">
+                  Activate selected storefront
+                </button>
+                <button className="danger-button" disabled={!canDelete || selectedProducts.length === 0 || isBulkActionRunning} onClick={() => void handleBulkDelete("selected")} type="button">
+                  Delete selected
+                </button>
+                <button className="danger-button" disabled={!canDelete || products.length === 0 || isBulkActionRunning} onClick={() => void handleBulkDelete("all")} type="button">
+                  Delete all
+                </button>
+              </div>
+            </div>
+          ) : null}
           <ManagementTable
             columns={productColumns}
             emptyMessage="No products have been merchandised yet."
             getRowKey={(product) => product.id}
             initialSortKey="name"
+            onRowClick={canUpdate ? openEditProduct : undefined}
+            onSelectionChange={variant === "inventory" ? setSelectedProductIds : undefined}
             rows={products}
+            selectable={variant === "inventory"}
+            selectedKeys={selectedProductIds}
             tableLabel="Product inventory management table"
           />
         </article>
@@ -744,26 +823,26 @@ export function CatalogPanel({
           values={productForm}
         />
         <div className="image-url-preview">
-          <span>Image preview</span>
-          {productForm.image_url.trim() ? (
-            <img
-              src={productForm.image_url.trim()}
-              alt="Product preview"
-              onError={(event) => {
-                event.currentTarget.style.display = "none";
-                const parent = event.currentTarget.parentElement;
-                if (parent) parent.classList.add("preview-broken");
-              }}
-              onLoad={(event) => {
-                event.currentTarget.style.display = "block";
-                const parent = event.currentTarget.parentElement;
-                if (parent) parent.classList.remove("preview-broken");
-              }}
+          <label className="product-image-upload">
+            <span>Product image</span>
+            <input
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              disabled={editingProductId === null ? !canCreate : !canUpdate}
+              onChange={handleImageFileChange}
+              type="file"
             />
+            <small>Choose a local PNG, JPEG, WebP, or GIF image up to 1 MB.</small>
+          </label>
+          {productForm.image_url.trim() ? (
+            <>
+              <img src={productForm.image_url.trim()} alt="Product preview" />
+              <button className="text-link" onClick={clearProductImage} type="button">
+                Remove image
+              </button>
+            </>
           ) : (
-            <p>No image URL set — the tone block fallback will be used.</p>
+            <p>No image selected — the tone block fallback will be used.</p>
           )}
-          <p className="image-url-preview-broken-note">Image could not be loaded from that URL.</p>
         </div>
       </RecordModal>
     </section>

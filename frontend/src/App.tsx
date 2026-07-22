@@ -45,7 +45,6 @@ import {
   logoutCustomer,
   logoutCustomerOtherSessions,
   logoutCustomerSession,
-  lookupCustomer as lookupCustomerRequest,
   logout as logoutRequest,
   registerCustomer,
   recordInvoicePayment as recordInvoicePaymentRequest,
@@ -148,7 +147,6 @@ import type {
   CreateProductInput,
   CreateRoleInput,
   CustomerLoginInput,
-  CustomerLookupPayload,
   CustomerMePayload,
   CustomerPortalProfile,
   CustomerRegisterInput,
@@ -191,7 +189,6 @@ import type {
 
 const CART_STORAGE_KEY = "depot-cart";
 const ACCOUNT_EMAIL_STORAGE_KEY = "depot-account-email";
-const ACCOUNT_ORDER_ID_STORAGE_KEY = "depot-account-order-id";
 
 function downloadBlob(blob: Blob, filename: string): void {
   const url = window.URL.createObjectURL(blob);
@@ -319,24 +316,6 @@ function readStoredAccountEmail(): string {
 function rememberAccountEmail(email: string) {
   try {
     window.localStorage.setItem(ACCOUNT_EMAIL_STORAGE_KEY, email);
-  } catch {
-    return;
-  }
-}
-
-function readStoredAccountOrderId(): number | null {
-  try {
-    const stored = window.localStorage.getItem(ACCOUNT_ORDER_ID_STORAGE_KEY);
-    const parsed = stored ? Number.parseInt(stored, 10) : NaN;
-    return Number.isFinite(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-function rememberAccountOrderId(orderId: number) {
-  try {
-    window.localStorage.setItem(ACCOUNT_ORDER_ID_STORAGE_KEY, String(orderId));
   } catch {
     return;
   }
@@ -1171,19 +1150,6 @@ function ShopFooter({ storefront }: { storefront: StorefrontPayload }) {
   );
 }
 
-function WhatsAppFab() {
-  const { t } = useI18n();
-
-  return (
-    <a className="wa-fab" href="https://wa.me/60174056993" target="_blank" rel="noopener" aria-label={t("shop.wa.chat")}>
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2zm0 2a8 8 0 1 1-4.1 14.9l-.3-.2-2.8.7.8-2.7-.2-.3A8 8 0 0 1 12 4zm4.5 10.2c-.2-.1-1.4-.7-1.6-.8s-.4-.1-.5.1-.6.8-.7.9-.3.2-.5.1a6.5 6.5 0 0 1-3.2-2.8c-.2-.4.2-.4.6-1.2a.5.5 0 0 0 0-.4c0-.1-.5-1.3-.7-1.7s-.4-.4-.5-.4h-.5a1 1 0 0 0-.7.3A3 3 0 0 0 6.5 12a5.3 5.3 0 0 0 1.1 2.8 12 12 0 0 0 4.6 4c2.3.9 2.3.6 2.7.6a2.5 2.5 0 0 0 1.7-1.2 2 2 0 0 0 .1-1.2c-.1-.1-.2-.2-.5-.3z" />
-      </svg>
-      {t("shop.wa.chat")}
-    </a>
-  );
-}
-
 export default function App() {
   const [view, setView] = useState<View>(() => viewFromPath(window.location.pathname));
   const [productDetailId, setProductDetailId] = useState<number | null>(() =>
@@ -1233,7 +1199,6 @@ export default function App() {
   const [customerProfilesNextCursor, setCustomerProfilesNextCursor] = useState<number | null>(null);
   const [isLoadingMoreCustomerProfiles, setIsLoadingMoreCustomerProfiles] = useState(false);
   const [customerAccountEmail, setCustomerAccountEmail] = useState(readStoredAccountEmail);
-  const [customerAccountOrderId, setCustomerAccountOrderId] = useState(readStoredAccountOrderId);
   const [permissions, setPermissions] = useState<PermissionsPayload | null>(null);
   const [activeRoleId, setActiveRoleId] = useState<number | null>(null);
   const [adminAuth, setAdminAuth] = useState<AdminAuthState>(() =>
@@ -1669,31 +1634,12 @@ export default function App() {
     setIsCartOpen(true);
   };
 
-  const lookupCustomer = async (
-    email: string,
-    orderId: number
-  ): Promise<CustomerLookupPayload> => {
-    const normalizedEmail = email.trim().toLowerCase();
-    const payload = await lookupCustomerRequest(normalizedEmail, orderId);
-
-    if (payload.profile !== null || payload.orders.length > 0) {
-      setCustomerAccountEmail(normalizedEmail);
-      rememberAccountEmail(normalizedEmail);
-      setCustomerAccountOrderId(orderId);
-      rememberAccountOrderId(orderId);
-    }
-
-    return payload;
-  };
-
   const submitCheckout = async (input: CreateOrderInput): Promise<Order> => {
     const order = await checkoutRequest(input);
     const checkoutEmail = order.customer_email.trim().toLowerCase();
 
     setCustomerAccountEmail(checkoutEmail);
     rememberAccountEmail(checkoutEmail);
-    setCustomerAccountOrderId(order.id);
-    rememberAccountOrderId(order.id);
     setOrders((current) => [order, ...current]);
     void fetchCustomerPortalProfiles().then((page) => {
       setCustomerProfiles(page.items);
@@ -2525,7 +2471,6 @@ export default function App() {
           )}
 
           <ShopFooter storefront={storefront} />
-          <WhatsAppFab />
 
           <CartDrawer
             cart={cart}
@@ -2545,8 +2490,6 @@ export default function App() {
           <AccountDrawer
             open={isAccountOpen}
             customerAccountEmail={customerAccountEmail}
-            customerAccountOrderId={customerAccountOrderId}
-            onLookupCustomer={lookupCustomer}
             onAuthenticated={(email) => {
               const normalizedEmail = email.trim().toLowerCase();
               setCustomerAccountEmail(normalizedEmail);
@@ -3392,14 +3335,11 @@ function ProductDetailView({ onAddToCart, onBack, productId }: ProductDetailView
 type AccountDrawerProps = {
   open: boolean;
   customerAccountEmail: string;
-  customerAccountOrderId: number | null;
-  onLookupCustomer: (email: string, orderId: number) => Promise<CustomerLookupPayload>;
   onAuthenticated: (email: string) => void;
   onClose: () => void;
 };
 
-type AccountLookupStatus = "idle" | "loading" | "success" | "error";
-type AccountAuthView = "login" | "register" | "guest";
+type AccountAuthView = "login" | "register";
 type AccountPortalTab = "transactions" | "membership" | "benefits" | "sessions";
 type PortalLoadStatus = "idle" | "loading" | "success" | "not-found" | "error";
 
@@ -3432,11 +3372,6 @@ function customerSessionDeviceLabel(userAgent: string | null): string {
   return `${browser} on ${platform}`;
 }
 
-const emptyCustomerLookupPayload: CustomerLookupPayload = {
-  profile: null,
-  orders: []
-};
-
 const emptyCustomerAuthForm: CustomerRegisterInput = {
   email: "",
   password: "",
@@ -3446,22 +3381,9 @@ const emptyCustomerAuthForm: CustomerRegisterInput = {
 function AccountDrawer({
   open,
   customerAccountEmail,
-  customerAccountOrderId,
-  onLookupCustomer,
   onAuthenticated,
   onClose
 }: AccountDrawerProps) {
-  const [lookupEmail, setLookupEmail] = useState(customerAccountEmail);
-  const [lookupOrderId, setLookupOrderId] = useState(
-    customerAccountOrderId !== null ? String(customerAccountOrderId) : ""
-  );
-  const [lookupPayload, setLookupPayload] = useState<CustomerLookupPayload>(
-    emptyCustomerLookupPayload
-  );
-  const [lookupStatus, setLookupStatus] = useState<AccountLookupStatus>("idle");
-  const [lookupError, setLookupError] = useState("");
-  const lastAutoLookupKeyRef = useRef<string | null>(null);
-
   const [session, setSession] = useState<CustomerMePayload | null>(null);
   const [authView, setAuthView] = useState<AccountAuthView>("login");
   const [authForm, setAuthForm] = useState<CustomerRegisterInput>(emptyCustomerAuthForm);
@@ -3756,84 +3678,9 @@ function AccountDrawer({
     }
   };
 
-  const runLookup = async (email: string, orderIdInput: string) => {
-    const trimmedEmail = email.trim();
-    const parsedOrderId = Number.parseInt(orderIdInput, 10);
-
-    if (!trimmedEmail || !Number.isFinite(parsedOrderId) || parsedOrderId <= 0) {
-      setLookupPayload(emptyCustomerLookupPayload);
-      setLookupStatus("idle");
-      setLookupError("");
-      return;
-    }
-
-    setLookupStatus("loading");
-    setLookupError("");
-
-    try {
-      const payload = await onLookupCustomer(trimmedEmail, parsedOrderId);
-      setLookupPayload(payload);
-      setLookupStatus("success");
-    } catch (error) {
-      setLookupStatus("error");
-      setLookupError(normalizeError(error, { operation: "look up customer orders", scope: "customer-lookup" }).userMessage);
-    }
-  };
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    const storedEmail = customerAccountEmail.trim().toLowerCase();
-    const autoLookupKey =
-      customerAccountOrderId !== null ? `${storedEmail}|${customerAccountOrderId}` : "";
-
-    // Skip when this is the email/order pairing a manual submit (or a prior run of this
-    // effect) already fetched, so a successful lookupCustomer call that updates
-    // customerAccountEmail/customerAccountOrderId doesn't trigger a second request.
-    if (autoLookupKey === (lastAutoLookupKeyRef.current ?? "")) {
-      return;
-    }
-
-    lastAutoLookupKeyRef.current = autoLookupKey;
-    setLookupEmail(storedEmail);
-    setLookupOrderId(customerAccountOrderId !== null ? String(customerAccountOrderId) : "");
-
-    if (storedEmail && customerAccountOrderId !== null) {
-      void runLookup(storedEmail, String(customerAccountOrderId));
-      return;
-    }
-
-    setLookupPayload(emptyCustomerLookupPayload);
-    setLookupStatus("idle");
-    setLookupError("");
-  }, [open, customerAccountEmail, customerAccountOrderId]);
-
   if (!open) {
     return null;
   }
-
-  const normalizedEmail =
-    lookupPayload.profile?.customer_email ?? lookupEmail.trim().toLowerCase();
-  const profile = lookupPayload.profile;
-  const accountOrders = [...lookupPayload.orders].sort(
-    (first, second) => Date.parse(second.created_at) - Date.parse(first.created_at)
-  );
-  const hasAccount = profile !== null || accountOrders.length > 0;
-  const accountName = profile?.customer_name ?? "My Account";
-  const lifetimePurchaseCents =
-    profile?.lifetime_purchase_cents ??
-    accountOrders.reduce((sum, order) => sum + order.subtotal_cents, 0);
-  const totalOrders = profile?.total_orders ?? accountOrders.length;
-  const isSearching = lookupStatus === "loading";
-
-  const submitLookup = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const trimmedEmail = lookupEmail.trim().toLowerCase();
-    lastAutoLookupKeyRef.current = `${trimmedEmail}|${lookupOrderId.trim()}`;
-    void runLookup(lookupEmail, lookupOrderId);
-  };
 
   const close = () => {
     onClose();
@@ -4255,15 +4102,6 @@ function AccountDrawer({
           >
             Create account
           </button>
-          <button
-            className={`text-link${authView === "guest" ? " active" : ""}`}
-            onClick={() => {
-              setAuthView("guest");
-              setAuthError("");
-            }}
-          >
-            Look up a guest order
-          </button>
         </div>
 
         {authView === "login" ? (
@@ -4334,124 +4172,7 @@ function AccountDrawer({
             </button>
             {authStatus === "error" ? <p className="cart-feedback">{authError}</p> : null}
           </form>
-        ) : (
-          <>
-            <form className="account-lookup-form" onSubmit={submitLookup}>
-              <label>
-                <span>Email address</span>
-                <input
-                  type="email"
-                  value={lookupEmail}
-                  onChange={(event) => setLookupEmail(event.target.value)}
-                  placeholder="orders@example.com"
-                  required
-                />
-              </label>
-              <label>
-                <span>Order #</span>
-                <input
-                  type="number"
-                  value={lookupOrderId}
-                  onChange={(event) => setLookupOrderId(event.target.value)}
-                  placeholder="e.g. 1024"
-                  min={1}
-                  required
-                />
-              </label>
-              <button className="solid-button" disabled={isSearching}>
-                {isSearching ? "Searching..." : "Find my orders"}
-              </button>
-              {lookupStatus === "error" ? <p className="cart-feedback">{lookupError}</p> : null}
-            </form>
-
-            {isSearching && !hasAccount ? (
-              <div className="cart-empty account-empty">
-                <p>Looking up recent orders...</p>
-              </div>
-            ) : hasAccount ? (
-              <div className="account-content">
-                <section className="account-hero">
-                  <p className="eyebrow">{profile?.membership_tier ?? "Online Shopper"}</p>
-                  <h3>{accountName}</h3>
-                  <p>{normalizedEmail}</p>
-                </section>
-
-                <section className="account-stat-grid" aria-label="Account summary">
-                  <div>
-                    <span>Points</span>
-                    <strong>{(profile?.points_balance ?? 0).toLocaleString()}</strong>
-                  </div>
-                  <div>
-                    <span>Lifetime Spend</span>
-                    <strong>{currencyFromCents(lifetimePurchaseCents)}</strong>
-                  </div>
-                  <div>
-                    <span>Orders</span>
-                    <strong>{totalOrders.toLocaleString()}</strong>
-                  </div>
-                  <div>
-                    <span>Last Purchase</span>
-                    <strong>
-                      {profile?.last_purchase_at
-                        ? formatOrderDate(profile.last_purchase_at)
-                        : accountOrders[0]
-                          ? formatOrderDate(accountOrders[0].created_at)
-                          : "None yet"}
-                    </strong>
-                  </div>
-                </section>
-
-                <section className="account-section">
-                  <div className="account-section-head">
-                    <p className="eyebrow">Recent Orders</p>
-                    <span className="status-pill">{accountOrders.length} found</span>
-                  </div>
-                  {accountOrders.length > 0 ? (
-                    <div className="account-orders">
-                      {accountOrders.map((order) => (
-                        <article className="account-order" key={order.id}>
-                          <div className="account-order-head">
-                            <div>
-                              <strong>Order #{order.id}</strong>
-                              <span>{formatOrderDate(order.created_at)}</span>
-                            </div>
-                            <div className="account-order-total">
-                              <strong>{currencyFromCents(order.subtotal_cents)}</strong>
-                              <span>{fulfillmentLabel(order.fulfillment_status)}</span>
-                            </div>
-                          </div>
-                          <ul className="account-line-items">
-                            {order.items.map((item, index) => (
-                              <li key={`${order.id}-${index}-${item.product_name}`}>
-                                <span>{item.product_name}</span>
-                                <strong>
-                                  {item.quantity} x {currencyFromCents(item.unit_price_cents)}
-                                </strong>
-                              </li>
-                            ))}
-                          </ul>
-                        </article>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="account-empty-note">No storefront orders are attached to this email yet.</p>
-                  )}
-                </section>
-              </div>
-            ) : (
-              <div className="cart-empty account-empty">
-                <p>
-                  {lookupStatus === "success"
-                    ? "No orders found for this email."
-                    : "No customer account is active yet."}
-                </p>
-                <button className="outline-button" onClick={close}>
-                  Continue Shopping
-                </button>
-              </div>
-            )}
-          </>
-        )}
+        ) : null}
       </aside>
     </div>
   );

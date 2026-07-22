@@ -20,7 +20,11 @@ type ManagementTableProps<T> = {
   initialSortKey?: string;
   isLoadingMore?: boolean;
   onLoadMore?: () => void;
+  onRowClick?: (row: T) => void;
+  onSelectionChange?: (selectedKeys: Set<number | string>) => void;
   rows: T[];
+  selectable?: boolean;
+  selectedKeys?: Set<number | string>;
   tableLabel: string;
 };
 
@@ -84,7 +88,11 @@ export function ManagementTable<T>({
   initialSortKey,
   isLoadingMore = false,
   onLoadMore,
+  onRowClick,
+  onSelectionChange,
   rows,
+  selectable = false,
+  selectedKeys = new Set<number | string>(),
   tableLabel
 }: ManagementTableProps<T>) {
   const firstSortableColumn = columns.find((column) => column.sortValue);
@@ -140,12 +148,36 @@ export function ManagementTable<T>({
     );
   };
 
+  const allRowsSelected = rows.length > 0 && rows.every((row) => selectedKeys.has(getRowKey(row)));
+  const toggleRowSelection = (row: T) => {
+    const key = getRowKey(row);
+    const next = new Set(selectedKeys);
+    next.has(key) ? next.delete(key) : next.add(key);
+    onSelectionChange?.(next);
+  };
+
+  const toggleAllRows = () => {
+    onSelectionChange?.(
+      allRowsSelected ? new Set() : new Set(rows.map((row) => getRowKey(row)))
+    );
+  };
+
   return (
     <div className="management-table-shell">
       <div className="management-table-scroll">
         <table className="management-table" aria-label={tableLabel}>
           <thead>
             <tr>
+              {selectable ? (
+                <th className="management-cell-center management-selection-cell" scope="col">
+                  <input
+                    aria-label={allRowsSelected ? "Clear all row selections" : "Select all rows"}
+                    checked={allRowsSelected}
+                    onChange={toggleAllRows}
+                    type="checkbox"
+                  />
+                </th>
+              ) : null}
               {columns.map((column) => {
                 const isActiveSort = sort?.key === column.key;
                 const sortLabel =
@@ -184,13 +216,32 @@ export function ManagementTable<T>({
           <tbody>
             {sortedRows.length === 0 ? (
               <tr>
-                <td className="management-table-empty" colSpan={columns.length}>
+                <td className="management-table-empty" colSpan={columns.length + (selectable ? 1 : 0)}>
                   {emptyMessage}
                 </td>
               </tr>
             ) : (
               sortedRows.map((row) => (
-                <tr key={getRowKey(row)}>
+                <tr
+                  className={onRowClick ? "management-table-row-clickable" : undefined}
+                  key={getRowKey(row)}
+                  onClick={(event) => {
+                    if ((event.target as HTMLElement).closest("button, input, a, select, textarea, label")) {
+                      return;
+                    }
+                    onRowClick?.(row);
+                  }}
+                >
+                  {selectable ? (
+                    <td className="management-cell-center management-selection-cell">
+                      <input
+                        aria-label={`Select ${getRowKey(row)}`}
+                        checked={selectedKeys.has(getRowKey(row))}
+                        onChange={() => toggleRowSelection(row)}
+                        type="checkbox"
+                      />
+                    </td>
+                  ) : null}
                   {columns.map((column) => (
                     <td
                       className={column.align ? `management-cell-${column.align}` : undefined}
