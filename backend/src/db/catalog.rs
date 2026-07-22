@@ -24,9 +24,16 @@ pub async fn fetch_admin_catalog(pool: &PgPool) -> Result<AdminCatalogPayload> {
 
     let products = sqlx::query_as::<_, Product>(
         r#"
-        SELECT id, name, category_slug, price_cents, badge, description, tone, featured, stock_quantity, low_stock_threshold, image_url
+        SELECT products.id, products.name, products.category_slug, products.price_cents, products.badge,
+               products.description, products.tone, products.featured, products.stock_quantity,
+               products.low_stock_threshold, products.image_url,
+               review_stats.avg_rating, COALESCE(review_stats.review_count, 0) AS review_count
         FROM products
-        ORDER BY sort_order
+        LEFT JOIN (
+            SELECT product_id, AVG(rating)::float8 AS avg_rating, COUNT(*)::bigint AS review_count
+            FROM product_reviews GROUP BY product_id
+        ) review_stats ON review_stats.product_id = products.id
+        ORDER BY products.sort_order
         "#,
     )
     .fetch_all(pool)
@@ -196,7 +203,8 @@ pub async fn create_product(pool: &PgPool, input: &CreateProductInput) -> Result
         r#"
         INSERT INTO products (name, category_slug, price_cents, badge, description, tone, featured, stock_quantity, low_stock_threshold, image_url, sort_order)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-        RETURNING id, name, category_slug, price_cents, badge, description, tone, featured, stock_quantity, low_stock_threshold, image_url
+        RETURNING id, name, category_slug, price_cents, badge, description, tone, featured, stock_quantity, low_stock_threshold, image_url,
+                  NULL::float8 AS avg_rating, 0::bigint AS review_count
         "#,
     )
     .bind(name)
@@ -257,19 +265,27 @@ pub async fn update_product(
 
     sqlx::query_as::<_, Product>(
         r#"
-        UPDATE products
-        SET name = $1,
-            category_slug = $2,
-            price_cents = $3,
-            badge = $4,
-            description = $5,
-            tone = $6,
-            featured = $7,
-            stock_quantity = $8,
-            low_stock_threshold = $9,
-            image_url = $10
-        WHERE id = $11
-        RETURNING id, name, category_slug, price_cents, badge, description, tone, featured, stock_quantity, low_stock_threshold, image_url
+        WITH updated AS (
+            UPDATE products
+            SET name = $1,
+                category_slug = $2,
+                price_cents = $3,
+                badge = $4,
+                description = $5,
+                tone = $6,
+                featured = $7,
+                stock_quantity = $8,
+                low_stock_threshold = $9,
+                image_url = $10
+            WHERE id = $11
+            RETURNING id, name, category_slug, price_cents, badge, description, tone, featured, stock_quantity, low_stock_threshold, image_url
+        )
+        SELECT updated.*, review_stats.avg_rating, COALESCE(review_stats.review_count, 0) AS review_count
+        FROM updated
+        LEFT JOIN (
+            SELECT product_id, AVG(rating)::float8 AS avg_rating, COUNT(*)::bigint AS review_count
+            FROM product_reviews GROUP BY product_id
+        ) review_stats ON review_stats.product_id = updated.id
         "#,
     )
     .bind(name)
@@ -320,11 +336,19 @@ pub async fn update_product_stock(
 
     sqlx::query_as::<_, Product>(
         r#"
-        UPDATE products
-        SET stock_quantity = $1,
-            low_stock_threshold = $2
-        WHERE id = $3
-        RETURNING id, name, category_slug, price_cents, badge, description, tone, featured, stock_quantity, low_stock_threshold, image_url
+        WITH updated AS (
+            UPDATE products
+            SET stock_quantity = $1,
+                low_stock_threshold = $2
+            WHERE id = $3
+            RETURNING id, name, category_slug, price_cents, badge, description, tone, featured, stock_quantity, low_stock_threshold, image_url
+        )
+        SELECT updated.*, review_stats.avg_rating, COALESCE(review_stats.review_count, 0) AS review_count
+        FROM updated
+        LEFT JOIN (
+            SELECT product_id, AVG(rating)::float8 AS avg_rating, COUNT(*)::bigint AS review_count
+            FROM product_reviews GROUP BY product_id
+        ) review_stats ON review_stats.product_id = updated.id
         "#,
     )
     .bind(input.stock_quantity)
@@ -338,8 +362,15 @@ pub async fn update_product_stock(
 pub async fn supplier_sync(pool: &PgPool) -> Result<Vec<ProductRestockResult>> {
     let low_stock_products = sqlx::query_as::<_, Product>(
         r#"
-        SELECT id, name, category_slug, price_cents, badge, description, tone, featured, stock_quantity, low_stock_threshold, image_url
+        SELECT products.id, products.name, products.category_slug, products.price_cents, products.badge,
+               products.description, products.tone, products.featured, products.stock_quantity,
+               products.low_stock_threshold, products.image_url,
+               review_stats.avg_rating, COALESCE(review_stats.review_count, 0) AS review_count
         FROM products
+        LEFT JOIN (
+            SELECT product_id, AVG(rating)::float8 AS avg_rating, COUNT(*)::bigint AS review_count
+            FROM product_reviews GROUP BY product_id
+        ) review_stats ON review_stats.product_id = products.id
         WHERE stock_quantity <= low_stock_threshold
         "#,
     )

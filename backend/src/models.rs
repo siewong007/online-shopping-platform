@@ -33,6 +33,8 @@ pub struct Product {
     pub stock_quantity: i32,
     pub low_stock_threshold: i32,
     pub image_url: String,
+    pub avg_rating: Option<f64>,
+    pub review_count: i64,
 }
 
 #[derive(Debug, Clone, Deserialize)]

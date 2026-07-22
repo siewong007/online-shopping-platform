@@ -40,8 +40,8 @@ pub(crate) fn normalize_shipping_address(
     {
         bail!("A recipient, phone number, and complete delivery address are required.");
     }
-    if country_code != "US" {
-        bail!("Delivery is currently available only in the United States.");
+    if country_code != "MY" {
+        bail!("Delivery is currently available only within Malaysia.");
     }
 
     Ok(NormalizedShippingAddress {

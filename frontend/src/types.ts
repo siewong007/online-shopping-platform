@@ -15,6 +15,8 @@ export type {
   ProductRestockResult
 } from "./modules/storefront/types";
 
+export type { CreateReviewInput, ProductDetailPayload, ProductReview } from "./modules/reviews/types";
+
 export type { AdminCatalogPayload, UpdateCategoryInput } from "./modules/catalog/types";
 
 export type { AdminAuthPayload, AdminLoginInput, AdminMePayload, AdminUser } from "./modules/auth/types";
@@ -48,6 +50,8 @@ export type {
   OrderControlProduct,
   OrderFulfillmentHistory,
   OrderItem,
+  ShippingAddressInput,
+  ShippingOption,
   UpdateOrderFulfillmentInput
 } from "./modules/orders/types";
 

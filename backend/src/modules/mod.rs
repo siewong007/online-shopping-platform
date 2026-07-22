@@ -11,6 +11,7 @@ pub mod offers;
 pub mod orders;
 pub mod payments;
 pub mod permissions;
+pub mod reviews;
 pub mod sales;
 pub mod settings;
 pub mod storefront;

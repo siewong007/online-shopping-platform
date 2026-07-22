@@ -59,7 +59,9 @@ export const fallbackStorefront: StorefrontPayload = {
       featured: true,
       stock_quantity: 25,
       low_stock_threshold: 5,
-      image_url: "https://picsum.photos/seed/milwaukee-combo-kit/400/300"
+      image_url: "https://picsum.photos/seed/milwaukee-combo-kit/400/300",
+      avg_rating: null,
+      review_count: 0
     },
     {
       id: 2,
@@ -72,7 +74,9 @@ export const fallbackStorefront: StorefrontPayload = {
       featured: true,
       stock_quantity: 12,
       low_stock_threshold: 5,
-      image_url: ""
+      image_url: "",
+      avg_rating: null,
+      review_count: 0
     },
     {
       id: 3,
@@ -85,7 +89,9 @@ export const fallbackStorefront: StorefrontPayload = {
       featured: true,
       stock_quantity: 48,
       low_stock_threshold: 10,
-      image_url: "https://picsum.photos/seed/behr-interior-paint/400/300"
+      image_url: "https://picsum.photos/seed/behr-interior-paint/400/300",
+      avg_rating: null,
+      review_count: 0
     },
     {
       id: 4,
@@ -98,7 +104,9 @@ export const fallbackStorefront: StorefrontPayload = {
       featured: true,
       stock_quantity: 8,
       low_stock_threshold: 5,
-      image_url: ""
+      image_url: "",
+      avg_rating: null,
+      review_count: 0
     },
     {
       id: 5,
@@ -111,7 +119,9 @@ export const fallbackStorefront: StorefrontPayload = {
       featured: true,
       stock_quantity: 16,
       low_stock_threshold: 5,
-      image_url: "https://picsum.photos/seed/ryobi-mower-kit/400/300"
+      image_url: "https://picsum.photos/seed/ryobi-mower-kit/400/300",
+      avg_rating: null,
+      review_count: 0
     },
     {
       id: 6,
@@ -124,7 +134,9 @@ export const fallbackStorefront: StorefrontPayload = {
       featured: true,
       stock_quantity: 3,
       low_stock_threshold: 5,
-      image_url: ""
+      image_url: "",
+      avg_rating: null,
+      review_count: 0
     },
     {
       id: 7,
@@ -137,7 +149,9 @@ export const fallbackStorefront: StorefrontPayload = {
       featured: true,
       stock_quantity: 20,
       low_stock_threshold: 5,
-      image_url: "https://picsum.photos/seed/pavestone-patio-pallet/400/300"
+      image_url: "https://picsum.photos/seed/pavestone-patio-pallet/400/300",
+      avg_rating: null,
+      review_count: 0
     },
     {
       id: 8,
@@ -150,7 +164,9 @@ export const fallbackStorefront: StorefrontPayload = {
       featured: true,
       stock_quantity: 52,
       low_stock_threshold: 10,
-      image_url: ""
+      image_url: "",
+      avg_rating: null,
+      review_count: 0
     }
   ],
   services: [

@@ -9,7 +9,8 @@ use crate::{
     app_state::AppState,
     modules::{
         admin_users, audit, auth, catalog, customer_auth, customer_portal, dashboard, health,
-        invoices, offers, orders, payments, permissions, sales, settings, storefront, support,
+        invoices, offers, orders, payments, permissions, reviews, sales, settings, storefront,
+        support,
     },
 };
 
@@ -22,6 +23,10 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
     Router::new()
         .route("/api/health", get(health::controller::health))
         .route("/api/storefront", get(storefront::controller::storefront))
+        .route(
+            "/api/storefront/products/{product_id}",
+            get(reviews::controller::product_detail),
+        )
         .route("/api/offers", get(offers::controller::public_offers))
         .route(
             "/api/support/conversations",
@@ -257,6 +262,10 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
         .route(
             "/api/account/sessions/{session_id}",
             delete(customer_auth::controller::logout_session),
+        )
+        .route(
+            "/api/account/products/{product_id}/reviews",
+            post(reviews::controller::create_review),
         )
         .with_state(state)
         .layer(TraceLayer::new_for_http())

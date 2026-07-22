@@ -93,6 +93,10 @@ export {
   fetchStorefront
 } from "../modules/storefront/api/storefrontApi";
 export {
+  createProductReview,
+  fetchProductDetail
+} from "../modules/reviews/api/reviewsApi";
+export {
   closeSupportConversation,
   createSupportConversation,
   fetchAdminSupportConversationThread,

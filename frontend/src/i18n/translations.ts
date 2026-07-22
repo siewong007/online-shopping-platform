@@ -511,7 +511,77 @@ export const translations = {
     en: "We could not complete that support request. Try again.",
     bm: "Kami tidak dapat menyelesaikan permintaan sokongan itu. Cuba lagi.",
     zh: "无法完成该支持请求。请重试。"
-  }
+  },
+
+  /* ---- shop: sidebar filters ---- */
+  "shop.filters.title": { en: "Filters", bm: "Penapis", zh: "筛选" },
+  "shop.filters.department": { en: "Department", bm: "Jabatan", zh: "部门" },
+  "shop.filters.availability": { en: "Availability", bm: "Ketersediaan", zh: "库存状态" },
+  "shop.filters.instock": { en: "In stock", bm: "Ada stok", zh: "有现货" },
+  "shop.filters.onsale": { en: "On sale", bm: "Sedang diskaun", zh: "特价商品" },
+  "shop.filters.price": { en: "Price", bm: "Harga", zh: "价格" },
+  "shop.filters.priceUnder": { en: "Under {n}", bm: "Bawah {n}", zh: "低于 {n}" },
+  "shop.filters.priceOver": { en: "{n}+", bm: "{n}+", zh: "{n} 以上" },
+  "shop.filters.clearAll": { en: "Clear all", bm: "Kosongkan semua", zh: "清除全部" },
+  "shop.filters.toggle": { en: "Filters", bm: "Penapis", zh: "筛选" },
+
+  /* ---- shop: toolbar ---- */
+  "shop.toolbar.results": { en: "{n} results", bm: "{n} hasil", zh: "{n} 件商品" },
+  "shop.toolbar.sort": { en: "Sort", bm: "Susun", zh: "排序" },
+  "shop.toolbar.view.grid": { en: "Grid view", bm: "Paparan grid", zh: "网格视图" },
+  "shop.toolbar.view.list": { en: "List view", bm: "Paparan senarai", zh: "列表视图" },
+
+  /* ---- shop: product card / detail ---- */
+  "shop.product.viewDetails": { en: "View details", bm: "Lihat butiran", zh: "查看详情" },
+  "shop.product.reviews.none": { en: "No reviews yet", bm: "Belum ada ulasan", zh: "暂无评价" },
+  "shop.product.stock.in": { en: "In stock", bm: "Ada stok", zh: "现货充足" },
+  "shop.product.stock.low": { en: "Low stock", bm: "Stok terhad", zh: "库存紧张" },
+  "shop.product.stock.out": { en: "Out of stock", bm: "Stok habis", zh: "缺货" },
+  "shop.detail.back": { en: "Back to shop", bm: "Kembali ke kedai", zh: "返回商店" },
+  "shop.detail.reviews": { en: "Reviews", bm: "Ulasan", zh: "评价" },
+  "shop.detail.writeReview": { en: "Write a review", bm: "Tulis ulasan", zh: "写评价" },
+  "shop.detail.rating": { en: "Rating", bm: "Penilaian", zh: "评分" },
+  "shop.detail.reviewBody": { en: "Your review", bm: "Ulasan anda", zh: "您的评价" },
+  "shop.detail.submit": { en: "Submit review", bm: "Hantar ulasan", zh: "提交评价" },
+  "shop.detail.submitting": { en: "Submitting...", bm: "Menghantar...", zh: "提交中..." },
+  "shop.detail.alreadyReviewed": {
+    en: "You've already reviewed this product.",
+    bm: "Anda telah mengulas produk ini.",
+    zh: "您已经评价过此商品。"
+  },
+  "shop.detail.mustPurchase": {
+    en: "Only customers who've purchased and received this product can leave a review.",
+    bm: "Hanya pelanggan yang telah membeli dan menerima produk ini boleh menulis ulasan.",
+    zh: "只有购买并收到此商品的顾客才能撰写评价。"
+  },
+  "shop.detail.signInToReview": {
+    en: "Sign in to your account to write a review.",
+    bm: "Log masuk ke akaun anda untuk menulis ulasan.",
+    zh: "请登录您的账户以撰写评价。"
+  },
+  "shop.detail.noReviews": {
+    en: "No reviews yet — be the first to share your experience.",
+    bm: "Belum ada ulasan — jadilah yang pertama berkongsi pengalaman anda.",
+    zh: "暂无评价 — 快来分享您的第一条评价吧。"
+  },
+  "shop.detail.notFound": { en: "Product not found.", bm: "Produk tidak dijumpai.", zh: "找不到该商品。" },
+
+  /* ---- shop: footer ---- */
+  "shop.footer.about": {
+    en: "永光五金 · Salim, Sibu, Sarawak. Sibu's hardware counter since 2017 — genuine brands, counter prices, and real advice.",
+    bm: "永光五金 · Salim, Sibu, Sarawak. Kedai perkakasan Sibu sejak 2017 — jenama tulen, harga kedai, dan nasihat sebenar.",
+    zh: "永光五金 · 砂拉越诗巫沙林。自 2017 年起服务诗巫的五金柜台 — 正品品牌、柜台价格、真诚建议。"
+  },
+  "shop.footer.shop": { en: "Shop", bm: "Beli-belah", zh: "商店" },
+  "shop.footer.services": { en: "Services", bm: "Perkhidmatan", zh: "服务" },
+  "shop.footer.contact": { en: "Contact", bm: "Hubungi", zh: "联系我们" },
+  "shop.footer.hours": { en: "Mon–Sat · 8am–6pm", bm: "Isnin–Sabtu · 8pg–6ptg", zh: "周一至周六 · 8am–6pm" },
+  "shop.footer.copy": {
+    en: "© 2017–2026 Ekoway Hardware Sdn Bhd",
+    bm: "© 2017–2026 Ekoway Hardware Sdn Bhd",
+    zh: "© 2017–2026 Ekoway Hardware Sdn Bhd"
+  },
+  "shop.wa.chat": { en: "Chat on WhatsApp", bm: "Sembang di WhatsApp", zh: "WhatsApp 咨询" }
 } as const satisfies Record<string, Entry>;
 
 export type TranslationKey = keyof typeof translations;

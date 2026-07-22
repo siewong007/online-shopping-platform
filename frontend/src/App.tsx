@@ -10,6 +10,7 @@ import {
   createInvoiceFromOrder as createInvoiceFromOrderRequest,
   createPayment as createPaymentRequest,
   createProduct as createProductRequest,
+  createProductReview,
   createRole as createRoleRequest,
   deleteAdminOrder as deleteAdminOrderRequest,
   deleteCategory as deleteCategoryRequest,
@@ -33,6 +34,7 @@ import {
   fetchOrders,
   fetchPayments,
   fetchPermissions,
+  fetchProductDetail,
   fetchSales,
   fetchSalesSummary,
   fetchStorefront,
@@ -161,12 +163,15 @@ import type {
   Payment,
   PermissionsPayload,
   Product,
+  ProductDetailPayload,
   RecordInvoicePaymentInput,
   Role,
   RolePagePermission,
   SalesRecord,
   SalesSummaryPayload,
   SetAdminUserActiveInput,
+  ShippingAddressInput,
+  ShippingOption,
   StorefrontPayload,
   StorefrontSort,
   SystemSetting,
@@ -199,14 +204,22 @@ function downloadBlob(blob: Blob, filename: string): void {
   window.URL.revokeObjectURL(url);
 }
 
-type View = "landing" | "store" | "admin" | "forbidden" | "not-found";
+type View = "landing" | "store" | "product" | "admin" | "forbidden" | "not-found";
 
 function viewFromPath(pathname: string): View {
   if (pathname === "/admin") return "admin";
+  if (productIdFromPath(pathname) !== null) return "product";
   if (pathname === "/shop") return "store";
   if (pathname === "/forbidden") return "forbidden";
   if (pathname === "/") return "landing";
   return "not-found";
+}
+
+function productIdFromPath(pathname: string): number | null {
+  const match = /^\/shop\/products\/(\d+)$/.exec(pathname);
+  if (!match) return null;
+  const id = Number(match[1]);
+  return Number.isFinite(id) ? id : null;
 }
 type AdminAuthState = "checking" | "unauthenticated" | "authenticated" | "demo";
 type AdminTab =
@@ -1010,8 +1023,172 @@ function EkowayMark({ compact = false }: { compact?: boolean }) {
   );
 }
 
+type ShopHeaderProps = {
+  cartCount: number;
+  categories: Category[];
+  onChangeCategory: (slug: string) => void;
+  onChangeSearch: (value: string) => void;
+  onOpenAccount: () => void;
+  onOpenAdmin: () => void;
+  onOpenCart: () => void;
+  searchTerm: string;
+  selectedCategory: string;
+};
+
+function ShopHeader({
+  cartCount,
+  categories,
+  onChangeCategory,
+  onChangeSearch,
+  onOpenAccount,
+  onOpenAdmin,
+  onOpenCart,
+  searchTerm,
+  selectedCategory
+}: ShopHeaderProps) {
+  const { t } = useI18n();
+
+  return (
+    <>
+      <div className="top-strip">
+        <p>
+          {t("shop.strip.before")}
+          <a href="https://wa.me/60174056993" target="_blank" rel="noopener">
+            017-405 6993
+          </a>
+          {t("shop.strip.after")}
+        </p>
+      </div>
+
+      <header className="site-header">
+        <div className="brand-block">
+          <a className="brand-logo-link" href="/" aria-label="Back to the main page">
+            <EkowayMark />
+          </a>
+          <div className="brand-copy">
+            <p className="eyebrow">{t("shop.eyebrow")}</p>
+            <h1>{t("shop.brand")}</h1>
+            <p className="brand-tagline">{t("shop.tagline")}</p>
+          </div>
+        </div>
+
+        <div className="header-actions">
+          <label className="search-shell">
+            <span>{t("shop.search.label")}</span>
+            <input
+              type="search"
+              placeholder={t("shop.search.placeholder")}
+              value={searchTerm}
+              onChange={(event) => onChangeSearch(event.target.value)}
+            />
+          </label>
+          <LangToggle />
+          <button className="outline-button" onClick={onOpenAccount}>
+            {t("shop.account")}
+          </button>
+          <button className="solid-button cart-button" onClick={onOpenCart}>
+            {t("shop.cart")}
+            <span>{cartCount}</span>
+          </button>
+        </div>
+      </header>
+
+      <nav className="mega-nav" aria-label="Primary">
+        {departmentMenu.map((item) => (
+          <a href="#categories" key={item.key}>
+            {t(item.key)}
+          </a>
+        ))}
+        <button className="nav-button" onClick={onOpenAdmin}>
+          {t("shop.nav.admin")}
+        </button>
+      </nav>
+
+      <nav className="dept-chip-bar" aria-label={t("shop.filters.department")}>
+        {categories.map((category) => (
+          <button
+            key={category.slug}
+            className={"dept-chip" + (selectedCategory === category.slug ? " dept-chip--on" : "")}
+            onClick={() => onChangeCategory(category.slug)}
+            type="button"
+          >
+            {category.name}
+          </button>
+        ))}
+      </nav>
+    </>
+  );
+}
+
+function ShopFooter({ storefront }: { storefront: StorefrontPayload }) {
+  const { t } = useI18n();
+
+  return (
+    <footer className="shop-footer">
+      <div className="shop-footer-grid">
+        <div className="shop-footer-brand">
+          <div className="fbrand">
+            <EkowayMark compact />
+            <strong>{t("shop.brand")}</strong>
+          </div>
+          <p>{t("shop.footer.about")}</p>
+        </div>
+        <div>
+          <h4>{t("shop.footer.shop")}</h4>
+          <ul>
+            {storefront.categories
+              .filter((category) => category.slug !== "all")
+              .slice(0, 6)
+              .map((category) => (
+                <li key={category.slug}>
+                  <a href="#categories">{category.name}</a>
+                </li>
+              ))}
+          </ul>
+        </div>
+        <div>
+          <h4>{t("shop.footer.services")}</h4>
+          <ul>
+            {storefront.services.map((service) => (
+              <li key={service.name}>{service.name}</li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h4>{t("shop.footer.contact")}</h4>
+          <ul>
+            <li>
+              <a href="https://wa.me/60174056993" target="_blank" rel="noopener">
+                WhatsApp 017-405 6993
+              </a>
+            </li>
+            <li>{t("shop.footer.hours")}</li>
+          </ul>
+        </div>
+      </div>
+      <div className="shop-footer-copy">{t("shop.footer.copy")}</div>
+    </footer>
+  );
+}
+
+function WhatsAppFab() {
+  const { t } = useI18n();
+
+  return (
+    <a className="wa-fab" href="https://wa.me/60174056993" target="_blank" rel="noopener" aria-label={t("shop.wa.chat")}>
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2zm0 2a8 8 0 1 1-4.1 14.9l-.3-.2-2.8.7.8-2.7-.2-.3A8 8 0 0 1 12 4zm4.5 10.2c-.2-.1-1.4-.7-1.6-.8s-.4-.1-.5.1-.6.8-.7.9-.3.2-.5.1a6.5 6.5 0 0 1-3.2-2.8c-.2-.4.2-.4.6-1.2a.5.5 0 0 0 0-.4c0-.1-.5-1.3-.7-1.7s-.4-.4-.5-.4h-.5a1 1 0 0 0-.7.3A3 3 0 0 0 6.5 12a5.3 5.3 0 0 0 1.1 2.8 12 12 0 0 0 4.6 4c2.3.9 2.3.6 2.7.6a2.5 2.5 0 0 0 1.7-1.2 2 2 0 0 0 .1-1.2c-.1-.1-.2-.2-.5-.3z" />
+      </svg>
+      {t("shop.wa.chat")}
+    </a>
+  );
+}
+
 export default function App() {
   const [view, setView] = useState<View>(() => viewFromPath(window.location.pathname));
+  const [productDetailId, setProductDetailId] = useState<number | null>(() =>
+    productIdFromPath(window.location.pathname)
+  );
   const [storefront, setStorefront] = useState<StorefrontPayload | null>(null);
   const [publicOffers, setPublicOffers] = useState<PublicOffersPayload | null>(null);
   const [dashboard, setDashboard] = useState<AdminDashboardPayload | null>(null);
@@ -1074,7 +1251,7 @@ export default function App() {
     document.title =
       view === "landing"
         ? "Ekoway Hardware — 永光五金 · Sibu, Sarawak"
-        : view === "store"
+        : view === "store" || view === "product"
           ? "Ekoway Hardware — Shop Online"
           : view === "admin"
             ? "Ekoway Hardware — OPT Console"
@@ -1126,6 +1303,7 @@ export default function App() {
   useEffect(() => {
     const onPopState = () => {
       setView(viewFromPath(window.location.pathname));
+      setProductDetailId(productIdFromPath(window.location.pathname));
     };
 
     window.addEventListener("popstate", onPopState);
@@ -1139,6 +1317,14 @@ export default function App() {
       const nextPath = nextView === "admin" ? "/admin" : nextView === "store" ? "/shop" : "/";
       window.history.pushState({}, "", nextPath);
       setView(nextView);
+    });
+  };
+
+  const openProductDetail = (productId: number) => {
+    startTransition(() => {
+      window.history.pushState({}, "", `/shop/products/${productId}`);
+      setProductDetailId(productId);
+      setView("product");
     });
   };
 
@@ -2281,58 +2467,95 @@ export default function App() {
   return (
     <div
       className={
-        view === "admin" ? "app-shell admin-shell" : view === "store" ? "app-shell storefront-app-shell" : "app-shell"
+        view === "admin"
+          ? "app-shell admin-shell"
+          : view === "store" || view === "product"
+            ? "app-shell storefront-app-shell"
+            : "app-shell"
       }
     >
-      {view === "store" ? (
-        <StorefrontView
-          cart={cart}
-          cartCount={cartCount}
-          customerAccountEmail={customerAccountEmail}
-          customerAccountOrderId={customerAccountOrderId}
-          filteredProducts={filteredProducts}
-          isCartOpen={isCartOpen}
-          isAccountOpen={isAccountOpen}
-          maxPriceCents={maxPriceCents}
-          minPriceCents={minPriceCents}
-          onAddToCart={addToCart}
-          onAccountAuthenticated={(email) => {
-            const normalizedEmail = email.trim().toLowerCase();
-            setCustomerAccountEmail(normalizedEmail);
-            rememberAccountEmail(normalizedEmail);
-          }}
-          onChangeCategory={setSelectedCategory}
-          onChangeMaxPrice={setMaxPriceCents}
-          onChangeMinPrice={setMinPriceCents}
-          onChangeSearch={setSearchTerm}
-          onChangeSort={setSortOption}
-          onCheckout={submitCheckout}
-          onCloseAccount={() => setIsAccountOpen(false)}
-          onClearCart={clearCart}
-          onCloseCart={() => setIsCartOpen(false)}
-          onLookupCustomer={lookupCustomer}
-          onOpenAdmin={() => openView("admin")}
-          onOpenAccount={() => {
-            setIsCartOpen(false);
-            setIsAccountOpen(true);
-          }}
-          onOpenCart={() => {
-            setIsAccountOpen(false);
-            setIsCartOpen(true);
-          }}
-          onGrabPromotion={grabPromotion}
-          onPromotionChange={setSelectedPromotionId}
-          onRemoveFromCart={removeFromCart}
-          onUpdateQuantity={updateQuantity}
-          onVoucherCodeChange={setVoucherCode}
-          publicOffers={publicOffers}
-          searchTerm={searchTerm}
-          selectedCategory={selectedCategory}
-          selectedPromotionId={selectedPromotionId}
-          sortOption={sortOption}
-          storefront={storefront}
-          voucherCode={voucherCode}
-        />
+      {view === "store" || view === "product" ? (
+        <div className="storefront-shell">
+          <ShopHeader
+            cartCount={cartCount}
+            categories={storefront.categories}
+            onChangeCategory={(slug) => {
+              setSelectedCategory(slug);
+              if (view !== "store") openView("store");
+            }}
+            onChangeSearch={setSearchTerm}
+            onOpenAccount={() => {
+              setIsCartOpen(false);
+              setIsAccountOpen(true);
+            }}
+            onOpenAdmin={() => openView("admin")}
+            onOpenCart={() => {
+              setIsAccountOpen(false);
+              setIsCartOpen(true);
+            }}
+            searchTerm={searchTerm}
+            selectedCategory={selectedCategory}
+          />
+
+          {view === "store" ? (
+            <StorefrontView
+              filteredProducts={filteredProducts}
+              maxPriceCents={maxPriceCents}
+              minPriceCents={minPriceCents}
+              onAddToCart={addToCart}
+              onChangeCategory={setSelectedCategory}
+              onChangeMaxPrice={setMaxPriceCents}
+              onChangeMinPrice={setMinPriceCents}
+              onChangeSearch={setSearchTerm}
+              onChangeSort={setSortOption}
+              onGrabPromotion={grabPromotion}
+              onViewProduct={openProductDetail}
+              publicOffers={publicOffers}
+              searchTerm={searchTerm}
+              selectedCategory={selectedCategory}
+              sortOption={sortOption}
+              storefront={storefront}
+            />
+          ) : (
+            <ProductDetailView
+              onAddToCart={addToCart}
+              onBack={() => openView("store")}
+              productId={productDetailId}
+            />
+          )}
+
+          <ShopFooter storefront={storefront} />
+          <WhatsAppFab />
+
+          <CartDrawer
+            cart={cart}
+            customerAccountEmail={customerAccountEmail}
+            open={isCartOpen}
+            onCheckout={submitCheckout}
+            onClose={() => setIsCartOpen(false)}
+            onCompleted={clearCart}
+            onPromotionChange={setSelectedPromotionId}
+            onRemoveFromCart={removeFromCart}
+            onUpdateQuantity={updateQuantity}
+            onVoucherCodeChange={setVoucherCode}
+            publicOffers={publicOffers}
+            selectedPromotionId={selectedPromotionId}
+            voucherCode={voucherCode}
+          />
+          <AccountDrawer
+            open={isAccountOpen}
+            customerAccountEmail={customerAccountEmail}
+            customerAccountOrderId={customerAccountOrderId}
+            onLookupCustomer={lookupCustomer}
+            onAuthenticated={(email) => {
+              const normalizedEmail = email.trim().toLowerCase();
+              setCustomerAccountEmail(normalizedEmail);
+              rememberAccountEmail(normalizedEmail);
+            }}
+            onClose={() => setIsAccountOpen(false)}
+          />
+          <SupportChatWidget customerEmail={customerAccountEmail} isSuppressed={isCartOpen || isAccountOpen} />
+        </div>
       ) : adminAuth === "unauthenticated" ? (
         <AdminLoginScreen
           onBackToStore={() => openView("store")}
@@ -2429,142 +2652,129 @@ export default function App() {
 }
 
 type StorefrontViewProps = {
-  cart: CartItem[];
-  cartCount: number;
-  customerAccountEmail: string;
-  customerAccountOrderId: number | null;
   filteredProducts: Product[];
-  isAccountOpen: boolean;
-  isCartOpen: boolean;
   maxPriceCents: number | null;
   minPriceCents: number | null;
   onAddToCart: (product: Product) => void;
-  onAccountAuthenticated: (email: string) => void;
   onChangeCategory: (slug: string) => void;
   onChangeMaxPrice: (value: number | null) => void;
   onChangeMinPrice: (value: number | null) => void;
   onChangeSearch: (value: string) => void;
   onChangeSort: (value: StorefrontSort) => void;
-  onCheckout: (input: CreateOrderInput) => Promise<Order>;
-  onCloseAccount: () => void;
-  onClearCart: () => void;
-  onCloseCart: () => void;
-  onLookupCustomer: (email: string, orderId: number) => Promise<CustomerLookupPayload>;
-  onOpenAdmin: () => void;
-  onOpenAccount: () => void;
-  onOpenCart: () => void;
   onGrabPromotion: (promotionId: number) => void;
-  onPromotionChange: (promotionId: number | null) => void;
-  onRemoveFromCart: (productId: number) => void;
-  onUpdateQuantity: (productId: number, quantity: number) => void;
-  onVoucherCodeChange: (code: string) => void;
+  onViewProduct: (productId: number) => void;
   publicOffers: PublicOffersPayload | null;
   searchTerm: string;
   selectedCategory: string;
-  selectedPromotionId: number | null;
   sortOption: StorefrontSort;
   storefront: StorefrontPayload;
-  voucherCode: string;
 };
 
+const PRICE_PRESETS: { minCents: number; maxCents: number | null }[] = [
+  { minCents: 0, maxCents: 5000 },
+  { minCents: 5000, maxCents: 15000 },
+  { minCents: 15000, maxCents: 50000 },
+  { minCents: 50000, maxCents: null }
+];
+
+function productStockState(product: Product): "in" | "low" | "out" {
+  if (product.stock_quantity <= 0) return "out";
+  if (product.stock_quantity <= product.low_stock_threshold) return "low";
+  return "in";
+}
+
+function isOnSale(product: Product): boolean {
+  return /sale/i.test(product.badge);
+}
+
+function StarRating({ avgRating, reviewCount }: { avgRating: number | null; reviewCount: number }) {
+  const { t } = useI18n();
+  if (avgRating == null || reviewCount === 0) {
+    return <span className="star-rating star-rating--empty">{t("shop.product.reviews.none")}</span>;
+  }
+
+  const rounded = Math.round(avgRating);
+  return (
+    <span className="star-rating" title={`${avgRating.toFixed(1)} out of 5`}>
+      <span className="star-rating-stars" aria-hidden="true">
+        {"★".repeat(rounded)}
+        {"☆".repeat(5 - rounded)}
+      </span>
+      <b>{avgRating.toFixed(1)}</b>
+      <span>({reviewCount})</span>
+    </span>
+  );
+}
+
+function StockBadge({ product }: { product: Product }) {
+  const { t } = useI18n();
+  const state = productStockState(product);
+  const label =
+    state === "out" ? t("shop.product.stock.out") : state === "low" ? t("shop.product.stock.low") : t("shop.product.stock.in");
+  return (
+    <span className={`avail avail--${state}`}>
+      <i aria-hidden="true" />
+      {label}
+    </span>
+  );
+}
+
 function StorefrontView({
-  cart,
-  cartCount,
-  customerAccountEmail,
-  customerAccountOrderId,
   filteredProducts,
-  isAccountOpen,
-  isCartOpen,
   maxPriceCents,
   minPriceCents,
   onAddToCart,
-  onAccountAuthenticated,
   onChangeCategory,
   onChangeMaxPrice,
   onChangeMinPrice,
   onChangeSearch,
   onChangeSort,
-  onCheckout,
-  onCloseAccount,
-  onClearCart,
-  onCloseCart,
-  onLookupCustomer,
-  onOpenAdmin,
-  onOpenAccount,
-  onOpenCart,
   onGrabPromotion,
-  onPromotionChange,
-  onRemoveFromCart,
-  onUpdateQuantity,
-  onVoucherCodeChange,
+  onViewProduct,
   publicOffers,
   searchTerm,
   selectedCategory,
-  selectedPromotionId,
   sortOption,
-  storefront,
-  voucherCode
+  storefront
 }: StorefrontViewProps) {
   const { t } = useI18n();
   const activeCategory =
     storefront.categories.find((category) => category.slug === selectedCategory) ?? storefront.categories[0];
 
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [onSaleOnly, setOnSaleOnly] = useState(false);
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+
+  const visibleProducts = filteredProducts.filter((product) => {
+    if (onSaleOnly && !isOnSale(product)) return false;
+    if (inStockOnly && product.stock_quantity <= 0) return false;
+    return true;
+  });
+
+  const activePreset = PRICE_PRESETS.find(
+    (preset) => preset.minCents === (minPriceCents ?? -1) && preset.maxCents === maxPriceCents
+  );
+
+  const clearAllFilters = () => {
+    onChangeSearch("");
+    onChangeCategory("all");
+    onChangeMinPrice(null);
+    onChangeMaxPrice(null);
+    setOnSaleOnly(false);
+    setInStockOnly(false);
+  };
+
+  const hasActiveFilters =
+    Boolean(searchTerm) ||
+    selectedCategory !== "all" ||
+    minPriceCents != null ||
+    maxPriceCents != null ||
+    onSaleOnly ||
+    inStockOnly;
+
   return (
-    <div className="storefront-shell">
-      <div className="top-strip">
-        <p>
-          {t("shop.strip.before")}
-          <a href="https://wa.me/60174056993" target="_blank" rel="noopener">
-            017-405 6993
-          </a>
-          {t("shop.strip.after")}
-        </p>
-      </div>
-
-      <header className="site-header">
-        <div className="brand-block">
-          <a className="brand-logo-link" href="/" aria-label="Back to the main page">
-            <EkowayMark />
-          </a>
-          <div className="brand-copy">
-            <p className="eyebrow">{t("shop.eyebrow")}</p>
-            <h1>{t("shop.brand")}</h1>
-            <p className="brand-tagline">{t("shop.tagline")}</p>
-          </div>
-        </div>
-
-        <div className="header-actions">
-          <label className="search-shell">
-            <span>{t("shop.search.label")}</span>
-            <input
-              type="search"
-              placeholder={t("shop.search.placeholder")}
-              value={searchTerm}
-              onChange={(event) => onChangeSearch(event.target.value)}
-            />
-          </label>
-          <LangToggle />
-          <button className="outline-button" onClick={onOpenAccount}>
-            {t("shop.account")}
-          </button>
-          <button className="solid-button cart-button" onClick={onOpenCart}>
-            {t("shop.cart")}
-            <span>{cartCount}</span>
-          </button>
-        </div>
-      </header>
-
-      <nav className="mega-nav" aria-label="Primary">
-        {departmentMenu.map((item) => (
-          <a href="#categories" key={item.key}>
-            {t(item.key)}
-          </a>
-        ))}
-        <button className="nav-button" onClick={onOpenAdmin}>
-          {t("shop.nav.admin")}
-        </button>
-      </nav>
-
+    <>
       <main className="page-shell">
         <section className="hero-grid">
           <article className="hero-panel hero-primary">
@@ -2682,46 +2892,6 @@ function StorefrontView({
             ))}
           </div>
 
-          <div className="filter-bar">
-            <label className="filter-field">
-              <span>{t("shop.filter.min")}</span>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="$0"
-                value={minPriceCents == null ? "" : minPriceCents / 100}
-                onChange={(event) => {
-                  onChangeMinPrice(priceInputToCents(event.target.value));
-                }}
-              />
-            </label>
-            <label className="filter-field">
-              <span>{t("shop.filter.max")}</span>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="Any"
-                value={maxPriceCents == null ? "" : maxPriceCents / 100}
-                onChange={(event) => {
-                  onChangeMaxPrice(priceInputToCents(event.target.value));
-                }}
-              />
-            </label>
-            <label className="filter-field">
-              <span>{t("shop.filter.sort")}</span>
-              <select
-                value={sortOption}
-                onChange={(event) => onChangeSort(event.target.value as StorefrontSort)}
-              >
-                <option value="featured">{t("shop.sort.featured")}</option>
-                <option value="price_asc">{t("shop.sort.priceAsc")}</option>
-                <option value="price_desc">{t("shop.sort.priceDesc")}</option>
-                <option value="name">{t("shop.sort.name")}</option>
-              </select>
-            </label>
-          </div>
         </section>
 
         <section className="savings-band">
@@ -2744,57 +2914,255 @@ function StorefrontView({
             <h2>{t("shop.products.title")}</h2>
           </div>
 
-           <div className="product-grid">
-             {filteredProducts.map((product) => {
-               const categoryName =
-                 storefront.categories.find((category) => category.slug === product.category_slug)?.name ??
-                 product.category_slug;
+          <div className="shop-toolbar">
+            <span className="shop-toolbar-count">{t("shop.toolbar.results", { n: visibleProducts.length })}</span>
+            <button
+              className="outline-button filters-toggle"
+              onClick={() => setIsMobileFiltersOpen(true)}
+              type="button"
+            >
+              {t("shop.filters.toggle")}
+            </button>
+            <span className="shop-toolbar-spacer" />
+            <label className="shop-sort">
+              <span>{t("shop.toolbar.sort")}</span>
+              <select value={sortOption} onChange={(event) => onChangeSort(event.target.value as StorefrontSort)}>
+                <option value="featured">{t("shop.sort.featured")}</option>
+                <option value="price_asc">{t("shop.sort.priceAsc")}</option>
+                <option value="price_desc">{t("shop.sort.priceDesc")}</option>
+                <option value="name">{t("shop.sort.name")}</option>
+              </select>
+            </label>
+            <div className="view-toggle" role="group" aria-label="View">
+              <button
+                className={viewMode === "grid" ? "on" : ""}
+                onClick={() => setViewMode("grid")}
+                aria-label={t("shop.toolbar.view.grid")}
+                type="button"
+              >
+                ▦
+              </button>
+              <button
+                className={viewMode === "list" ? "on" : ""}
+                onClick={() => setViewMode("list")}
+                aria-label={t("shop.toolbar.view.list")}
+                type="button"
+              >
+                ☰
+              </button>
+            </div>
+            {hasActiveFilters ? (
+              <div className="active-filters">
+                {searchTerm ? (
+                  <button className="fchip" onClick={() => onChangeSearch("")} type="button">
+                    “{searchTerm}” <i>×</i>
+                  </button>
+                ) : null}
+                {selectedCategory !== "all" ? (
+                  <button className="fchip" onClick={() => onChangeCategory("all")} type="button">
+                    {activeCategory?.name ?? selectedCategory} <i>×</i>
+                  </button>
+                ) : null}
+                {onSaleOnly ? (
+                  <button className="fchip" onClick={() => setOnSaleOnly(false)} type="button">
+                    {t("shop.filters.onsale")} <i>×</i>
+                  </button>
+                ) : null}
+                {inStockOnly ? (
+                  <button className="fchip" onClick={() => setInStockOnly(false)} type="button">
+                    {t("shop.filters.instock")} <i>×</i>
+                  </button>
+                ) : null}
+                {minPriceCents != null || maxPriceCents != null ? (
+                  <button
+                    className="fchip"
+                    onClick={() => {
+                      onChangeMinPrice(null);
+                      onChangeMaxPrice(null);
+                    }}
+                    type="button"
+                  >
+                    {minPriceCents != null ? currencyFromCents(minPriceCents) : "$0"}–
+                    {maxPriceCents != null ? currencyFromCents(maxPriceCents) : t("shop.filters.priceOver", { n: "" })}{" "}
+                    <i>×</i>
+                  </button>
+                ) : null}
+                <button className="clear-all-link" onClick={clearAllFilters} type="button">
+                  {t("shop.filters.clearAll")}
+                </button>
+              </div>
+            ) : null}
+          </div>
 
-               return (
-                 <article className="product-card" key={product.id}>
-                   <div className="product-topline">
-                     <span className="badge-chip">{product.badge}</span>
-                     <span className="tone-chip">{product.tone}</span>
-                   </div>
+          <div className="shop-grid-layout">
+            <aside
+              className={"shop-sidebar" + (isMobileFiltersOpen ? " shop-sidebar--open" : "")}
+              aria-label={t("shop.filters.title")}
+            >
+              <div className="shop-sidebar-mobilehead">
+                <h3>{t("shop.filters.title")}</h3>
+                <button
+                  className="drawer-close"
+                  onClick={() => setIsMobileFiltersOpen(false)}
+                  aria-label="Close"
+                  type="button"
+                >
+                  &times;
+                </button>
+              </div>
 
-                   <div
-                     className={
-                       "product-visual" + (product.image_url ? "" : " tone-fallback")
-                     }
-                   >
-                     {product.image_url ? (
-                       <img
-                         src={product.image_url}
-                         alt={product.name}
-                         loading="lazy"
-                         onError={(event) => {
-                           event.currentTarget.style.display = "none";
-                           const parent = event.currentTarget.parentElement;
-                           if (parent) parent.classList.add("tone-fallback");
-                         }}
-                       />
-                     ) : null}
-                     <span>{categoryName}</span>
-                     <strong>{product.tone}</strong>
-                   </div>
+              <div className="fgroup">
+                <h4>{t("shop.filters.availability")}</h4>
+                <label className="opt">
+                  <input
+                    type="checkbox"
+                    checked={inStockOnly}
+                    onChange={(event) => setInStockOnly(event.target.checked)}
+                  />
+                  <span>{t("shop.filters.instock")}</span>
+                </label>
+                <label className="opt">
+                  <input
+                    type="checkbox"
+                    checked={onSaleOnly}
+                    onChange={(event) => setOnSaleOnly(event.target.checked)}
+                  />
+                  <span>{t("shop.filters.onsale")}</span>
+                </label>
+              </div>
 
-                   <div className="product-meta">
-                     <h3>{product.name}</h3>
-                     <p>{product.description}</p>
-                   </div>
+              <div className="fgroup">
+                <h4>{t("shop.filters.department")}</h4>
+                <div className="opts opts--scroll">
+                  {storefront.categories.map((category) => (
+                    <label className="opt" key={category.slug}>
+                      <input
+                        type="radio"
+                        name="shop-department"
+                        checked={selectedCategory === category.slug}
+                        onChange={() => onChangeCategory(category.slug)}
+                      />
+                      <span>{category.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
 
-                   <footer>
-                     <div>
-                       <p className="price-label">{t("shop.product.from")}</p>
-                       <strong>{currencyFromCents(product.price_cents)}</strong>
-                       <p>{categoryName}</p>
-                     </div>
-                     <button onClick={() => onAddToCart(product)}>{t("shop.product.add")}</button>
-                   </footer>
-                 </article>
-               );
-             })}
-           </div>
+              <div className="fgroup">
+                <h4>{t("shop.filters.price")}</h4>
+                <div className="presets">
+                  {PRICE_PRESETS.map((preset) => (
+                    <button
+                      key={`${preset.minCents}-${preset.maxCents}`}
+                      className={"preset" + (activePreset === preset ? " preset--on" : "")}
+                      onClick={() => {
+                        if (activePreset === preset) {
+                          onChangeMinPrice(null);
+                          onChangeMaxPrice(null);
+                        } else {
+                          onChangeMinPrice(preset.minCents);
+                          onChangeMaxPrice(preset.maxCents);
+                        }
+                      }}
+                      type="button"
+                    >
+                      {preset.maxCents == null
+                        ? t("shop.filters.priceOver", { n: currencyFromCents(preset.minCents) })
+                        : t("shop.filters.priceUnder", { n: currencyFromCents(preset.maxCents) })}
+                    </button>
+                  ))}
+                </div>
+                <div className="price-inputs">
+                  <label>
+                    <span>{t("shop.filter.min")}</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="$0"
+                      value={minPriceCents == null ? "" : minPriceCents / 100}
+                      onChange={(event) => onChangeMinPrice(priceInputToCents(event.target.value))}
+                    />
+                  </label>
+                  <label>
+                    <span>{t("shop.filter.max")}</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="Any"
+                      value={maxPriceCents == null ? "" : maxPriceCents / 100}
+                      onChange={(event) => onChangeMaxPrice(priceInputToCents(event.target.value))}
+                    />
+                  </label>
+                </div>
+              </div>
+            </aside>
+
+            <div className={"product-grid" + (viewMode === "list" ? " product-grid--list" : "")}>
+              {visibleProducts.map((product) => {
+                const categoryName =
+                  storefront.categories.find((category) => category.slug === product.category_slug)?.name ??
+                  product.category_slug;
+                const stockState = productStockState(product);
+
+                return (
+                  <article className="product-card" key={product.id}>
+                    <div className="product-topline">
+                      <span className="badge-chip">{product.badge}</span>
+                      <span className="tone-chip">{product.tone}</span>
+                    </div>
+
+                    <button
+                      className={"product-visual" + (product.image_url ? "" : " tone-fallback")}
+                      onClick={() => onViewProduct(product.id)}
+                      type="button"
+                    >
+                      {product.image_url ? (
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          loading="lazy"
+                          onError={(event) => {
+                            event.currentTarget.style.display = "none";
+                            const parent = event.currentTarget.parentElement;
+                            if (parent) parent.classList.add("tone-fallback");
+                          }}
+                        />
+                      ) : null}
+                      <span>{categoryName}</span>
+                      <strong>{product.tone}</strong>
+                    </button>
+
+                    <div className="product-meta">
+                      <StarRating avgRating={product.avg_rating} reviewCount={product.review_count} />
+                      <h3>
+                        <button className="product-name-link" onClick={() => onViewProduct(product.id)} type="button">
+                          {product.name}
+                        </button>
+                      </h3>
+                      <p>{product.description}</p>
+                      <StockBadge product={product} />
+                    </div>
+
+                    <footer>
+                      <div>
+                        <p className="price-label">{t("shop.product.from")}</p>
+                        <strong>{currencyFromCents(product.price_cents)}</strong>
+                      </div>
+                      <button
+                        className="btn--add"
+                        disabled={stockState === "out"}
+                        onClick={() => onAddToCart(product)}
+                      >
+                        {t("shop.product.add")}
+                      </button>
+                    </footer>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
         </section>
 
         <section className="services-section" id="services">
@@ -2831,35 +3199,193 @@ function StorefrontView({
           </div>
         </section>
       </main>
+    </>
+  );
+}
 
-      <CartDrawer
-        cart={cart}
-        customerAccountEmail={customerAccountEmail}
-        open={isCartOpen}
-        onCheckout={onCheckout}
-        onClose={onCloseCart}
-        onCompleted={onClearCart}
-        onPromotionChange={onPromotionChange}
-        onRemoveFromCart={onRemoveFromCart}
-        onUpdateQuantity={onUpdateQuantity}
-        onVoucherCodeChange={onVoucherCodeChange}
-        publicOffers={publicOffers}
-        selectedPromotionId={selectedPromotionId}
-        voucherCode={voucherCode}
-      />
-      <AccountDrawer
-        open={isAccountOpen}
-        customerAccountEmail={customerAccountEmail}
-        customerAccountOrderId={customerAccountOrderId}
-        onLookupCustomer={onLookupCustomer}
-        onAuthenticated={onAccountAuthenticated}
-        onClose={onCloseAccount}
-      />
-      <SupportChatWidget
-        customerEmail={customerAccountEmail}
-        isSuppressed={isCartOpen || isAccountOpen}
-      />
-    </div>
+type ProductDetailViewProps = {
+  onAddToCart: (product: Product) => void;
+  onBack: () => void;
+  productId: number | null;
+};
+
+function ProductDetailView({ onAddToCart, onBack, productId }: ProductDetailViewProps) {
+  const { t } = useI18n();
+  const [status, setStatus] = useState<"loading" | "loaded" | "not-found" | "error">("loading");
+  const [payload, setPayload] = useState<ProductDetailPayload | null>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewBody, setReviewBody] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [reviewFeedback, setReviewFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (productId == null) {
+      setStatus("not-found");
+      return;
+    }
+
+    let cancelled = false;
+    setStatus("loading");
+    setPayload(null);
+    setReviewFeedback(null);
+
+    fetchProductDetail(productId)
+      .then((data) => {
+        if (cancelled) return;
+        setPayload(data);
+        setStatus("loaded");
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setStatus(error instanceof ApiError && error.status === 404 ? "not-found" : "error");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [productId]);
+
+  const isSignedIn = getCustomerAuthToken() !== null;
+
+  const handleSubmitReview = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (productId == null) return;
+
+    setIsSubmittingReview(true);
+    setReviewFeedback(null);
+
+    try {
+      await createProductReview(productId, { rating: reviewRating, body: reviewBody });
+      const refreshed = await fetchProductDetail(productId);
+      setPayload(refreshed);
+      setReviewBody("");
+      setReviewRating(5);
+    } catch (error) {
+      setReviewFeedback(normalizeError(error, { operation: "submit review", scope: "checkout" }).userMessage);
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
+  if (status === "loading") {
+    return (
+      <main className="page-shell">
+        <p className="product-detail-status">{t("shop.loading")}</p>
+      </main>
+    );
+  }
+
+  if (status === "not-found" || status === "error" || !payload) {
+    return (
+      <main className="page-shell">
+        <p className="product-detail-status">{t("shop.detail.notFound")}</p>
+        <button className="outline-button" onClick={onBack} type="button">
+          {t("shop.detail.back")}
+        </button>
+      </main>
+    );
+  }
+
+  const { product, reviews, can_review, already_reviewed } = payload;
+  const stockState = productStockState(product);
+
+  return (
+    <main className="page-shell product-detail">
+      <button className="text-link product-detail-back" onClick={onBack} type="button">
+        &lsaquo; {t("shop.detail.back")}
+      </button>
+
+      <div className="product-detail-layout">
+        <div className={"product-visual product-detail-visual" + (product.image_url ? "" : " tone-fallback")}>
+          {product.image_url ? (
+            <img
+              src={product.image_url}
+              alt={product.name}
+              onError={(event) => {
+                event.currentTarget.style.display = "none";
+                const parent = event.currentTarget.parentElement;
+                if (parent) parent.classList.add("tone-fallback");
+              }}
+            />
+          ) : null}
+          <strong>{product.tone}</strong>
+        </div>
+
+        <div className="product-detail-info">
+          <span className="tone-chip">{product.tone}</span>
+          <h1>{product.name}</h1>
+          <StarRating avgRating={product.avg_rating} reviewCount={product.review_count} />
+          <p className="product-detail-description">{product.description}</p>
+          <StockBadge product={product} />
+          <div className="product-detail-price">{currencyFromCents(product.price_cents)}</div>
+          <button
+            className="solid-button"
+            disabled={stockState === "out"}
+            onClick={() => onAddToCart(product)}
+          >
+            {t("shop.product.add")}
+          </button>
+        </div>
+      </div>
+
+      <section className="product-detail-reviews">
+        <h2>{t("shop.detail.reviews")}</h2>
+
+        {reviews.length === 0 ? (
+          <p className="product-detail-status">{t("shop.detail.noReviews")}</p>
+        ) : (
+          <ul className="review-list">
+            {reviews.map((review) => (
+              <li key={review.id} className="review-item">
+                <div className="review-item-head">
+                  <strong>{review.customer_display_name}</strong>
+                  <StarRating avgRating={review.rating} reviewCount={1} />
+                </div>
+                <p>{review.body}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className="review-form-shell">
+          <h3>{t("shop.detail.writeReview")}</h3>
+          {!isSignedIn ? (
+            <p className="product-detail-status">{t("shop.detail.signInToReview")}</p>
+          ) : already_reviewed ? (
+            <p className="product-detail-status">{t("shop.detail.alreadyReviewed")}</p>
+          ) : !can_review ? (
+            <p className="product-detail-status">{t("shop.detail.mustPurchase")}</p>
+          ) : (
+            <form className="review-form" onSubmit={handleSubmitReview}>
+              <label>
+                <span>{t("shop.detail.rating")}</span>
+                <select value={reviewRating} onChange={(event) => setReviewRating(Number(event.target.value))}>
+                  {[5, 4, 3, 2, 1].map((value) => (
+                    <option key={value} value={value}>
+                      {"★".repeat(value)}
+                      {"☆".repeat(5 - value)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>{t("shop.detail.reviewBody")}</span>
+                <textarea
+                  required
+                  rows={4}
+                  value={reviewBody}
+                  onChange={(event) => setReviewBody(event.target.value)}
+                />
+              </label>
+              {reviewFeedback ? <p className="cart-feedback">{reviewFeedback}</p> : null}
+              <button className="solid-button" disabled={isSubmittingReview} type="submit">
+                {isSubmittingReview ? t("shop.detail.submitting") : t("shop.detail.submit")}
+              </button>
+            </form>
+          )}
+        </div>
+      </section>
+    </main>
   );
 }
 
@@ -3931,6 +4457,28 @@ function AccountDrawer({
   );
 }
 
+const EMPTY_SHIPPING_ADDRESS: ShippingAddressInput = {
+  recipient_name: "",
+  phone: "",
+  address_line1: "",
+  address_line2: "",
+  city: "",
+  state: "",
+  postal_code: "",
+  country_code: "MY"
+};
+
+function isShippingAddressComplete(address: ShippingAddressInput): boolean {
+  return Boolean(
+    address.recipient_name.trim() &&
+      address.phone.trim() &&
+      address.address_line1.trim() &&
+      address.city.trim() &&
+      address.state.trim() &&
+      address.postal_code.trim()
+  );
+}
+
 type CartDrawerProps = {
   cart: CartItem[];
   customerAccountEmail: string;
@@ -3968,7 +4516,15 @@ function CartDrawer({
     customer_name: string;
     customer_email: string;
     fulfillment_method: FulfillmentMethod;
-  }>({ customer_name: "", customer_email: "", fulfillment_method: "pickup" });
+    shipping_address: ShippingAddressInput;
+    shipping_service_code: string;
+  }>({
+    customer_name: "",
+    customer_email: "",
+    fulfillment_method: "pickup",
+    shipping_address: EMPTY_SHIPPING_ADDRESS,
+    shipping_service_code: ""
+  });
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null);
@@ -3995,8 +4551,11 @@ function CartDrawer({
     });
   }, [customerAccountEmail, open]);
 
+  const isDelivery = form.fulfillment_method === "delivery";
+  const addressReady = !isDelivery || isShippingAddressComplete(form.shipping_address);
+
   useEffect(() => {
-    if (!open || cart.length === 0) {
+    if (!open || cart.length === 0 || !addressReady) {
       setQuote(null);
       setQuoteFeedback(null);
       setIsQuoting(false);
@@ -4014,12 +4573,20 @@ function CartDrawer({
           product_id: item.product.id,
           quantity: item.quantity
         })),
+        fulfillment_method: form.fulfillment_method,
         promotion_id: selectedPromotionId ?? undefined,
-        voucher_code: voucherCode.trim() || undefined
+        voucher_code: voucherCode.trim() || undefined,
+        shipping_address: isDelivery ? form.shipping_address : undefined,
+        shipping_service_code: isDelivery ? form.shipping_service_code || undefined : undefined
       })
         .then((nextQuote) => {
-          if (!cancelled) {
-            setQuote(nextQuote);
+          if (cancelled) return;
+          setQuote(nextQuote);
+          if (isDelivery && !form.shipping_service_code && nextQuote.shipping_options.length > 0) {
+            setForm((current) => ({
+              ...current,
+              shipping_service_code: nextQuote.shipping_options[0].code
+            }));
           }
         })
         .catch((error) => {
@@ -4043,7 +4610,17 @@ function CartDrawer({
       cancelled = true;
       window.clearTimeout(timeout);
     };
-  }, [cart, open, selectedPromotionId, voucherCode]);
+  }, [
+    addressReady,
+    cart,
+    isDelivery,
+    open,
+    selectedPromotionId,
+    voucherCode,
+    form.fulfillment_method,
+    form.shipping_address,
+    form.shipping_service_code
+  ]);
 
   if (!open) {
     return null;
@@ -4059,7 +4636,13 @@ function CartDrawer({
 
   const close = () => {
     setStage("cart");
-    setForm({ customer_name: "", customer_email: "", fulfillment_method: "pickup" });
+    setForm({
+      customer_name: "",
+      customer_email: "",
+      fulfillment_method: "pickup",
+      shipping_address: EMPTY_SHIPPING_ADDRESS,
+      shipping_service_code: ""
+    });
     setFeedback(null);
     setConfirmedOrder(null);
     onClose();
@@ -4073,11 +4656,13 @@ function CartDrawer({
     try {
       const order = await onCheckout({
         customer_name: form.customer_name,
-      customer_email: form.customer_email,
-      fulfillment_method: form.fulfillment_method,
+        customer_email: form.customer_email,
+        fulfillment_method: form.fulfillment_method,
         items: cart.map((item) => ({ product_id: item.product.id, quantity: item.quantity })),
         promotion_id: selectedPromotionId ?? undefined,
-        voucher_code: voucherCode.trim() || undefined
+        voucher_code: voucherCode.trim() || undefined,
+        shipping_address: isDelivery ? form.shipping_address : undefined,
+        shipping_service_code: isDelivery ? form.shipping_service_code || undefined : undefined
       });
       setConfirmedOrder(order);
       onCompleted();
@@ -4121,6 +4706,12 @@ function CartDrawer({
           <div className="cart-subtotal">
             <span>Tax</span>
             <strong>{currencyFromCents(quote.tax_cents)}</strong>
+          </div>
+        ) : null}
+        {quote.shipping_cents !== 0 ? (
+          <div className="cart-subtotal">
+            <span>Shipping</span>
+            <strong>{currencyFromCents(quote.shipping_cents)}</strong>
           </div>
         ) : null}
         <div className="cart-subtotal">
@@ -4328,7 +4919,8 @@ function CartDrawer({
                 onChange={(event) =>
                   setForm((current) => ({
                     ...current,
-                    fulfillment_method: event.target.value as FulfillmentMethod
+                    fulfillment_method: event.target.value as FulfillmentMethod,
+                    shipping_service_code: ""
                   }))
                 }
               >
@@ -4336,6 +4928,120 @@ function CartDrawer({
                 <option value="delivery">Delivery</option>
               </select>
             </label>
+            {isDelivery ? (
+              <div className="cart-shipping-fields">
+                <p className="cart-shipping-note">Delivery is available within Malaysia.</p>
+                <label>
+                  <span>Recipient name</span>
+                  <input
+                    value={form.shipping_address.recipient_name}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        shipping_address: { ...current.shipping_address, recipient_name: event.target.value }
+                      }))
+                    }
+                    required
+                  />
+                </label>
+                <label>
+                  <span>Phone</span>
+                  <input
+                    type="tel"
+                    value={form.shipping_address.phone}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        shipping_address: { ...current.shipping_address, phone: event.target.value }
+                      }))
+                    }
+                    required
+                  />
+                </label>
+                <label>
+                  <span>Address line 1</span>
+                  <input
+                    value={form.shipping_address.address_line1}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        shipping_address: { ...current.shipping_address, address_line1: event.target.value }
+                      }))
+                    }
+                    required
+                  />
+                </label>
+                <label>
+                  <span>Address line 2 (optional)</span>
+                  <input
+                    value={form.shipping_address.address_line2}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        shipping_address: { ...current.shipping_address, address_line2: event.target.value }
+                      }))
+                    }
+                  />
+                </label>
+                <label>
+                  <span>City</span>
+                  <input
+                    value={form.shipping_address.city}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        shipping_address: { ...current.shipping_address, city: event.target.value }
+                      }))
+                    }
+                    required
+                  />
+                </label>
+                <label>
+                  <span>State</span>
+                  <input
+                    value={form.shipping_address.state}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        shipping_address: { ...current.shipping_address, state: event.target.value }
+                      }))
+                    }
+                    required
+                  />
+                </label>
+                <label>
+                  <span>Postal code</span>
+                  <input
+                    value={form.shipping_address.postal_code}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        shipping_address: { ...current.shipping_address, postal_code: event.target.value }
+                      }))
+                    }
+                    required
+                  />
+                </label>
+                {quote && quote.shipping_options.length > 0 ? (
+                  <label>
+                    <span>Delivery service</span>
+                    <select
+                      value={form.shipping_service_code}
+                      onChange={(event) =>
+                        setForm((current) => ({ ...current, shipping_service_code: event.target.value }))
+                      }
+                    >
+                      {quote.shipping_options.map((option: ShippingOption) => (
+                        <option key={option.code} value={option.code}>
+                          {option.name} &middot; {currencyFromCents(option.shipping_cents)} &middot;{" "}
+                          {option.min_delivery_days}-{option.max_delivery_days} days
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
+              </div>
+            ) : null}
             {feedback ? <p className="cart-feedback">{feedback}</p> : null}
             {isQuoting ? <p className="cart-feedback">Updating checkout total…</p> : null}
             {quoteFeedback ? (
@@ -4348,7 +5054,13 @@ function CartDrawer({
               <button type="button" className="outline-button" onClick={() => setStage("cart")}>
                 Back to cart
               </button>
-              <button type="submit" className="solid-button" disabled={isSubmitting || isQuoting}>
+              <button
+                type="submit"
+                className="solid-button"
+                disabled={
+                  isSubmitting || isQuoting || (isDelivery && (!addressReady || !form.shipping_service_code))
+                }
+              >
                 {isSubmitting ? "Placing order..." : "Place Order"}
               </button>
             </div>

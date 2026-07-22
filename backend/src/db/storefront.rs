@@ -14,8 +14,15 @@ pub async fn fetch_storefront(pool: &PgPool, query: &StorefrontQuery) -> Result<
     .await?;
 
     let mut builder = sqlx::QueryBuilder::new(
-        "SELECT id, name, category_slug, price_cents, badge, description, tone, featured, stock_quantity, low_stock_threshold, image_url \
-         FROM products WHERE featured = true",
+        "SELECT products.id, products.name, products.category_slug, products.price_cents, products.badge, \
+         products.description, products.tone, products.featured, products.stock_quantity, products.low_stock_threshold, \
+         products.image_url, review_stats.avg_rating, COALESCE(review_stats.review_count, 0) AS review_count \
+         FROM products \
+         LEFT JOIN ( \
+             SELECT product_id, AVG(rating)::float8 AS avg_rating, COUNT(*)::bigint AS review_count \
+             FROM product_reviews GROUP BY product_id \
+         ) review_stats ON review_stats.product_id = products.id \
+         WHERE featured = true",
     );
 
     if let Some(text) = query

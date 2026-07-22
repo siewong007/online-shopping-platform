@@ -16,6 +16,8 @@ export type Product = {
   stock_quantity: number;
   low_stock_threshold: number;
   image_url: string;
+  avg_rating: number | null;
+  review_count: number;
 };
 
 export type CreateCategoryInput = {
