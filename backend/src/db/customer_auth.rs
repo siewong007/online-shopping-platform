@@ -66,15 +66,17 @@ pub async fn insert_customer_session(
     pool: &PgPool,
     customer_account_id: i32,
     token: &str,
+    user_agent: Option<&str>,
 ) -> Result<()> {
     sqlx::query(
         r#"
-        INSERT INTO customer_sessions (token, customer_account_id, expires_at)
-        VALUES ($1, $2, now() + interval '30 days')
+        INSERT INTO customer_sessions (token, customer_account_id, user_agent, expires_at)
+        VALUES ($1, $2, $3, now() + interval '30 days')
         "#,
     )
     .bind(token)
     .bind(customer_account_id)
+    .bind(user_agent)
     .execute(pool)
     .await?;
 
@@ -101,7 +103,8 @@ pub async fn authenticate_customer_session(
 ) -> Result<Option<CustomerIdentity>> {
     sqlx::query_as::<_, CustomerIdentity>(
         r#"
-        SELECT customer_accounts.id AS customer_account_id,
+        SELECT customer_sessions.id AS session_id,
+               customer_accounts.id AS customer_account_id,
                customer_accounts.email,
                customer_accounts.display_name
         FROM customer_sessions
@@ -114,6 +117,85 @@ pub async fn authenticate_customer_session(
     .fetch_optional(pool)
     .await
     .map_err(Into::into)
+}
+
+pub async fn touch_customer_session(pool: &PgPool, session_id: i32) -> Result<()> {
+    sqlx::query(
+        r#"
+        UPDATE customer_sessions
+        SET last_seen_at = now()
+        WHERE id = $1
+          AND last_seen_at < now() - interval '5 minutes'
+        "#,
+    )
+    .bind(session_id)
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+pub async fn fetch_customer_sessions(
+    pool: &PgPool,
+    customer_account_id: i32,
+) -> Result<Vec<CustomerSession>> {
+    sqlx::query_as::<_, CustomerSession>(
+        r#"
+        SELECT id,
+               user_agent,
+               created_at::text AS created_at,
+               last_seen_at::text AS last_seen_at,
+               expires_at::text AS expires_at
+        FROM customer_sessions
+        WHERE customer_account_id = $1
+          AND expires_at > now()
+        ORDER BY last_seen_at DESC, id DESC
+        "#,
+    )
+    .bind(customer_account_id)
+    .fetch_all(pool)
+    .await
+    .map_err(Into::into)
+}
+
+pub async fn delete_customer_session_for_account(
+    pool: &PgPool,
+    customer_account_id: i32,
+    session_id: i32,
+) -> Result<bool> {
+    let result = sqlx::query(
+        r#"
+        DELETE FROM customer_sessions
+        WHERE id = $1
+          AND customer_account_id = $2
+        "#,
+    )
+    .bind(session_id)
+    .bind(customer_account_id)
+    .execute(pool)
+    .await?;
+
+    Ok(result.rows_affected() == 1)
+}
+
+pub async fn delete_other_customer_sessions(
+    pool: &PgPool,
+    customer_account_id: i32,
+    current_session_id: i32,
+) -> Result<()> {
+    sqlx::query(
+        r#"
+        DELETE FROM customer_sessions
+        WHERE customer_account_id = $1
+          AND id <> $2
+        "#,
+    )
+    .bind(customer_account_id)
+    .bind(current_session_id)
+    .execute(pool)
+    .await?;
+
+    Ok(())
 }
 
 pub async fn link_portal_profile_to_account(

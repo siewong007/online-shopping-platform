@@ -547,6 +547,16 @@ async fn fulfillment_status_flow_writes_history_and_advances_sales(pool: PgPool)
             "customer_name": "Fulfillment Buyer",
             "customer_email": "fulfillment-buyer@example.com",
             "fulfillment_method": "delivery",
+            "shipping_address": {
+                "recipient_name": "Fulfillment Buyer",
+                "phone": "555-0100",
+                "address_line1": "100 Main Street",
+                "city": "Atlanta",
+                "state": "GA",
+                "postal_code": "30303",
+                "country_code": "US"
+            },
+            "shipping_service_code": "standard",
             "items": [{ "product_id": 1, "quantity": 1 }]
         })),
     )
@@ -554,6 +564,7 @@ async fn fulfillment_status_flow_writes_history_and_advances_sales(pool: PgPool)
     assert_eq!(order_status, StatusCode::CREATED, "{order_body}");
     assert_eq!(order_body["fulfillment_method"], "delivery");
     assert_eq!(order_body["fulfillment_status"], "received");
+    assert_eq!(order_body["shipping_cents"], 798);
     let order_id = order_body["id"].as_i64().expect("order id");
 
     let (skip_status, skip_body) = common::request(

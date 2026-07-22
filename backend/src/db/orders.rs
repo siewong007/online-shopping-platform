@@ -1,5 +1,8 @@
-use crate::db::sales::advance_sales_status_for_fulfillment;
 use crate::db::settings::{compute_tax_and_total, fetch_setting_int};
+use crate::db::{
+    insert_delivery_details, normalize_shipping_address, quote_delivery,
+    sales::advance_sales_status_for_fulfillment,
+};
 use crate::models::*;
 use anyhow::{Result, anyhow, bail};
 use sqlx::{PgConnection, PgPool};
@@ -372,16 +375,48 @@ pub async fn quote_checkout(pool: &PgPool, input: &CheckoutQuoteInput) -> Result
         .iter()
         .map(|offer| offer.discount_cents)
         .sum();
-    let (tax_cents, total_cents) =
+    let (tax_cents, merchandise_total_cents) =
         compute_tax_and_total(subtotal_cents, discount_cents, tax_rate_bps);
+    let fulfillment_method = normalize_fulfillment_method(input.fulfillment_method.as_deref())?;
+    let (shipping_options, shipping_cents, requires_shipping_selection) =
+        if fulfillment_method == "delivery" {
+            let address = input.shipping_address.as_ref().ok_or_else(|| {
+                anyhow!("A delivery address is required to calculate delivery options.")
+            })?;
+            normalize_shipping_address(address)?;
+            let delivery = quote_delivery(
+                &mut conn,
+                &input.items,
+                input.shipping_service_code.as_deref(),
+            )
+            .await?;
+            let shipping_cents = delivery
+                .selected
+                .as_ref()
+                .map(|option| option.shipping_cents)
+                .unwrap_or(0);
+            (
+                delivery.options,
+                shipping_cents,
+                delivery.selected.is_none(),
+            )
+        } else {
+            (Vec::new(), 0, false)
+        };
+    let total_cents = merchandise_total_cents
+        .checked_add(shipping_cents)
+        .ok_or_else(|| anyhow!("Order total exceeds the supported maximum."))?;
 
     Ok(CheckoutQuote {
         items,
         subtotal_cents,
         discount_cents,
         tax_cents,
+        shipping_cents,
         total_cents,
         applied_offers,
+        shipping_options,
+        requires_shipping_selection,
     })
 }
 
@@ -410,8 +445,30 @@ pub async fn create_order(
         .iter()
         .map(|offer| offer.discount_cents)
         .sum();
-    let (tax_cents, total_cents) =
+    let (tax_cents, merchandise_total_cents) =
         compute_tax_and_total(subtotal_cents, discount_cents, tax_rate_bps);
+    let (shipping_cents, shipping_address, shipping_option) = if fulfillment_method == "delivery" {
+        let address = input
+            .shipping_address
+            .as_ref()
+            .ok_or_else(|| anyhow!("A delivery address is required for delivery orders."))?;
+        let address = normalize_shipping_address(address)?;
+        let delivery = quote_delivery(
+            &mut tx,
+            &input.items,
+            input.shipping_service_code.as_deref(),
+        )
+        .await?;
+        let option = delivery.selected.ok_or_else(|| {
+            anyhow!("Select an available delivery service before placing this order.")
+        })?;
+        (option.shipping_cents, Some(address), Some(option))
+    } else {
+        (0, None, None)
+    };
+    let total_cents = merchandise_total_cents
+        .checked_add(shipping_cents)
+        .ok_or_else(|| anyhow!("Order total exceeds the supported maximum."))?;
 
     let (order_id, fulfillment_status, fulfillment_method, created_at) =
         sqlx::query_as::<_, (i32, String, String, String)>(
@@ -445,17 +502,22 @@ pub async fn create_order(
         .await?;
     }
 
+    if let (Some(address), Some(option)) = (shipping_address.as_ref(), shipping_option.as_ref()) {
+        insert_delivery_details(&mut tx, order_id, address, option).await?;
+    }
+
     sqlx::query(
         r#"
         INSERT INTO order_sales_meta
-            (order_id, status, payment_status, channel, discount_cents, tax_cents, total_cents, manual_discount_cents)
-        VALUES ($1, 'confirmed', 'unpaid', 'web', $2, $3, $4, 0)
+            (order_id, status, payment_status, channel, discount_cents, tax_cents, shipping_cents, total_cents, manual_discount_cents)
+        VALUES ($1, 'confirmed', 'unpaid', 'web', $2, $3, $4, $5, 0)
         ON CONFLICT (order_id) DO NOTHING
         "#,
     )
     .bind(order_id)
     .bind(discount_cents)
     .bind(tax_cents)
+    .bind(shipping_cents)
     .bind(total_cents)
     .execute(&mut *tx)
     .await?;
@@ -514,6 +576,7 @@ pub async fn create_order(
         subtotal_cents,
         discount_cents,
         tax_cents,
+        shipping_cents,
         total_cents,
         fulfillment_status,
         fulfillment_method,
@@ -537,6 +600,7 @@ pub async fn fetch_orders(pool: &PgPool, limit: i64, before: Option<i32>) -> Res
                     i32,
                     i32,
                     i32,
+                    i32,
                     String,
                     String,
                     String,
@@ -550,6 +614,7 @@ pub async fn fetch_orders(pool: &PgPool, limit: i64, before: Option<i32>) -> Res
                     orders.subtotal_cents,
                     COALESCE(meta.discount_cents, 0) AS discount_cents,
                     COALESCE(meta.tax_cents, 0) AS tax_cents,
+                    COALESCE(meta.shipping_cents, 0) AS shipping_cents,
                     COALESCE(meta.total_cents, orders.subtotal_cents) AS total_cents,
                     orders.fulfillment_status,
                     orders.fulfillment_method,
@@ -577,6 +642,7 @@ pub async fn fetch_orders(pool: &PgPool, limit: i64, before: Option<i32>) -> Res
                     i32,
                     i32,
                     i32,
+                    i32,
                     String,
                     String,
                     String,
@@ -590,6 +656,7 @@ pub async fn fetch_orders(pool: &PgPool, limit: i64, before: Option<i32>) -> Res
                     orders.subtotal_cents,
                     COALESCE(meta.discount_cents, 0) AS discount_cents,
                     COALESCE(meta.tax_cents, 0) AS tax_cents,
+                    COALESCE(meta.shipping_cents, 0) AS shipping_cents,
                     COALESCE(meta.total_cents, orders.subtotal_cents) AS total_cents,
                     orders.fulfillment_status,
                     orders.fulfillment_method,
@@ -646,6 +713,7 @@ pub async fn fetch_orders(pool: &PgPool, limit: i64, before: Option<i32>) -> Res
                 subtotal_cents,
                 discount_cents,
                 tax_cents,
+                shipping_cents,
                 total_cents,
                 fulfillment_status,
                 fulfillment_method,
@@ -657,6 +725,7 @@ pub async fn fetch_orders(pool: &PgPool, limit: i64, before: Option<i32>) -> Res
                 subtotal_cents,
                 discount_cents,
                 tax_cents,
+                shipping_cents,
                 total_cents,
                 fulfillment_status,
                 fulfillment_method,
@@ -965,9 +1034,11 @@ pub async fn update_order(pool: &PgPool, order_id: i32, input: &CreateOrderInput
         .await?;
     }
 
-    let manual_discount_cents = sqlx::query_scalar::<_, i32>(
+    let (manual_discount_cents, shipping_cents) = sqlx::query_as::<_, (i32, i32)>(
         r#"
-        SELECT COALESCE(manual_discount_cents, discount_cents)
+        SELECT
+            COALESCE(manual_discount_cents, discount_cents),
+            COALESCE(shipping_cents, 0)
         FROM order_sales_meta
         WHERE order_id = $1
         FOR UPDATE
@@ -976,7 +1047,7 @@ pub async fn update_order(pool: &PgPool, order_id: i32, input: &CreateOrderInput
     .bind(order_id)
     .fetch_optional(&mut *tx)
     .await?
-    .unwrap_or(0);
+    .unwrap_or((0, 0));
     let offer_discount_cents = sqlx::query_scalar::<_, i64>(
         r#"
         SELECT COALESCE(SUM(discount_snapshot_cents), 0)::bigint
@@ -996,8 +1067,11 @@ pub async fn update_order(pool: &PgPool, order_id: i32, input: &CreateOrderInput
         );
     }
 
-    let (tax_cents, total_cents) =
+    let (tax_cents, merchandise_total_cents) =
         compute_tax_and_total(subtotal_cents, discount_cents, tax_rate_bps);
+    let total_cents = merchandise_total_cents
+        .checked_add(shipping_cents)
+        .ok_or_else(|| anyhow!("Order total exceeds the supported maximum."))?;
 
     sqlx::query(
         r#"
@@ -1056,6 +1130,7 @@ pub async fn fetch_order_by_id(pool: &PgPool, order_id: i32) -> Result<Option<Or
             i32,
             i32,
             i32,
+            i32,
             String,
             String,
             String,
@@ -1069,6 +1144,7 @@ pub async fn fetch_order_by_id(pool: &PgPool, order_id: i32) -> Result<Option<Or
             orders.subtotal_cents,
             COALESCE(meta.discount_cents, 0) AS discount_cents,
             COALESCE(meta.tax_cents, 0) AS tax_cents,
+            COALESCE(meta.shipping_cents, 0) AS shipping_cents,
             COALESCE(meta.total_cents, orders.subtotal_cents) AS total_cents,
             orders.fulfillment_status,
             orders.fulfillment_method,
@@ -1089,6 +1165,7 @@ pub async fn fetch_order_by_id(pool: &PgPool, order_id: i32) -> Result<Option<Or
         subtotal_cents,
         discount_cents,
         tax_cents,
+        shipping_cents,
         total_cents,
         fulfillment_status,
         fulfillment_method,
@@ -1117,6 +1194,7 @@ pub async fn fetch_order_by_id(pool: &PgPool, order_id: i32) -> Result<Option<Or
         subtotal_cents,
         discount_cents,
         tax_cents,
+        shipping_cents,
         total_cents,
         fulfillment_status,
         fulfillment_method,
@@ -1245,6 +1323,8 @@ mod order_tests {
             }],
             promotion_id: None,
             voucher_code: None,
+            shipping_address: None,
+            shipping_service_code: None,
         }
     }
 

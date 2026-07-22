@@ -178,15 +178,48 @@ pub struct CreateOrderInput {
     pub promotion_id: Option<i32>,
     #[serde(default)]
     pub voucher_code: Option<String>,
+    #[serde(default)]
+    pub shipping_address: Option<ShippingAddressInput>,
+    #[serde(default)]
+    pub shipping_service_code: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct CheckoutQuoteInput {
     pub items: Vec<CreateOrderItemInput>,
     #[serde(default)]
+    pub fulfillment_method: Option<String>,
+    #[serde(default)]
     pub promotion_id: Option<i32>,
     #[serde(default)]
     pub voucher_code: Option<String>,
+    #[serde(default)]
+    pub shipping_address: Option<ShippingAddressInput>,
+    #[serde(default)]
+    pub shipping_service_code: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct ShippingAddressInput {
+    pub recipient_name: String,
+    pub phone: String,
+    pub address_line1: String,
+    #[serde(default)]
+    pub address_line2: String,
+    pub city: String,
+    pub state: String,
+    pub postal_code: String,
+    pub country_code: String,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct ShippingOption {
+    pub code: String,
+    pub name: String,
+    pub carrier: String,
+    pub shipping_cents: i32,
+    pub min_delivery_days: i32,
+    pub max_delivery_days: i32,
 }
 
 #[derive(Debug, Clone, Serialize, FromRow)]
@@ -223,8 +256,11 @@ pub struct CheckoutQuote {
     pub subtotal_cents: i32,
     pub discount_cents: i32,
     pub tax_cents: i32,
+    pub shipping_cents: i32,
     pub total_cents: i32,
     pub applied_offers: Vec<AppliedOffer>,
+    pub shipping_options: Vec<ShippingOption>,
+    pub requires_shipping_selection: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -235,6 +271,7 @@ pub struct Order {
     pub subtotal_cents: i32,
     pub discount_cents: i32,
     pub tax_cents: i32,
+    pub shipping_cents: i32,
     pub total_cents: i32,
     pub fulfillment_status: String,
     pub fulfillment_method: String,
@@ -365,6 +402,7 @@ pub struct CustomerAccountCredentials {
 
 #[derive(Debug, Clone, Serialize, FromRow)]
 pub struct CustomerIdentity {
+    pub session_id: i32,
     pub customer_account_id: i32,
     pub email: String,
     pub display_name: String,
@@ -394,6 +432,25 @@ pub struct CustomerMePayload {
     pub account: CustomerAccount,
     pub profile: Option<CustomerLookupProfile>,
     pub orders: Vec<CustomerLookupOrder>,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct CustomerSession {
+    pub id: i32,
+    pub user_agent: Option<String>,
+    pub created_at: String,
+    pub last_seen_at: String,
+    pub expires_at: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CustomerSessionView {
+    pub id: i32,
+    pub user_agent: Option<String>,
+    pub created_at: String,
+    pub last_seen_at: String,
+    pub expires_at: String,
+    pub is_current: bool,
 }
 
 #[derive(Debug, Clone, Serialize, FromRow)]

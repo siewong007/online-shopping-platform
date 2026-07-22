@@ -40,7 +40,10 @@ export {
   register as registerCustomer,
   login as loginCustomer,
   logout as logoutCustomer,
-  fetchMe as fetchCustomerMe
+  fetchMe as fetchCustomerMe,
+  fetchSessions as fetchCustomerSessions,
+  logoutSession as logoutCustomerSession,
+  logoutOtherSessions as logoutCustomerOtherSessions
 } from "../modules/customer_auth/api/customerAuthApi";
 export {
   fetchBenefits as fetchCustomerPortalBenefits,

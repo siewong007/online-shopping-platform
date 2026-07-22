@@ -16,6 +16,26 @@ export type CreateOrderItemInput = {
   quantity: number;
 };
 
+export type ShippingAddressInput = {
+  recipient_name: string;
+  phone: string;
+  address_line1: string;
+  address_line2?: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  country_code: string;
+};
+
+export type ShippingOption = {
+  code: string;
+  name: string;
+  carrier: string;
+  shipping_cents: number;
+  min_delivery_days: number;
+  max_delivery_days: number;
+};
+
 export type CreateOrderInput = {
   customer_name: string;
   customer_email: string;
@@ -23,12 +43,17 @@ export type CreateOrderInput = {
   items: CreateOrderItemInput[];
   promotion_id?: number;
   voucher_code?: string;
+  shipping_address?: ShippingAddressInput;
+  shipping_service_code?: string;
 };
 
 export type CheckoutQuoteInput = {
   items: CreateOrderItemInput[];
+  fulfillment_method?: FulfillmentMethod;
   promotion_id?: number;
   voucher_code?: string;
+  shipping_address?: ShippingAddressInput;
+  shipping_service_code?: string;
 };
 
 export type OrderItem = {
@@ -51,8 +76,11 @@ export type CheckoutQuote = {
   subtotal_cents: number;
   discount_cents: number;
   tax_cents: number;
+  shipping_cents: number;
   total_cents: number;
   applied_offers: AppliedOffer[];
+  shipping_options: ShippingOption[];
+  requires_shipping_selection: boolean;
 };
 
 export type OrderFulfillmentHistory = {
@@ -72,6 +100,7 @@ export type Order = {
   subtotal_cents: number;
   discount_cents?: number;
   tax_cents?: number;
+  shipping_cents?: number;
   total_cents?: number;
   fulfillment_status: FulfillmentStatus;
   fulfillment_method: FulfillmentMethod;

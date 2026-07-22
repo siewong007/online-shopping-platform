@@ -12,6 +12,7 @@ mod payments;
 mod permissions;
 mod sales;
 mod settings;
+mod shipping;
 mod storefront;
 mod support;
 
@@ -29,5 +30,6 @@ pub use payments::*;
 pub use permissions::*;
 pub use sales::*;
 pub use settings::*;
+pub(crate) use shipping::*;
 pub use storefront::*;
 pub use support::*;

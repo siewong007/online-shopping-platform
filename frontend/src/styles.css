@@ -2272,6 +2272,31 @@ ul {
   gap: 0.85rem;
 }
 
+.customer-session-list {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.customer-session {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.customer-session > div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.customer-session span:not(.status-pill) {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .account-section-head,
 .account-order-head,
 .account-line-items li {
@@ -3706,6 +3731,28 @@ ul {
 .notification-critical-fallback__icon { display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border: 3px double currentColor; border-radius: 50%; color: var(--notification-accent); font-size: 1.4rem; font-weight: 900; }
 .notification-critical-fallback h1 { margin: 0.3rem 0 0.55rem; font-size: clamp(1.35rem, 4vw, 2rem); }
 .notification-critical-fallback p { max-width: 34rem; line-height: 1.55; }
+.status-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #102a27, #1b3d35 55%, #ba8b39);
+}
+.status-page__card {
+  width: min(100%, 40rem);
+  padding: clamp(2rem, 7vw, 4.5rem);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.28);
+  text-align: center;
+}
+.status-page__code { margin: 0; color: #b17a26; font-size: clamp(4.5rem, 18vw, 9rem); font-weight: 900; letter-spacing: -0.08em; line-height: 0.9; }
+.status-page__card .eyebrow { margin: 1.25rem 0 0.45rem; color: #42635b; }
+.status-page__card h1 { margin: 0; color: #153d36; font-size: clamp(1.7rem, 4vw, 2.5rem); line-height: 1.15; }
+.status-page__message { max-width: 32rem; margin: 1rem auto 0; color: #49605a; line-height: 1.65; }
+.status-page__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; margin-top: 2rem; }
+.status-page__actions button { min-height: 2.75rem; }
 @keyframes notification-arrive { from { opacity: 0; transform: translateY(0.4rem); } }
 
 @media (max-width: 540px) {
@@ -3714,6 +3761,9 @@ ul {
   .notification-box { gap: 0.55rem; padding: 0.75rem; }
   .notification-box__heading { align-items: flex-start; flex-direction: column; gap: 0.15rem; }
   .notification-critical-fallback { grid-template-columns: 1fr; padding-top: 12vh; }
+  .status-page { padding: 1rem; }
+  .status-page__card { padding: 2rem 1.25rem; }
+  .status-page__actions { align-items: stretch; flex-direction: column; }
 }
 
 @media (prefers-color-scheme: dark) {

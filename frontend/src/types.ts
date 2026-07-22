@@ -73,7 +73,8 @@ export type {
   CustomerAuthPayload,
   CustomerLoginInput,
   CustomerMePayload,
-  CustomerRegisterInput
+  CustomerRegisterInput,
+  CustomerSession
 } from "./modules/customer_auth/types";
 
 export type {

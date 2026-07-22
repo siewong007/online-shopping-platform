@@ -295,6 +295,13 @@ export function setOnApiUnavailable(callback: (() => void) | null): void {
   onApiUnavailable = callback;
 }
 
+function handleUnauthorized(response: Response, scope: AuthScope): void {
+  if (response.status !== 401) return;
+
+  if (scope === "admin") onUnauthorized?.();
+  if (scope === "customer") setCustomerAuthToken(null);
+}
+
 export async function fetchJson<T>(path: string, fallback: T, scope: AuthScope = "admin"): Promise<T> {
   const { data } = await fetchJsonResult(path, fallback, scope);
   return data;
@@ -308,7 +315,7 @@ export async function fetchJsonResult<T>(
   try {
     const response = await performFetch(path, {}, scope);
 
-    if (response.status === 401 && scope === "admin") onUnauthorized?.();
+    handleUnauthorized(response, scope);
     if (!response.ok) throw await errorFromResponse(response, path);
 
     return { data: (await response.json()) as T, isFallback: false };
@@ -332,7 +339,7 @@ export async function requestJson<TResponse>(
     throw error;
   }
 
-  if (response.status === 401 && scope === "admin") onUnauthorized?.();
+  handleUnauthorized(response, scope);
   if (!response.ok) throw await errorFromResponse(response, path);
   if (response.status === 204) return undefined as TResponse;
   return (await response.json()) as TResponse;
@@ -352,7 +359,7 @@ export async function requestBlob(
     throw error;
   }
 
-  if (response.status === 401 && scope === "admin") onUnauthorized?.();
+  handleUnauthorized(response, scope);
   if (!response.ok) throw await errorFromResponse(response, path);
   return response.blob();
 }

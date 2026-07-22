@@ -29,3 +29,12 @@ export type CustomerMePayload = {
   profile: CustomerLookupProfile | null;
   orders: CustomerLookupOrder[];
 };
+
+export type CustomerSession = {
+  id: number;
+  user_agent: string | null;
+  created_at: string;
+  last_seen_at: string;
+  expires_at: string;
+  is_current: boolean;
+};

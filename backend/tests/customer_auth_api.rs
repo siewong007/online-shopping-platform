@@ -45,6 +45,99 @@ async fn register_login_and_me_roundtrip(pool: PgPool) {
 }
 
 #[sqlx::test]
+async fn customer_can_log_out_another_device_without_losing_current_session(pool: PgPool) {
+    let app = common::app(pool);
+
+    let (register_status, register_body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/account/register",
+        None,
+        Some(json!({
+            "email": "sessions@example.com",
+            "password": "hunter2pass",
+            "display_name": "Session Tester"
+        })),
+    )
+    .await;
+    assert_eq!(register_status, StatusCode::CREATED, "{register_body}");
+    let first_token = register_body["token"].as_str().expect("token").to_string();
+
+    let (login_status, login_body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/account/login",
+        None,
+        Some(json!({ "email": "sessions@example.com", "password": "hunter2pass" })),
+    )
+    .await;
+    assert_eq!(login_status, StatusCode::OK, "{login_body}");
+    let second_token = login_body["token"].as_str().expect("token").to_string();
+
+    let (sessions_status, sessions_body) = common::request(
+        app.clone(),
+        Method::GET,
+        "/api/account/sessions",
+        Some(&second_token),
+        None,
+    )
+    .await;
+    assert_eq!(sessions_status, StatusCode::OK, "{sessions_body}");
+    let sessions = sessions_body
+        .as_array()
+        .expect("sessions should be an array");
+    assert_eq!(sessions.len(), 2);
+    assert_eq!(
+        sessions
+            .iter()
+            .filter(|session| session["is_current"] == true)
+            .count(),
+        1
+    );
+    assert!(
+        sessions
+            .iter()
+            .all(|session| session.get("token").is_none())
+    );
+
+    let other_session_id = sessions
+        .iter()
+        .find(|session| session["is_current"] == false)
+        .and_then(|session| session["id"].as_i64())
+        .expect("other session should be listed");
+
+    let (logout_status, logout_body) = common::request(
+        app.clone(),
+        Method::DELETE,
+        &format!("/api/account/sessions/{other_session_id}"),
+        Some(&second_token),
+        None,
+    )
+    .await;
+    assert_eq!(logout_status, StatusCode::NO_CONTENT, "{logout_body}");
+
+    let (revoked_status, _) = common::request(
+        app.clone(),
+        Method::GET,
+        "/api/account/me",
+        Some(&first_token),
+        None,
+    )
+    .await;
+    assert_eq!(revoked_status, StatusCode::UNAUTHORIZED);
+
+    let (current_status, current_body) = common::request(
+        app,
+        Method::GET,
+        "/api/account/me",
+        Some(&second_token),
+        None,
+    )
+    .await;
+    assert_eq!(current_status, StatusCode::OK, "{current_body}");
+}
+
+#[sqlx::test]
 async fn duplicate_registration_and_bad_login_are_generic(pool: PgPool) {
     let app = common::app(pool);
 

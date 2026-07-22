@@ -1,7 +1,7 @@
 use axum::{
     Router,
     http::{HeaderValue, Method, header::AUTHORIZATION, header::CONTENT_TYPE},
-    routing::{get, post, put},
+    routing::{delete, get, post, put},
 };
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
@@ -246,6 +246,18 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
             post(customer_auth::controller::logout),
         )
         .route("/api/account/me", get(customer_auth::controller::me))
+        .route(
+            "/api/account/sessions",
+            get(customer_auth::controller::sessions),
+        )
+        .route(
+            "/api/account/sessions/others",
+            delete(customer_auth::controller::logout_other_sessions),
+        )
+        .route(
+            "/api/account/sessions/{session_id}",
+            delete(customer_auth::controller::logout_session),
+        )
         .with_state(state)
         .layer(TraceLayer::new_for_http())
         .layer(cors)

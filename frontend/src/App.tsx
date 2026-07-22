@@ -27,6 +27,7 @@ import {
   fetchCustomerPortalBenefits,
   fetchCustomerPortalMembership,
   fetchCustomerPortalTransactions,
+  fetchCustomerSessions,
   fetchInvoices,
   fetchMe,
   fetchOrders,
@@ -40,6 +41,8 @@ import {
   login as loginRequest,
   loginCustomer,
   logoutCustomer,
+  logoutCustomerOtherSessions,
+  logoutCustomerSession,
   lookupCustomer as lookupCustomerRequest,
   logout as logoutRequest,
   registerCustomer,
@@ -117,6 +120,7 @@ import {
 import type { PagedResponse } from "./shared/api/pagination";
 import { ManagementTable } from "./shared/components/ManagementTable";
 import { RecordForm, type RecordFormField, RecordModal } from "./shared/components/RecordModal";
+import { StatusPage } from "./shared/components/StatusPage";
 import { currencyFromCents, formatOrderDate, formatRelativeTime } from "./shared/formatters";
 import { normalizeError, useNotifications } from "./shared/notifications";
 import type {
@@ -146,6 +150,7 @@ import type {
   CustomerMePayload,
   CustomerPortalProfile,
   CustomerRegisterInput,
+  CustomerSession,
   CustomerTransactionsPayload,
   FulfillmentMethod,
   FulfillmentStatus,
@@ -194,12 +199,14 @@ function downloadBlob(blob: Blob, filename: string): void {
   window.URL.revokeObjectURL(url);
 }
 
-type View = "landing" | "store" | "admin";
+type View = "landing" | "store" | "admin" | "forbidden" | "not-found";
 
 function viewFromPath(pathname: string): View {
   if (pathname === "/admin") return "admin";
   if (pathname === "/shop") return "store";
-  return "landing";
+  if (pathname === "/forbidden") return "forbidden";
+  if (pathname === "/") return "landing";
+  return "not-found";
 }
 type AdminAuthState = "checking" | "unauthenticated" | "authenticated" | "demo";
 type AdminTab =
@@ -1098,7 +1105,11 @@ export default function App() {
         ? "Ekoway Hardware — 永光五金 · Sibu, Sarawak"
         : view === "store"
           ? "Ekoway Hardware — Shop Online"
-          : "Ekoway Hardware — OPT Console";
+          : view === "admin"
+            ? "Ekoway Hardware — OPT Console"
+            : view === "forbidden"
+              ? "Access denied — Ekoway Hardware"
+              : "Page not found — Ekoway Hardware";
   }, [view]);
 
   useEffect(() => {
@@ -1154,7 +1165,7 @@ export default function App() {
 
   const fulfillmentByStage = groupedFulfillment(orders);
 
-  const openView = (nextView: View) => {
+  const openView = (nextView: Extract<View, "landing" | "store" | "admin">) => {
     startTransition(() => {
       const nextPath = nextView === "admin" ? "/admin" : nextView === "store" ? "/shop" : "/";
       window.history.pushState({}, "", nextPath);
@@ -2277,6 +2288,14 @@ export default function App() {
 
   const openShop = () => openView("store");
 
+  if (view === "forbidden") {
+    return <StatusPage code="403" onGoHome={() => openView("landing")} onShop={openShop} />;
+  }
+
+  if (view === "not-found") {
+    return <StatusPage code="404" onGoHome={() => openView("landing")} onShop={openShop} />;
+  }
+
   // Show landing page immediately without waiting for storefront data
   if (view === "landing") {
     return (
@@ -2869,10 +2888,37 @@ type AccountDrawerProps = {
 
 type AccountLookupStatus = "idle" | "loading" | "success" | "error";
 type AccountAuthView = "login" | "register" | "guest";
-type AccountPortalTab = "transactions" | "membership" | "benefits";
+type AccountPortalTab = "transactions" | "membership" | "benefits" | "sessions";
 type PortalLoadStatus = "idle" | "loading" | "success" | "not-found" | "error";
 
 const PORTAL_TRANSACTIONS_PAGE_SIZE = 20;
+
+function customerSessionDeviceLabel(userAgent: string | null): string {
+  if (!userAgent) return "Unknown device";
+
+  const browser = userAgent.includes("Edg/")
+    ? "Microsoft Edge"
+    : userAgent.includes("Firefox/")
+      ? "Firefox"
+      : userAgent.includes("Chrome/")
+        ? "Chrome"
+        : userAgent.includes("Safari/")
+          ? "Safari"
+          : "Browser";
+  const platform = userAgent.includes("iPhone") || userAgent.includes("iPad")
+    ? "iOS"
+    : userAgent.includes("Android")
+      ? "Android"
+      : userAgent.includes("Mac OS")
+        ? "macOS"
+        : userAgent.includes("Windows")
+          ? "Windows"
+          : userAgent.includes("Linux")
+            ? "Linux"
+            : "Unknown platform";
+
+  return `${browser} on ${platform}`;
+}
 
 const emptyCustomerLookupPayload: CustomerLookupPayload = {
   profile: null,
@@ -2920,6 +2966,10 @@ function AccountDrawer({
   const [transactions, setTransactions] = useState<CustomerTransactionsPayload | null>(null);
   const [transactionsStatus, setTransactionsStatus] = useState<PortalLoadStatus>("idle");
   const [transactionsOffset, setTransactionsOffset] = useState(0);
+  const [customerSessions, setCustomerSessions] = useState<CustomerSession[]>([]);
+  const [customerSessionsStatus, setCustomerSessionsStatus] = useState<PortalLoadStatus>("idle");
+  const [customerSessionsError, setCustomerSessionsError] = useState("");
+  const [sessionActionId, setSessionActionId] = useState<number | "others" | null>(null);
 
   useEffect(() => {
     if (!open) {
@@ -3062,6 +3112,37 @@ function AccountDrawer({
     };
   }, [open, session, transactionsOffset]);
 
+  useEffect(() => {
+    if (!open || !session || portalTab !== "sessions") {
+      return;
+    }
+
+    let cancelled = false;
+    setCustomerSessionsStatus("loading");
+    setCustomerSessionsError("");
+
+    void (async () => {
+      try {
+        const payload = await fetchCustomerSessions();
+        if (!cancelled) {
+          setCustomerSessions(payload);
+          setCustomerSessionsStatus("success");
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setCustomerSessionsStatus("error");
+          setCustomerSessionsError(
+            normalizeError(error, { operation: "load signed-in devices", scope: "customer-auth" }).userMessage
+          );
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, portalTab, session]);
+
   const submitLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setAuthStatus("loading");
@@ -3113,6 +3194,46 @@ function AccountDrawer({
       setTransactions(null);
       setTransactionsStatus("idle");
       setTransactionsOffset(0);
+      setCustomerSessions([]);
+      setCustomerSessionsStatus("idle");
+      setCustomerSessionsError("");
+      setSessionActionId(null);
+    }
+  };
+
+  const revokeSession = async (sessionId: number) => {
+    setSessionActionId(sessionId);
+    setCustomerSessionsError("");
+
+    try {
+      await logoutCustomerSession(sessionId);
+      setCustomerSessions((current) => current.filter((item) => item.id !== sessionId));
+    } catch (error) {
+      setCustomerSessionsError(
+        normalizeError(error, { operation: "log out a device", scope: "customer-auth" }).userMessage
+      );
+    } finally {
+      setSessionActionId(null);
+    }
+  };
+
+  const revokeOtherSessions = async () => {
+    if (!window.confirm("Log out all other devices? This device will stay signed in.")) {
+      return;
+    }
+
+    setSessionActionId("others");
+    setCustomerSessionsError("");
+
+    try {
+      await logoutCustomerOtherSessions();
+      setCustomerSessions((current) => current.filter((item) => item.is_current));
+    } catch (error) {
+      setCustomerSessionsError(
+        normalizeError(error, { operation: "log out other devices", scope: "customer-auth" }).userMessage
+      );
+    } finally {
+      setSessionActionId(null);
     }
   };
 
@@ -3284,6 +3405,14 @@ function AccountDrawer({
                 onClick={() => setPortalTab("benefits")}
               >
                 Benefits
+              </button>
+              <button
+                role="tab"
+                aria-selected={portalTab === "sessions"}
+                className={`text-link${portalTab === "sessions" ? " active" : ""}`}
+                onClick={() => setPortalTab("sessions")}
+              >
+                Sessions
               </button>
             </div>
 
@@ -3487,6 +3616,60 @@ function AccountDrawer({
                   </div>
                 ) : (
                   <p className="account-empty-note">No benefit tiers are available right now.</p>
+                )}
+              </section>
+            ) : null}
+
+            {portalTab === "sessions" ? (
+              <section className="account-section" aria-label="Signed-in devices">
+                <div className="account-section-head">
+                  <div>
+                    <p className="eyebrow">Account security</p>
+                    <h3>Signed-in devices</h3>
+                  </div>
+                  {customerSessions.some((item) => !item.is_current) ? (
+                    <button
+                      className="text-link"
+                      disabled={sessionActionId !== null}
+                      onClick={() => void revokeOtherSessions()}
+                    >
+                      Log out others
+                    </button>
+                  ) : null}
+                </div>
+
+                {customerSessionsStatus === "loading" ? (
+                  <p className="account-empty-note">Loading signed-in devices...</p>
+                ) : customerSessionsStatus === "error" ? (
+                  <p className="account-empty-note">{customerSessionsError || "Unable to load signed-in devices."}</p>
+                ) : customerSessions.length === 0 ? (
+                  <p className="account-empty-note">No active sessions were found.</p>
+                ) : (
+                  <div className="customer-session-list">
+                    {customerSessions.map((item) => (
+                      <article className="customer-session" key={item.id}>
+                        <div>
+                          <strong>{customerSessionDeviceLabel(item.user_agent)}</strong>
+                          <span>
+                            {item.is_current
+                              ? "This device"
+                              : `Last active ${formatRelativeTime(item.last_seen_at)}`}
+                          </span>
+                        </div>
+                        {item.is_current ? (
+                          <span className="status-pill">Current</span>
+                        ) : (
+                          <button
+                            className="outline-button"
+                            disabled={sessionActionId !== null}
+                            onClick={() => void revokeSession(item.id)}
+                          >
+                            {sessionActionId === item.id ? "Logging out..." : "Log out"}
+                          </button>
+                        )}
+                      </article>
+                    ))}
+                  </div>
                 )}
               </section>
             ) : null}

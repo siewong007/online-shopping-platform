@@ -12,7 +12,10 @@ use crate::{
 };
 
 use super::{
-    dto::{CustomerAuthPayload, CustomerLoginInput, CustomerMePayload, CustomerRegisterInput},
+    dto::{
+        CustomerAuthPayload, CustomerLoginInput, CustomerMePayload, CustomerRegisterInput,
+        CustomerSessionView,
+    },
     model::{CustomerAccount, CustomerIdentity},
     repository,
 };
@@ -49,6 +52,7 @@ fn is_valid_email(email: &str) -> bool {
 pub async fn register(
     pool: &PgPool,
     input: &CustomerRegisterInput,
+    user_agent: Option<&str>,
 ) -> Result<CustomerAuthPayload, HttpError> {
     let email = input.email.trim();
     let display_name = input.display_name.trim();
@@ -91,7 +95,7 @@ pub async fn register(
         .map_err(map_customer_error)?;
 
     let token = generate_session_token();
-    repository::insert_customer_session(pool, account.id, &token)
+    repository::insert_customer_session(pool, account.id, &token, user_agent)
         .await
         .map_err(map_customer_error)?;
 
@@ -101,6 +105,7 @@ pub async fn register(
 pub async fn login(
     pool: &PgPool,
     input: &CustomerLoginInput,
+    user_agent: Option<&str>,
 ) -> Result<CustomerAuthPayload, HttpError> {
     let email = input.email.trim();
 
@@ -124,7 +129,7 @@ pub async fn login(
         .map_err(map_customer_error)?;
 
     let token = generate_session_token();
-    repository::insert_customer_session(pool, credentials.id, &token)
+    repository::insert_customer_session(pool, credentials.id, &token, user_agent)
         .await
         .map_err(map_customer_error)?;
 
@@ -157,8 +162,70 @@ pub async fn me(
         .map_err(map_customer_error)
 }
 
+pub async fn sessions(
+    pool: &PgPool,
+    identity: &CustomerIdentity,
+) -> Result<Vec<CustomerSessionView>, HttpError> {
+    repository::fetch_customer_sessions(pool, identity.customer_account_id)
+        .await
+        .map_err(map_customer_error)
+        .map(|sessions| {
+            sessions
+                .into_iter()
+                .map(|session| CustomerSessionView {
+                    id: session.id,
+                    user_agent: session.user_agent,
+                    created_at: session.created_at,
+                    last_seen_at: session.last_seen_at,
+                    expires_at: session.expires_at,
+                    is_current: session.id == identity.session_id,
+                })
+                .collect()
+        })
+}
+
+pub async fn logout_session(
+    pool: &PgPool,
+    identity: &CustomerIdentity,
+    session_id: i32,
+) -> Result<(), HttpError> {
+    if session_id == identity.session_id {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Use logout to end this device's session.".to_string(),
+        ));
+    }
+
+    let deleted = repository::delete_customer_session_for_account(
+        pool,
+        identity.customer_account_id,
+        session_id,
+    )
+    .await
+    .map_err(map_customer_error)?;
+
+    if deleted {
+        Ok(())
+    } else {
+        Err((StatusCode::NOT_FOUND, "Session not found.".to_string()))
+    }
+}
+
+pub async fn logout_other_sessions(
+    pool: &PgPool,
+    identity: &CustomerIdentity,
+) -> Result<(), HttpError> {
+    repository::delete_other_customer_sessions(
+        pool,
+        identity.customer_account_id,
+        identity.session_id,
+    )
+    .await
+    .map_err(map_customer_error)
+}
+
 pub async fn authenticate_token(pool: &PgPool, token: &str) -> Result<CustomerIdentity, HttpError> {
-    repository::authenticate_customer_session(pool, token)
+    let identity = repository::authenticate_customer_session(pool, token)
         .await
         .map_err(map_customer_error)?
         .ok_or_else(|| {
@@ -166,7 +233,13 @@ pub async fn authenticate_token(pool: &PgPool, token: &str) -> Result<CustomerId
                 StatusCode::UNAUTHORIZED,
                 "Customer session is missing or expired.".to_string(),
             )
-        })
+        })?;
+
+    repository::touch_customer_session(pool, identity.session_id)
+        .await
+        .map_err(map_customer_error)?;
+
+    Ok(identity)
 }
 
 fn bearer_token_from_headers(headers: &HeaderMap) -> Result<&str, HttpError> {

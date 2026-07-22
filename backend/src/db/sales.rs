@@ -271,6 +271,19 @@ pub async fn update_sales_details(
     .await?
     .ok_or_else(|| anyhow::anyhow!("Order {order_id} does not exist."))?;
 
+    let shipping_cents = sqlx::query_scalar::<_, i32>(
+        r#"
+        SELECT COALESCE(shipping_cents, 0)
+        FROM order_sales_meta
+        WHERE order_id = $1
+        FOR UPDATE
+        "#,
+    )
+    .bind(order_id)
+    .fetch_optional(&mut *tx)
+    .await?
+    .unwrap_or(0);
+
     let offer_discount_cents = sqlx::query_scalar::<_, i64>(
         r#"
         SELECT COALESCE(SUM(discount_snapshot_cents), 0)::bigint
@@ -289,8 +302,11 @@ pub async fn update_sales_details(
 
     let discount_cents = i32::try_from(offer_discount_cents + i64::from(input.discount_cents))
         .map_err(|_| anyhow::anyhow!("Discount exceeds the supported maximum."))?;
-    let (tax_cents, total_cents) =
+    let (tax_cents, merchandise_total_cents) =
         compute_tax_and_total(subtotal_cents, discount_cents, tax_rate_bps);
+    let total_cents = merchandise_total_cents
+        .checked_add(shipping_cents)
+        .ok_or_else(|| anyhow::anyhow!("Order total exceeds the supported maximum."))?;
 
     sqlx::query(
         r#"
