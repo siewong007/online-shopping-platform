@@ -7,6 +7,3 @@ node_modules
 .DS_Store
 postgres-data
 postgres-data-pg18-backup-20260711
-
-# Graphify generated output
-graphify-out/
