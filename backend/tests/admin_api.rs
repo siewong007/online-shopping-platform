@@ -316,7 +316,24 @@ async fn product_image_url_scheme_is_validated_and_roundtrips(pool: PgPool) {
         Some(data_scheme),
     )
     .await;
-    assert_eq!(data_status, StatusCode::BAD_REQUEST, "{data_body}");
+    assert_eq!(data_status, StatusCode::CREATED, "{data_body}");
+    assert_eq!(data_body["image_url"], "data:image/png;base64,aGVsbG8=");
+
+    let mut unsupported_data_scheme = base_product.clone();
+    unsupported_data_scheme["image_url"] = json!("data:text/html;base64,PHNjcmlwdD4=");
+    let (unsupported_data_status, unsupported_data_body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/admin/products",
+        Some(&token),
+        Some(unsupported_data_scheme),
+    )
+    .await;
+    assert_eq!(
+        unsupported_data_status,
+        StatusCode::BAD_REQUEST,
+        "{unsupported_data_body}"
+    );
 
     let mut valid_url = base_product.clone();
     valid_url["image_url"] = json!("https://example.com/wire-stripper.jpg");
