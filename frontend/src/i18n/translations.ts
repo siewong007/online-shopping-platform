@@ -264,8 +264,12 @@ export const translations = {
     bm: "Cari alatan kuasa, cat, paip dan banyak lagi",
     zh: "搜索电动工具、油漆、水管配件等"
   },
+  "shop.search.action": { en: "Search", bm: "Cari", zh: "搜索" },
   "shop.account": { en: "My Account", bm: "Akaun Saya", zh: "我的账户" },
+  "shop.account.short": { en: "Account", bm: "Akaun", zh: "账户" },
   "shop.cart": { en: "Cart", bm: "Troli", zh: "购物车" },
+  "shop.dept.all.short": { en: "All departments", bm: "Semua jabatan", zh: "所有部门" },
+  "shop.whatsapp": { en: "WhatsApp the store", bm: "WhatsApp kedai", zh: "WhatsApp 联系门店" },
   "shop.nav.admin": { en: "Admin", bm: "Admin", zh: "管理" },
   "shop.nav.home": { en: "Home", bm: "Utama", zh: "首页" },
   "shop.loading": { en: "Loading the Ekoway storefront...", bm: "Memuatkan kedai Ekoway...", zh: "正在加载 Ekoway 商店..." },
@@ -524,19 +528,91 @@ export const translations = {
   "shop.filters.priceOver": { en: "{n}+", bm: "{n}+", zh: "{n} 以上" },
   "shop.filters.clearAll": { en: "Clear all", bm: "Kosongkan semua", zh: "清除全部" },
   "shop.filters.toggle": { en: "Filters", bm: "Penapis", zh: "筛选" },
+  "shop.filters.close": { en: "Close filters", bm: "Tutup penapis", zh: "关闭筛选" },
 
   /* ---- shop: toolbar ---- */
   "shop.toolbar.results": { en: "{n} results", bm: "{n} hasil", zh: "{n} 件商品" },
+  "shop.toolbar.resultsFiltered": {
+    en: "{visible} of {total} results",
+    bm: "{visible} daripada {total} hasil",
+    zh: "{total} 件中的 {visible} 件"
+  },
   "shop.toolbar.sort": { en: "Sort", bm: "Susun", zh: "排序" },
   "shop.toolbar.view.grid": { en: "Grid view", bm: "Paparan grid", zh: "网格视图" },
   "shop.toolbar.view.list": { en: "List view", bm: "Paparan senarai", zh: "列表视图" },
 
+  /* ---- shop: 3a worklist job lens ---- */
+  "shop.jobs.workingOn": { en: "Working\non", bm: "Sedang\ndibuat", zh: "正在\n进行" },
+  "shop.jobs.resolvesTo": { en: "Resolves to", bm: "Merangkumi", zh: "包含" },
+  "shop.jobs.summary": {
+    en: "{departments} departments · {products} products",
+    bm: "{departments} jabatan · {products} produk",
+    zh: "{departments} 个部门 · {products} 件商品"
+  },
+  "shop.jobs.resultCount": {
+    en: "{products} products · {job}",
+    bm: "{products} produk · {job}",
+    zh: "{products} 件商品 · {job}"
+  },
+  "shop.jobs.context": { en: "Job context", bm: "Konteks kerja", zh: "项目背景" },
+  "shop.jobs.atmosphere": { en: "category atmosphere", bm: "suasana kategori", zh: "品类氛围" },
+  "shop.jobs.inspirationDisclosure": {
+    en: "Project inspiration — not exact product imagery.",
+    bm: "Inspirasi projek — bukan imej produk sebenar.",
+    zh: "项目灵感展示，并非准确商品图片。"
+  },
+  "shop.jobs.departments": { en: "Departments in this job", bm: "Jabatan dalam kerja ini", zh: "此项目包含的部门" },
+
   /* ---- shop: product card / detail ---- */
+  "shop.product.view": { en: "View product", bm: "Lihat produk", zh: "查看商品" },
   "shop.product.viewDetails": { en: "View details", bm: "Lihat butiran", zh: "查看详情" },
   "shop.product.reviews.none": { en: "No reviews yet", bm: "Belum ada ulasan", zh: "暂无评价" },
   "shop.product.stock.in": { en: "In stock", bm: "Ada stok", zh: "现货充足" },
   "shop.product.stock.low": { en: "Low stock", bm: "Stok terhad", zh: "库存紧张" },
   "shop.product.stock.out": { en: "Out of stock", bm: "Stok habis", zh: "缺货" },
+  "shop.product.stock.inCount": { en: "In stock — {n} avail.", bm: "Ada stok — baki {n}", zh: "现货——剩 {n} 件" },
+  "shop.product.stock.lowCount": { en: "Low stock — {n} left", bm: "Stok terhad — baki {n}", zh: "库存紧张——剩 {n} 件" },
+  "shop.product.stock.outSoon": {
+    en: "Out of stock — check back soon",
+    bm: "Stok habis — sila semak semula",
+    zh: "缺货——请稍后查看"
+  },
+
+  /* ---- shop: dense listing (Trade Counter) ---- */
+  "shop.listing.col.product": { en: "Product", bm: "Produk", zh: "产品" },
+  "shop.listing.col.category": { en: "Category", bm: "Kategori", zh: "分类" },
+  "shop.listing.col.stock": { en: "Stock", bm: "Stok", zh: "库存" },
+  "shop.listing.col.badge": { en: "Badge", bm: "Lencana", zh: "标签" },
+  "shop.listing.col.actions": { en: "Actions", bm: "Tindakan", zh: "操作" },
+  "shop.listing.noPhoto": {
+    en: "Product image is not available yet.",
+    bm: "Gambar produk belum tersedia.",
+    zh: "商品图片暂未提供。"
+  },
+  "shop.listing.loading": { en: "Loading products…", bm: "Memuatkan produk…", zh: "正在加载商品…" },
+  "shop.listing.empty.title": {
+    en: "No products match right now",
+    bm: "Tiada produk yang sepadan buat masa ini",
+    zh: "暂无符合条件的商品"
+  },
+  "shop.listing.empty.searchBody": {
+    en: 'No products match "{query}." Try a different term, or browse by department below.',
+    bm: 'Tiada produk sepadan dengan "{query}." Cuba istilah lain, atau layari mengikut jabatan di bawah.',
+    zh: '没有商品与"{query}"匹配。请尝试其他关键词，或在下方按部门浏览。'
+  },
+  "shop.listing.empty.filterBody": {
+    en: "No products match the current filters.",
+    bm: "Tiada produk sepadan dengan penapis semasa.",
+    zh: "没有商品符合目前的筛选条件。"
+  },
+  "shop.listing.empty.clearSearch": { en: "Clear search", bm: "Kosongkan carian", zh: "清除搜索" },
+  "shop.listing.empty.browseAll": { en: "Browse all departments", bm: "Lihat semua jabatan", zh: "浏览所有部门" },
+  "shop.offline.banner": {
+    en: "Showing recently saved catalogue data — live prices and stock may be a little out of date.",
+    bm: "Memaparkan data katalog yang disimpan baru-baru ini — harga dan stok mungkin sedikit lapuk.",
+    zh: "正在显示近期保存的目录数据——实时价格和库存可能略有延迟。"
+  },
+  "shop.offline.reload": { en: "Reload", bm: "Muat semula", zh: "重新加载" },
   "shop.detail.back": { en: "Back to shop", bm: "Kembali ke kedai", zh: "返回商店" },
   "shop.detail.reviews": { en: "Reviews", bm: "Ulasan", zh: "评价" },
   "shop.detail.writeReview": { en: "Write a review", bm: "Tulis ulasan", zh: "写评价" },
@@ -565,6 +641,95 @@ export const translations = {
     zh: "暂无评价 — 快来分享您的第一条评价吧。"
   },
   "shop.detail.notFound": { en: "Product not found.", bm: "Produk tidak dijumpai.", zh: "找不到该商品。" },
+  "shop.detail.backProducts": { en: "Back to products", bm: "Kembali ke produk", zh: "返回商品" },
+  "shop.detail.allDepartment": {
+    en: "All {department}",
+    bm: "Semua {department}",
+    zh: "全部{department}"
+  },
+  "shop.detail.breadcrumb": { en: "Breadcrumb", bm: "Laluan navigasi", zh: "面包屑导航" },
+  "shop.detail.stillWorkingOn": {
+    en: "Still working on:",
+    bm: "Masih mengusahakan:",
+    zh: "仍在进行："
+  },
+  "shop.detail.productCount": { en: "{n} products", bm: "{n} produk", zh: "{n} 件商品" },
+  "shop.detail.purchase": { en: "Purchase", bm: "Pembelian", zh: "购买" },
+  "shop.detail.quantity": { en: "Quantity", bm: "Kuantiti", zh: "数量" },
+  "shop.detail.decreaseQuantity": {
+    en: "Decrease quantity",
+    bm: "Kurangkan kuantiti",
+    zh: "减少数量"
+  },
+  "shop.detail.increaseQuantity": {
+    en: "Increase quantity",
+    bm: "Tambah kuantiti",
+    zh: "增加数量"
+  },
+  "shop.detail.askWhatsapp": {
+    en: "Ask about this product on WhatsApp",
+    bm: "Tanya tentang produk ini di WhatsApp",
+    zh: "通过 WhatsApp 咨询此商品"
+  },
+  "shop.detail.whatsappMessage": {
+    en: "Hello Ekoway, I have a question about {product}.",
+    bm: "Hai Ekoway, saya ingin bertanya tentang {product}.",
+    zh: "您好 Ekoway，我想咨询 {product}。"
+  },
+  "shop.detail.savedCatalogue": { en: "SAVED CATALOGUE", bm: "KATALOG DISIMPAN", zh: "已保存目录" },
+  "shop.detail.savedCatalogueBody": {
+    en: "Showing saved product information because the live catalogue could not be reached. Price and availability may not be current.",
+    bm: "Maklumat produk yang disimpan dipaparkan kerana katalog langsung tidak dapat dicapai. Harga dan ketersediaan mungkin bukan yang terkini.",
+    zh: "由于无法连接实时目录，正在显示已保存的商品信息。价格和库存状态可能不是最新的。"
+  },
+  "shop.detail.verifiedInformation": {
+    en: "VERIFIED INFORMATION",
+    bm: "MAKLUMAT DISAHKAN",
+    zh: "已核实信息"
+  },
+  "shop.detail.department": { en: "Department", bm: "Jabatan", zh: "部门" },
+  "shop.detail.price": { en: "Price", bm: "Harga", zh: "价格" },
+  "shop.detail.availability": { en: "Availability", bm: "Ketersediaan", zh: "库存状态" },
+  "shop.detail.verifiedNote": {
+    en: "Only information confirmed by Ekoway is shown.",
+    bm: "Hanya maklumat yang disahkan oleh Ekoway dipaparkan.",
+    zh: "仅显示经 Ekoway 确认的信息。"
+  },
+  "shop.detail.moreIn": {
+    en: "More in {department}",
+    bm: "Lagi dalam {department}",
+    zh: "更多{department}商品"
+  },
+  "shop.detail.departmentProductCount": {
+    en: "{n} products in this department",
+    bm: "{n} produk dalam jabatan ini",
+    zh: "此部门共有 {n} 件商品"
+  },
+  "shop.detail.notFoundTitle": {
+    en: "This product is not available.",
+    bm: "Produk ini tidak tersedia.",
+    zh: "此商品目前不可用。"
+  },
+  "shop.detail.notFoundBody": {
+    en: "It may have been removed from the catalogue, or the link may be out of date.",
+    bm: "Produk ini mungkin telah dikeluarkan daripada katalog, atau pautannya mungkin sudah lapuk.",
+    zh: "该商品可能已从目录中移除，或此链接已经失效。"
+  },
+  "shop.detail.errorTitle": {
+    en: "We could not load this product.",
+    bm: "Kami tidak dapat memuatkan produk ini.",
+    zh: "无法加载此商品。"
+  },
+  "shop.detail.errorBody": {
+    en: "Please return to the catalogue and try again.",
+    bm: "Sila kembali ke katalog dan cuba lagi.",
+    zh: "请返回商品目录后重试。"
+  },
+  "shop.detail.askStore": {
+    en: "Ask the store on WhatsApp",
+    bm: "Tanya kedai di WhatsApp",
+    zh: "通过 WhatsApp 咨询门店"
+  },
 
   /* ---- shop: footer ---- */
   "shop.footer.about": {

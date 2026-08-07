@@ -4767,3 +4767,2286 @@ body:has(.support-chat-widget) .notification-region--toasts {
   .support-inbox__layout,
   .support-inbox__message { border: 2px solid CanvasText; background: Canvas; color: CanvasText; box-shadow: none; }
 }
+
+/* ---------- Storefront 3a Worklist: approved desktop listing surface ---------- */
+@media (min-width: 1024px) {
+  .storefront-app-shell {
+    background: #e8e4dc;
+  }
+
+  .storefront-shell {
+    --worklist-ground: #f5f2ec;
+    --worklist-surface: #fffefb;
+    --worklist-field: #fbf9f4;
+    --worklist-ink: #17191a;
+    --worklist-ink-2: #4a4d47;
+    --worklist-ink-3: #55584f;
+    --worklist-ink-4: #6e6b63;
+    --worklist-ink-5: #8a867d;
+    --worklist-line: #e4dfd5;
+    --worklist-line-2: #ddd7cb;
+    --worklist-line-3: #c9c2b4;
+    --worklist-line-4: #d8d2c6;
+    --worklist-line-5: #efebe3;
+    --worklist-green-deep: #14342a;
+    --worklist-green: #2a6a50;
+    --worklist-green-on-dark: #8fb3a2;
+    --worklist-orange: #d2542a;
+    --worklist-grey: #9a938a;
+    --worklist-missing: #f2efe8;
+    --worklist-display: Archivo, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --worklist-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    --worklist-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    width: min(1440px, 100%);
+    margin: 0 auto;
+    border-inline: 1px solid #d3cdc1;
+    background: var(--worklist-ground);
+    color: var(--worklist-ink);
+    font-family: var(--worklist-sans);
+  }
+
+  .storefront-shell :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--worklist-green-deep);
+    outline-offset: 2px;
+  }
+
+  .storefront-shell .worklist-header {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    width: 100%;
+    max-width: none;
+    height: 66px;
+    margin: 0;
+    padding: 0 36px;
+    border-bottom: 1px solid var(--worklist-line);
+    background: var(--worklist-surface);
+  }
+
+  .storefront-shell .worklist-logo {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 10px;
+    color: var(--worklist-ink);
+    text-decoration: none;
+  }
+
+  .storefront-shell .worklist-logo .ekoway-mark {
+    width: 24px;
+    height: 24px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .storefront-shell .worklist-logo .ekoway-mark img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  .storefront-shell .worklist-logo__word {
+    font-family: var(--worklist-display);
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+  }
+
+  .storefront-shell .worklist-logo > i {
+    width: 1px;
+    height: 16px;
+    background: var(--worklist-line);
+  }
+
+  .storefront-shell .worklist-logo__sub {
+    color: var(--worklist-ink-5);
+    font-family: var(--worklist-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+  }
+
+  .storefront-shell .worklist-search {
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    width: auto;
+    max-width: 520px;
+    height: 38px;
+    min-width: 260px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--worklist-line-4);
+    border-radius: 0;
+    background: var(--worklist-field);
+    box-shadow: none;
+  }
+
+  .storefront-shell .worklist-search input {
+    flex: 1 1 auto;
+    width: auto;
+    height: 100%;
+    min-width: 0;
+    padding: 0 12px;
+    border: 0;
+    background: transparent;
+    color: var(--worklist-ink);
+    font: 13.5px var(--worklist-sans);
+  }
+
+  .storefront-shell .worklist-search input::placeholder {
+    color: var(--worklist-ink-5);
+  }
+
+  .storefront-shell .worklist-search button {
+    align-self: stretch;
+    padding: 0 16px;
+    border: 0;
+    background: var(--worklist-green-deep);
+    color: var(--worklist-ground);
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .storefront-shell .worklist-utils {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 20px;
+    margin-left: auto;
+  }
+
+  .storefront-shell .worklist-utils .lang-toggle {
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--worklist-line);
+    font-size: 11.5px;
+    letter-spacing: 0;
+  }
+
+  .storefront-shell .worklist-utils .lang-toggle .sep {
+    display: none;
+  }
+
+  .storefront-shell .worklist-utils .lang-toggle [data-lang] {
+    min-width: auto;
+    padding: 3px 8px;
+    color: var(--worklist-ink-4);
+  }
+
+  .storefront-shell .worklist-utils .lang-toggle [data-lang].on {
+    background: var(--worklist-green-deep);
+    color: var(--worklist-ground);
+  }
+
+  .storefront-shell .worklist-utils .shop-header-account,
+  .storefront-shell .worklist-utils .shop-header-cart {
+    min-height: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--worklist-ink);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .storefront-shell .worklist-utils .shop-header-account:hover,
+  .storefront-shell .worklist-utils .shop-header-cart:hover {
+    color: var(--worklist-green-deep);
+    background: transparent;
+  }
+
+  .storefront-shell .worklist-utils .shop-header-cart-count {
+    display: inline-grid;
+    min-width: 23px;
+    height: 20px;
+    padding: 2px 6px;
+    border-radius: 0;
+    background: var(--worklist-ink);
+    color: var(--worklist-ground);
+    font: 11px var(--worklist-mono);
+  }
+
+  .storefront-shell .dept-chip-bar {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    width: 100%;
+    height: 46px;
+    margin: 0;
+    padding: 0 36px;
+    overflow: hidden;
+    border-bottom: 1px solid var(--worklist-line);
+    background: var(--worklist-surface);
+  }
+
+  .storefront-shell .dept-chip-list {
+    display: flex;
+    align-items: stretch;
+    gap: 26px;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .storefront-shell .dept-chip-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .storefront-shell .dept-chip {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--worklist-ink-2);
+    font-size: 13.5px;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .storefront-shell .dept-chip:hover {
+    color: var(--worklist-green-deep);
+  }
+
+  .storefront-shell .dept-chip--on {
+    background: transparent;
+    color: var(--worklist-ink);
+    font-weight: 600;
+    box-shadow: inset 0 -2px var(--worklist-green-deep);
+  }
+
+  .storefront-shell .dept-whatsapp {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 8px;
+    margin-left: auto;
+    padding-left: 24px;
+    background: var(--worklist-surface);
+    color: var(--worklist-green);
+    font-size: 12.5px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .storefront-shell .dept-whatsapp i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--worklist-green);
+  }
+
+  .storefront-shell .worklist-job-band {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    padding: 16px 36px;
+    background: var(--worklist-green-deep);
+  }
+
+  .storefront-shell .worklist-job-band__label {
+    flex: 0 0 78px;
+    width: 78px;
+    color: var(--worklist-green-on-dark);
+    font: 9.5px/1.5 var(--worklist-mono);
+    letter-spacing: 0.2em;
+    white-space: pre-line;
+    text-transform: uppercase;
+  }
+
+  .storefront-shell .worklist-job-band__options {
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .storefront-shell .worklist-job-band__options button {
+    padding: 8px 14px;
+    border: 1px solid rgba(245, 242, 236, 0.28);
+    background: transparent;
+    color: #cdddd5;
+    font-size: 13.5px;
+    white-space: nowrap;
+  }
+
+  .storefront-shell .worklist-job-band__options button[aria-pressed="true"] {
+    border-color: var(--worklist-ground);
+    background: var(--worklist-ground);
+    color: var(--worklist-green-deep);
+    font-weight: 600;
+  }
+
+  .storefront-shell .worklist-job-band__result {
+    flex: 0 0 auto;
+    margin: 0;
+    padding-left: 28px;
+    border-left: 1px solid rgba(245, 242, 236, 0.18);
+    text-align: right;
+  }
+
+  .storefront-shell .worklist-job-band__result dt {
+    margin-bottom: 5px;
+    color: var(--worklist-green-on-dark);
+    font: 9.5px var(--worklist-mono);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .storefront-shell .worklist-job-band__result dd {
+    margin: 0;
+    color: var(--worklist-ground);
+    font: 600 16px var(--worklist-display);
+    letter-spacing: -0.01em;
+  }
+
+  .storefront-shell .worklist-catalogue-shell {
+    display: grid;
+    grid-template-columns: 296px minmax(0, 1fr);
+    gap: 32px;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 26px 36px 60px;
+    background: var(--worklist-ground);
+  }
+
+  .storefront-shell .worklist-catalogue-shell--all {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .storefront-shell .worklist-context-rail {
+    width: 296px;
+  }
+
+  .storefront-shell .worklist-context-rail h1 {
+    margin: 0;
+    color: var(--worklist-ink);
+    font: 700 31px/1.06 var(--worklist-display);
+    letter-spacing: -0.028em;
+  }
+
+  .storefront-shell .worklist-context-rail__note {
+    margin: 10px 0 0;
+    color: var(--worklist-ink-3);
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+
+  .storefront-shell .worklist-context-rail__atmosphere {
+    display: flex;
+    align-items: flex-end;
+    height: 230px;
+    margin-top: 18px;
+    padding: 14px;
+    border: 1px solid var(--worklist-line-2);
+    background: repeating-linear-gradient(135deg, #e7e2d9 0 7px, #efebe3 7px 14px);
+  }
+
+  .storefront-shell .worklist-context-rail__atmosphere p {
+    margin: 0;
+    padding: 6px 8px;
+    border: 1px solid var(--worklist-line-2);
+    background: var(--worklist-ground);
+    color: var(--worklist-ink-4);
+    font: 10.5px/1.6 var(--worklist-mono);
+  }
+
+  .storefront-shell .worklist-context-rail__atmosphere span {
+    display: block;
+  }
+
+  .storefront-shell .worklist-context-rail__disclosure {
+    margin: 8px 0 0;
+    color: var(--worklist-ink-5);
+    font-size: 11.5px;
+    line-height: 1.45;
+  }
+
+  .storefront-shell .worklist-context-rail__departments {
+    margin-top: 24px;
+    padding-top: 12px;
+    border-top: 1px solid var(--worklist-line-2);
+  }
+
+  .storefront-shell .worklist-context-rail__departments h2 {
+    margin: 0 0 6px;
+    color: var(--worklist-ink-5);
+    font: 400 9.5px var(--worklist-mono);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .storefront-shell .worklist-context-rail__departments > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--worklist-line);
+  }
+
+  .storefront-shell .worklist-context-rail__departments span {
+    font-size: 13.5px;
+  }
+
+  .storefront-shell .worklist-context-rail__departments b {
+    color: var(--worklist-ink-4);
+    font: 400 12px var(--worklist-mono);
+  }
+
+  .storefront-shell .worklist-product-field {
+    min-width: 0;
+  }
+
+  .storefront-shell .worklist-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--worklist-line-2);
+  }
+
+  .storefront-shell .worklist-toolbar__count {
+    color: var(--worklist-ink-3);
+    font: 12px var(--worklist-mono);
+  }
+
+  .storefront-shell .worklist-toolbar__controls {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+  }
+
+  .storefront-shell .worklist-control,
+  .storefront-shell .worklist-sort {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 13px;
+    border: 1px solid var(--worklist-line-3);
+    border-radius: 0;
+    background: var(--worklist-surface);
+    color: var(--worklist-ink);
+    font-size: 12.5px;
+    font-weight: 500;
+  }
+
+  .storefront-shell .worklist-control > span {
+    padding: 1px 5px;
+    background: var(--worklist-green-deep);
+    color: var(--worklist-ground);
+    font: 10.5px var(--worklist-mono);
+  }
+
+  .storefront-shell .worklist-sort select {
+    max-width: 160px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+  }
+
+  .storefront-shell .shop-card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    padding: 20px 0 40px;
+  }
+
+  .storefront-shell .shop-product-card {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--worklist-line);
+    border-radius: 0;
+    background: var(--worklist-surface);
+    box-shadow: none;
+  }
+
+  .storefront-shell .shop-product-card .shop-listing-media {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 176px;
+    flex: 0 0 176px;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-bottom: 1px solid var(--worklist-line);
+    border-radius: 0;
+    background: var(--worklist-surface);
+  }
+
+  .storefront-shell .shop-product-card .shop-listing-media img {
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+    object-fit: contain;
+  }
+
+  .storefront-shell .shop-missing-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    height: 100%;
+    padding: 0 18px;
+    background-color: var(--worklist-missing);
+    background-image: repeating-linear-gradient(90deg, rgba(20, 52, 42, 0.05) 0 1px, transparent 1px 8px);
+    color: var(--worklist-ink-4);
+    text-align: center;
+  }
+
+  .storefront-shell .shop-missing-image-mark {
+    width: 26px;
+    height: 26px;
+    border: 1px solid var(--worklist-green-deep);
+    background: linear-gradient(135deg, transparent 49.5%, var(--worklist-green-deep) 49.5%, var(--worklist-green-deep) 50.5%, transparent 50.5%);
+    opacity: 0.55;
+  }
+
+  .storefront-shell .shop-missing-image-department,
+  .storefront-shell .shop-missing-image-caption {
+    display: block;
+  }
+
+  .storefront-shell .shop-missing-image-department {
+    margin-bottom: 5px;
+    color: var(--worklist-green-deep);
+    font: 9px var(--worklist-mono);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .storefront-shell .shop-missing-image-caption {
+    margin: 0;
+    padding: 0;
+    color: var(--worklist-ink-4);
+    font-size: 11.5px;
+    line-height: 1.4;
+  }
+
+  .storefront-shell .shop-product-card-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 0;
+    padding: 14px 15px 15px;
+  }
+
+  .storefront-shell .shop-product-category {
+    margin-bottom: 7px;
+    color: var(--worklist-green);
+    font: 9px var(--worklist-mono);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .storefront-shell .shop-product-card h2 {
+    height: 39px;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  .storefront-shell .shop-product-card .shop-listing-name-link {
+    display: block;
+    width: 100%;
+    height: 39px;
+    overflow: hidden;
+    color: var(--worklist-ink);
+    font: 500 14.5px/1.34 var(--worklist-sans);
+    text-wrap: pretty;
+  }
+
+  .storefront-shell .shop-product-card__commerce {
+    display: grid;
+    gap: 7px;
+    margin-top: 12px;
+  }
+
+  .storefront-shell .shop-product-card .shop-price {
+    color: var(--worklist-ink);
+    font: 700 20px var(--worklist-display);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  .storefront-shell .shop-product-card .avail {
+    gap: 7px;
+    color: var(--worklist-ink-2);
+    font-size: 12px;
+    font-weight: 400;
+  }
+
+  .storefront-shell .shop-product-card .avail i {
+    width: 7px;
+    height: 7px;
+    flex: 0 0 7px;
+  }
+
+  .storefront-shell .shop-product-card .avail--in i {
+    background: var(--worklist-green);
+  }
+
+  .storefront-shell .shop-product-card .avail--low i {
+    background: var(--worklist-orange);
+  }
+
+  .storefront-shell .shop-product-card .avail--out i {
+    background: var(--worklist-grey);
+  }
+
+  .storefront-shell .shop-product-card__actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 13px;
+    border-top: 1px solid var(--worklist-line-5);
+  }
+
+  .storefront-shell .worklist-view-product {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--worklist-green-deep);
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .storefront-shell .shop-product-card .shop-add-to-cart {
+    min-height: 0;
+    padding: 7px 12px;
+    border: 1px solid var(--worklist-ink);
+    border-radius: 0;
+    background: transparent;
+    color: var(--worklist-ink);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .storefront-shell .shop-product-card .shop-add-to-cart:hover:not(:disabled) {
+    border-color: var(--worklist-green-deep);
+    background: var(--worklist-green-deep);
+    color: var(--worklist-ground);
+  }
+
+  .storefront-shell .shop-product-card .shop-add-to-cart:disabled {
+    border-color: var(--worklist-line-3);
+    background: transparent;
+    color: var(--worklist-ink-5);
+  }
+
+  .storefront-shell .shop-listing-skeleton {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    padding-top: 20px;
+  }
+
+  .storefront-shell .shop-listing-skeleton-row {
+    display: grid;
+    gap: 14px;
+    height: 370px;
+    padding: 0;
+    border: 1px solid var(--worklist-line);
+    background: var(--worklist-surface);
+  }
+
+  .storefront-shell .shop-listing-skeleton-row .shop-skeleton-media {
+    width: 100%;
+    height: 176px;
+  }
+
+  .storefront-shell .shop-listing-skeleton-row .shop-skeleton-line {
+    width: calc(100% - 30px);
+    margin-inline: 15px;
+  }
+
+  .storefront-shell .worklist-filter-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    border: 0;
+    background: rgba(23, 25, 26, 0.38);
+  }
+
+  .storefront-shell .worklist-filter-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 71;
+    display: grid;
+    align-content: start;
+    gap: 22px;
+    width: min(380px, 100vw);
+    height: 100vh;
+    padding: 26px;
+    overflow-y: auto;
+    border-left: 1px solid var(--worklist-line-2);
+    background: var(--worklist-surface);
+    box-shadow: -20px 0 48px rgba(23, 25, 26, 0.14);
+  }
+
+  .storefront-shell .worklist-filter-drawer__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--worklist-line);
+  }
+
+  .storefront-shell .worklist-filter-drawer__header h2 {
+    margin: 0;
+    font: 700 24px var(--worklist-display);
+  }
+
+  .storefront-shell .worklist-filter-drawer__header button {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--worklist-line-3);
+    background: transparent;
+  }
+
+  .storefront-shell .worklist-filter-drawer__header svg {
+    width: 18px;
+  }
+
+  .storefront-shell .worklist-filter-drawer__clear {
+    justify-self: start;
+    padding: 8px 12px;
+    border: 1px solid var(--worklist-line-3);
+    background: var(--worklist-surface);
+    color: var(--worklist-green-deep);
+    font-weight: 600;
+  }
+
+  .storefront-shell .worklist-offline-notice {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: 34px;
+    margin: 0 0 10px;
+    padding: 5px 9px;
+    border: 1px solid var(--worklist-line-2);
+    border-left: 3px solid var(--worklist-green-deep);
+    border-radius: 0;
+    background: var(--worklist-field);
+    color: var(--worklist-ink-3);
+    font-size: 11.5px;
+    font-weight: 400;
+    line-height: 1.35;
+    text-align: left;
+  }
+
+  .storefront-shell .worklist-offline-notice button {
+    min-height: 24px;
+    padding: 3px 8px;
+    border: 1px solid var(--worklist-line-3);
+    border-radius: 0;
+    background: var(--worklist-surface);
+    color: var(--worklist-green-deep);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+}
+
+/* 3a Worklist: derived responsive adaptation. Desktop tokens above remain authoritative. */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .storefront-shell .worklist-header,
+  .storefront-shell .dept-chip-bar {
+    padding-inline: 24px;
+  }
+
+  .storefront-shell .worklist-job-band {
+    padding-inline: 24px;
+  }
+
+  .storefront-shell .worklist-catalogue-shell {
+    grid-template-columns: 260px minmax(0, 1fr);
+    padding-inline: 24px;
+  }
+
+  .storefront-shell .worklist-context-rail {
+    width: 260px;
+  }
+
+  .storefront-shell .shop-card-grid,
+  .storefront-shell .shop-listing-skeleton {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1023px) {
+  .storefront-shell {
+    --worklist-ground: #f5f2ec;
+    --worklist-surface: #fffefb;
+    --worklist-field: #fbf9f4;
+    --worklist-ink: #17191a;
+    --worklist-ink-2: #4a4d47;
+    --worklist-ink-3: #55584f;
+    --worklist-ink-4: #6e6b63;
+    --worklist-ink-5: #8a867d;
+    --worklist-line: #e4dfd5;
+    --worklist-line-2: #ddd7cb;
+    --worklist-line-3: #c9c2b4;
+    --worklist-line-4: #d8d2c6;
+    --worklist-line-5: #efebe3;
+    --worklist-green-deep: #14342a;
+    --worklist-green: #2a6a50;
+    --worklist-green-on-dark: #8fb3a2;
+    --worklist-orange: #d2542a;
+    --worklist-grey: #9a938a;
+    --worklist-missing: #f2efe8;
+    --worklist-display: Archivo, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --worklist-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    --worklist-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    background: var(--worklist-ground);
+    color: var(--worklist-ink);
+    font-family: var(--worklist-sans);
+  }
+
+  .storefront-shell :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--worklist-green-deep);
+    outline-offset: 2px;
+  }
+
+  .storefront-shell .worklist-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    width: 100%;
+    margin: 0;
+    padding: 12px 16px 14px;
+    border-bottom: 1px solid var(--worklist-line);
+    background: var(--worklist-surface);
+  }
+
+  .storefront-shell .worklist-logo {
+    display: flex;
+    grid-column: 1;
+    grid-row: 1;
+    align-items: center;
+    min-width: 0;
+    gap: 8px;
+    color: var(--worklist-ink);
+    text-decoration: none;
+  }
+
+  .storefront-shell .worklist-logo .ekoway-mark {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .storefront-shell .worklist-logo .ekoway-mark img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  .storefront-shell .worklist-logo__word {
+    font-family: var(--worklist-display);
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+  }
+
+  .storefront-shell .worklist-logo > i,
+  .storefront-shell .worklist-logo__sub {
+    display: none;
+  }
+
+  .storefront-shell .worklist-utils {
+    display: flex;
+    grid-column: 2;
+    grid-row: 1;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    margin: 0;
+  }
+
+  .storefront-shell .worklist-utils .lang-toggle {
+    display: inline-flex;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--worklist-line);
+    font-size: 11.5px;
+    letter-spacing: 0;
+  }
+
+  .storefront-shell .worklist-utils .lang-toggle .sep {
+    display: none;
+  }
+
+  .storefront-shell .worklist-utils .lang-toggle [data-lang] {
+    min-width: 0;
+    padding: 5px 7px;
+    color: var(--worklist-ink-4);
+  }
+
+  .storefront-shell .worklist-utils .lang-toggle [data-lang].on {
+    background: var(--worklist-green-deep);
+    color: var(--worklist-ground);
+  }
+
+  .storefront-shell .worklist-utils .shop-header-account,
+  .storefront-shell .worklist-utils .shop-header-cart {
+    min-height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--worklist-ink);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .storefront-shell .worklist-utils .shop-header-cart {
+    gap: 5px;
+  }
+
+  .storefront-shell .worklist-utils .shop-header-cart-count {
+    display: inline-grid;
+    min-width: 20px;
+    height: 20px;
+    padding: 2px 5px;
+    border-radius: 0;
+    background: var(--worklist-ink);
+    color: var(--worklist-ground);
+    font: 11px var(--worklist-mono);
+  }
+
+  .storefront-shell .worklist-search {
+    display: flex;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    align-items: center;
+    width: 100%;
+    height: 42px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--worklist-line-4);
+    border-radius: 0;
+    background: var(--worklist-field);
+    box-shadow: none;
+  }
+
+  .storefront-shell .worklist-search input {
+    flex: 1 1 auto;
+    width: 0;
+    min-width: 0;
+    height: 100%;
+    padding: 0 12px;
+    border: 0;
+    background: transparent;
+    color: var(--worklist-ink);
+    font: 14px var(--worklist-sans);
+  }
+
+  .storefront-shell .worklist-search button {
+    align-self: stretch;
+    padding: 0 16px;
+    border: 0;
+    background: var(--worklist-green-deep);
+    color: var(--worklist-ground);
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+
+  .storefront-shell .dept-chip-bar {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    height: 54px;
+    margin: 0;
+    padding: 0 16px;
+    overflow: hidden;
+    border-bottom: 1px solid var(--worklist-line);
+    background: var(--worklist-surface);
+  }
+
+  .storefront-shell .dept-chip-list {
+    display: flex;
+    align-items: stretch;
+    gap: 20px;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .storefront-shell .dept-chip-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .storefront-shell .dept-chip {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--worklist-ink-2);
+    font-size: 13.5px;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .storefront-shell .dept-chip--on {
+    background: transparent;
+    color: var(--worklist-ink);
+    font-weight: 600;
+    box-shadow: inset 0 -2px var(--worklist-green-deep);
+  }
+
+  .storefront-shell .dept-whatsapp {
+    display: none;
+  }
+
+  .storefront-shell .worklist-job-band {
+    display: block;
+    padding: 12px 16px;
+    background: var(--worklist-green-deep);
+  }
+
+  .storefront-shell .worklist-job-band__label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--worklist-green-on-dark);
+    font: 9.5px/1.5 var(--worklist-mono);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .storefront-shell .worklist-job-band__options {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .storefront-shell .worklist-job-band__options::-webkit-scrollbar {
+    display: none;
+  }
+
+  .storefront-shell .worklist-job-band__options button {
+    min-height: 44px;
+    padding: 8px 14px;
+    border: 1px solid rgba(245, 242, 236, 0.28);
+    background: transparent;
+    color: #cdddd5;
+    font-size: 13.5px;
+    white-space: nowrap;
+  }
+
+  .storefront-shell .worklist-job-band__options button[aria-pressed="true"] {
+    border-color: var(--worklist-ground);
+    background: var(--worklist-ground);
+    color: var(--worklist-green-deep);
+    font-weight: 600;
+  }
+
+  .storefront-shell .worklist-job-band__result {
+    margin: 10px 0 0;
+    padding: 10px 0 0;
+    border-top: 1px solid rgba(245, 242, 236, 0.18);
+    text-align: left;
+  }
+
+  .storefront-shell .worklist-job-band__result dt {
+    margin-bottom: 4px;
+    color: var(--worklist-green-on-dark);
+    font: 9.5px var(--worklist-mono);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .storefront-shell .worklist-job-band__result dd {
+    margin: 0;
+    color: var(--worklist-ground);
+    font: 600 16px var(--worklist-display);
+  }
+
+  .storefront-shell .worklist-catalogue-shell {
+    display: block;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 20px 16px 48px;
+    background: var(--worklist-ground);
+  }
+
+  .storefront-shell .worklist-context-rail {
+    display: none;
+  }
+
+  .storefront-shell .worklist-context-mobile {
+    display: block;
+    margin: 0 0 20px;
+  }
+
+  .storefront-shell .worklist-context-mobile h1 {
+    margin: 0;
+    color: var(--worklist-ink);
+    font: 700 28px/1.08 var(--worklist-display);
+    letter-spacing: -0.028em;
+  }
+
+  .storefront-shell .worklist-context-mobile > p {
+    margin: 8px 0 0;
+    color: var(--worklist-ink-3);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .storefront-shell .worklist-context-mobile details {
+    margin-top: 12px;
+    border-top: 1px solid var(--worklist-line-2);
+    border-bottom: 1px solid var(--worklist-line-2);
+  }
+
+  .storefront-shell .worklist-context-mobile summary {
+    min-height: 44px;
+    padding: 12px 0;
+    color: var(--worklist-green-deep);
+    cursor: pointer;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+
+  .storefront-shell .worklist-context-mobile__details {
+    padding: 0 0 14px;
+  }
+
+  .storefront-shell .worklist-context-mobile__atmosphere {
+    display: flex;
+    align-items: flex-end;
+    min-height: 150px;
+    padding: 14px;
+    border: 1px solid var(--worklist-line-2);
+    background: repeating-linear-gradient(135deg, #e7e2d9 0 7px, #efebe3 7px 14px);
+  }
+
+  .storefront-shell .worklist-context-mobile__atmosphere p {
+    margin: 0;
+    padding: 6px 8px;
+    border: 1px solid var(--worklist-line-2);
+    background: var(--worklist-ground);
+    color: var(--worklist-ink-4);
+    font: 10.5px/1.6 var(--worklist-mono);
+  }
+
+  .storefront-shell .worklist-context-mobile__atmosphere span {
+    display: block;
+  }
+
+  .storefront-shell .worklist-context-mobile__disclosure {
+    margin: 8px 0 0;
+    color: var(--worklist-ink-5);
+    font-size: 11.5px;
+    line-height: 1.45;
+  }
+
+  .storefront-shell .worklist-context-mobile__departments {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--worklist-line-2);
+  }
+
+  .storefront-shell .worklist-context-mobile__departments h2 {
+    margin: 0 0 6px;
+    color: var(--worklist-ink-5);
+    font: 400 9.5px var(--worklist-mono);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .storefront-shell .worklist-context-mobile__departments > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--worklist-line);
+  }
+
+  .storefront-shell .worklist-context-mobile__departments span {
+    font-size: 13.5px;
+  }
+
+  .storefront-shell .worklist-context-mobile__departments b {
+    color: var(--worklist-ink-4);
+    font: 400 12px var(--worklist-mono);
+  }
+
+  .storefront-shell .worklist-product-field {
+    min-width: 0;
+  }
+
+  .storefront-shell .worklist-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--worklist-line-2);
+  }
+
+  .storefront-shell .worklist-toolbar__count {
+    flex: 1 0 100%;
+    color: var(--worklist-ink-3);
+    font: 12px var(--worklist-mono);
+  }
+
+  .storefront-shell .worklist-toolbar__controls {
+    display: flex;
+    flex: 1 1 auto;
+    gap: 10px;
+    min-width: 0;
+    margin-left: 0;
+  }
+
+  .storefront-shell .worklist-control,
+  .storefront-shell .worklist-sort {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border: 1px solid var(--worklist-line-3);
+    border-radius: 0;
+    background: var(--worklist-surface);
+    color: var(--worklist-ink);
+    font-size: 12.5px;
+    font-weight: 500;
+  }
+
+  .storefront-shell .worklist-control > span {
+    padding: 1px 5px;
+    background: var(--worklist-green-deep);
+    color: var(--worklist-ground);
+    font: 10.5px var(--worklist-mono);
+  }
+
+  .storefront-shell .worklist-sort {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .storefront-shell .worklist-sort select {
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+  }
+
+  .storefront-shell .shop-card-grid,
+  .storefront-shell .shop-listing-skeleton {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    padding: 20px 0 40px;
+  }
+
+  .storefront-shell .shop-product-card {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--worklist-line);
+    border-radius: 0;
+    background: var(--worklist-surface);
+    box-shadow: none;
+  }
+
+  .storefront-shell .shop-product-card .shop-listing-media {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 176px;
+    flex: 0 0 176px;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-bottom: 1px solid var(--worklist-line);
+    border-radius: 0;
+    background: var(--worklist-surface);
+  }
+
+  .storefront-shell .shop-product-card .shop-listing-media img {
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+    object-fit: contain;
+  }
+
+  .storefront-shell .shop-missing-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    height: 100%;
+    padding: 0 18px;
+    background-color: var(--worklist-missing);
+    background-image: repeating-linear-gradient(90deg, rgba(20, 52, 42, 0.05) 0 1px, transparent 1px 8px);
+    color: var(--worklist-ink-4);
+    text-align: center;
+  }
+
+  .storefront-shell .shop-missing-image-mark {
+    width: 26px;
+    height: 26px;
+    border: 1px solid var(--worklist-green-deep);
+    background: linear-gradient(135deg, transparent 49.5%, var(--worklist-green-deep) 49.5%, var(--worklist-green-deep) 50.5%, transparent 50.5%);
+    opacity: 0.55;
+  }
+
+  .storefront-shell .shop-missing-image-department {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--worklist-green-deep);
+    font: 9px var(--worklist-mono);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .storefront-shell .shop-missing-image-caption {
+    display: block;
+    color: var(--worklist-ink-4);
+    font-size: 11.5px;
+    line-height: 1.4;
+  }
+
+  .storefront-shell .shop-product-card-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 0;
+    padding: 14px 15px 15px;
+  }
+
+  .storefront-shell .shop-product-category {
+    margin-bottom: 7px;
+    color: var(--worklist-green);
+    font: 9px var(--worklist-mono);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .storefront-shell .shop-product-card h2,
+  .storefront-shell .shop-product-card .shop-listing-name-link {
+    height: auto;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  .storefront-shell .shop-product-card .shop-listing-name-link {
+    display: -webkit-box;
+    width: 100%;
+    color: var(--worklist-ink);
+    font: 500 14.5px/1.34 var(--worklist-sans);
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    text-wrap: pretty;
+  }
+
+  .storefront-shell .shop-product-card__commerce {
+    display: grid;
+    gap: 7px;
+    margin-top: 12px;
+  }
+
+  .storefront-shell .shop-product-card .shop-price {
+    color: var(--worklist-ink);
+    font: 700 20px var(--worklist-display);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  .storefront-shell .shop-product-card .avail {
+    gap: 7px;
+    color: var(--worklist-ink-2);
+    font-size: 12px;
+  }
+
+  .storefront-shell .shop-product-card .avail i {
+    width: 7px;
+    height: 7px;
+    flex: 0 0 7px;
+  }
+
+  .storefront-shell .shop-product-card .avail--in i {
+    background: var(--worklist-green);
+  }
+
+  .storefront-shell .shop-product-card .avail--low i {
+    background: var(--worklist-orange);
+  }
+
+  .storefront-shell .shop-product-card .avail--out i {
+    background: var(--worklist-grey);
+  }
+
+  .storefront-shell .shop-product-card__actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: auto;
+    padding-top: 13px;
+    border-top: 1px solid var(--worklist-line-5);
+  }
+
+  .storefront-shell .worklist-view-product,
+  .storefront-shell .shop-product-card .shop-add-to-cart {
+    min-height: 44px;
+  }
+
+  .storefront-shell .worklist-view-product {
+    display: inline-flex;
+    align-items: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--worklist-green-deep);
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .storefront-shell .shop-product-card .shop-add-to-cart {
+    padding: 7px 12px;
+    border: 1px solid var(--worklist-ink);
+    border-radius: 0;
+    background: transparent;
+    color: var(--worklist-ink);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .storefront-shell .worklist-filter-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 71;
+    display: grid;
+    align-content: start;
+    gap: 22px;
+    width: min(380px, 100vw);
+    height: 100dvh;
+    padding: 20px 16px;
+    overflow-y: auto;
+    border-left: 1px solid var(--worklist-line-2);
+    background: var(--worklist-surface);
+  }
+
+  .storefront-shell .worklist-filter-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    border: 0;
+    background: rgba(23, 25, 26, 0.38);
+  }
+
+  .storefront-shell .worklist-offline-notice {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 44px;
+    margin: 0 0 10px;
+    padding: 7px 9px;
+    border: 1px solid var(--worklist-line-2);
+    border-left: 3px solid var(--worklist-green-deep);
+    border-radius: 0;
+    background: var(--worklist-field);
+    color: var(--worklist-ink-3);
+    font-size: 11.5px;
+    line-height: 1.35;
+    text-align: left;
+  }
+
+  .storefront-shell .worklist-offline-notice button {
+    min-height: 32px;
+    padding: 3px 8px;
+    border: 1px solid var(--worklist-line-3);
+    border-radius: 0;
+    background: var(--worklist-surface);
+    color: var(--worklist-green-deep);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 390px) {
+  .storefront-shell .worklist-context-mobile__atmosphere,
+  .storefront-shell .worklist-context-mobile__disclosure {
+    display: none;
+  }
+}
+
+@media (max-width: 359px) {
+  .storefront-shell .worklist-header {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .storefront-shell .worklist-utils {
+    grid-column: 1;
+    grid-row: 2;
+    justify-content: flex-start;
+  }
+
+  .storefront-shell .worklist-search {
+    grid-row: 3;
+  }
+
+  .storefront-shell .worklist-utils .lang-toggle [data-lang] {
+    padding-inline: 6px;
+  }
+}
+
+/* ---------- ProductDetailView Pass 3: isolated continuation of the approved 3a surface ---------- */
+.storefront-shell .pdp-shell {
+  min-width: 0;
+  background: var(--worklist-ground);
+  color: var(--worklist-ink);
+  font-family: var(--worklist-sans);
+}
+
+.storefront-shell .pdp-shell :is(a, button, input):focus-visible {
+  outline: 2px solid var(--worklist-green-deep);
+  outline-offset: 2px;
+}
+
+.storefront-shell .pdp-context-bar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  height: 44px;
+  min-width: 0;
+  padding: 0 36px;
+  border-bottom: 1px solid var(--worklist-line-2);
+}
+
+.storefront-shell .pdp-context-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: var(--worklist-green-deep);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.storefront-shell .pdp-context-back > span:first-child {
+  font-family: var(--worklist-mono);
+}
+
+.storefront-shell .pdp-context-back__mobile,
+.storefront-shell .pdp-context-count {
+  display: none;
+}
+
+.storefront-shell .pdp-context-divider {
+  width: 1px;
+  height: 15px;
+  flex: 0 0 1px;
+  background: var(--worklist-line-2);
+}
+
+.storefront-shell .pdp-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  color: var(--worklist-ink-4);
+  font-size: 12.5px;
+}
+
+.storefront-shell .pdp-breadcrumb button {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: var(--worklist-ink-4);
+  white-space: nowrap;
+}
+
+.storefront-shell .pdp-breadcrumb button:hover {
+  color: var(--worklist-green-deep);
+}
+
+.storefront-shell .pdp-breadcrumb i {
+  color: #b4ac9e;
+  font-style: normal;
+}
+
+.storefront-shell .pdp-breadcrumb b {
+  max-width: 470px;
+  overflow: hidden;
+  color: var(--worklist-ink-2);
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.storefront-shell .pdp-context-job {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0 0 0 auto;
+  color: var(--worklist-ink-4);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.storefront-shell .pdp-context-job b {
+  color: var(--worklist-ink-2);
+  font-weight: 500;
+}
+
+.storefront-shell .pdp-primary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 456px;
+  align-items: start;
+  gap: 32px;
+  padding: 26px 36px 0;
+}
+
+.storefront-shell .pdp-viewer {
+  position: relative;
+  height: 500px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--worklist-line);
+  background: var(--worklist-surface);
+}
+
+.storefront-shell .pdp-viewer__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 28px;
+  background: var(--worklist-surface);
+  object-fit: contain;
+  object-position: center;
+}
+
+.storefront-shell .pdp-missing-image {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  width: 100%;
+  height: 100%;
+  padding: 0 18px;
+  background-color: var(--worklist-missing);
+  background-image: repeating-linear-gradient(90deg, rgba(20, 52, 42, 0.05) 0 1px, transparent 1px 8px);
+  color: var(--worklist-ink-4);
+  text-align: center;
+}
+
+.storefront-shell .pdp-missing-image__mark {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--worklist-green-deep);
+  background: linear-gradient(135deg, transparent 49.5%, var(--worklist-green-deep) 49.5%, var(--worklist-green-deep) 50.5%, transparent 50.5%);
+  opacity: 0.55;
+}
+
+.storefront-shell .pdp-missing-image__department,
+.storefront-shell .pdp-missing-image__copy {
+  display: block;
+}
+
+.storefront-shell .pdp-missing-image__department {
+  margin-bottom: 8px;
+  color: var(--worklist-green-deep);
+  font: 10px var(--worklist-mono);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.storefront-shell .pdp-missing-image__copy {
+  color: var(--worklist-ink-4);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.storefront-shell .pdp-buy {
+  padding: 24px 24px 22px;
+  border: 1px solid var(--worklist-line);
+  background: var(--worklist-surface);
+}
+
+.storefront-shell .pdp-fallback-notice {
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  border: 1px solid var(--worklist-line-2);
+  background: var(--worklist-missing);
+}
+
+.storefront-shell .pdp-fallback-notice b {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--worklist-green-deep);
+  font: 9px var(--worklist-mono);
+  letter-spacing: 0.18em;
+}
+
+.storefront-shell .pdp-fallback-notice p {
+  margin: 0;
+  color: var(--worklist-ink-3);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.storefront-shell .pdp-buy__department {
+  color: var(--worklist-green);
+  font: 9.5px var(--worklist-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.storefront-shell .pdp-buy__name {
+  margin: 11px 0 0;
+  color: var(--worklist-ink);
+  font: 700 30px/1.13 var(--worklist-display);
+  letter-spacing: -0.026em;
+  text-wrap: pretty;
+}
+
+.storefront-shell .pdp-buy__rule {
+  height: 1px;
+  margin: 18px 0;
+  background: var(--worklist-line-5);
+}
+
+.storefront-shell .pdp-buy__price {
+  color: var(--worklist-ink);
+  font: 700 38px/1 var(--worklist-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.storefront-shell .pdp-stock {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 13px;
+  color: var(--worklist-ink-2);
+  font-size: 13.5px;
+}
+
+.storefront-shell .pdp-stock i {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
+}
+
+.storefront-shell .pdp-stock span {
+  white-space: nowrap;
+}
+
+.storefront-shell .pdp-stock--in i { background: var(--worklist-green); }
+.storefront-shell .pdp-stock--low i { background: var(--worklist-orange); }
+.storefront-shell .pdp-stock--out i { background: var(--worklist-grey); }
+
+.storefront-shell .pdp-primary-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.storefront-shell .pdp-quantity {
+  display: flex;
+  align-items: stretch;
+  height: 52px;
+  flex: 0 0 132px;
+  border: 1px solid var(--worklist-line-3);
+  background: var(--worklist-surface);
+}
+
+.storefront-shell .pdp-quantity button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 41px;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--worklist-ink-2);
+  font-size: 17px;
+}
+
+.storefront-shell .pdp-quantity input {
+  width: 48px;
+  min-width: 0;
+  border: 0;
+  border-right: 1px solid var(--worklist-line-5);
+  border-left: 1px solid var(--worklist-line-5);
+  background: transparent;
+  color: var(--worklist-ink);
+  font: 14px var(--worklist-mono);
+  text-align: center;
+}
+
+.storefront-shell .pdp-quantity :disabled {
+  color: var(--worklist-ink-5);
+  cursor: not-allowed;
+}
+
+.storefront-shell .pdp-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  flex: 1 1 auto;
+  border: 0;
+  background: var(--worklist-green-deep);
+  color: var(--worklist-ground);
+  font-size: 14.5px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.storefront-shell .pdp-add:disabled {
+  background: var(--worklist-line-2);
+  color: var(--worklist-ink-4);
+  cursor: not-allowed;
+}
+
+.storefront-shell .pdp-whatsapp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 46px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--worklist-line-3);
+  background: var(--worklist-surface);
+  color: var(--worklist-green);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.storefront-shell .pdp-whatsapp i {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: var(--worklist-green);
+}
+
+.storefront-shell .pdp-whatsapp--lead {
+  border-color: var(--worklist-green-deep);
+  color: var(--worklist-green-deep);
+}
+
+.storefront-shell .pdp-whatsapp--lead i { background: var(--worklist-green-deep); }
+
+.storefront-shell .pdp-buy__foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--worklist-line-5);
+}
+
+.storefront-shell .pdp-buy__foot button {
+  border: 0;
+  background: transparent;
+  color: var(--worklist-green-deep);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.storefront-shell .pdp-buy__foot em {
+  color: var(--worklist-ink-5);
+  font: 11px var(--worklist-mono);
+  font-style: normal;
+  white-space: nowrap;
+}
+
+.storefront-shell .pdp-verified {
+  margin: 22px 36px 0;
+  padding: 16px 22px 18px;
+  border: 1px solid var(--worklist-line);
+  background: var(--worklist-surface);
+}
+
+.storefront-shell .pdp-verified h2 {
+  margin: 0;
+  color: var(--worklist-ink-5);
+  font: 400 9.5px var(--worklist-mono);
+  letter-spacing: 0.2em;
+}
+
+.storefront-shell .pdp-verified dl {
+  display: flex;
+  align-items: stretch;
+  margin: 13px 0 0;
+}
+
+.storefront-shell .pdp-verified dl > div {
+  min-width: 0;
+  padding: 0 26px;
+  flex: 1 1 0;
+  border-left: 1px solid var(--worklist-line-5);
+}
+
+.storefront-shell .pdp-verified dl > div:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.storefront-shell .pdp-verified dt {
+  margin-bottom: 8px;
+  color: var(--worklist-ink-4);
+  font-size: 12px;
+}
+
+.storefront-shell .pdp-verified dd {
+  margin: 0;
+  overflow: hidden;
+  color: var(--worklist-ink);
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.storefront-shell .pdp-verified dd.pdp-mono {
+  font: 14px var(--worklist-mono);
+}
+
+.storefront-shell .pdp-verified > p {
+  max-width: 760px;
+  margin: 16px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--worklist-line-5);
+  color: var(--worklist-ink-4);
+  font-size: 12px;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.storefront-shell .pdp-more {
+  padding: 26px 36px 40px;
+}
+
+.storefront-shell .pdp-more > header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--worklist-line-2);
+}
+
+.storefront-shell .pdp-more h2 {
+  margin: 0;
+  color: var(--worklist-ink);
+  font: 600 19px var(--worklist-display);
+  letter-spacing: -0.02em;
+}
+
+.storefront-shell .pdp-more em {
+  color: var(--worklist-ink-5);
+  font: 11.5px var(--worklist-mono);
+  font-style: normal;
+}
+
+.storefront-shell .pdp-more > header button {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: var(--worklist-green-deep);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.storefront-shell .pdp-more__grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding-top: 20px;
+}
+
+.storefront-shell .pdp-state-panel,
+.storefront-shell .pdp-not-found {
+  margin: 26px 36px 40px;
+  padding: 30px 32px;
+  border: 1px solid var(--worklist-line);
+  background: var(--worklist-surface);
+}
+
+.storefront-shell .pdp-state-panel p,
+.storefront-shell .pdp-not-found p {
+  max-width: 420px;
+  margin: 10px 0 0;
+  color: var(--worklist-ink-3);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.storefront-shell .pdp-not-found h1 {
+  margin: 0;
+  color: var(--worklist-ink);
+  font: 700 24px var(--worklist-display);
+  letter-spacing: -0.025em;
+}
+
+.storefront-shell .pdp-not-found__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.storefront-shell .pdp-not-found__actions .pdp-add { flex: 0 0 200px; }
+.storefront-shell .pdp-not-found__actions .pdp-whatsapp { width: auto; margin-top: 0; padding-inline: 16px; }
+.storefront-shell .pdp-condensed-actions { display: none; }
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .storefront-shell .pdp-context-bar { padding-inline: 24px; }
+  .storefront-shell .pdp-primary { padding-inline: 24px; }
+  .storefront-shell .pdp-verified { margin-inline: 24px; }
+  .storefront-shell .pdp-more { padding-inline: 24px; }
+  .storefront-shell .pdp-viewer { height: clamp(440px, 39vw, 500px); }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .storefront-shell .pdp-context-bar { padding-inline: 24px; }
+  .storefront-shell .pdp-primary {
+    grid-template-columns: minmax(0, 1fr);
+    padding-inline: 24px;
+  }
+  .storefront-shell .pdp-viewer { height: 380px; }
+  .storefront-shell .pdp-verified { margin-inline: 24px; }
+  .storefront-shell .pdp-verified dl { flex-wrap: wrap; }
+  .storefront-shell .pdp-verified dl > div { flex-basis: 50%; padding-block: 10px; }
+  .storefront-shell .pdp-more { padding-inline: 24px; }
+  .storefront-shell .pdp-more__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 767px) {
+  html:has(.pdp-shell--condensed) {
+    scroll-padding-bottom: calc(70px + env(safe-area-inset-bottom));
+  }
+
+  .storefront-shell--product .dept-chip--on { order: -1; }
+  .storefront-shell--product .dept-chip-list .dept-chip:first-child { display: none; }
+
+  .storefront-shell .pdp-context-bar {
+    gap: 10px;
+    height: 38px;
+    padding: 0 14px;
+  }
+
+  .storefront-shell .pdp-context-back { font-size: 12.5px; }
+  .storefront-shell .pdp-context-back__desktop,
+  .storefront-shell .pdp-context-divider,
+  .storefront-shell .pdp-breadcrumb,
+  .storefront-shell .pdp-context-job { display: none; }
+  .storefront-shell .pdp-context-back__mobile { display: inline; }
+
+  .storefront-shell .pdp-context-count {
+    display: block;
+    margin-left: auto;
+    color: var(--worklist-ink-5);
+    font: 10.5px var(--worklist-mono);
+    font-style: normal;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .storefront-shell .pdp-primary {
+    display: block;
+    padding: 0;
+  }
+
+  .storefront-shell .pdp-viewer {
+    height: 258px;
+    border: 0;
+    border-bottom: 1px solid var(--worklist-line);
+  }
+
+  .storefront-shell .pdp-viewer__image { padding: 18px; }
+
+  .storefront-shell .pdp-buy {
+    padding: 16px 14px 18px;
+    border: 0;
+    border-bottom: 1px solid var(--worklist-line);
+  }
+
+  .storefront-shell .pdp-buy__name {
+    margin-top: 9px;
+    font-size: 23px;
+    line-height: 1.16;
+  }
+
+  .storefront-shell .pdp-buy__rule { margin: 14px 0; }
+  .storefront-shell .pdp-buy__price { font-size: 31px; }
+  .storefront-shell .pdp-stock { margin-top: 11px; }
+  .storefront-shell .pdp-primary-actions { gap: 10px; margin-top: 16px; }
+
+  .storefront-shell .pdp-quantity {
+    height: 52px;
+    flex-basis: 118px;
+  }
+
+  .storefront-shell .pdp-quantity button { width: 36px; min-height: 44px; }
+  .storefront-shell .pdp-quantity input { width: 44px; }
+  .storefront-shell .pdp-add { min-height: 52px; font-size: 14px; }
+  .storefront-shell .pdp-whatsapp { min-height: 46px; font-size: 12.5px; }
+  .storefront-shell .pdp-buy__foot { display: none; }
+
+  .storefront-shell .pdp-verified {
+    margin: 14px 14px 0;
+    padding: 14px 14px 16px;
+  }
+
+  .storefront-shell .pdp-verified dl {
+    flex-direction: column;
+    margin-top: 10px;
+  }
+
+  .storefront-shell .pdp-verified dl > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 11px 0 0;
+    flex: 0 0 auto;
+    border-top: 1px solid var(--worklist-line-5);
+    border-left: 0;
+  }
+
+  .storefront-shell .pdp-verified dl > div:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .storefront-shell .pdp-verified dt { margin-bottom: 0; font-size: 12.5px; white-space: nowrap; }
+  .storefront-shell .pdp-verified dd,
+  .storefront-shell .pdp-verified dd.pdp-mono {
+    overflow: visible;
+    font-size: 13.5px;
+    text-align: right;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  .storefront-shell .pdp-verified > p { margin-top: 13px; padding-top: 12px; font-size: 11.5px; }
+
+  .storefront-shell .pdp-more { padding: 18px 14px 90px; }
+  .storefront-shell .pdp-more > header { flex-direction: column; align-items: flex-start; gap: 5px; }
+  .storefront-shell .pdp-more > header button { margin-left: 0; }
+  .storefront-shell .pdp-more h2 { font-size: 17px; }
+  .storefront-shell .pdp-more__grid { grid-template-columns: minmax(0, 1fr); gap: 14px; padding-top: 16px; }
+
+  .storefront-shell .pdp-not-found,
+  .storefront-shell .pdp-state-panel { margin: 14px; padding: 24px 20px; }
+  .storefront-shell .pdp-not-found__actions { flex-direction: column; }
+  .storefront-shell .pdp-not-found__actions .pdp-add { flex-basis: 52px; }
+  .storefront-shell .pdp-not-found__actions .pdp-whatsapp { width: 100%; }
+
+  .storefront-shell .pdp-shell--condensed {
+    padding-bottom: calc(70px + env(safe-area-inset-bottom));
+  }
+
+  .storefront-shell .pdp-condensed-actions {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: calc(70px + env(safe-area-inset-bottom));
+    padding: 0 14px env(safe-area-inset-bottom);
+    border-top: 1px solid var(--worklist-line-3);
+    background: var(--worklist-surface);
+  }
+
+  .storefront-shell .pdp-condensed-actions dl { margin: 0; flex: 0 0 auto; }
+  .storefront-shell .pdp-condensed-actions dt {
+    color: var(--worklist-ink);
+    font: 700 19px var(--worklist-display);
+    letter-spacing: -0.02em;
+  }
+  .storefront-shell .pdp-condensed-actions dd {
+    gap: 6px;
+    margin: 3px 0 0;
+    font-size: 11px;
+  }
+  .storefront-shell .pdp-condensed-actions dd i { width: 6px; height: 6px; flex-basis: 6px; }
+  .storefront-shell .pdp-condensed-actions .pdp-quantity { height: 48px; flex-basis: 96px; }
+  .storefront-shell .pdp-condensed-actions .pdp-quantity button { width: 32px; }
+  .storefront-shell .pdp-condensed-actions .pdp-quantity input { width: 30px; }
+  .storefront-shell .pdp-condensed-actions .pdp-add { height: 48px; min-height: 48px; }
+}
+
+@media (max-width: 359px) {
+  .storefront-shell .pdp-context-bar { padding-inline: 12px; }
+  .storefront-shell .pdp-buy { padding-inline: 12px; }
+  .storefront-shell .pdp-primary-actions { gap: 8px; }
+  .storefront-shell .pdp-quantity { flex-basis: 104px; }
+  .storefront-shell .pdp-quantity button { width: 31px; }
+  .storefront-shell .pdp-quantity input { width: 40px; }
+  .storefront-shell .pdp-add { font-size: 13px; }
+  .storefront-shell .pdp-condensed-actions { gap: 8px; padding-inline: 10px; }
+  .storefront-shell .pdp-condensed-actions dl { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .storefront-shell .pdp-shell * { scroll-behavior: auto !important; }
+}

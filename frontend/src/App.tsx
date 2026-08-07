@@ -73,6 +73,7 @@ import { AdminLoginScreen } from "./modules/auth/components/AdminLoginScreen";
 import { CatalogPanel } from "./modules/catalog/components/CatalogPanel";
 import { OperationsConsole } from "./modules/dashboard/components/OperationsConsole";
 import { LandingView } from "./modules/landing/LandingView";
+import { JOB_LENSES, type JobLens, type JobLensId } from "./modules/storefront/jobLenses";
 import { InvoicesPanel } from "./modules/invoices/components/InvoicesPanel";
 import {
   createPromotion as createPromotionRequest,
@@ -108,7 +109,8 @@ import {
   fallbackCustomerPortalBenefits,
   fallbackCustomerPortalMembership,
   fallbackCustomerPortalTransactions,
-  fallbackPermissions
+  fallbackPermissions,
+  fallbackStorefront
 } from "./data/fallback";
 import {
   ApiError,
@@ -272,21 +274,6 @@ const changePasswordFields: RecordFormField<ChangeOwnPasswordInput>[] = [
 ];
 
 const membershipTiers = ["Bronze", "Silver", "Gold", "Pro Xtra", "VIP"];
-
-const departmentMenu: { key: TranslationKey }[] = [
-  { key: "shop.dept.all" },
-  { key: "shop.dept.deals" },
-  { key: "shop.dept.power" },
-  { key: "shop.dept.paint" },
-  { key: "shop.dept.building" },
-  { key: "shop.dept.bath" },
-  { key: "shop.dept.kitchen" },
-  { key: "shop.dept.electrical" },
-  { key: "shop.dept.lighting" },
-  { key: "shop.dept.hand" },
-  { key: "shop.dept.services" },
-  { key: "shop.dept.pro" }
-];
 
 const seasonalTags = [
   "Genuine Brands",
@@ -1008,7 +995,6 @@ type ShopHeaderProps = {
   onChangeCategory: (slug: string) => void;
   onChangeSearch: (value: string) => void;
   onOpenAccount: () => void;
-  onOpenAdmin: () => void;
   onOpenCart: () => void;
   searchTerm: string;
   selectedCategory: string;
@@ -1020,7 +1006,6 @@ function ShopHeader({
   onChangeCategory,
   onChangeSearch,
   onOpenAccount,
-  onOpenAdmin,
   onOpenCart,
   searchTerm,
   selectedCategory
@@ -1029,71 +1014,57 @@ function ShopHeader({
 
   return (
     <>
-      <div className="top-strip">
-        <p>
-          {t("shop.strip.before")}
-          <a href="https://wa.me/60174056993" target="_blank" rel="noopener">
-            017-405 6993
-          </a>
-          {t("shop.strip.after")}
-        </p>
-      </div>
+      <header className="site-header worklist-header">
+        <a className="worklist-logo" href="/" aria-label={t("shop.nav.home")}>
+          <EkowayMark />
+          <span className="worklist-logo__word">EKOWAY</span>
+          <i aria-hidden="true" />
+          <span className="worklist-logo__sub">HARDWARE</span>
+        </a>
 
-      <header className="site-header">
-        <div className="brand-block">
-          <a className="brand-logo-link" href="/" aria-label="Back to the main page">
-            <EkowayMark />
-          </a>
-          <div className="brand-copy">
-            <p className="eyebrow">{t("shop.eyebrow")}</p>
-            <h1>{t("shop.brand")}</h1>
-            <p className="brand-tagline">{t("shop.tagline")}</p>
-          </div>
-        </div>
-
-        <div className="header-actions">
-          <label className="search-shell">
-            <span>{t("shop.search.label")}</span>
-            <input
-              type="search"
-              placeholder={t("shop.search.placeholder")}
-              value={searchTerm}
-              onChange={(event) => onChangeSearch(event.target.value)}
-            />
+        <form className="search-shell worklist-search" role="search" onSubmit={(event) => event.preventDefault()}>
+          <label className="sr-only" htmlFor="storefront-search">
+            {t("shop.search.label")}
           </label>
+          <input
+            id="storefront-search"
+            type="search"
+            placeholder={t("shop.search.placeholder")}
+            value={searchTerm}
+            onChange={(event) => onChangeSearch(event.target.value)}
+          />
+          <button type="submit">{t("shop.search.action")}</button>
+        </form>
+
+        <div className="header-actions worklist-utils">
           <LangToggle />
-          <button className="outline-button" onClick={onOpenAccount}>
-            {t("shop.account")}
+          <button className="shop-header-account" onClick={onOpenAccount} type="button">
+            {t("shop.account.short")}
           </button>
-          <button className="solid-button cart-button" onClick={onOpenCart}>
+          <button className="shop-header-cart" onClick={onOpenCart} type="button">
             {t("shop.cart")}
-            <span>{cartCount}</span>
+            <span className="shop-header-cart-count">{cartCount}</span>
           </button>
         </div>
       </header>
 
-      <nav className="mega-nav" aria-label="Primary">
-        {departmentMenu.map((item) => (
-          <a href="#categories" key={item.key}>
-            {t(item.key)}
-          </a>
-        ))}
-        <button className="nav-button" onClick={onOpenAdmin}>
-          {t("shop.nav.admin")}
-        </button>
-      </nav>
-
       <nav className="dept-chip-bar" aria-label={t("shop.filters.department")}>
-        {categories.map((category) => (
-          <button
-            key={category.slug}
-            className={"dept-chip" + (selectedCategory === category.slug ? " dept-chip--on" : "")}
-            onClick={() => onChangeCategory(category.slug)}
-            type="button"
-          >
-            {category.name}
-          </button>
-        ))}
+        <div className="dept-chip-list">
+          {categories.map((category) => (
+            <button
+              key={category.slug}
+              className={"dept-chip" + (selectedCategory === category.slug ? " dept-chip--on" : "")}
+              onClick={() => onChangeCategory(category.slug)}
+              type="button"
+            >
+              {category.slug === "all" ? t("shop.dept.all.short") : category.name}
+            </button>
+          ))}
+        </div>
+        <a className="dept-whatsapp" href="https://wa.me/60174056993" target="_blank" rel="noopener">
+          <i aria-hidden="true" />
+          {t("shop.whatsapp")}
+        </a>
       </nav>
     </>
   );
@@ -1156,11 +1127,13 @@ export default function App() {
     productIdFromPath(window.location.pathname)
   );
   const [storefront, setStorefront] = useState<StorefrontPayload | null>(null);
+  const [isStorefrontRefetching, setIsStorefrontRefetching] = useState(false);
   const [publicOffers, setPublicOffers] = useState<PublicOffersPayload | null>(null);
   const [dashboard, setDashboard] = useState<AdminDashboardPayload | null>(null);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [activeJobId, setActiveJobId] = useState<JobLensId | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [minPriceCents, setMinPriceCents] = useState<number | null>(null);
   const [maxPriceCents, setMaxPriceCents] = useState<number | null>(null);
@@ -1246,17 +1219,24 @@ export default function App() {
     let cancelled = false;
 
     const timeout = window.setTimeout(() => {
+      setIsStorefrontRefetching(true);
       void fetchStorefront({
         q: searchTerm,
         category: selectedCategory,
         minPriceCents: minPriceCents ?? undefined,
         maxPriceCents: maxPriceCents ?? undefined,
         sort: sortOption
-      }).then((payload) => {
-        if (!cancelled) {
-          setStorefront(payload);
-        }
-      });
+      })
+        .then((payload) => {
+          if (!cancelled) {
+            setStorefront(payload);
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setIsStorefrontRefetching(false);
+          }
+        });
     }, 300);
 
     return () => {
@@ -1276,6 +1256,16 @@ export default function App() {
   }, []);
 
   const filteredProducts = storefront?.products ?? [];
+  // Reference-equality check against the already-exported fallback fixture — fetchStorefront()
+  // never clones fallbackStorefront's categories array (storefrontApi.ts), so this reliably
+  // detects fallback mode without any change to the fetch/http layer.
+  const isShowingFallbackStorefront = storefront != null && storefront.categories === fallbackStorefront.categories;
+
+  useEffect(() => {
+    if (isShowingFallbackStorefront) {
+      setActiveJobId(null);
+    }
+  }, [isShowingFallbackStorefront]);
 
   const openView = (nextView: Extract<View, "landing" | "store" | "admin">) => {
     startTransition(() => {
@@ -1287,7 +1277,7 @@ export default function App() {
 
   const openProductDetail = (productId: number) => {
     startTransition(() => {
-      window.history.pushState({}, "", `/shop/products/${productId}`);
+      window.history.pushState({ ekowayStorefrontProduct: view === "store" }, "", `/shop/products/${productId}`);
       setProductDetailId(productId);
       setView("product");
     });
@@ -2421,11 +2411,12 @@ export default function App() {
       }
     >
       {view === "store" || view === "product" ? (
-        <div className="storefront-shell">
+        <div className={`storefront-shell${view === "product" ? " storefront-shell--product" : ""}`}>
           <ShopHeader
             cartCount={cartCount}
             categories={storefront.categories}
             onChangeCategory={(slug) => {
+              setActiveJobId(null);
               setSelectedCategory(slug);
               if (view !== "store") openView("store");
             }}
@@ -2434,27 +2425,40 @@ export default function App() {
               setIsCartOpen(false);
               setIsAccountOpen(true);
             }}
-            onOpenAdmin={() => openView("admin")}
             onOpenCart={() => {
               setIsAccountOpen(false);
               setIsCartOpen(true);
             }}
             searchTerm={searchTerm}
-            selectedCategory={selectedCategory}
+            selectedCategory={
+              view === "product" && productDetailId != null
+                ? storefront.products.find((product) => product.id === productDetailId)?.category_slug ?? selectedCategory
+                : selectedCategory
+            }
           />
 
           {view === "store" ? (
             <StorefrontView
+              activeJobId={activeJobId}
               filteredProducts={filteredProducts}
+              isRefetching={isStorefrontRefetching}
+              isShowingFallbackData={isShowingFallbackStorefront}
               maxPriceCents={maxPriceCents}
               minPriceCents={minPriceCents}
               onAddToCart={addToCart}
-              onChangeCategory={setSelectedCategory}
+              onChangeCategory={(slug) => {
+                setActiveJobId(null);
+                setSelectedCategory(slug);
+              }}
               onChangeMaxPrice={setMaxPriceCents}
               onChangeMinPrice={setMinPriceCents}
               onChangeSearch={setSearchTerm}
               onChangeSort={setSortOption}
               onGrabPromotion={grabPromotion}
+              onSelectJob={(jobId) => {
+                setActiveJobId(jobId);
+                setSelectedCategory("all");
+              }}
               onViewProduct={openProductDetail}
               publicOffers={publicOffers}
               searchTerm={searchTerm}
@@ -2464,9 +2468,33 @@ export default function App() {
             />
           ) : (
             <ProductDetailView
+              activeJobName={
+                activeJobId
+                  ? JOB_LENSES.find((job) => job.id === activeJobId && job.approvedForProduction)?.name ?? null
+                  : null
+              }
+              fallbackProduct={
+                isShowingFallbackStorefront && productDetailId != null
+                  ? storefront?.products.find((product) => product.id === productDetailId) ?? null
+                  : null
+              }
+              isCatalogueLoaded={storefront !== null}
               onAddToCart={addToCart}
-              onBack={() => openView("store")}
+              onBack={() => {
+                if (window.history.state?.ekowayStorefrontProduct === true) {
+                  window.history.back();
+                  return;
+                }
+                openView("store");
+              }}
+              onOpenDepartment={(slug) => {
+                setActiveJobId(null);
+                setSelectedCategory(slug);
+                openView("store");
+              }}
+              onViewProduct={openProductDetail}
               productId={productDetailId}
+              storefront={storefront}
             />
           )}
 
@@ -2595,7 +2623,10 @@ export default function App() {
 }
 
 type StorefrontViewProps = {
+  activeJobId: JobLensId | null;
   filteredProducts: Product[];
+  isRefetching: boolean;
+  isShowingFallbackData: boolean;
   maxPriceCents: number | null;
   minPriceCents: number | null;
   onAddToCart: (product: Product) => void;
@@ -2605,6 +2636,7 @@ type StorefrontViewProps = {
   onChangeSearch: (value: string) => void;
   onChangeSort: (value: StorefrontSort) => void;
   onGrabPromotion: (promotionId: number) => void;
+  onSelectJob: (jobId: JobLensId) => void;
   onViewProduct: (productId: number) => void;
   publicOffers: PublicOffersPayload | null;
   searchTerm: string;
@@ -2628,6 +2660,31 @@ function productStockState(product: Product): "in" | "low" | "out" {
 
 function isOnSale(product: Product): boolean {
   return /sale/i.test(product.badge);
+}
+
+const GENERIC_PLACEHOLDER_IMAGE_HOSTS = [
+  "dummyimage.com",
+  "lorempixel.com",
+  "loremflickr.com",
+  "picsum.photos",
+  "placehold.co",
+  "placehold.it",
+  "placeholder.com",
+  "via.placeholder.com"
+];
+
+function isGenericPlaceholderImage(imageUrl: string): boolean {
+  const trimmedUrl = imageUrl.trim();
+  if (!trimmedUrl) return true;
+
+  try {
+    const hostname = new URL(trimmedUrl, window.location.origin).hostname.toLowerCase();
+    return GENERIC_PLACEHOLDER_IMAGE_HOSTS.some(
+      (placeholderHost) => hostname === placeholderHost || hostname.endsWith(`.${placeholderHost}`)
+    );
+  } catch {
+    return false;
+  }
 }
 
 function StarRating({ avgRating, reviewCount }: { avgRating: number | null; reviewCount: number }) {
@@ -2662,8 +2719,276 @@ function StockBadge({ product }: { product: Product }) {
   );
 }
 
+function IconClose() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+      <line x1="4" y1="4" x2="16" y2="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="16" y1="4" x2="4" y2="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// Listing-specific stock line (real quantity, not just the state word). Deliberately
+// separate from <StockBadge>, which ProductDetailView also renders — this keeps
+// ProductDetailView's copy completely unchanged (Pass 2 does not redesign it).
+function ListingStockLine({ product }: { product: Product }) {
+  const { t } = useI18n();
+  const state = productStockState(product);
+
+  if (state === "out") {
+    return (
+      <span className="avail avail--out">
+        <i aria-hidden="true" />
+        {t("shop.product.stock.out")}
+      </span>
+    );
+  }
+
+  if (state === "low") {
+    return (
+      <span className="avail avail--low">
+        <i aria-hidden="true" />
+        {t("shop.product.stock.lowCount", { n: product.stock_quantity })}
+      </span>
+    );
+  }
+
+  return (
+    <span className="avail avail--in">
+      <i aria-hidden="true" />
+      {t("shop.product.stock.in")}
+    </span>
+  );
+}
+
+// Shared missing-image / real-image media button for both listing modes — consistent
+// treatment everywhere, per design/SYSTEM.md §6 and design/assets/ICON-GUIDE.md.
+function ListingProductMedia({
+  onOpen,
+  product
+}: {
+  onOpen: () => void;
+  product: Product;
+}) {
+  const { t } = useI18n();
+  const [imageFailed, setImageFailed] = useState(false);
+  const showImage = !imageFailed && !isGenericPlaceholderImage(product.image_url);
+
+  return (
+    <button className="shop-listing-media" onClick={onOpen} type="button">
+      {showImage ? (
+        <img
+          src={product.image_url}
+          alt={product.name}
+          loading="lazy"
+          onError={() => setImageFailed(true)}
+        />
+      ) : (
+        <span className="shop-missing-image">
+          <span className="shop-missing-image-mark" aria-hidden="true" />
+          <span>
+            <span className="shop-missing-image-department">{product.category_slug.replaceAll("-", " ")}</span>
+            <span className="shop-missing-image-caption">{t("shop.listing.noPhoto")}</span>
+          </span>
+        </span>
+      )}
+    </button>
+  );
+}
+
+function formatWorklistPrice(priceCents: number): string {
+  return new Intl.NumberFormat("en-MY", {
+    style: "currency",
+    currency: "MYR",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })
+    .format(priceCents / 100)
+    .replace(/\u00a0/g, " ");
+}
+
+function JobBand({
+  activeJob,
+  departmentCount,
+  jobs,
+  onSelectJob,
+  productCount
+}: {
+  activeJob: JobLens | null;
+  departmentCount: number;
+  jobs: JobLens[];
+  onSelectJob: (jobId: JobLensId) => void;
+  productCount: number;
+}) {
+  const { t } = useI18n();
+
+  return (
+    <section className="worklist-job-band" aria-label={t("shop.jobs.workingOn")}>
+      <span className="worklist-job-band__label">{t("shop.jobs.workingOn")}</span>
+      <div className="worklist-job-band__options">
+        {jobs.map((job) => (
+          <button
+            aria-pressed={activeJob?.id === job.id}
+            key={job.id}
+            onClick={() => onSelectJob(job.id)}
+            type="button"
+          >
+            {job.name}
+          </button>
+        ))}
+      </div>
+      <dl className="worklist-job-band__result">
+        <dt>{t("shop.jobs.resolvesTo")}</dt>
+        <dd>{t("shop.jobs.summary", { departments: departmentCount, products: productCount })}</dd>
+      </dl>
+    </section>
+  );
+}
+
+function JobContextRail({
+  categories,
+  job,
+  products
+}: {
+  categories: Category[];
+  job: JobLens;
+  products: Product[];
+}) {
+  const { t } = useI18n();
+  const counts = products.reduce<Map<string, number>>((result, product) => {
+    result.set(product.category_slug, (result.get(product.category_slug) ?? 0) + 1);
+    return result;
+  }, new Map());
+  const departments = job.departmentSlugs
+    .map((slug) => ({ category: categories.find((category) => category.slug === slug), count: counts.get(slug) ?? 0 }))
+    .filter((item) => item.category && item.count > 0);
+
+  return (
+    <aside className="worklist-context-rail" aria-label={t("shop.jobs.context")}>
+      <h1>{job.name}</h1>
+      <p className="worklist-context-rail__note">{job.note}</p>
+      <div className="worklist-context-rail__atmosphere">
+        <p>
+          {t("shop.jobs.atmosphere")}
+          <span>{job.atmosphere}</span>
+        </p>
+      </div>
+      <p className="worklist-context-rail__disclosure">{t("shop.jobs.inspirationDisclosure")}</p>
+      <div className="worklist-context-rail__departments">
+        <h2>{t("shop.jobs.departments")}</h2>
+        {departments.map(({ category, count }) => (
+          <div key={category!.slug}>
+            <span>{category!.name}</span>
+            <b>{count}</b>
+          </div>
+        ))}
+      </div>
+    </aside>
+  );
+}
+
+function JobContextDisclosure({
+  categories,
+  job,
+  products
+}: {
+  categories: Category[];
+  job: JobLens;
+  products: Product[];
+}) {
+  const { t } = useI18n();
+  const counts = products.reduce<Map<string, number>>((result, product) => {
+    result.set(product.category_slug, (result.get(product.category_slug) ?? 0) + 1);
+    return result;
+  }, new Map());
+  const departments = job.departmentSlugs
+    .map((slug) => ({ category: categories.find((category) => category.slug === slug), count: counts.get(slug) ?? 0 }))
+    .filter((item) => item.category && item.count > 0);
+
+  return (
+    <section className="worklist-context-mobile" aria-label={t("shop.jobs.context")}>
+      <h1>{job.name}</h1>
+      <p>{job.note}</p>
+      <details>
+        <summary>{t("shop.jobs.context")}</summary>
+        <div className="worklist-context-mobile__details">
+          <div className="worklist-context-mobile__atmosphere">
+            <p>
+              {t("shop.jobs.atmosphere")}
+              <span>{job.atmosphere}</span>
+            </p>
+          </div>
+          <p className="worklist-context-mobile__disclosure">{t("shop.jobs.inspirationDisclosure")}</p>
+          <div className="worklist-context-mobile__departments">
+            <h2>{t("shop.jobs.departments")}</h2>
+            {departments.map(({ category, count }) => (
+              <div key={category!.slug}>
+                <span>{category!.name}</span>
+                <b>{count}</b>
+              </div>
+            ))}
+          </div>
+        </div>
+      </details>
+    </section>
+  );
+}
+
+function ShopListingSkeletonRows({ count }: { count: number }) {
+  return (
+    <div className="shop-listing-skeleton" aria-hidden="true">
+      {Array.from({ length: count }).map((_, index) => (
+        <div className="shop-listing-skeleton-row" key={index}>
+          <span className="shop-skeleton-block shop-skeleton-media" />
+          <span className="shop-skeleton-block shop-skeleton-line" />
+          <span className="shop-skeleton-block shop-skeleton-line shop-skeleton-line--short" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+type EmptyResultsProps = {
+  hasSearch: boolean;
+  onBrowseAll: () => void;
+  onClearAll: () => void;
+  onClearSearch: () => void;
+  searchTerm: string;
+};
+
+function EmptyResults({ hasSearch, onBrowseAll, onClearAll, onClearSearch, searchTerm }: EmptyResultsProps) {
+  const { t } = useI18n();
+
+  return (
+    <div className="shop-empty-state" role="status">
+      <h3>{t("shop.listing.empty.title")}</h3>
+      <p>
+        {hasSearch
+          ? t("shop.listing.empty.searchBody", { query: searchTerm })
+          : t("shop.listing.empty.filterBody")}
+      </p>
+      <div className="shop-empty-state-actions">
+        {hasSearch ? (
+          <button className="shop-empty-action" onClick={onClearSearch} type="button">
+            {t("shop.listing.empty.clearSearch")}
+          </button>
+        ) : null}
+        <button className="shop-empty-action" onClick={onClearAll} type="button">
+          {t("shop.filters.clearAll")}
+        </button>
+        <button className="shop-empty-action shop-empty-action--primary" onClick={onBrowseAll} type="button">
+          {t("shop.listing.empty.browseAll")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function StorefrontView({
+  activeJobId,
   filteredProducts,
+  isRefetching,
+  isShowingFallbackData,
   maxPriceCents,
   minPriceCents,
   onAddToCart,
@@ -2672,29 +2997,82 @@ function StorefrontView({
   onChangeMinPrice,
   onChangeSearch,
   onChangeSort,
-  onGrabPromotion,
+  onSelectJob,
   onViewProduct,
-  publicOffers,
   searchTerm,
   selectedCategory,
   sortOption,
   storefront
 }: StorefrontViewProps) {
   const { t } = useI18n();
-  const activeCategory =
-    storefront.categories.find((category) => category.slug === selectedCategory) ?? storefront.categories[0];
-
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [onSaleOnly, setOnSaleOnly] = useState(false);
   const [inStockOnly, setInStockOnly] = useState(false);
-  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const filtersToggleRef = useRef<HTMLButtonElement | null>(null);
+  const sidebarRef = useRef<HTMLElement | null>(null);
+  const availableJobs = isShowingFallbackData
+    ? []
+    : JOB_LENSES.filter(
+        (job) =>
+          job.approvedForProduction &&
+          job.departmentSlugs.some((slug) => filteredProducts.some((product) => product.category_slug === slug)),
+      );
+  const activeJob = activeJobId ? availableJobs.find((job) => job.id === activeJobId) ?? null : null;
 
-  const visibleProducts = filteredProducts.filter((product) => {
+  useEffect(() => {
+    if (!isFiltersOpen) return;
+
+    const sidebar = sidebarRef.current;
+    const focusables = Array.from(
+      sidebar?.querySelectorAll<HTMLElement>(
+        "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])"
+      ) ?? []
+    ).filter((element) => element.offsetParent !== null);
+    focusables[0]?.focus();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsFiltersOpen(false);
+        return;
+      }
+
+      if (event.key !== "Tab" || focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+      filtersToggleRef.current?.focus();
+    };
+  }, [isFiltersOpen]);
+
+  const jobProducts = activeJob
+    ? filteredProducts.filter((product) => activeJob.departmentSlugs.includes(product.category_slug))
+    : filteredProducts;
+  const visibleProducts = jobProducts.filter((product) => {
     if (onSaleOnly && !isOnSale(product)) return false;
     if (inStockOnly && product.stock_quantity <= 0) return false;
     return true;
   });
-
+  const departmentCount = new Set(visibleProducts.map((product) => product.category_slug)).size;
+  const activeFilterCount =
+    Number(Boolean(searchTerm)) +
+    Number(selectedCategory !== "all") +
+    Number(minPriceCents != null || maxPriceCents != null) +
+    Number(onSaleOnly) +
+    Number(inStockOnly);
   const activePreset = PRICE_PRESETS.find(
     (preset) => preset.minCents === (minPriceCents ?? -1) && preset.maxCents === maxPriceCents
   );
@@ -2708,437 +3086,220 @@ function StorefrontView({
     setInStockOnly(false);
   };
 
-  const hasActiveFilters =
-    Boolean(searchTerm) ||
-    selectedCategory !== "all" ||
-    minPriceCents != null ||
-    maxPriceCents != null ||
-    onSaleOnly ||
-    inStockOnly;
-
   return (
     <>
-      <main className="page-shell">
-        <section className="hero-grid">
-          <article className="hero-panel hero-primary">
-            <div className="hero-copy">
-              <p className="eyebrow">{t("shop.hero.eyebrow")}</p>
-              <h2>{t("shop.hero.title")}</h2>
-              <p>{t("shop.hero.body")}</p>
-              <div className="hero-actions">
-                <a className="solid-button" href="#featured-products">
-                  {t("shop.hero.cta1")}
-                </a>
-                <a className="outline-button" href="#services">
-                  {t("shop.hero.cta2")}
-                </a>
-              </div>
+      {availableJobs.length > 0 ? (
+        <JobBand
+          activeJob={activeJob}
+          departmentCount={departmentCount}
+          jobs={availableJobs}
+          onSelectJob={onSelectJob}
+          productCount={visibleProducts.length}
+        />
+      ) : null}
+
+      <main
+        className={`worklist-catalogue-shell${activeJob ? "" : " worklist-catalogue-shell--all"}`}
+        data-fallback={isShowingFallbackData || undefined}
+      >
+        {activeJob ? (
+          <>
+            <JobContextRail categories={storefront.categories} job={activeJob} products={visibleProducts} />
+            <JobContextDisclosure categories={storefront.categories} job={activeJob} products={visibleProducts} />
+          </>
+        ) : null}
+
+        <section className="worklist-product-field" aria-label={t("shop.products.title")}>
+          {isShowingFallbackData ? (
+            <div className="shop-offline-banner worklist-offline-notice" role="status">
+              <span>{t("shop.offline.banner")}</span>
+              <button onClick={() => window.location.reload()} type="button">
+                {t("shop.offline.reload")}
+              </button>
             </div>
-
-            <div className="hero-metrics">
-              <div>
-                <strong>{t("shop.hero.m1.v")}</strong>
-                <span>{t("shop.hero.m1.k")}</span>
-              </div>
-              <div>
-                <strong>{t("shop.hero.m2.v")}</strong>
-                <span>{t("shop.hero.m2.k")}</span>
-              </div>
-              <div>
-                <strong>{t("shop.hero.m3.v")}</strong>
-                <span>{t("shop.hero.m3.k")}</span>
-              </div>
+          ) : null}
+          <div className="worklist-toolbar">
+            <span className="worklist-toolbar__count" aria-live="polite">
+              {activeJob
+                ? t("shop.jobs.resultCount", { products: visibleProducts.length, job: activeJob.name })
+                : t("shop.toolbar.results", { n: visibleProducts.length })}
+            </span>
+            <div className="worklist-toolbar__controls">
+              <button
+                aria-expanded={isFiltersOpen}
+                className="worklist-control"
+                onClick={() => setIsFiltersOpen(true)}
+                ref={filtersToggleRef}
+                type="button"
+              >
+                {t("shop.filters.toggle")}
+                {activeFilterCount > 0 ? <span>{activeFilterCount}</span> : null}
+              </button>
+              <label className="worklist-sort">
+                <span>{t("shop.toolbar.sort")}:</span>
+                <select value={sortOption} onChange={(event) => onChangeSort(event.target.value as StorefrontSort)}>
+                  <option value="featured">{t("shop.sort.featured")}</option>
+                  <option value="price_asc">{t("shop.sort.priceAsc")}</option>
+                  <option value="price_desc">{t("shop.sort.priceDesc")}</option>
+                  <option value="name">{t("shop.sort.name")}</option>
+                </select>
+              </label>
             </div>
-          </article>
+          </div>
 
-          <article className="hero-panel hero-secondary">
-            <p className="eyebrow">{t("shop.panel2.eyebrow")}</p>
-            <h3>{t("shop.panel2.title")}</h3>
-            <p>{t("shop.panel2.body")}</p>
-            <ul className="deal-points">
-              <li>{t("shop.panel2.p1")}</li>
-              <li>{t("shop.panel2.p2")}</li>
-              <li>{t("shop.panel2.p3")}</li>
-            </ul>
-            <a className="text-link" href="#deals">
-              {t("shop.panel2.link")}
-            </a>
-          </article>
-
-          <article className="hero-panel hero-tertiary">
-            <p className="eyebrow">{t("shop.panel3.eyebrow")}</p>
-            <h3>{t("shop.panel3.title")}</h3>
-            <p>{t("shop.panel3.body")}</p>
-            <div className="mini-board">
-              {quickServiceCalls.map((item) => (
-                <div key={item.key}>
-                  <span>{t(item.key)}</span>
-                  <strong>{t(item.detail)}</strong>
+          {isFiltersOpen ? (
+            <>
+              <button
+                aria-label={t("shop.filters.close")}
+                className="worklist-filter-backdrop"
+                onClick={() => setIsFiltersOpen(false)}
+                type="button"
+              />
+              <aside className="worklist-filter-drawer" aria-label={t("shop.filters.title")} aria-modal="true" role="dialog" ref={sidebarRef}>
+                <div className="worklist-filter-drawer__header">
+                  <h2>{t("shop.filters.title")}</h2>
+                  <button aria-label={t("shop.filters.close")} onClick={() => setIsFiltersOpen(false)} type="button">
+                    <IconClose />
+                  </button>
                 </div>
-              ))}
-            </div>
-          </article>
-        </section>
-
-        <section className="promo-rail" id="deals">
-          {publicOffers?.promotions.length ? (
-            publicOffers.promotions.map((promotion) => (
-              <article key={promotion.id}>
-                <p className="eyebrow">{promotion.label}</p>
-                <h3>{promotion.title}</h3>
-                <p>{promotion.description}</p>
-                <button
-                  className="solid-button"
-                  onClick={() => onGrabPromotion(promotion.id)}
-                  type="button"
-                >
-                  Grab deal
-                </button>
-              </article>
-            ))
-          ) : (
-            storefront.promotions.map((promotion) => (
-              <article key={promotion.title}>
-                <p className="eyebrow">{promotion.label}</p>
-                <h3>{promotion.title}</h3>
-                <p>{promotion.description}</p>
-              </article>
-            ))
-          )}
-        </section>
-
-        <section className="seasonal-band" aria-label="Seasonal highlights">
-          {seasonalTags.map((tag) => (
-            <span key={tag}>{tag}</span>
-          ))}
-        </section>
-
-        <section className="category-section" id="categories">
-          <div className="section-heading">
-            <p className="eyebrow">{t("shop.sec.cat.eyebrow")}</p>
-            <h2>{t("shop.sec.cat.title")}</h2>
-            <p className="section-copy">
-              {t("shop.sec.cat.now")} {activeCategory?.name ?? t("shop.dept.all")}
-            </p>
-          </div>
-
-          <div className="category-grid">
-            {storefront.categories.map((category) => (
-              <button
-                key={category.slug}
-                className={`category-card ${selectedCategory === category.slug ? "active" : ""}`}
-                onClick={() => onChangeCategory(category.slug)}
-              >
-                <strong>{category.name}</strong>
-                <span>{category.teaser}</span>
-              </button>
-            ))}
-          </div>
-
-        </section>
-
-        <section className="savings-band">
-          <div>
-            <p className="eyebrow">{t("shop.savings.eyebrow")}</p>
-            <h3>{t("shop.savings.title")}</h3>
-            <p>{t("shop.savings.count", { n: filteredProducts.length })}</p>
-          </div>
-          <div className="savings-tags">
-            <span>{t("shop.savings.t1")}</span>
-            <span>{t("shop.savings.t2")}</span>
-            <span>{t("shop.savings.t3")}</span>
-            <span>{t("shop.savings.t4")}</span>
-          </div>
-        </section>
-
-        <section className="product-section" id="featured-products">
-          <div className="section-heading">
-            <p className="eyebrow">{t("shop.products.eyebrow")}</p>
-            <h2>{t("shop.products.title")}</h2>
-          </div>
-
-          <div className="shop-toolbar">
-            <span className="shop-toolbar-count">{t("shop.toolbar.results", { n: visibleProducts.length })}</span>
-            <button
-              className="outline-button filters-toggle"
-              onClick={() => setIsMobileFiltersOpen(true)}
-              type="button"
-            >
-              {t("shop.filters.toggle")}
-            </button>
-            <span className="shop-toolbar-spacer" />
-            <label className="shop-sort">
-              <span>{t("shop.toolbar.sort")}</span>
-              <select value={sortOption} onChange={(event) => onChangeSort(event.target.value as StorefrontSort)}>
-                <option value="featured">{t("shop.sort.featured")}</option>
-                <option value="price_asc">{t("shop.sort.priceAsc")}</option>
-                <option value="price_desc">{t("shop.sort.priceDesc")}</option>
-                <option value="name">{t("shop.sort.name")}</option>
-              </select>
-            </label>
-            <div className="view-toggle" role="group" aria-label="View">
-              <button
-                className={viewMode === "grid" ? "on" : ""}
-                onClick={() => setViewMode("grid")}
-                aria-label={t("shop.toolbar.view.grid")}
-                type="button"
-              >
-                ▦
-              </button>
-              <button
-                className={viewMode === "list" ? "on" : ""}
-                onClick={() => setViewMode("list")}
-                aria-label={t("shop.toolbar.view.list")}
-                type="button"
-              >
-                ☰
-              </button>
-            </div>
-            {hasActiveFilters ? (
-              <div className="active-filters">
-                {searchTerm ? (
-                  <button className="fchip" onClick={() => onChangeSearch("")} type="button">
-                    “{searchTerm}” <i>×</i>
-                  </button>
-                ) : null}
-                {selectedCategory !== "all" ? (
-                  <button className="fchip" onClick={() => onChangeCategory("all")} type="button">
-                    {activeCategory?.name ?? selectedCategory} <i>×</i>
-                  </button>
-                ) : null}
-                {onSaleOnly ? (
-                  <button className="fchip" onClick={() => setOnSaleOnly(false)} type="button">
-                    {t("shop.filters.onsale")} <i>×</i>
-                  </button>
-                ) : null}
-                {inStockOnly ? (
-                  <button className="fchip" onClick={() => setInStockOnly(false)} type="button">
-                    {t("shop.filters.instock")} <i>×</i>
-                  </button>
-                ) : null}
-                {minPriceCents != null || maxPriceCents != null ? (
-                  <button
-                    className="fchip"
-                    onClick={() => {
-                      onChangeMinPrice(null);
-                      onChangeMaxPrice(null);
-                    }}
-                    type="button"
-                  >
-                    {minPriceCents != null ? currencyFromCents(minPriceCents) : "$0"}–
-                    {maxPriceCents != null ? currencyFromCents(maxPriceCents) : t("shop.filters.priceOver", { n: "" })}{" "}
-                    <i>×</i>
-                  </button>
-                ) : null}
-                <button className="clear-all-link" onClick={clearAllFilters} type="button">
+                <fieldset className="fgroup">
+                  <legend>{t("shop.filters.availability")}</legend>
+                  <label className="opt">
+                    <input checked={inStockOnly} onChange={(event) => setInStockOnly(event.target.checked)} type="checkbox" />
+                    <span>{t("shop.filters.instock")}</span>
+                  </label>
+                  <label className="opt">
+                    <input checked={onSaleOnly} onChange={(event) => setOnSaleOnly(event.target.checked)} type="checkbox" />
+                    <span>{t("shop.filters.onsale")}</span>
+                  </label>
+                </fieldset>
+                <fieldset className="fgroup">
+                  <legend>{t("shop.filters.department")}</legend>
+                  <div className="opts opts--scroll">
+                    {storefront.categories.map((category) => (
+                      <label className="opt" key={category.slug}>
+                        <input
+                          checked={selectedCategory === category.slug}
+                          name="shop-department"
+                          onChange={() => onChangeCategory(category.slug)}
+                          type="radio"
+                        />
+                        <span>{category.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+                <fieldset className="fgroup">
+                  <legend>{t("shop.filters.price")}</legend>
+                  <div className="presets">
+                    {PRICE_PRESETS.map((preset) => (
+                      <button
+                        className={"preset" + (activePreset === preset ? " preset--on" : "")}
+                        key={`${preset.minCents}-${preset.maxCents}`}
+                        onClick={() => {
+                          if (activePreset === preset) {
+                            onChangeMinPrice(null);
+                            onChangeMaxPrice(null);
+                          } else {
+                            onChangeMinPrice(preset.minCents);
+                            onChangeMaxPrice(preset.maxCents);
+                          }
+                        }}
+                        type="button"
+                      >
+                        {preset.maxCents == null
+                          ? t("shop.filters.priceOver", { n: formatWorklistPrice(preset.minCents) })
+                          : t("shop.filters.priceUnder", { n: formatWorklistPrice(preset.maxCents) })}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="price-inputs">
+                    <label>
+                      <span>{t("shop.filter.min")}</span>
+                      <input
+                        min="0"
+                        onChange={(event) => onChangeMinPrice(priceInputToCents(event.target.value))}
+                        placeholder="RM 0"
+                        step="0.01"
+                        type="number"
+                        value={minPriceCents == null ? "" : minPriceCents / 100}
+                      />
+                    </label>
+                    <label>
+                      <span>{t("shop.filter.max")}</span>
+                      <input
+                        min="0"
+                        onChange={(event) => onChangeMaxPrice(priceInputToCents(event.target.value))}
+                        placeholder="Any"
+                        step="0.01"
+                        type="number"
+                        value={maxPriceCents == null ? "" : maxPriceCents / 100}
+                      />
+                    </label>
+                  </div>
+                </fieldset>
+                <button className="worklist-filter-drawer__clear" onClick={clearAllFilters} type="button">
                   {t("shop.filters.clearAll")}
                 </button>
-              </div>
-            ) : null}
-          </div>
+              </aside>
+            </>
+          ) : null}
 
-          <div className="shop-grid-layout">
-            <aside
-              className={"shop-sidebar" + (isMobileFiltersOpen ? " shop-sidebar--open" : "")}
-              aria-label={t("shop.filters.title")}
-            >
-              <div className="shop-sidebar-mobilehead">
-                <h3>{t("shop.filters.title")}</h3>
-                <button
-                  className="drawer-close"
-                  onClick={() => setIsMobileFiltersOpen(false)}
-                  aria-label="Close"
-                  type="button"
-                >
-                  &times;
-                </button>
-              </div>
+          <div className="shop-listing-region" aria-busy={isRefetching}>
+            {isRefetching ? (
+              <>
+                <span className="sr-only" role="status">{t("shop.listing.loading")}</span>
+                <ShopListingSkeletonRows count={6} />
+              </>
+            ) : visibleProducts.length === 0 ? (
+              <EmptyResults
+                hasSearch={Boolean(searchTerm)}
+                onBrowseAll={() => onChangeCategory("all")}
+                onClearAll={clearAllFilters}
+                onClearSearch={() => onChangeSearch("")}
+                searchTerm={searchTerm}
+              />
+            ) : (
+              <div className="shop-card-grid">
+                {visibleProducts.map((product) => {
+                  const categoryName =
+                    storefront.categories.find((category) => category.slug === product.category_slug)?.name ??
+                    product.category_slug;
+                  const stockState = productStockState(product);
 
-              <div className="fgroup">
-                <h4>{t("shop.filters.availability")}</h4>
-                <label className="opt">
-                  <input
-                    type="checkbox"
-                    checked={inStockOnly}
-                    onChange={(event) => setInStockOnly(event.target.checked)}
-                  />
-                  <span>{t("shop.filters.instock")}</span>
-                </label>
-                <label className="opt">
-                  <input
-                    type="checkbox"
-                    checked={onSaleOnly}
-                    onChange={(event) => setOnSaleOnly(event.target.checked)}
-                  />
-                  <span>{t("shop.filters.onsale")}</span>
-                </label>
-              </div>
-
-              <div className="fgroup">
-                <h4>{t("shop.filters.department")}</h4>
-                <div className="opts opts--scroll">
-                  {storefront.categories.map((category) => (
-                    <label className="opt" key={category.slug}>
-                      <input
-                        type="radio"
-                        name="shop-department"
-                        checked={selectedCategory === category.slug}
-                        onChange={() => onChangeCategory(category.slug)}
-                      />
-                      <span>{category.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="fgroup">
-                <h4>{t("shop.filters.price")}</h4>
-                <div className="presets">
-                  {PRICE_PRESETS.map((preset) => (
-                    <button
-                      key={`${preset.minCents}-${preset.maxCents}`}
-                      className={"preset" + (activePreset === preset ? " preset--on" : "")}
-                      onClick={() => {
-                        if (activePreset === preset) {
-                          onChangeMinPrice(null);
-                          onChangeMaxPrice(null);
-                        } else {
-                          onChangeMinPrice(preset.minCents);
-                          onChangeMaxPrice(preset.maxCents);
-                        }
-                      }}
-                      type="button"
-                    >
-                      {preset.maxCents == null
-                        ? t("shop.filters.priceOver", { n: currencyFromCents(preset.minCents) })
-                        : t("shop.filters.priceUnder", { n: currencyFromCents(preset.maxCents) })}
-                    </button>
-                  ))}
-                </div>
-                <div className="price-inputs">
-                  <label>
-                    <span>{t("shop.filter.min")}</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="$0"
-                      value={minPriceCents == null ? "" : minPriceCents / 100}
-                      onChange={(event) => onChangeMinPrice(priceInputToCents(event.target.value))}
-                    />
-                  </label>
-                  <label>
-                    <span>{t("shop.filter.max")}</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="Any"
-                      value={maxPriceCents == null ? "" : maxPriceCents / 100}
-                      onChange={(event) => onChangeMaxPrice(priceInputToCents(event.target.value))}
-                    />
-                  </label>
-                </div>
-              </div>
-            </aside>
-
-            <div className={"product-grid" + (viewMode === "list" ? " product-grid--list" : "")}>
-              {visibleProducts.map((product) => {
-                const categoryName =
-                  storefront.categories.find((category) => category.slug === product.category_slug)?.name ??
-                  product.category_slug;
-                const stockState = productStockState(product);
-
-                return (
-                  <article className="product-card" key={product.id}>
-                    <div className="product-topline">
-                      <span className="badge-chip">{product.badge}</span>
-                      <span className="tone-chip">{product.tone}</span>
-                    </div>
-
-                    <button
-                      className={"product-visual" + (product.image_url ? "" : " tone-fallback")}
-                      onClick={() => onViewProduct(product.id)}
-                      type="button"
-                    >
-                      {product.image_url ? (
-                        <img
-                          src={product.image_url}
-                          alt={product.name}
-                          loading="lazy"
-                          onError={(event) => {
-                            event.currentTarget.style.display = "none";
-                            const parent = event.currentTarget.parentElement;
-                            if (parent) parent.classList.add("tone-fallback");
-                          }}
-                        />
-                      ) : null}
-                      <span>{categoryName}</span>
-                      <strong>{product.tone}</strong>
-                    </button>
-
-                    <div className="product-meta">
-                      <StarRating avgRating={product.avg_rating} reviewCount={product.review_count} />
-                      <h3>
-                        <button className="product-name-link" onClick={() => onViewProduct(product.id)} type="button">
-                          {product.name}
-                        </button>
-                      </h3>
-                      <p>{product.description}</p>
-                      <StockBadge product={product} />
-                    </div>
-
-                    <footer>
-                      <div>
-                        <p className="price-label">{t("shop.product.from")}</p>
-                        <strong>{currencyFromCents(product.price_cents)}</strong>
+                  return (
+                    <article className="shop-product-card" key={product.id}>
+                      <ListingProductMedia product={product} onOpen={() => onViewProduct(product.id)} />
+                      <div className="shop-product-card-body">
+                        <span className="shop-product-category">{categoryName}</span>
+                        <h2>
+                          <button className="shop-listing-name-link" onClick={() => onViewProduct(product.id)} type="button">
+                            {product.name}
+                          </button>
+                        </h2>
+                        <div className="shop-product-card__commerce">
+                          <span className="shop-price">{formatWorklistPrice(product.price_cents)}</span>
+                          <ListingStockLine product={product} />
+                        </div>
+                        <div className="shop-product-card__actions">
+                          <button className="worklist-view-product" onClick={() => onViewProduct(product.id)} type="button">
+                            {t("shop.product.view")} <span aria-hidden="true">→</span>
+                          </button>
+                          <button
+                            className="shop-add-to-cart"
+                            disabled={stockState === "out"}
+                            onClick={() => onAddToCart(product)}
+                            type="button"
+                          >
+                            {t("shop.product.add")}
+                          </button>
+                        </div>
                       </div>
-                      <button
-                        className="btn--add"
-                        disabled={stockState === "out"}
-                        onClick={() => onAddToCart(product)}
-                      >
-                        {t("shop.product.add")}
-                      </button>
-                    </footer>
-                  </article>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        <section className="services-section" id="services">
-          <div className="section-heading">
-            <p className="eyebrow">{t("shop.services.eyebrow")}</p>
-            <h2>{t("shop.services.title")}</h2>
-          </div>
-
-          <div className="service-grid">
-            {storefront.services.map((service) => (
-              <article className="service-card" key={service.name}>
-                <p className="eyebrow">{t("shop.services.card")}</p>
-                <h3>{service.name}</h3>
-                <p>{service.description}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="pro-section" id="pro-desk">
-          <div className="pro-copy">
-            <p className="eyebrow">{t("shop.pro.eyebrow")}</p>
-            <h2>{t("shop.pro.title")}</h2>
-            <p>{t("shop.pro.body")}</p>
-          </div>
-
-          <div className="pro-panel">
-            {storefront.pro_stats.map((stat) => (
-              <div key={stat.label}>
-                <strong>{stat.value}</strong>
-                <span>{stat.label}</span>
+                    </article>
+                  );
+                })}
               </div>
-            ))}
+            )}
           </div>
         </section>
       </main>
@@ -3147,19 +3308,37 @@ function StorefrontView({
 }
 
 type ProductDetailViewProps = {
+  activeJobName: string | null;
+  fallbackProduct: Product | null;
+  isCatalogueLoaded: boolean;
   onAddToCart: (product: Product) => void;
   onBack: () => void;
+  onOpenDepartment: (slug: string) => void;
+  onViewProduct: (productId: number) => void;
   productId: number | null;
+  storefront: StorefrontPayload;
 };
 
-function ProductDetailView({ onAddToCart, onBack, productId }: ProductDetailViewProps) {
+function ProductDetailView({
+  activeJobName,
+  fallbackProduct,
+  isCatalogueLoaded,
+  onAddToCart,
+  onBack,
+  onOpenDepartment,
+  onViewProduct,
+  productId,
+  storefront
+}: ProductDetailViewProps) {
   const { t } = useI18n();
   const [status, setStatus] = useState<"loading" | "loaded" | "not-found" | "error">("loading");
   const [payload, setPayload] = useState<ProductDetailPayload | null>(null);
-  const [reviewRating, setReviewRating] = useState(5);
-  const [reviewBody, setReviewBody] = useState("");
-  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
-  const [reviewFeedback, setReviewFeedback] = useState<string | null>(null);
+  const [isFallbackDetail, setIsFallbackDetail] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const [showCondensedActions, setShowCondensedActions] = useState(false);
+  const primaryActionsRef = useRef<HTMLDivElement | null>(null);
+  const hasSeenPrimaryActions = useRef(false);
 
   useEffect(() => {
     if (productId == null) {
@@ -3170,7 +3349,11 @@ function ProductDetailView({ onAddToCart, onBack, productId }: ProductDetailView
     let cancelled = false;
     setStatus("loading");
     setPayload(null);
-    setReviewFeedback(null);
+    setIsFallbackDetail(false);
+    setImageFailed(false);
+    setQuantity(1);
+    setShowCondensedActions(false);
+    hasSeenPrimaryActions.current = false;
 
     fetchProductDetail(productId)
       .then((data) => {
@@ -3180,154 +3363,264 @@ function ProductDetailView({ onAddToCart, onBack, productId }: ProductDetailView
       })
       .catch((error) => {
         if (cancelled) return;
+
+        if (fallbackProduct) {
+          setPayload({ product: fallbackProduct, reviews: [], can_review: false, already_reviewed: false });
+          setIsFallbackDetail(true);
+          setStatus("loaded");
+          return;
+        }
+
+        if (!isCatalogueLoaded) return;
         setStatus(error instanceof ApiError && error.status === 404 ? "not-found" : "error");
       });
 
     return () => {
       cancelled = true;
     };
-  }, [productId]);
+  }, [fallbackProduct, isCatalogueLoaded, productId]);
 
-  const isSignedIn = getCustomerAuthToken() !== null;
+  useEffect(() => {
+    const actions = primaryActionsRef.current;
+    if (!actions || status !== "loaded" || typeof IntersectionObserver === "undefined") return;
 
-  const handleSubmitReview = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (productId == null) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry) return;
+        if (entry.isIntersecting) {
+          hasSeenPrimaryActions.current = true;
+          setShowCondensedActions(false);
+        } else {
+          setShowCondensedActions(hasSeenPrimaryActions.current && entry.boundingClientRect.top < 0);
+        }
+      },
+      { threshold: 0.05 }
+    );
 
-    setIsSubmittingReview(true);
-    setReviewFeedback(null);
+    observer.observe(actions);
+    return () => observer.disconnect();
+  }, [productId, status]);
 
-    try {
-      await createProductReview(productId, { rating: reviewRating, body: reviewBody });
-      const refreshed = await fetchProductDetail(productId);
-      setPayload(refreshed);
-      setReviewBody("");
-      setReviewRating(5);
-    } catch (error) {
-      setReviewFeedback(normalizeError(error, { operation: "submit review", scope: "checkout" }).userMessage);
-    } finally {
-      setIsSubmittingReview(false);
-    }
-  };
+  const renderContextBar = (
+    categoryName?: string,
+    categorySlug?: string,
+    productName?: string,
+    productCount?: number
+  ) => (
+    <div className="pdp-context-bar">
+      <button className="pdp-context-back" onClick={onBack} type="button">
+        <span aria-hidden="true">←</span>
+        <span className="pdp-context-back__desktop">{t("shop.detail.backProducts")}</span>
+        <span className="pdp-context-back__mobile">
+          {categoryName ? t("shop.detail.allDepartment", { department: categoryName }) : t("shop.detail.backProducts")}
+        </span>
+      </button>
+      {categoryName && categorySlug && productName ? (
+        <>
+          <i className="pdp-context-divider" aria-hidden="true" />
+          <nav className="pdp-breadcrumb" aria-label={t("shop.detail.breadcrumb")}>
+            <button onClick={() => onOpenDepartment("all")} type="button">{t("shop.dept.all.short")}</button>
+            <i aria-hidden="true">/</i>
+            <button onClick={() => onOpenDepartment(categorySlug)} type="button">{categoryName}</button>
+            <i aria-hidden="true">/</i>
+            <b aria-current="page">{productName}</b>
+          </nav>
+          {activeJobName ? (
+            <p className="pdp-context-job">
+              {t("shop.detail.stillWorkingOn")} <b>{activeJobName}</b>
+            </p>
+          ) : null}
+          {productCount != null ? (
+            <em className="pdp-context-count">{t("shop.detail.productCount", { n: productCount })}</em>
+          ) : null}
+        </>
+      ) : null}
+    </div>
+  );
 
   if (status === "loading") {
     return (
-      <main className="page-shell">
-        <p className="product-detail-status">{t("shop.loading")}</p>
+      <main className="pdp-shell">
+        {renderContextBar()}
+        <section className="pdp-state-panel" aria-live="polite"><p>{t("shop.loading")}</p></section>
       </main>
     );
   }
 
   if (status === "not-found" || status === "error" || !payload) {
     return (
-      <main className="page-shell">
-        <p className="product-detail-status">{t("shop.detail.notFound")}</p>
-        <button className="outline-button" onClick={onBack} type="button">
-          {t("shop.detail.back")}
-        </button>
+      <main className="pdp-shell">
+        {renderContextBar()}
+        <section className="pdp-not-found">
+          <h1>{status === "error" ? t("shop.detail.errorTitle") : t("shop.detail.notFoundTitle")}</h1>
+          <p>{status === "error" ? t("shop.detail.errorBody") : t("shop.detail.notFoundBody")}</p>
+          <div className="pdp-not-found__actions">
+            <button className="pdp-add" onClick={onBack} type="button">{t("shop.detail.backProducts")}</button>
+            <a className="pdp-whatsapp" href="https://wa.me/60174056993" rel="noopener" target="_blank">
+              <i aria-hidden="true" />{t("shop.detail.askStore")}
+            </a>
+          </div>
+        </section>
       </main>
     );
   }
 
-  const { product, reviews, can_review, already_reviewed } = payload;
+  const { product } = payload;
   const stockState = productStockState(product);
+  const showProductImage = !imageFailed && !isGenericPlaceholderImage(product.image_url);
+  const categoryName =
+    storefront.categories.find((category) => category.slug === product.category_slug)?.name ??
+    product.category_slug.replaceAll("-", " ");
+  const departmentProducts = storefront.products.filter((item) => item.category_slug === product.category_slug);
+  const continuationProducts = departmentProducts.filter((item) => item.id !== product.id).slice(0, 4);
+  const stockLabel =
+    stockState === "out"
+      ? t("shop.product.stock.out")
+      : stockState === "low"
+        ? t("shop.product.stock.lowCount", { n: product.stock_quantity })
+        : t("shop.product.stock.in");
+  const whatsappHref = `https://wa.me/60174056993?text=${encodeURIComponent(
+    t("shop.detail.whatsappMessage", { product: product.name })
+  )}`;
+
+  const addSelectedQuantity = () => {
+    for (let index = 0; index < quantity; index += 1) onAddToCart(product);
+  };
+
+  const quantityControl = (condensed = false) => (
+    <div className={`pdp-quantity${condensed ? " pdp-quantity--condensed" : ""}`} role="group" aria-label={t("shop.detail.quantity")}>
+      <button
+        aria-label={t("shop.detail.decreaseQuantity")}
+        disabled={stockState === "out" || quantity <= 1}
+        onClick={() => setQuantity((current) => Math.max(1, current - 1))}
+        type="button"
+      >−</button>
+      <input aria-label={t("shop.detail.quantity")} disabled={stockState === "out"} inputMode="numeric" readOnly value={quantity} />
+      <button
+        aria-label={t("shop.detail.increaseQuantity")}
+        disabled={stockState === "out"}
+        onClick={() => setQuantity((current) => current + 1)}
+        type="button"
+      >+</button>
+    </div>
+  );
 
   return (
-    <main className="page-shell product-detail">
-      <button className="text-link product-detail-back" onClick={onBack} type="button">
-        &lsaquo; {t("shop.detail.back")}
-      </button>
+    <main className={`pdp-shell${showCondensedActions ? " pdp-shell--condensed" : ""}`}>
+      {renderContextBar(categoryName, product.category_slug, product.name, departmentProducts.length)}
 
-      <div className="product-detail-layout">
-        <div className={"product-visual product-detail-visual" + (product.image_url ? "" : " tone-fallback")}>
-          {product.image_url ? (
-            <img
-              src={product.image_url}
-              alt={product.name}
-              onError={(event) => {
-                event.currentTarget.style.display = "none";
-                const parent = event.currentTarget.parentElement;
-                if (parent) parent.classList.add("tone-fallback");
-              }}
-            />
+      <section className="pdp-primary">
+        <figure className="pdp-viewer">
+          {showProductImage ? (
+            <img className="pdp-viewer__image" src={product.image_url} alt={product.name} onError={() => setImageFailed(true)} />
+          ) : (
+            <span className="pdp-missing-image">
+              <span className="pdp-missing-image__mark" aria-hidden="true" />
+              <span>
+                <span className="pdp-missing-image__department">{categoryName}</span>
+                <span className="pdp-missing-image__copy">{t("shop.listing.noPhoto")}</span>
+              </span>
+            </span>
+          )}
+        </figure>
+
+        <aside className="pdp-buy" aria-label={t("shop.detail.purchase")}>
+          {isFallbackDetail ? (
+            <div className="pdp-fallback-notice" role="status">
+              <b>{t("shop.detail.savedCatalogue")}</b>
+              <p>{t("shop.detail.savedCatalogueBody")}</p>
+            </div>
           ) : null}
-          <strong>{product.tone}</strong>
-        </div>
-
-        <div className="product-detail-info">
-          <span className="tone-chip">{product.tone}</span>
-          <h1>{product.name}</h1>
-          <StarRating avgRating={product.avg_rating} reviewCount={product.review_count} />
-          <p className="product-detail-description">{product.description}</p>
-          <StockBadge product={product} />
-          <div className="product-detail-price">{currencyFromCents(product.price_cents)}</div>
-          <button
-            className="solid-button"
-            disabled={stockState === "out"}
-            onClick={() => onAddToCart(product)}
+          <span className="pdp-buy__department">{categoryName}</span>
+          <h1 className="pdp-buy__name">{product.name}</h1>
+          <div className="pdp-buy__rule" aria-hidden="true" />
+          <div className="pdp-buy__price">{formatWorklistPrice(product.price_cents)}</div>
+          <div className={`pdp-stock pdp-stock--${stockState}`}><i aria-hidden="true" /><span>{stockLabel}</span></div>
+          <div className="pdp-primary-actions" ref={primaryActionsRef}>
+            {quantityControl()}
+            <button className="pdp-add" disabled={stockState === "out"} onClick={addSelectedQuantity} type="button">
+              {stockState === "out" ? t("shop.product.stock.out") : t("shop.product.add")}
+            </button>
+          </div>
+          <a
+            className={`pdp-whatsapp${stockState === "out" ? " pdp-whatsapp--lead" : ""}`}
+            href={whatsappHref}
+            rel="noopener"
+            target="_blank"
           >
-            {t("shop.product.add")}
+            <i aria-hidden="true" />{t("shop.detail.askWhatsapp")}
+          </a>
+          {departmentProducts.length > 0 ? (
+            <div className="pdp-buy__foot">
+              <button onClick={() => onOpenDepartment(product.category_slug)} type="button">
+                ← {t("shop.detail.allDepartment", { department: categoryName })}
+              </button>
+              <em>{t("shop.detail.productCount", { n: departmentProducts.length })}</em>
+            </div>
+          ) : null}
+        </aside>
+      </section>
+
+      <section className="pdp-verified" aria-labelledby="pdp-verified-heading">
+        <h2 id="pdp-verified-heading">{t("shop.detail.verifiedInformation")}</h2>
+        <dl>
+          <div><dt>{t("shop.detail.department")}</dt><dd>{categoryName}</dd></div>
+          <div><dt>{t("shop.detail.price")}</dt><dd className="pdp-mono">{formatWorklistPrice(product.price_cents)}</dd></div>
+          <div><dt>{t("shop.detail.availability")}</dt><dd>{stockLabel}</dd></div>
+        </dl>
+        <p>{t("shop.detail.verifiedNote")}</p>
+      </section>
+
+      {continuationProducts.length > 0 ? (
+        <section className="pdp-more" aria-labelledby="pdp-more-heading">
+          <header>
+            <h2 id="pdp-more-heading">{t("shop.detail.moreIn", { department: categoryName })}</h2>
+            <em>{t("shop.detail.departmentProductCount", { n: departmentProducts.length })}</em>
+            <button onClick={() => onOpenDepartment(product.category_slug)} type="button">
+              {t("shop.detail.allDepartment", { department: categoryName })} →
+            </button>
+          </header>
+          <div className="shop-card-grid pdp-more__grid">
+            {continuationProducts.map((item) => (
+              <article className="shop-product-card" key={item.id}>
+                <ListingProductMedia product={item} onOpen={() => onViewProduct(item.id)} />
+                <div className="shop-product-card-body">
+                  <span className="shop-product-category">{categoryName}</span>
+                  <h3><button className="shop-listing-name-link" onClick={() => onViewProduct(item.id)} type="button">{item.name}</button></h3>
+                  <div className="shop-product-card__commerce">
+                    <span className="shop-price">{formatWorklistPrice(item.price_cents)}</span>
+                    <ListingStockLine product={item} />
+                  </div>
+                  <div className="shop-product-card__actions">
+                    <button className="worklist-view-product" onClick={() => onViewProduct(item.id)} type="button">
+                      {t("shop.product.view")} <span aria-hidden="true">→</span>
+                    </button>
+                    <button
+                      className="shop-add-to-cart"
+                      disabled={productStockState(item) === "out"}
+                      onClick={() => onAddToCart(item)}
+                      type="button"
+                    >{t("shop.product.add")}</button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {showCondensedActions ? (
+        <div className="pdp-condensed-actions" role="region" aria-label={t("shop.detail.purchase")}>
+          <dl>
+            <dt>{formatWorklistPrice(product.price_cents)}</dt>
+            <dd className={`pdp-stock pdp-stock--${stockState}`}><i aria-hidden="true" />{stockLabel}</dd>
+          </dl>
+          {quantityControl(true)}
+          <button className="pdp-add" disabled={stockState === "out"} onClick={addSelectedQuantity} type="button">
+            {stockState === "out" ? t("shop.product.stock.out") : t("shop.product.add")}
           </button>
         </div>
-      </div>
-
-      <section className="product-detail-reviews">
-        <h2>{t("shop.detail.reviews")}</h2>
-
-        {reviews.length === 0 ? (
-          <p className="product-detail-status">{t("shop.detail.noReviews")}</p>
-        ) : (
-          <ul className="review-list">
-            {reviews.map((review) => (
-              <li key={review.id} className="review-item">
-                <div className="review-item-head">
-                  <strong>{review.customer_display_name}</strong>
-                  <StarRating avgRating={review.rating} reviewCount={1} />
-                </div>
-                <p>{review.body}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <div className="review-form-shell">
-          <h3>{t("shop.detail.writeReview")}</h3>
-          {!isSignedIn ? (
-            <p className="product-detail-status">{t("shop.detail.signInToReview")}</p>
-          ) : already_reviewed ? (
-            <p className="product-detail-status">{t("shop.detail.alreadyReviewed")}</p>
-          ) : !can_review ? (
-            <p className="product-detail-status">{t("shop.detail.mustPurchase")}</p>
-          ) : (
-            <form className="review-form" onSubmit={handleSubmitReview}>
-              <label>
-                <span>{t("shop.detail.rating")}</span>
-                <select value={reviewRating} onChange={(event) => setReviewRating(Number(event.target.value))}>
-                  {[5, 4, 3, 2, 1].map((value) => (
-                    <option key={value} value={value}>
-                      {"★".repeat(value)}
-                      {"☆".repeat(5 - value)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                <span>{t("shop.detail.reviewBody")}</span>
-                <textarea
-                  required
-                  rows={4}
-                  value={reviewBody}
-                  onChange={(event) => setReviewBody(event.target.value)}
-                />
-              </label>
-              {reviewFeedback ? <p className="cart-feedback">{reviewFeedback}</p> : null}
-              <button className="solid-button" disabled={isSubmittingReview} type="submit">
-                {isSubmittingReview ? t("shop.detail.submitting") : t("shop.detail.submit")}
-              </button>
-            </form>
-          )}
-        </div>
-      </section>
+      ) : null}
     </main>
   );
 }
@@ -4402,11 +4695,13 @@ function CartDrawer({
   }
 
   const renderTotals = () => {
+    const formatCartPrice = stage === "cart" ? formatWorklistPrice : currencyFromCents;
+
     if (!quote) {
       return (
         <div className="cart-subtotal">
           <span>{t("shop.cartd.subtotal")}</span>
-          <strong>{currencyFromCents(subtotalCents)}</strong>
+          <strong>{formatCartPrice(subtotalCents)}</strong>
         </div>
       );
     }
@@ -4415,29 +4710,29 @@ function CartDrawer({
       <>
         <div className="cart-subtotal">
           <span>Subtotal</span>
-          <strong>{currencyFromCents(quote.subtotal_cents)}</strong>
+          <strong>{formatCartPrice(quote.subtotal_cents)}</strong>
         </div>
         {quote.discount_cents !== 0 ? (
           <div className="cart-subtotal">
             <span>Discount</span>
-            <strong>-{currencyFromCents(quote.discount_cents)}</strong>
+            <strong>-{formatCartPrice(quote.discount_cents)}</strong>
           </div>
         ) : null}
         {quote.tax_cents !== 0 ? (
           <div className="cart-subtotal">
             <span>Tax</span>
-            <strong>{currencyFromCents(quote.tax_cents)}</strong>
+            <strong>{formatCartPrice(quote.tax_cents)}</strong>
           </div>
         ) : null}
         {quote.shipping_cents !== 0 ? (
           <div className="cart-subtotal">
             <span>Shipping</span>
-            <strong>{currencyFromCents(quote.shipping_cents)}</strong>
+            <strong>{formatCartPrice(quote.shipping_cents)}</strong>
           </div>
         ) : null}
         <div className="cart-subtotal">
           <span>Total</span>
-          <strong>{currencyFromCents(quote.total_cents)}</strong>
+          <strong>{formatCartPrice(quote.total_cents)}</strong>
         </div>
       </>
     );
@@ -4479,12 +4774,13 @@ function CartDrawer({
         ) : stage === "cart" ? (
           <>
             <ul className="cart-lines">
-              {cart.map((item) => (
-                <li className="cart-line" key={item.product.id}>
-                  <div
-                    className={"cart-line-visual" + (item.product.image_url ? "" : " tone-fallback")}
-                  >
-                    {item.product.image_url ? (
+              {cart.map((item) => {
+                const showCartImage = !isGenericPlaceholderImage(item.product.image_url);
+
+                return (
+                  <li className="cart-line" key={item.product.id}>
+                    <div className={"cart-line-visual" + (showCartImage ? "" : " tone-fallback")}>
+                      {showCartImage ? (
                       <img
                         src={item.product.image_url}
                         alt={item.product.name}
@@ -4495,39 +4791,38 @@ function CartDrawer({
                           if (parent) parent.classList.add("tone-fallback");
                         }}
                       />
-                    ) : (
-                      <span>{item.product.tone}</span>
-                    )}
-                  </div>
-                  <div className="cart-line-body">
-                    <div className="cart-line-info">
-                      <strong>{item.product.name}</strong>
-                      <span>{currencyFromCents(item.product.price_cents)} each</span>
+                      ) : null}
                     </div>
-                    <div className="cart-line-controls">
-                      <div className="qty-stepper">
-                        <button
-                          onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}
-                          aria-label={`Decrease ${item.product.name} quantity`}
-                        >
-                          &minus;
-                        </button>
-                        <span>{item.quantity}</span>
-                        <button
-                          onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
-                          aria-label={`Increase ${item.product.name} quantity`}
-                        >
-                          +
+                    <div className="cart-line-body">
+                      <div className="cart-line-info">
+                        <strong>{item.product.name}</strong>
+                        <span>{formatWorklistPrice(item.product.price_cents)} each</span>
+                      </div>
+                      <div className="cart-line-controls">
+                        <div className="qty-stepper">
+                          <button
+                            onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}
+                            aria-label={`Decrease ${item.product.name} quantity`}
+                          >
+                            &minus;
+                          </button>
+                          <span>{item.quantity}</span>
+                          <button
+                            onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
+                            aria-label={`Increase ${item.product.name} quantity`}
+                          >
+                            +
+                          </button>
+                        </div>
+                        <strong>{formatWorklistPrice(item.product.price_cents * item.quantity)}</strong>
+                        <button className="cart-remove" onClick={() => onRemoveFromCart(item.product.id)}>
+                          {t("shop.cartd.remove")}
                         </button>
                       </div>
-                      <strong>{currencyFromCents(item.product.price_cents * item.quantity)}</strong>
-                      <button className="cart-remove" onClick={() => onRemoveFromCart(item.product.id)}>
-                        {t("shop.cartd.remove")}
-                      </button>
                     </div>
-                  </div>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
             <section className="cart-checkout-form" aria-labelledby="cart-deals-title">
               <h3 id="cart-deals-title">Deals &amp; vouchers</h3>

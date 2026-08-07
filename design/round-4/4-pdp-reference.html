@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Ekoway — ProductDetailView · visual reference (desktop 1440×900 + mobile 390×844)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   EKOWAY — ProductDetailView, pass 3.
+   Continuation of the approved 3a Worklist listing. Every colour,
+   face and hairline below is inherited verbatim from
+   design/round-3/3a-worklist-reference.html. Only PDP metrics are new.
+   Do not restyle. Values here are authority.
+   ============================================================ */
+:root{
+  /* colour — inherited, unchanged */
+  --canvas:#E8E4DC; --ground:#F5F2EC; --surface:#FFFEFB; --field:#FBF9F4;
+  --ink:#17191A; --ink-2:#4A4D47; --ink-3:#55584F; --ink-4:#6E6B63; --ink-5:#8A867D;
+  --line:#E4DFD5; --line-2:#DDD7CB; --line-3:#C9C2B4; --line-4:#D8D2C6; --line-5:#EFEBE3;
+  --green-deep:#14342A; --green:#2A6A50; --green-on-dark:#8FB3A2;
+  --orange:#D2542A; --grey-dot:#9A938A; --miss-bg:#F2EFE8;
+  /* type — inherited, unchanged */
+  --display:Archivo,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,Helvetica,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  /* metrics — inherited */
+  --page:1440px; --gutter:36px; --header-h:66px; --nav-h:46px; --card-img-h:176px;
+  /* metrics — new for the PDP */
+  --ctx-h:44px;      /* breadcrumb / back bar */
+  --buy-w:456px;     /* buy panel column */
+  --viewer-h:500px;  /* product image region */
+  --col-gap:32px;
+}
+*{box-sizing:border-box}
+html{background:var(--canvas)}
+body{margin:0;background:var(--canvas);font-family:var(--sans);-webkit-font-smoothing:antialiased;color:var(--ink)}
+a{color:var(--green);text-decoration:none}
+a:hover{color:var(--green-deep)}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;text-align:left}
+input{font:inherit}
+:focus-visible{outline:2px solid var(--green-deep);outline-offset:2px}
+
+/* ============ concept chrome — NOT part of the design ============ */
+.sheet{width:calc(var(--page) + 72px);margin:0 auto;padding:34px 36px 90px}
+.mast{border-bottom:1px solid #CFC8BA;padding-bottom:14px;margin-bottom:26px;display:flex;align-items:flex-end;gap:20px}
+.mast h1{font-family:var(--display);font-size:22px;font-weight:700;letter-spacing:-.02em;margin:0;color:var(--ink)}
+.mast p{margin:0 0 2px;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:var(--ink-4)}
+.mast p b{color:var(--green-deep);font-weight:500}
+.cap{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--ink-4);margin:0 0 10px;display:flex;align-items:center;gap:10px}
+.cap i{font-style:normal;background:var(--ink);color:var(--ground);padding:3px 7px;letter-spacing:.14em}
+.cap em{font-style:normal;color:var(--ink-5);letter-spacing:.04em;font-size:10.5px}
+.stack{margin-bottom:38px}
+[data-annotation]{pointer-events:none}
+.fold{position:absolute;left:0;right:0;top:900px;border-top:1px dashed rgba(23,25,26,.3);z-index:5}
+.fold span{position:absolute;left:0;top:6px;font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;background:var(--ink);color:var(--ground);padding:3px 8px}
+/* capture flag: the delivered PNG must not carry concept chrome, so the marker
+   lives OUTSIDE #desktopShot rather than inside the captured element */
+.foldwrap{position:relative;width:var(--page)}
+.row2{display:flex;gap:36px;align-items:flex-start}
+
+/* ============ page shells ============ */
+.page{width:var(--page);background:var(--ground);border:1px solid #D3CDC1;position:relative;overflow:hidden}
+.page--fold{height:900px}
+
+/* ---------- 1. public header (66px) — inherited verbatim ---------- */
+.hdr{height:var(--header-h);background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:28px;padding:0 var(--gutter)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo__mark{width:14px;height:14px;background:var(--green-deep)}
+.logo__word{font-family:var(--display);font-size:21px;font-weight:800;letter-spacing:-.035em;color:var(--ink)}
+.logo__rule{width:1px;height:16px;background:var(--line)}
+.logo__sub{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;color:var(--ink-5)}
+.search{flex:1;display:flex;align-items:center;height:38px;border:1px solid var(--line-4);background:var(--field);max-width:520px}
+.search__input{padding:0 12px;font-size:13.5px;color:var(--ink-5);flex:1;border:0;background:transparent;font-family:inherit;height:100%}
+.search__input::placeholder{color:var(--ink-5)}
+.search__btn{height:100%;display:flex;align-items:center;padding:0 16px;background:var(--green-deep);color:var(--ground);font-size:12.5px;font-weight:600;letter-spacing:.02em;cursor:pointer}
+.utils{display:flex;align-items:center;gap:20px;margin-left:auto}
+.lang{display:flex;align-items:center;gap:2px;border:1px solid var(--line);padding:2px}
+.lang button{font-size:11.5px;padding:3px 8px;color:var(--ink-4);cursor:pointer;white-space:nowrap}
+.lang button[aria-current="true"]{font-weight:600;background:var(--green-deep);color:var(--ground)}
+.lang button:last-child{font-size:12.5px}
+.utils__account{font-size:13px;color:#3C3F3A}
+.utils__cart{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--ink);font-weight:500}
+.utils__cart span{font-family:var(--mono);font-size:11px;background:var(--ink);color:var(--ground);padding:2px 6px}
+
+/* ---------- 2. canonical department nav (46px) — inherited verbatim ---------- */
+.deptnav{height:var(--nav-h);background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:stretch;padding:0 var(--gutter)}
+.deptnav__list{display:flex;align-items:stretch;gap:26px}
+.deptnav__item{display:flex;align-items:center;font-size:13.5px;color:var(--ink-2);white-space:nowrap;flex:0 0 auto;cursor:pointer}
+.deptnav__item[aria-current="page"]{font-weight:600;color:var(--ink);box-shadow:inset 0 -2px 0 var(--green-deep)}
+.deptnav__wa{margin-left:auto;padding-left:24px;display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--green);font-weight:500;white-space:nowrap}
+.deptnav__wa i{width:6px;height:6px;border-radius:50%;background:var(--green)}
+
+/* ---------- 3. context bar (NEW) — back path + breadcrumb + retained lens ---------- */
+.ctx{height:var(--ctx-h);display:flex;align-items:center;gap:18px;padding:0 var(--gutter);border-bottom:1px solid var(--line-2)}
+.ctx__back{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--green-deep);white-space:nowrap;cursor:pointer}
+.ctx__back u{text-decoration:none;font-family:var(--mono);font-size:13px}
+.ctx__div{width:1px;height:15px;background:var(--line-2);flex:0 0 1px}
+.crumb{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--ink-4);min-width:0}
+.crumb a{color:var(--ink-4);white-space:nowrap}
+.crumb a:hover{color:var(--green-deep)}
+.crumb i{font-style:normal;color:#B4AC9E}
+.crumb b{font-weight:400;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:470px}
+/* retained job context — ONE restrained line, no count, no chips, no second nav.
+   Rendered only when a verified job lens is still active in navigation state. */
+.ctx__lens{margin:0 0 0 auto;display:flex;align-items:baseline;gap:6px;white-space:nowrap;font-size:12.5px;color:var(--ink-4)}
+.ctx__lens b{font-weight:500;color:var(--ink-2)}
+
+/* ---------- 4. product region ---------- */
+.detail{display:grid;grid-template-columns:1fr var(--buy-w);gap:var(--col-gap);padding:26px var(--gutter) 0;align-items:start}
+.viewer{margin:0;background:var(--surface);border:1px solid var(--line);height:var(--viewer-h);overflow:hidden;position:relative}
+.viewer__img{width:100%;height:100%;object-fit:contain;object-position:center;padding:28px;display:block;background:var(--surface)}
+/* concept photo slot: stands in for a real <img>; NOT a product state */
+.slot{height:100%;background:repeating-linear-gradient(135deg,#EDE9E1 0 7px,#F4F1EA 7px 14px);display:flex;align-items:center;justify-content:center}
+.slot span{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--ink-5);background:var(--surface);padding:5px 9px;border:1px solid #E0DACE}
+/* image unavailable — inherited component, large scale */
+.miss{height:100%;background:var(--miss-bg);background-image:repeating-linear-gradient(90deg,rgba(20,52,42,.05) 0 1px,transparent 1px 8px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:0 18px;text-align:center}
+.miss__mark{width:26px;height:26px;border:1px solid var(--green-deep);background:linear-gradient(135deg,transparent 49.5%,var(--green-deep) 49.5%,var(--green-deep) 50.5%,transparent 50.5%);opacity:.55}
+.miss__dept{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--green-deep);margin-bottom:5px}
+.miss__copy{font-size:11.5px;color:var(--ink-4);line-height:1.4}
+.miss--lg{gap:18px}
+.miss--lg .miss__mark{width:44px;height:44px}
+.miss--lg .miss__dept{font-size:10px;letter-spacing:.2em;margin-bottom:8px}
+.miss--lg .miss__copy{font-size:14px}
+
+/* ---------- 5. buy panel ---------- */
+.buy{background:var(--surface);border:1px solid var(--line);padding:24px 24px 22px}
+.buy__dept{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;color:var(--green)}
+.buy__name{font-family:var(--display);font-size:30px;font-weight:700;line-height:1.13;letter-spacing:-.026em;color:var(--ink);margin:11px 0 0;text-wrap:pretty}
+.buy__attr{font-family:var(--mono);font-size:11.5px;color:var(--ink-5);margin-top:12px}
+.buy__rule{height:1px;background:var(--line-5);margin:18px 0}
+.buy__price{font-family:var(--display);font-size:38px;font-weight:700;letter-spacing:-.03em;line-height:1;color:var(--ink)}
+.buy__stock{display:flex;align-items:center;gap:9px;margin-top:13px}
+.buy__stock i{width:8px;height:8px;border-radius:50%;flex:0 0 8px}
+.buy__stock span{font-size:13.5px;color:var(--ink-2);white-space:nowrap}
+.qtyrow{display:flex;gap:12px;margin-top:18px}
+.qty{display:flex;align-items:stretch;border:1px solid var(--line-3);height:52px;flex:0 0 132px;background:var(--surface)}
+.qty button{width:41px;display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--ink-2);cursor:pointer}
+.qty input{width:48px;border:0;border-left:1px solid var(--line-5);border-right:1px solid var(--line-5);text-align:center;font-family:var(--mono);font-size:14px;background:transparent;color:var(--ink)}
+.qty__lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;color:var(--ink-5);margin-bottom:7px}
+.cart{flex:1;height:52px;background:var(--green-deep);color:var(--ground);font-size:14.5px;font-weight:600;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.cart[disabled]{background:var(--line-2);color:var(--ink-4);cursor:not-allowed}
+.wa{margin-top:10px;height:46px;border:1px solid var(--line-3);background:var(--surface);display:flex;align-items:center;justify-content:center;gap:9px;font-size:13px;font-weight:500;color:var(--green);cursor:pointer;width:100%}
+.wa i{width:7px;height:7px;border-radius:50%;background:var(--green);flex:0 0 7px}
+.wa--lead{border-color:var(--green-deep);color:var(--green-deep)}
+.wa--lead i{background:var(--green-deep)}
+.buy__foot{margin-top:16px;padding-top:14px;border-top:1px solid var(--line-5);display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.buy__foot a{font-size:12.5px;font-weight:600;color:var(--green-deep);white-space:nowrap}
+.buy__foot em{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--ink-5);white-space:nowrap}
+.fallbk{display:block;background:var(--miss-bg);border:1px solid var(--line-2);padding:10px 12px;margin-bottom:16px}
+.fallbk b{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--green-deep);margin-bottom:5px}
+.fallbk p{margin:0;font-size:12px;line-height:1.45;color:var(--ink-3)}
+
+/* ---------- 6. verified information (full-width fact strip) ---------- */
+.vinfo{margin:22px var(--gutter) 0;background:var(--surface);border:1px solid var(--line);padding:16px 22px 18px}
+.vinfo__h{margin:0;font-family:var(--mono);font-size:9.5px;font-weight:400;letter-spacing:.2em;color:var(--ink-5)}
+/* 3 or 4 cells. Absent facts remove their cell; the rest redistribute. */
+.vinfo__list{margin:13px 0 0;display:flex;align-items:stretch}
+.vinfo__cell{flex:1 1 0;padding:0 26px;border-left:1px solid var(--line-5);min-width:0}
+.vinfo__cell:first-child{padding-left:0;border-left:0}
+.vinfo__cell dt{font-size:12px;color:var(--ink-4);margin-bottom:8px}
+.vinfo__cell dd{margin:0;font-size:15px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vinfo__cell dd.mono{font-family:var(--mono);font-size:14px}
+.vinfo__note{margin:16px 0 0;padding-top:14px;border-top:1px solid var(--line-5);font-size:12px;line-height:1.5;color:var(--ink-4);max-width:760px;text-wrap:pretty}
+.vinfo__note a{font-weight:500}
+
+/* ---------- 7. continuation ---------- */
+.more{padding:26px var(--gutter) 40px}
+.more__head{display:flex;align-items:baseline;gap:16px;padding-bottom:13px;border-bottom:1px solid var(--line-2)}
+.more__head h2{margin:0;font-family:var(--display);font-size:19px;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
+.more__head em{font-style:normal;font-family:var(--mono);font-size:11.5px;color:var(--ink-5)}
+.more__head a{margin-left:auto;font-size:12.5px;font-weight:600;color:var(--green-deep)}
+.more__grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding-top:20px}
+
+/* ---------- 8. product card — inherited verbatim from the listing ---------- */
+.card{background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column}
+.card__imgwrap{height:var(--card-img-h);border-bottom:1px solid var(--line);position:relative;overflow:hidden;display:block}
+.card__body{padding:14px 15px 15px;display:flex;flex-direction:column;flex:1}
+.card__dept{font-family:var(--mono);font-size:9px;letter-spacing:.16em;color:var(--green);margin-bottom:7px}
+.card__name{font-size:14.5px;font-weight:500;line-height:1.34;color:var(--ink);height:39px;overflow:hidden;text-wrap:pretty;margin:0}
+.card__attr{font-family:var(--mono);font-size:11px;color:var(--ink-5);margin-top:7px}
+.card__price{font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:-.02em;color:var(--ink);margin-top:12px}
+.card__stock{display:flex;align-items:center;gap:7px;margin-top:7px}
+.card__stock i{width:7px;height:7px;border-radius:50%;flex:0 0 7px}
+.card__stock span{font-size:12px;color:var(--ink-2);white-space:nowrap}
+.card__actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:13px;border-top:1px solid var(--line-5)}
+.card__open{font-size:12.5px;font-weight:600;color:var(--green-deep);white-space:nowrap}
+.card__cart{border:1px solid var(--ink);padding:7px 12px;font-size:12px;font-weight:500;color:var(--ink);cursor:pointer;white-space:nowrap}
+
+/* ---------- 9. not found (documented state) ---------- */
+.nf{background:var(--surface);border:1px solid var(--line);padding:30px 32px}
+.nf h2{margin:0;font-family:var(--display);font-size:24px;font-weight:700;letter-spacing:-.025em;color:var(--ink)}
+.nf p{margin:10px 0 0;font-size:13.5px;line-height:1.55;color:var(--ink-3);max-width:420px;text-wrap:pretty}
+.nf__acts{display:flex;gap:12px;margin-top:20px}
+.nf__acts .cart{flex:0 0 200px}
+.nf__acts .wa{margin-top:0;width:auto;padding:0 16px}
+
+/* ============ MOBILE 390×844 ============ */
+.mob{width:390px;height:844px;background:var(--ground);border:1px solid #D3CDC1;position:relative;overflow:hidden}
+.mob__hdr{height:52px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:0 12px}
+.mob__hdr .logo__word{font-size:17px}
+.mob__hdr .utils{gap:9px}
+.mob__hdr .lang{padding:1px}
+.mob__hdr .lang button{padding:2px 4px;font-size:10px}
+.mob__hdr .lang button:last-child{font-size:11px}
+.mob__hdr .utils__account{font-size:11.5px;white-space:nowrap}
+.mob__hdr .utils__cart{font-size:11.5px;gap:5px}
+.mob__search{height:46px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 14px}
+.mob__search .search{max-width:none;height:34px}
+.mob__search .search__input{font-size:13px}
+.mob__search .search__btn{padding:0 13px;font-size:12px}
+.mob__nav{height:40px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:stretch;gap:20px;padding:0 14px;overflow:hidden}
+.mob__nav .deptnav__item{font-size:13px}
+.mob__ctx{height:38px;display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:1px solid var(--line-2)}
+.mob__ctx .ctx__back{font-size:12.5px}
+.mob__ctx em{margin-left:auto;font-style:normal;font-family:var(--mono);font-size:10.5px;color:var(--ink-5)}
+.mob__viewer{height:258px;background:var(--surface);border-bottom:1px solid var(--line);overflow:hidden}
+.mob__buy{background:var(--surface);border-bottom:1px solid var(--line);padding:16px 14px 18px}
+.mob__buy .buy__name{font-size:23px;line-height:1.16;margin-top:9px}
+.mob__buy .buy__attr{margin-top:10px;font-size:11px}
+.mob__buy .buy__rule{margin:14px 0}
+.mob__buy .buy__price{font-size:31px}
+.mob__buy .buy__stock{margin-top:11px}
+.mob__buy .qtyrow{margin-top:16px;gap:10px}
+.mob__buy .qty{height:52px;flex:0 0 118px}
+.mob__buy .qty button{width:36px}
+.mob__buy .qty input{width:44px}
+.mob__buy .cart{height:52px;font-size:14px}
+.mob__buy .wa{height:46px;font-size:12.5px}
+.mob__peek{padding:14px 14px 0}
+.mob__body{padding:14px 14px 0}
+.mob .vinfo{margin:0;padding:14px 14px 16px}
+.mob .vinfo__list{flex-direction:column;margin-top:10px}
+.mob .vinfo__cell{flex:0 0 auto;padding:11px 0 0;border-left:0;border-top:1px solid var(--line-5);display:flex;align-items:baseline;justify-content:space-between;gap:14px}
+.mob .vinfo__cell:first-child{border-top:0;padding-top:0}
+.mob .vinfo__cell dt{margin-bottom:0;font-size:12.5px;white-space:nowrap}
+.mob .vinfo__cell dd{font-size:13.5px;text-align:right;white-space:normal;overflow:visible;text-overflow:clip}
+.mob .vinfo__cell dd.mono{font-size:13px}
+.mob .vinfo__note{margin-top:13px;padding-top:12px;font-size:11.5px}
+.mob .more{padding:18px 14px 90px}
+.mob .more__head{flex-direction:column;align-items:flex-start;gap:5px}
+.mob .more__head a{margin-left:0}
+.mob .more__grid{grid-template-columns:1fr;gap:14px;padding-top:16px}
+.mob .more__head h2{font-size:17px}
+/* condensed action bar. Appears ONLY after the real decision block scrolls away.
+   Production adds env(safe-area-inset-bottom) to its padding and a matching
+   scroll-padding-bottom on the page, so it never covers content or focus. */
+.mob__sticky{position:absolute;left:0;right:0;bottom:0;height:70px;background:var(--surface);border-top:1px solid var(--line-3);display:flex;align-items:center;gap:12px;padding:0 14px}
+.mob__sticky dl{margin:0;flex:0 0 auto}
+.mob__sticky dt{font-family:var(--display);font-size:19px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+.mob__sticky dd{margin:3px 0 0;font-size:11px;color:var(--ink-2);display:flex;align-items:center;gap:6px}
+.mob__sticky dd i{width:6px;height:6px;border-radius:50%;flex:0 0 6px}
+.mob__sticky .cart{height:48px;font-size:14px}
+
+/* ============ state gallery ============ */
+.gal{display:grid;grid-template-columns:repeat(2,1fr);gap:26px 24px}
+.gal__item{display:grid;grid-template-columns:168px 1fr;gap:20px;align-items:start;border-top:1px solid #CFC8BA;padding-top:14px}
+.gal__cap > b{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;color:var(--green-deep);margin-bottom:7px;line-height:1.5}
+.gal__cap p b{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--ink-2);letter-spacing:0}
+.gal__cap p{margin:0;font-size:11.5px;line-height:1.55;color:var(--ink-4);text-wrap:pretty}
+.gal__cap p+p{margin-top:7px}
+.gal__mod{width:456px}
+.gal__mod--wide{width:100%}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="mast" data-annotation="concept-chrome">
+    <h1>Ekoway — ProductDetailView</h1>
+    <p>PASS 3 · ONE DIRECTION · CONTINUATION OF <b>3a WORKLIST</b> · OWNER DECISIONS APPLIED · CONCEPT DATA FROM seed-catalogue.js</p>
+  </div>
+
+  <!-- ================= DESKTOP 1440×900 ================= -->
+  <div class="stack">
+    <p class="cap" data-annotation="caption"><i>01</i> DESKTOP CONCEPT — 1440 × 900, FIRST VIEWPORT <em>Everything to the Add to Cart decision sits above the fold.</em></p>
+    <div class="foldwrap"><div class="page page--fold" id="desktopShot"></div><div class="fold" data-annotation="fold-1440x900"><span>1440 × 900 FOLD</span></div></div>
+  </div>
+
+  <div class="stack">
+    <p class="cap" data-annotation="caption"><i>02</i> SAME PAGE, BELOW THE FOLD <em>Verified information, then the continuation back into the catalogue.</em></p>
+    <div class="page" id="desktopBelow"></div>
+  </div>
+
+  <!-- ================= MOBILE 390×844 ================= -->
+  <div class="stack">
+    <p class="cap" data-annotation="caption"><i>03</i> MOBILE CONCEPT — 390 × 844 <em>Deliberately recomposed: one uninterrupted decision block; the condensed action bar appears only after it scrolls away.</em></p>
+    <div class="row2">
+      <div class="mob" id="mobileShot"></div>
+      <div class="mob" id="mobileBelow"></div>
+      <div style="max-width:300px">
+        <p class="gal__cap" style="margin:0"><b>MOBILE LOGIC</b></p>
+        <p style="margin:0 0 12px;font-size:12px;line-height:1.6;color:var(--ink-4);text-wrap:pretty">Left frame is the landing viewport. Department, name, price, stock, quantity and Add to Cart are one continuous block on a single surface directly under the image — never split by a rule or a section boundary.</p>
+        <p style="margin:0 0 12px;font-size:12px;line-height:1.6;color:var(--ink-4);text-wrap:pretty">Right frame is the same page scrolled. Once the block leaves the viewport the condensed action bar pins price, stock and Add to Cart to the bottom. It never appears while the real block is visible, so the price is stated once.</p>
+        <p style="margin:0;font-size:12px;line-height:1.6;color:var(--ink-4);text-wrap:pretty">No desktop region is dropped: the same verified information and the same continuation cards follow, at full card anatomy.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= STATES ================= -->
+  <div class="stack">
+    <p class="cap" data-annotation="caption"><i>04</i> REQUIRED STATES <em>Real modules at production size, built from the same seed data. States 1, 4 and 6 are shown by the concept above.</em></p>
+    <div class="gal" id="gallery"></div>
+  </div>
+
+</div>
+
+<script>
+/* ------------------------------------------------------------------
+   Concept data only — identical shape to seed-catalogue.js.
+   Contract fields: id, name, category, price, stockQty, lowStock,
+   imageUrl, attribute. Nothing else exists, so nothing else is shown.
+   ------------------------------------------------------------------ */
+var PRODUCTS = [
+  {id:'r1',name:'Heavy-Duty Galvanised Roofing Sheet 0.47mm \u00d7 3.0m, Anti-Rust Coated',category:'Roofing & Rain',price:89.9,stockQty:128,lowStock:false,imageUrl:'',attribute:'0.47mm gauge'},
+  {id:'r2',name:'Aluminium Gutter Profile 4in \u00d7 3.0m',category:'Roofing & Rain',price:118,stockQty:62,lowStock:false,imageUrl:'photo',attribute:'3.0m length'},
+  {id:'r3',name:'Roof & Gutter Sealant 300ml, Neutral Cure',category:'Roofing & Rain',price:24.9,stockQty:4,lowStock:true,imageUrl:'',attribute:'300ml'},
+  {id:'r4',name:'Polycarbonate Awning Sheet 1.2m \u00d7 2.4m, UV-Stabilised',category:'Roofing & Rain',price:356,stockQty:18,lowStock:false,imageUrl:'',attribute:'UV-stabilised'},
+  {id:'r5',name:'Roofing Screw with EPDM Washer 65mm, Box of 500',category:'Roofing & Rain',price:142,stockQty:37,lowStock:false,imageUrl:'',attribute:'Box of 500'},
+  {id:'p1',name:'Inverter Pressure Pump 1.0HP with Automatic Controller',category:'Plumbing & Pumps',price:2798,stockQty:6,lowStock:false,imageUrl:'photo',attribute:'1.0HP'},
+  {id:'p2',name:'PVC Pressure Elbow 90\u00b0 25mm',category:'Plumbing & Pumps',price:3.9,stockQty:1240,lowStock:false,imageUrl:'',attribute:'25mm'},
+  {id:'p3',name:'Submersible Drainage Pump 0.5HP, Stainless Housing',category:'Plumbing & Pumps',price:689,stockQty:11,lowStock:false,imageUrl:'',attribute:'0.5HP'},
+  {id:'p4',name:'Brass Ball Valve 25mm, Full Bore',category:'Plumbing & Pumps',price:32,stockQty:88,lowStock:false,imageUrl:'',attribute:'25mm'},
+  {id:'t1',name:'1200W Angle Grinder 100mm with Anti-Vibration Handle',category:'Power Tools',price:299,stockQty:22,lowStock:false,imageUrl:'photo',attribute:'100mm disc'},
+  {id:'t2',name:'Cordless Impact Driver 18V, Bare Tool',category:'Power Tools',price:458,stockQty:9,lowStock:false,imageUrl:'',attribute:'18V'},
+  {id:'b1',name:'Ordinary Portland Cement 50kg',category:'Building Materials',price:21.5,stockQty:340,lowStock:false,imageUrl:'',attribute:'50kg'},
+  {id:'b2',name:'Waterproofing Cement Slurry 20kg, Two-Component',category:'Building Materials',price:176,stockQty:0,lowStock:false,imageUrl:'',attribute:'20kg'}
+];
+var DEPARTMENTS = ['Building Materials','Roofing & Rain','Plumbing & Pumps','Power Tools'];
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function formatPrice(v){return 'RM ' + Number(v).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function get(id){var m=PRODUCTS.filter(function(p){return p.id===id;})[0];return JSON.parse(JSON.stringify(m));}
+function countIn(cat){return PRODUCTS.filter(function(p){return p.category===cat;}).length;}
+function siblings(p,n){return PRODUCTS.filter(function(q){return q.category===p.category && q.id!==p.id;}).slice(0,n);}
+
+/* stock — the approved three bands. Exact quantity only when low. */
+function stockOf(p){
+  if(p.stockQty === 0) return {text:'Out of stock',color:'var(--grey-dot)',ok:false};
+  if(p.lowStock) return {text:'Low stock \u2014 ' + p.stockQty + ' left',color:'var(--orange)',ok:true};
+  return {text:'In stock',color:'var(--green)',ok:true};
+}
+
+/* image — exactly three states; loading and runtime failure resolve into "unavailable" */
+function imageBlock(p,large){
+  if(p.imageUrl){
+    /* Production: a real <img src> in this same reserved frame. */
+    return '<div class="slot" data-annotation="photo-slot"><span>PRODUCT PHOTO</span></div>';
+  }
+  return '<div class="miss' + (large?' miss--lg':'') + '"><div class="miss__mark" aria-hidden="true"></div><div>' +
+    '<div class="miss__dept">' + esc(p.category.toUpperCase()) + '</div>' +
+    '<div class="miss__copy">Product image is not available yet.</div></div></div>';
+}
+
+function header(){
+  return '<header class="hdr">' +
+    '<div class="logo"><div class="logo__mark" aria-hidden="true"></div><div class="logo__word">EKOWAY</div>' +
+    '<div class="logo__rule" aria-hidden="true"></div><div class="logo__sub">HARDWARE</div></div>' +
+    '<form class="search" role="search" onsubmit="return false"><input class="search__input" type="search" placeholder="Search products and departments\u2026" aria-label="Search products"><button class="search__btn" type="submit">Search</button></form>' +
+    '<div class="utils"><div class="lang" role="group" aria-label="Language">' +
+    '<button aria-current="true">EN</button><button>BM</button><button>\u4e2d\u6587</button></div>' +
+    '<a class="utils__account" href="#">Account</a><a class="utils__cart" href="#">Cart<span>2</span></a></div></header>';
+}
+function deptnav(active){
+  return '<nav class="deptnav" aria-label="Departments"><div class="deptnav__list">' +
+    '<a class="deptnav__item" href="#">All departments</a>' +
+    DEPARTMENTS.map(function(d){
+      return '<a class="deptnav__item" href="#"' + (d===active?' aria-current="page"':'') + '>' + esc(d) + '</a>';
+    }).join('') +
+    '</div><a class="deptnav__wa" href="#"><i aria-hidden="true"></i>WhatsApp the store</a></nav>';
+}
+/* Context bar. The job line renders ONLY when a verified job lens is still active. */
+function ctxbar(p,lens){
+  return '<div class="ctx">' +
+    '<a class="ctx__back" href="#"><u aria-hidden="true">\u2190</u>Back to products</a>' +
+    '<div class="ctx__div" aria-hidden="true"></div>' +
+    '<nav class="crumb" aria-label="Breadcrumb"><a href="#">All departments</a><i aria-hidden="true">/</i>' +
+    '<a href="#">' + esc(p.category) + '</a><i aria-hidden="true">/</i><b>' + esc(p.name) + '</b></nav>' +
+    (lens ? '<p class="ctx__lens">Still working on: <b>' + esc(lens.name) + '</b></p>' : '') +
+    '</div>';
+}
+
+/* ---- buy panel: department, name, attribute, price, stock, quantity, Add to Cart, contact ---- */
+function buyPanel(p,opt){
+  opt = opt || {};
+  var s = stockOf(p);
+  var out = p.stockQty === 0;
+  return '<aside class="buy" aria-label="Purchase">' +
+    (opt.fallback ? '<div class="fallbk"><b>SAVED CATALOGUE</b><p>Showing saved product information because the live catalogue could not be reached. Price and availability may not be current.</p></div>' : '') +
+    '<div class="buy__dept">' + esc(p.category.toUpperCase()) + '</div>' +
+    '<h1 class="buy__name">' + esc(p.name) + '</h1>' +
+    (p.attribute ? '<div class="buy__attr">' + esc(p.attribute) + '</div>' : '') +
+    '<div class="buy__rule" aria-hidden="true"></div>' +
+    '<div class="buy__price">' + formatPrice(p.price) + '</div>' +
+    '<div class="buy__stock"><i style="background:' + s.color + '" aria-hidden="true"></i><span>' + esc(s.text) + '</span></div>' +
+    '<div class="qtyrow">' +
+      '<div class="qty" role="group" aria-label="Quantity">' +
+        '<button type="button" aria-label="Decrease quantity"' + (out?' disabled':'') + '>\u2212</button>' +
+        '<input type="text" inputmode="numeric" value="1" aria-label="Quantity"' + (out?' disabled':'') + '>' +
+        '<button type="button" aria-label="Increase quantity"' + (out?' disabled':'') + '>+</button>' +
+      '</div>' +
+      '<button class="cart" type="button"' + (out?' disabled':'') + '>' + (out ? 'Out of stock' : 'Add to Cart') + '</button>' +
+    '</div>' +
+    '<a class="wa' + (out?' wa--lead':'') + '" href="#"><i aria-hidden="true"></i>Ask about this product on WhatsApp</a>' +
+    '<div class="buy__foot"><a href="#">\u2190 All ' + esc(p.category) + '</a><em>' + countIn(p.category) + ' products</em></div>' +
+    '</aside>';
+}
+
+/* ---- verified information: only cells that carry a real value ---- */
+function vinfo(p,flush){
+  var s = stockOf(p);
+  var rows = [['Department', esc(p.category), false]];
+  if(p.attribute) rows.push(['Product detail', esc(p.attribute), true]);
+  rows.push(['Price', formatPrice(p.price), true]);
+  rows.push(['Availability', esc(s.text), false]);
+  return '<section class="vinfo"' + (flush?' style="margin-top:0"':'') + ' aria-labelledby="vi-' + p.id + '">' +
+    '<h2 class="vinfo__h" id="vi-' + p.id + '">VERIFIED INFORMATION</h2>' +
+    '<dl class="vinfo__list">' + rows.map(function(r){
+      return '<div class="vinfo__cell"><dt>' + r[0] + '</dt><dd' + (r[2]?' class="mono"':'') + '>' + r[1] + '</dd></div>';
+    }).join('') + '</dl>' +
+    '<p class="vinfo__note">Only information confirmed by Ekoway is shown.</p>' +
+    '</section>';
+}
+
+/* ---- continuation: the frozen listing card, unchanged ---- */
+function cardHTML(p){
+  var s = stockOf(p);
+  return '<article class="card">' +
+    '<a class="card__imgwrap" href="#" aria-label="' + esc(p.name) + '">' + imageBlock(p) + '</a>' +
+    '<div class="card__body"><div class="card__dept">' + esc(p.category.toUpperCase()) + '</div>' +
+    '<h3 class="card__name"><a href="#" style="color:inherit">' + esc(p.name) + '</a></h3>' +
+    (p.attribute ? '<div class="card__attr">' + esc(p.attribute) + '</div>' : '') +
+    '<div class="card__price">' + formatPrice(p.price) + '</div>' +
+    '<div class="card__stock"><i style="background:' + s.color + '" aria-hidden="true"></i><span>' + esc(s.text) + '</span></div>' +
+    '<div class="card__actions"><a class="card__open" href="#">View product \u2192</a>' +
+    '<button class="card__cart" type="button">Add to Cart</button></div></div></article>';
+}
+function continuation(p,n){
+  var sibs = siblings(p,n);
+  return '<section class="more" aria-labelledby="more-h">' +
+    '<div class="more__head"><h2 id="more-h">More in ' + esc(p.category) + '</h2>' +
+    '<em>' + countIn(p.category) + ' products in this department</em>' +
+    '<a href="#">All ' + esc(p.category) + ' \u2192</a></div>' +
+    '<div class="more__grid">' + sibs.map(cardHTML).join('') + '</div></section>';
+}
+
+/* ================= build the desktop concept ================= */
+var HERO = get('p3');           /* no verified photography \u00b7 mid RM price \u00b7 normal stock \u00b7 attribute present */
+var LENS = {name:'Water Supply'};
+
+document.getElementById('desktopShot').innerHTML =
+  header() + deptnav(HERO.category) + ctxbar(HERO,LENS) +
+  '<main class="detail"><figure class="viewer">' + imageBlock(HERO,true) + '</figure>' +
+  buyPanel(HERO) + '</main>' + vinfo(HERO);
+
+document.getElementById('desktopBelow').innerHTML =
+  '<div style="padding-top:26px">' + vinfo(HERO,true) + '</div>' +
+  continuation(HERO,4);
+
+/* ================= build the mobile concept ================= */
+function mobHeader(){
+  return '<header class="mob__hdr"><div class="logo"><div class="logo__mark" aria-hidden="true"></div>' +
+    '<div class="logo__word">EKOWAY</div></div><div class="utils">' +
+    '<div class="lang" role="group" aria-label="Language"><button aria-current="true">EN</button><button>BM</button><button>\u4e2d\u6587</button></div>' +
+    '<a class="utils__account" href="#">Account</a>' +
+    '<a class="utils__cart" href="#">Cart<span>2</span></a></div></header>' +
+    '<div class="mob__search"><form class="search" role="search" onsubmit="return false">' +
+    '<input class="search__input" type="search" placeholder="Search products\u2026" aria-label="Search products">' +
+    '<button class="search__btn" type="submit">Search</button></form></div>' +
+    '<nav class="mob__nav" aria-label="Departments"><a class="deptnav__item" href="#" aria-current="page">Plumbing &amp; Pumps</a>' +
+    '<a class="deptnav__item" href="#">Power Tools</a><a class="deptnav__item" href="#">Roofing &amp; Rain</a></nav>';
+}
+var mStock = stockOf(HERO);
+document.getElementById('mobileShot').innerHTML =
+  mobHeader() +
+  '<div class="mob__ctx"><a class="ctx__back" href="#"><u aria-hidden="true">\u2190</u>All ' + esc(HERO.category) + '</a>' +
+  '<em>' + countIn(HERO.category) + ' PRODUCTS</em></div>' +
+  '<div class="mob__viewer">' + imageBlock(HERO,true) + '</div>' +
+  '<div class="mob__buy">' +
+    '<div class="buy__dept">' + esc(HERO.category.toUpperCase()) + '</div>' +
+    '<h1 class="buy__name">' + esc(HERO.name) + '</h1>' +
+    '<div class="buy__attr">' + esc(HERO.attribute) + '</div>' +
+    '<div class="buy__rule" aria-hidden="true"></div>' +
+    '<div class="buy__price">' + formatPrice(HERO.price) + '</div>' +
+    '<div class="buy__stock"><i style="background:' + mStock.color + '" aria-hidden="true"></i><span>' + esc(mStock.text) + '</span></div>' +
+    '<div class="qtyrow"><div class="qty" role="group" aria-label="Quantity">' +
+      '<button type="button" aria-label="Decrease quantity">\u2212</button><input type="text" inputmode="numeric" value="1" aria-label="Quantity"><button type="button" aria-label="Increase quantity">+</button></div>' +
+      '<button class="cart" type="button">Add to Cart</button></div>' +
+    '<a class="wa" href="#"><i aria-hidden="true"></i>Ask about this product on WhatsApp</a>' +
+  '</div>' +
+  '<div class="mob__peek">' + vinfo(HERO,true) + '</div>';
+
+document.getElementById('mobileBelow').innerHTML =
+  '<div class="mob__body">' + vinfo(HERO,true) + '</div>' +
+  continuation(HERO,2) +
+  '<div class="mob__sticky"><dl><dt>' + formatPrice(HERO.price) + '</dt>' +
+  '<dd><i style="background:' + mStock.color + '" aria-hidden="true"></i>' + esc(mStock.text) + '</dd></dl>' +
+  '<div class="qty" role="group" aria-label="Quantity" style="height:48px;flex:0 0 96px">' +
+  '<button type="button" aria-label="Decrease quantity">\u2212</button><input type="text" inputmode="numeric" value="1" aria-label="Quantity" style="width:30px"><button type="button" aria-label="Increase quantity">+</button></div>' +
+  '<button class="cart" type="button">Add to Cart</button></div>';
+
+/* ================= state gallery ================= */
+var noAttr = get('p4'); noAttr.attribute = '';
+var longName = get('r1');
+var lowS = get('r3');
+var outS = get('b2');
+var fallb = get('t2');
+
+function galItem(label,notes,module,wide){
+  return '<div class="gal__item"><div class="gal__cap"><b>' + label + '</b>' +
+    notes.map(function(n){return '<p>' + n + '</p>';}).join('') + '</div>' +
+    '<div class="gal__mod' + (wide?' gal__mod--wide':'') + '">' + module + '</div></div>';
+}
+
+var G = [];
+G.push(galItem('STATE 2<br>IMAGE UNAVAILABLE',
+  ['Same reserved frame, same height \u2014 the layout never shifts. Department set in mono over the honest line, so an absent photo reads as a known gap, not a broken page.',
+   'Runtime load failure and an empty <code>imageUrl</code> resolve to this identical panel. Generic placeholder URLs are treated as absent.'],
+  '<figure class="viewer" style="height:300px;margin:0">' + imageBlock(longName,true) + '</figure>', true));
+
+G.push(galItem('STATE 3<br>LONG PRODUCT NAME',
+  ['Exact catalogue name, never truncated on this page \u2014 the detail view is where the full name is finally allowed to breathe.',
+   'Archivo 30/700 wraps to three lines; the price block moves down and nothing else changes.'],
+  buyPanel(longName)));
+
+G.push(galItem('STATE 7<br>MISSING OPTIONAL ATTRIBUTE',
+  ['The attribute line is removed entirely \u2014 no dash, no \u201cN/A\u201d, no substituted copy, and no explanation of what is missing.',
+   'Verified information drops the same cell and rebalances to <b>three</b> cells. No empty <b>Product detail</b> heading is ever rendered.'],
+  '<div style="display:grid;gap:18px">' + buyPanel(noAttr) + vinfo(noAttr,true) + '</div>', true));
+
+G.push(galItem('STATE 5<br>LOW STOCK',
+  ['Exact quantity only in this band: <b>Low stock \u2014 4 left</b>. Orange <code>#D2542A</code> appears nowhere else on the page.',
+   'Add to Cart stays fully enabled and unchanged; urgency is stated, never manufactured.'],
+  buyPanel(lowS)));
+
+G.push(galItem('OUT OF STOCK<br>(THIRD BAND)',
+  ['Add to Cart is disabled and relabelled to the truth. Quantity is disabled with it.',
+   'The contact action takes the lead outline so the customer keeps a route forward. It is worded as a question, never as a promise \u2014 no reservation, quotation, order or restock date is implied, because none is held.'],
+  buyPanel(outS)));
+
+G.push(galItem('STATE 8<br>SAVED FALLBACK PRODUCT',
+  ['The saved catalogue renders the identical page \u2014 no degraded layout, nothing hidden.',
+   'One quiet strip above the panel discloses the source and that price and availability may be stale. Add to Cart keeps working exactly as it does today.'],
+  buyPanel(fallb,{fallback:true})));
+
+G.push(galItem('STATE 9<br>NOT FOUND<br><span style="letter-spacing:.04em;color:var(--ink-5)">documented state only</span>',
+  ['Reached only when the id resolves to nothing. Header, department nav and context bar stay in place above it.',
+   'Two exits, no dead end: back to the catalogue, or ask the store. Never a blank page and never an invented product.'],
+  '<div class="nf"><h2>This product is not available.</h2>' +
+  '<p>It may have been removed from the catalogue, or the link may be out of date.</p>' +
+  '<div class="nf__acts"><button class="cart" type="button">Back to products</button>' +
+  '<a class="wa" href="#"><i aria-hidden="true"></i>Ask the store on WhatsApp</a></div></div>', true));
+
+document.getElementById('gallery').innerHTML = G.join('');
+</script>
+</body>
+</html>
