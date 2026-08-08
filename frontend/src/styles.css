@@ -6346,6 +6346,116 @@ body:has(.support-chat-widget) .notification-region--toasts {
   }
 }
 
+/* 3a Worklist: state foundations kept explicit so the approved drawer, recovery,
+   and loading states do not depend on historical Pass 1/2 storefront rules. */
+.storefront-shell .worklist-filter-drawer .fgroup {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.storefront-shell .worklist-filter-drawer .fgroup legend {
+  margin: 0 0 0.55rem;
+  padding: 0;
+  color: var(--worklist-ink-5);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.storefront-shell .shop-product-card .shop-listing-name-link {
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+  text-align: left;
+  overflow-wrap: break-word;
+}
+
+.storefront-shell .shop-skeleton-block {
+  display: inline-block;
+  border-radius: 2px;
+  background: #eceae2;
+  animation: shop-skeleton-fade 1.4s ease-in-out infinite;
+}
+
+.storefront-shell .shop-skeleton-line {
+  height: 0.9rem;
+}
+
+@keyframes shop-skeleton-fade {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .storefront-shell .shop-skeleton-block {
+    animation: none;
+  }
+}
+
+.storefront-shell .shop-empty-state {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+  padding: 2rem 1.25rem;
+  border: 1px solid var(--worklist-line);
+  border-radius: 2px;
+  background: var(--worklist-surface);
+  color: var(--worklist-ink);
+  text-align: left;
+}
+
+.storefront-shell .shop-empty-state h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.storefront-shell .shop-empty-state p {
+  max-width: 38rem;
+  margin: 0;
+  color: var(--worklist-ink-5);
+}
+
+.storefront-shell .shop-empty-state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.storefront-shell .shop-empty-action {
+  min-height: 44px;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--worklist-line-3);
+  border-radius: 2px;
+  background: var(--worklist-surface);
+  color: var(--worklist-ink);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.storefront-shell .shop-empty-action:hover {
+  border-color: var(--worklist-green-deep);
+  color: var(--worklist-green-deep);
+}
+
+.storefront-shell .shop-empty-action--primary {
+  border-color: var(--worklist-green-deep);
+  background: var(--worklist-green-deep);
+  color: var(--worklist-ground);
+}
+
+.storefront-shell .shop-empty-action--primary:hover {
+  border-color: var(--worklist-green);
+  background: var(--worklist-green);
+  color: var(--worklist-ground);
+}
+
 /* ---------- ProductDetailView Pass 3: isolated continuation of the approved 3a surface ---------- */
 .storefront-shell .pdp-shell {
   min-width: 0;
