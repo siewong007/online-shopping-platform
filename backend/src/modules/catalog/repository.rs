@@ -6,7 +6,7 @@ use super::{
         CreateCategoryInput, CreateProductInput, UpdateCategoryInput, UpdateProductInput,
         UpdateProductStockInput,
     },
-    model::{AdminCatalogPayload, Category, Product, ProductRestockResult},
+    model::{AdminCatalogPayload, CatalogueImportReport, Category, Product, ProductRestockResult},
 };
 
 pub async fn fetch_admin_catalog(pool: &PgPool) -> Result<AdminCatalogPayload> {
@@ -55,4 +55,8 @@ pub async fn update_product_stock(
 
 pub async fn run_supplier_sync(pool: &PgPool) -> Result<Vec<ProductRestockResult>> {
     crate::db::supplier_sync(pool).await
+}
+
+pub async fn import_catalogue(pool: &PgPool, body: &str) -> Result<CatalogueImportReport> {
+    crate::db::import_catalogue(pool, body).await
 }

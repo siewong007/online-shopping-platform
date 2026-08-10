@@ -15,7 +15,7 @@ use super::{
         CreateCategoryInput, CreateProductInput, UpdateCategoryInput, UpdateProductInput,
         UpdateProductStockInput,
     },
-    model::{AdminCatalogPayload, Category, Product, ProductRestockResult},
+    model::{AdminCatalogPayload, CatalogueImportReport, Category, Product, ProductRestockResult},
     service,
 };
 
@@ -198,4 +198,26 @@ pub async fn supplier_sync(
         .await
         .map(Json)
         .map_err(|error| error::map_admin_query_error("supplier sync failed", error))
+}
+
+/// Accepts the AutoCount catalogue export as a raw CSV body. Sent as text rather than a
+/// multipart upload so no new extractor feature is needed for a single-file endpoint.
+pub async fn import_catalogue(
+    State(state): State<AppState>,
+    identity: AdminIdentity,
+    body: String,
+) -> Result<Json<CatalogueImportReport>, error::HttpError> {
+    permissions::service::ensure_permission(
+        &state.pool,
+        &identity,
+        permissions::model::ADMIN_CATALOG_PAGE,
+        permissions::model::PermissionAction::Create,
+        "catalog",
+    )
+    .await?;
+
+    service::import_catalogue(&state.pool, &identity, &body)
+        .await
+        .map(Json)
+        .map_err(error::map_admin_error)
 }

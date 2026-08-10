@@ -1,7 +1,7 @@
-use std::{env, io::ErrorKind, net::SocketAddr};
+use std::{env, io::ErrorKind, net::SocketAddr, time::Duration};
 
 use anyhow::Context;
-use online_shopping_api::{app_state::AppState, modules::auth, routes};
+use online_shopping_api::{app_state::AppState, db, modules::auth, routes};
 use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -35,6 +35,8 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("failed to ensure seed admin user")?;
 
+    spawn_abandoned_stock_sweep(pool.clone());
+
     let app = routes::build_router(AppState::new(pool), frontend_origin);
 
     let address: SocketAddr = format!("{app_host}:{app_port}").parse()?;
@@ -60,6 +62,29 @@ async fn main() -> anyhow::Result<()> {
         .await?;
 
     Ok(())
+}
+
+/// Periodically returns stock held by abandoned, never-paid orders. The sweep itself is a
+/// no-op until `inventory.unpaid_release_minutes` is raised above 0, so this ticker is cheap
+/// while the setting stays at its seeded default.
+fn spawn_abandoned_stock_sweep(pool: sqlx::PgPool) {
+    tokio::spawn(async move {
+        let mut ticker = tokio::time::interval(Duration::from_secs(300));
+
+        loop {
+            ticker.tick().await;
+
+            match db::release_abandoned_order_stock(&pool).await {
+                Ok(0) => {}
+                Ok(released) => {
+                    tracing::info!("released held stock for {released} abandoned order(s)");
+                }
+                Err(error) => {
+                    tracing::warn!(%error, "abandoned-order stock sweep failed");
+                }
+            }
+        }
+    });
 }
 
 async fn shutdown_signal() {

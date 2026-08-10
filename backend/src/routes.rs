@@ -1,5 +1,6 @@
 use axum::{
     Router,
+    extract::DefaultBodyLimit,
     http::{HeaderValue, Method, header::AUTHORIZATION, header::CONTENT_TYPE},
     routing::{delete, get, post, put},
 };
@@ -238,6 +239,13 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
         .route(
             "/api/admin/inventory/supplier-sync",
             post(catalog::controller::supplier_sync),
+        )
+        .route(
+            "/api/admin/catalogue/import",
+            // The full AutoCount export is ~1 MB of CSV, over Axum's 2 MB default once the
+            // catalogue grows; give this one route its own ceiling.
+            post(catalog::controller::import_catalogue)
+                .layer(DefaultBodyLimit::max(16 * 1024 * 1024)),
         )
         .route("/api/checkout", post(orders::controller::checkout))
         .route("/api/checkout/quote", post(orders::controller::quote))

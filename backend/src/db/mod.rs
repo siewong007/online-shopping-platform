@@ -1,6 +1,7 @@
 mod admin;
 mod audit;
 mod catalog;
+mod catalogue_import;
 mod customer_auth;
 mod customer_portal;
 mod dashboard;
@@ -20,6 +21,7 @@ mod support;
 pub use admin::*;
 pub use audit::*;
 pub use catalog::*;
+pub use catalogue_import::*;
 pub use customer_auth::*;
 pub use customer_portal::*;
 pub use dashboard::*;
