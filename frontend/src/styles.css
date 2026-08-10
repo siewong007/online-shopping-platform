@@ -7267,3 +7267,13 @@ body:has(.support-chat-widget) .notification-region--toasts {
 }
 .shop-load-more p { margin: 0; color: #6d7472; font-size: 0.875rem; }
 .shop-load-more button { min-height: 2.75rem; min-width: 12rem; }
+
+/* ---- department facet counts ---- */
+.storefront-shell .worklist-filter-drawer .opt { display: flex; align-items: center; gap: 8px; }
+.storefront-shell .worklist-filter-drawer .opt > span:first-of-type { flex: 1; min-width: 0; }
+.storefront-shell .worklist-filter-drawer .opt-count {
+  flex: none;
+  color: var(--worklist-ink-5, #8a867d);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}

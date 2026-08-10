@@ -80,6 +80,14 @@ function buildQueryString(params?: StorefrontQueryParams): string {
     search.set("offset", String(params.offset));
   }
 
+  if (params.inStockOnly) {
+    search.set("in_stock_only", "true");
+  }
+
+  if (params.onSaleOnly) {
+    search.set("on_sale_only", "true");
+  }
+
   const query = search.toString();
   return query ? `?${query}` : "";
 }

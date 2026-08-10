@@ -5,12 +5,25 @@ use sqlx::PgPool;
 const DEFAULT_PAGE_SIZE: i64 = 60;
 const MAX_PAGE_SIZE: i64 = 120;
 
-/// Filters shared by the product page query and its matching COUNT, so the two can
-/// never drift apart and report a total that does not match the rows returned.
+/// Filters shared by the product page query, its matching COUNT, and the per-department
+/// counts, so the three can never drift apart and report totals that disagree.
+///
+/// `include_category` is false when building the department facet: the counts have to show
+/// how many products each *other* department holds under the current search and price
+/// filters, which they could not do if the selected department were also applied.
 fn push_product_filters<'a>(
     builder: &mut sqlx::QueryBuilder<'a, sqlx::Postgres>,
     query: &'a StorefrontQuery,
+    include_category: bool,
 ) {
+    if query.in_stock_only.unwrap_or(false) {
+        builder.push(" AND stock_quantity > 0");
+    }
+
+    if query.on_sale_only.unwrap_or(false) {
+        builder.push(" AND badge ILIKE '%sale%'");
+    }
+
     if let Some(text) = query
         .q
         .as_deref()
@@ -31,11 +44,12 @@ fn push_product_filters<'a>(
         builder.push(" ESCAPE '\\')");
     }
 
-    if let Some(category) = query
-        .category
-        .as_deref()
-        .map(str::trim)
-        .filter(|category| !category.is_empty() && *category != "all")
+    if include_category
+        && let Some(category) = query
+            .category
+            .as_deref()
+            .map(str::trim)
+            .filter(|category| !category.is_empty() && *category != "all")
     {
         builder.push(" AND category_slug = ");
         builder.push_bind(category.to_string());
@@ -74,8 +88,20 @@ pub async fn fetch_storefront(pool: &PgPool, query: &StorefrontQuery) -> Result<
 
     let mut count_builder =
         sqlx::QueryBuilder::new("SELECT COUNT(*) FROM products WHERE featured = true");
-    push_product_filters(&mut count_builder, query);
+    push_product_filters(&mut count_builder, query, true);
     let total_products: i64 = count_builder.build_query_scalar().fetch_one(pool).await?;
+
+    // Department facet: how many products each department holds under every filter except
+    // the department itself, so a shopper can see where else their search has results.
+    let mut facet_builder = sqlx::QueryBuilder::new(
+        "SELECT category_slug, COUNT(*)::bigint FROM products WHERE featured = true",
+    );
+    push_product_filters(&mut facet_builder, query, false);
+    facet_builder.push(" GROUP BY category_slug");
+    let category_counts = facet_builder
+        .build_query_as::<CategoryCount>()
+        .fetch_all(pool)
+        .await?;
 
     let mut builder = sqlx::QueryBuilder::new(
         "SELECT products.id, products.name, products.category_slug, products.price_cents, products.badge, \
@@ -89,7 +115,7 @@ pub async fn fetch_storefront(pool: &PgPool, query: &StorefrontQuery) -> Result<
          WHERE featured = true",
     );
 
-    push_product_filters(&mut builder, query);
+    push_product_filters(&mut builder, query, true);
 
     // Every branch ends with products.id. Imported products all share sort_order = 0, and
     // prices and names repeat freely, so without a unique tiebreaker LIMIT/OFFSET ordering
@@ -142,6 +168,7 @@ pub async fn fetch_storefront(pool: &PgPool, query: &StorefrontQuery) -> Result<
         categories,
         products,
         total_products,
+        category_counts,
         promotions,
         services,
         pro_stats,

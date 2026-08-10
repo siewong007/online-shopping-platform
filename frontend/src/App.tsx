@@ -1273,6 +1273,10 @@ export default function App() {
   const [storefront, setStorefront] = useState<StorefrontPayload | null>(null);
   const [isStorefrontFallback, setIsStorefrontFallback] = useState(false);
   const [isLoadingMoreProducts, setIsLoadingMoreProducts] = useState(false);
+  // Held here, not in StorefrontView: with a paged catalogue these must be part of the
+  // query, otherwise they only filter the 60 products that happen to be loaded.
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [onSaleOnly, setOnSaleOnly] = useState(false);
   const [isStorefrontRefetching, setIsStorefrontRefetching] = useState(false);
   const [publicOffers, setPublicOffers] = useState<PublicOffersPayload | null>(null);
   const [dashboard, setDashboard] = useState<AdminDashboardPayload | null>(null);
@@ -1383,6 +1387,8 @@ export default function App() {
         minPriceCents: minPriceCents ?? undefined,
         maxPriceCents: maxPriceCents ?? undefined,
         sort: sortOption,
+        inStockOnly,
+        onSaleOnly,
         offset: storefront.products.length
       });
       payload.products.forEach((product) => latestProductsById.current.set(product.id, product));
@@ -1421,7 +1427,9 @@ export default function App() {
         category: selectedCategory,
         minPriceCents: minPriceCents ?? undefined,
         maxPriceCents: maxPriceCents ?? undefined,
-        sort: sortOption
+        sort: sortOption,
+        inStockOnly,
+        onSaleOnly
       })
         .then(({ isFallback, payload }) => {
           if (!cancelled && storefrontRequestGeneration.current === requestGeneration) {
@@ -1442,7 +1450,7 @@ export default function App() {
       cancelled = true;
       window.clearTimeout(timeout);
     };
-  }, [searchTerm, selectedCategory, minPriceCents, maxPriceCents, sortOption, view]);
+  }, [searchTerm, selectedCategory, minPriceCents, maxPriceCents, sortOption, inStockOnly, onSaleOnly, view]);
 
   useEffect(() => {
     const onPopState = () => {
@@ -2700,6 +2708,10 @@ export default function App() {
               isRefetching={isStorefrontRefetching}
               isShowingFallbackData={isShowingFallbackStorefront}
               isLoadingMoreProducts={isLoadingMoreProducts}
+              inStockOnly={inStockOnly}
+              onSaleOnly={onSaleOnly}
+              onChangeInStockOnly={setInStockOnly}
+              onChangeOnSaleOnly={setOnSaleOnly}
               onLoadMoreProducts={() => void loadMoreProducts()}
               totalProducts={storefront.total_products}
               maxPriceCents={maxPriceCents}
@@ -2917,6 +2929,10 @@ type StorefrontViewProps = {
   isLoadingMoreProducts: boolean;
   onLoadMoreProducts: () => void;
   totalProducts: number;
+  inStockOnly: boolean;
+  onSaleOnly: boolean;
+  onChangeInStockOnly: (next: boolean) => void;
+  onChangeOnSaleOnly: (next: boolean) => void;
   maxPriceCents: number | null;
   minPriceCents: number | null;
   onAddToCart: (product: Product) => void;
@@ -3270,11 +3286,13 @@ function StorefrontView({
   searchTerm,
   selectedCategory,
   sortOption,
-  storefront
+  storefront,
+  inStockOnly,
+  onSaleOnly,
+  onChangeInStockOnly,
+  onChangeOnSaleOnly
 }: StorefrontViewProps) {
   const { t } = useI18n();
-  const [onSaleOnly, setOnSaleOnly] = useState(false);
-  const [inStockOnly, setInStockOnly] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const filtersToggleRef = useRef<HTMLButtonElement | null>(null);
   const productFieldRef = useRef<HTMLElement | null>(null);
@@ -3376,11 +3394,16 @@ function StorefrontView({
   const jobProducts = activeJob
     ? filteredProducts.filter((product) => activeJob.departmentSlugs.includes(product.category_slug))
     : filteredProducts;
-  const visibleProducts = jobProducts.filter((product) => {
-    if (onSaleOnly && !isOnSale(product)) return false;
-    if (inStockOnly && product.stock_quantity <= 0) return false;
-    return true;
-  });
+  // Filtering happens in the query now; everything returned is already a match.
+  const visibleProducts = jobProducts;
+  // Department counts come from the API and respect every filter except the department
+  // itself, so they show where else the current search has results.
+  const countBySlug = new Map(
+    storefront.category_counts.map((entry) => [entry.category_slug, entry.count])
+  );
+  const departmentsWithStock = storefront.categories.filter(
+    (category) => category.slug === "all" || (countBySlug.get(category.slug) ?? 0) > 0
+  );
   const departmentCount = new Set(visibleProducts.map((product) => product.category_slug)).size;
   const activeFilterCount =
     Number(Boolean(searchTerm)) +
@@ -3397,8 +3420,8 @@ function StorefrontView({
     onChangeCategory("all");
     onChangeMinPrice(null);
     onChangeMaxPrice(null);
-    setOnSaleOnly(false);
-    setInStockOnly(false);
+    onChangeOnSaleOnly(false);
+    onChangeInStockOnly(false);
   };
 
   return (
@@ -3441,8 +3464,8 @@ function StorefrontView({
           <div className="worklist-toolbar">
             <span className="worklist-toolbar__count" aria-live="polite">
               {activeJob
-                ? t("shop.jobs.resultCount", { products: visibleProducts.length, job: activeJob.name })
-                : t("shop.toolbar.results", { n: visibleProducts.length })}
+                ? t("shop.jobs.resultCount", { products: totalProducts, job: activeJob.name })
+                : t("shop.toolbar.results", { n: totalProducts })}
             </span>
             <div className="worklist-toolbar__controls">
               <button
@@ -3485,18 +3508,18 @@ function StorefrontView({
                 <fieldset className="fgroup">
                   <legend>{t("shop.filters.availability")}</legend>
                   <label className="opt">
-                    <input checked={inStockOnly} onChange={(event) => setInStockOnly(event.target.checked)} type="checkbox" />
+                    <input checked={inStockOnly} onChange={(event) => onChangeInStockOnly(event.target.checked)} type="checkbox" />
                     <span>{t("shop.filters.instock")}</span>
                   </label>
                   <label className="opt">
-                    <input checked={onSaleOnly} onChange={(event) => setOnSaleOnly(event.target.checked)} type="checkbox" />
+                    <input checked={onSaleOnly} onChange={(event) => onChangeOnSaleOnly(event.target.checked)} type="checkbox" />
                     <span>{t("shop.filters.onsale")}</span>
                   </label>
                 </fieldset>
                 <fieldset className="fgroup">
                   <legend>{t("shop.filters.department")}</legend>
                   <div className="opts opts--scroll">
-                    {storefront.categories.map((category) => (
+                    {departmentsWithStock.map((category) => (
                       <label className="opt" key={category.slug}>
                         <input
                           checked={selectedCategory === category.slug}
@@ -3505,6 +3528,9 @@ function StorefrontView({
                           type="radio"
                         />
                         <span>{category.name}</span>
+                        {category.slug === "all" ? null : (
+                          <span className="opt-count">{countBySlug.get(category.slug) ?? 0}</span>
+                        )}
                       </label>
                     ))}
                   </div>

@@ -68,11 +68,17 @@ export type ProStat = {
   value: string;
 };
 
+export type CategoryCount = {
+  category_slug: string;
+  count: number;
+};
+
 export type StorefrontPayload = {
   categories: Category[];
   products: Product[];
   /** Total matching the filters, which is larger than `products` once paging kicks in. */
   total_products: number;
+  category_counts: CategoryCount[];
   promotions: Promotion[];
   services: ServiceItem[];
   pro_stats: ProStat[];
@@ -93,4 +99,6 @@ export type StorefrontQueryParams = {
   sort?: StorefrontSort;
   limit?: number;
   offset?: number;
+  inStockOnly?: boolean;
+  onSaleOnly?: boolean;
 };

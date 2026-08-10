@@ -98,6 +98,7 @@ pub struct StorefrontPayload {
     /// Total matching the current filters, not the length of `products` — the storefront
     /// pages through a catalogue far larger than one response.
     pub total_products: i64,
+    pub category_counts: Vec<CategoryCount>,
     pub promotions: Vec<Promotion>,
     pub services: Vec<ServiceItem>,
     pub pro_stats: Vec<ProStat>,
@@ -112,6 +113,14 @@ pub struct StorefrontQuery {
     pub sort: Option<String>,
     pub limit: Option<i64>,
     pub offset: Option<i64>,
+    pub in_stock_only: Option<bool>,
+    pub on_sale_only: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct CategoryCount {
+    pub category_slug: String,
+    pub count: i64,
 }
 
 #[derive(Debug, Clone, Serialize, FromRow)]
