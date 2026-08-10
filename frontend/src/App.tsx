@@ -1,4 +1,14 @@
-import { type FormEvent, startTransition, useEffect, useRef, useState } from "react";
+import {
+  type FormEvent,
+  lazy,
+  startTransition,
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState
+} from "react";
+import { createPortal } from "react-dom";
 
 import {
   changeOwnPassword as changeOwnPasswordRequest,
@@ -10,7 +20,6 @@ import {
   createInvoiceFromOrder as createInvoiceFromOrderRequest,
   createPayment as createPaymentRequest,
   createProduct as createProductRequest,
-  createProductReview,
   createRole as createRoleRequest,
   deleteAdminOrder as deleteAdminOrderRequest,
   deleteCategory as deleteCategoryRequest,
@@ -68,13 +77,54 @@ import {
 } from "./lib/api";
 import { LangToggle, useI18n } from "./i18n/LanguageContext";
 import type { TranslationKey } from "./i18n/translations";
-import { TeamPanel } from "./modules/admin_users/components/TeamPanel";
-import { AdminLoginScreen } from "./modules/auth/components/AdminLoginScreen";
-import { CatalogPanel } from "./modules/catalog/components/CatalogPanel";
-import { OperationsConsole } from "./modules/dashboard/components/OperationsConsole";
 import { LandingView } from "./modules/landing/LandingView";
+import { LegalPage } from "./modules/legal/LegalPage";
+import { LEGAL_DOCUMENTS, type LegalSlug } from "./modules/legal/content";
 import { JOB_LENSES, type JobLens, type JobLensId } from "./modules/storefront/jobLenses";
-import { InvoicesPanel } from "./modules/invoices/components/InvoicesPanel";
+
+// Admin console panels are loaded on demand: a storefront visitor never renders
+// them, and eagerly importing them put the whole OPT console in the shopper's
+// bundle. Each is a named export, so the dynamic import maps it onto `default`.
+const TeamPanel = lazy(() =>
+  import("./modules/admin_users/components/TeamPanel").then((m) => ({ default: m.TeamPanel }))
+);
+const AdminLoginScreen = lazy(() =>
+  import("./modules/auth/components/AdminLoginScreen").then((m) => ({ default: m.AdminLoginScreen }))
+);
+const CatalogPanel = lazy(() =>
+  import("./modules/catalog/components/CatalogPanel").then((m) => ({ default: m.CatalogPanel }))
+);
+const OperationsConsole = lazy(() =>
+  import("./modules/dashboard/components/OperationsConsole").then((m) => ({ default: m.OperationsConsole }))
+);
+const InvoicesPanel = lazy(() =>
+  import("./modules/invoices/components/InvoicesPanel").then((m) => ({ default: m.InvoicesPanel }))
+);
+const OfferManagementPanel = lazy(() =>
+  import("./modules/offers/components/OfferManagementPanel").then((m) => ({
+    default: m.OfferManagementPanel
+  }))
+);
+const OrderControlPanel = lazy(() =>
+  import("./modules/orders/components/OrderControlPanel").then((m) => ({ default: m.OrderControlPanel }))
+);
+const PaymentManagementPanel = lazy(() =>
+  import("./modules/payments/components/PaymentManagementPanel").then((m) => ({
+    default: m.PaymentManagementPanel
+  }))
+);
+const PermissionsPanel = lazy(() =>
+  import("./modules/permissions/components/PermissionsPanel").then((m) => ({ default: m.PermissionsPanel }))
+);
+const SalesPanel = lazy(() =>
+  import("./modules/sales/components/SalesPanel").then((m) => ({ default: m.SalesPanel }))
+);
+const SettingsPanel = lazy(() =>
+  import("./modules/settings/components/SettingsPanel").then((m) => ({ default: m.SettingsPanel }))
+);
+const SupportInboxPanel = lazy(() =>
+  import("./modules/support/components/SupportInboxPanel").then((m) => ({ default: m.SupportInboxPanel }))
+);
 import {
   createPromotion as createPromotionRequest,
   createVoucher as createVoucherRequest,
@@ -86,7 +136,6 @@ import {
   updatePromotion as updatePromotionRequest,
   updateVoucher as updateVoucherRequest
 } from "./modules/offers/api/offersApi";
-import { OfferManagementPanel } from "./modules/offers/components/OfferManagementPanel";
 import type {
   CreatePromotionInput,
   CreateVoucherInput,
@@ -97,14 +146,8 @@ import type {
   Voucher
 } from "./modules/offers/types";
 import { quoteCheckout } from "./modules/orders/api/orderApi";
-import { OrderControlPanel } from "./modules/orders/components/OrderControlPanel";
 import type { CheckoutQuote } from "./modules/orders/types";
-import { PaymentManagementPanel } from "./modules/payments/components/PaymentManagementPanel";
-import { PermissionsPanel } from "./modules/permissions/components/PermissionsPanel";
-import { SalesPanel } from "./modules/sales/components/SalesPanel";
-import { SettingsPanel } from "./modules/settings/components/SettingsPanel";
 import { SupportChatWidget } from "./modules/support/components/SupportChatWidget";
-import { SupportInboxPanel } from "./modules/support/components/SupportInboxPanel";
 import {
   fallbackCustomerPortalBenefits,
   fallbackCustomerPortalMembership,
@@ -203,15 +246,28 @@ function downloadBlob(blob: Blob, filename: string): void {
   window.URL.revokeObjectURL(url);
 }
 
-type View = "landing" | "store" | "product" | "admin" | "forbidden" | "not-found";
+type View = "landing" | "store" | "product" | "admin" | "forbidden" | "not-found" | "legal";
+
+const LEGAL_ROUTES: Record<string, LegalSlug> = {
+  "/privacy": "privacy",
+  "/terms": "terms",
+  "/returns": "returns",
+  "/delivery": "delivery",
+  "/contact": "contact"
+};
 
 function viewFromPath(pathname: string): View {
   if (pathname === "/admin") return "admin";
   if (productIdFromPath(pathname) !== null) return "product";
   if (pathname === "/shop") return "store";
   if (pathname === "/forbidden") return "forbidden";
+  if (legalSlugFromPath(pathname) !== null) return "legal";
   if (pathname === "/") return "landing";
   return "not-found";
+}
+
+function legalSlugFromPath(pathname: string): LegalSlug | null {
+  return LEGAL_ROUTES[pathname] ?? null;
 }
 
 function productIdFromPath(pathname: string): number | null {
@@ -220,6 +276,45 @@ function productIdFromPath(pathname: string): number | null {
   const id = Number(match[1]);
   return Number.isFinite(id) ? id : null;
 }
+
+function reconcileCartStock(cart: CartItem[], products: Product[]): CartItem[] {
+  const productsById = new Map(products.map((product) => [product.id, product]));
+  let changed = false;
+
+  const nextCart = cart.flatMap((item) => {
+    const currentProduct = productsById.get(item.product.id);
+    if (!currentProduct) return [item];
+
+    const stockLimit = Math.max(0, Math.floor(currentProduct.stock_quantity));
+    if (stockLimit === 0) {
+      changed = true;
+      return [];
+    }
+
+    const nextQuantity = Math.min(item.quantity, stockLimit);
+    const stockChanged =
+      item.product.stock_quantity !== currentProduct.stock_quantity ||
+      item.product.low_stock_threshold !== currentProduct.low_stock_threshold;
+
+    if (!stockChanged && nextQuantity === item.quantity) return [item];
+
+    changed = true;
+    return [
+      {
+        ...item,
+        product: {
+          ...item.product,
+          stock_quantity: currentProduct.stock_quantity,
+          low_stock_threshold: currentProduct.low_stock_threshold
+        },
+        quantity: nextQuantity
+      }
+    ];
+  });
+
+  return changed ? nextCart : cart;
+}
+
 type AdminAuthState = "checking" | "unauthenticated" | "authenticated" | "demo";
 type AdminTab =
   | "overview"
@@ -996,6 +1091,7 @@ type ShopHeaderProps = {
   onChangeSearch: (value: string) => void;
   onOpenAccount: () => void;
   onOpenCart: () => void;
+  onSubmitSearch: () => void;
   searchTerm: string;
   selectedCategory: string;
 };
@@ -1007,6 +1103,7 @@ function ShopHeader({
   onChangeSearch,
   onOpenAccount,
   onOpenCart,
+  onSubmitSearch,
   searchTerm,
   selectedCategory
 }: ShopHeaderProps) {
@@ -1022,7 +1119,14 @@ function ShopHeader({
           <span className="worklist-logo__sub">HARDWARE</span>
         </a>
 
-        <form className="search-shell worklist-search" role="search" onSubmit={(event) => event.preventDefault()}>
+        <form
+          className="search-shell worklist-search"
+          role="search"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onSubmitSearch();
+          }}
+        >
           <label className="sr-only" htmlFor="storefront-search">
             {t("shop.search.label")}
           </label>
@@ -1052,6 +1156,7 @@ function ShopHeader({
         <div className="dept-chip-list">
           {categories.map((category) => (
             <button
+              aria-pressed={selectedCategory === category.slug}
               key={category.slug}
               className={"dept-chip" + (selectedCategory === category.slug ? " dept-chip--on" : "")}
               onClick={() => onChangeCategory(category.slug)}
@@ -1070,7 +1175,13 @@ function ShopHeader({
   );
 }
 
-function ShopFooter({ storefront }: { storefront: StorefrontPayload }) {
+function ShopFooter({
+  onOpenCategory,
+  storefront
+}: {
+  onOpenCategory: (slug: string) => void;
+  storefront: StorefrontPayload;
+}) {
   const { t } = useI18n();
 
   return (
@@ -1091,7 +1202,15 @@ function ShopFooter({ storefront }: { storefront: StorefrontPayload }) {
               .slice(0, 6)
               .map((category) => (
                 <li key={category.slug}>
-                  <a href="#categories">{category.name}</a>
+                  <a
+                    href="/shop"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      onOpenCategory(category.slug);
+                    }}
+                  >
+                    {category.name}
+                  </a>
                 </li>
               ))}
           </ul>
@@ -1113,6 +1232,26 @@ function ShopFooter({ storefront }: { storefront: StorefrontPayload }) {
               </a>
             </li>
             <li>{t("shop.footer.hours")}</li>
+            <li>
+              <a href="/contact">{t("shop.footer.link.contact")}</a>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <h4>{t("shop.footer.legal")}</h4>
+          <ul>
+            <li>
+              <a href="/privacy">{t("shop.footer.link.privacy")}</a>
+            </li>
+            <li>
+              <a href="/terms">{t("shop.footer.link.terms")}</a>
+            </li>
+            <li>
+              <a href="/returns">{t("shop.footer.link.returns")}</a>
+            </li>
+            <li>
+              <a href="/delivery">{t("shop.footer.link.delivery")}</a>
+            </li>
           </ul>
         </div>
       </div>
@@ -1123,10 +1262,17 @@ function ShopFooter({ storefront }: { storefront: StorefrontPayload }) {
 
 export default function App() {
   const [view, setView] = useState<View>(() => viewFromPath(window.location.pathname));
+  // Held in state rather than read from location at render time: moving between two
+  // policy pages leaves `view` on "legal", so nothing would trigger a re-render.
+  const [legalSlug, setLegalSlug] = useState<LegalSlug | null>(() =>
+    legalSlugFromPath(window.location.pathname)
+  );
   const [productDetailId, setProductDetailId] = useState<number | null>(() =>
     productIdFromPath(window.location.pathname)
   );
   const [storefront, setStorefront] = useState<StorefrontPayload | null>(null);
+  const [isStorefrontFallback, setIsStorefrontFallback] = useState(false);
+  const [isLoadingMoreProducts, setIsLoadingMoreProducts] = useState(false);
   const [isStorefrontRefetching, setIsStorefrontRefetching] = useState(false);
   const [publicOffers, setPublicOffers] = useState<PublicOffersPayload | null>(null);
   const [dashboard, setDashboard] = useState<AdminDashboardPayload | null>(null);
@@ -1135,6 +1281,7 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [activeJobId, setActiveJobId] = useState<JobLensId | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [returnFocusProductId, setReturnFocusProductId] = useState<number | null>(null);
   const [minPriceCents, setMinPriceCents] = useState<number | null>(null);
   const [maxPriceCents, setMaxPriceCents] = useState<number | null>(null);
   const [sortOption, setSortOption] = useState<StorefrontSort>("featured");
@@ -1180,8 +1327,12 @@ export default function App() {
   const [currentAdmin, setCurrentAdmin] = useState<AdminMePayload | null>(null);
   const [adminCatalog, setAdminCatalog] = useState<AdminCatalogPayload | null>(null);
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
-
   const isInitialStorefrontFilter = useRef(true);
+  const latestProductsById = useRef(
+    new Map(fallbackStorefront.products.map((product) => [product.id, product]))
+  );
+  const productReturnFocusRef = useRef<number | null>(null);
+  const storefrontRequestGeneration = useRef(0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const { t } = useI18n();
 
@@ -1195,20 +1346,59 @@ export default function App() {
             ? "Ekoway Hardware — OPT Console"
             : view === "forbidden"
               ? "Access denied — Ekoway Hardware"
-              : "Page not found — Ekoway Hardware";
-  }, [view]);
+              : view === "legal" && legalSlug
+                ? `${LEGAL_DOCUMENTS[legalSlug].title} — Ekoway Hardware`
+                : "Page not found — Ekoway Hardware";
+  }, [legalSlug, view]);
 
   useEffect(() => {
     window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
   }, [cart]);
 
   useEffect(() => {
-    void fetchStorefront().then(setStorefront);
+    const requestGeneration = ++storefrontRequestGeneration.current;
+    void fetchStorefront().then(({ isFallback, payload }) => {
+      if (storefrontRequestGeneration.current === requestGeneration) {
+        payload.products.forEach((product) => latestProductsById.current.set(product.id, product));
+        setCart((current) => reconcileCartStock(current, payload.products));
+        setStorefront(payload);
+        setIsStorefrontFallback(isFallback);
+      }
+    });
   }, []);
 
   useEffect(() => {
     void fetchPublicOffers().then(setPublicOffers);
   }, []);
+
+  // The API pages the catalogue; this appends the next page rather than replacing, so the
+  // grid grows instead of jumping back to the first 60 results.
+  const loadMoreProducts = async () => {
+    if (!storefront || isLoadingMoreProducts) return;
+    setIsLoadingMoreProducts(true);
+    try {
+      const { payload } = await fetchStorefront({
+        q: searchTerm,
+        category: selectedCategory,
+        minPriceCents: minPriceCents ?? undefined,
+        maxPriceCents: maxPriceCents ?? undefined,
+        sort: sortOption,
+        offset: storefront.products.length
+      });
+      payload.products.forEach((product) => latestProductsById.current.set(product.id, product));
+      setStorefront((current) => {
+        if (!current) return payload;
+        const seen = new Set(current.products.map((product) => product.id));
+        return {
+          ...current,
+          total_products: payload.total_products,
+          products: [...current.products, ...payload.products.filter((p) => !seen.has(p.id))]
+        };
+      });
+    } finally {
+      setIsLoadingMoreProducts(false);
+    }
+  };
 
   useEffect(() => {
     if (isInitialStorefrontFilter.current) {
@@ -1216,7 +1406,13 @@ export default function App() {
       return;
     }
 
+    if (view !== "store") {
+      setIsStorefrontRefetching(false);
+      return;
+    }
+
     let cancelled = false;
+    const requestGeneration = ++storefrontRequestGeneration.current;
 
     const timeout = window.setTimeout(() => {
       setIsStorefrontRefetching(true);
@@ -1227,13 +1423,16 @@ export default function App() {
         maxPriceCents: maxPriceCents ?? undefined,
         sort: sortOption
       })
-        .then((payload) => {
-          if (!cancelled) {
+        .then(({ isFallback, payload }) => {
+          if (!cancelled && storefrontRequestGeneration.current === requestGeneration) {
+            payload.products.forEach((product) => latestProductsById.current.set(product.id, product));
+            setCart((current) => reconcileCartStock(current, payload.products));
             setStorefront(payload);
+            setIsStorefrontFallback(isFallback);
           }
         })
         .finally(() => {
-          if (!cancelled) {
+          if (!cancelled && storefrontRequestGeneration.current === requestGeneration) {
             setIsStorefrontRefetching(false);
           }
         });
@@ -1243,12 +1442,25 @@ export default function App() {
       cancelled = true;
       window.clearTimeout(timeout);
     };
-  }, [searchTerm, selectedCategory, minPriceCents, maxPriceCents, sortOption]);
+  }, [searchTerm, selectedCategory, minPriceCents, maxPriceCents, sortOption, view]);
 
   useEffect(() => {
     const onPopState = () => {
-      setView(viewFromPath(window.location.pathname));
-      setProductDetailId(productIdFromPath(window.location.pathname));
+      const nextView = viewFromPath(window.location.pathname);
+      const nextProductId = productIdFromPath(window.location.pathname);
+
+      if (nextView === "store" && productReturnFocusRef.current !== null) {
+        setIsStorefrontRefetching(true);
+        setReturnFocusProductId(productReturnFocusRef.current);
+      } else if (nextView === "product") {
+        const historyProductId = window.history.state?.storefrontReturnProductId;
+        productReturnFocusRef.current =
+          typeof historyProductId === "number" ? historyProductId : productReturnFocusRef.current;
+      }
+
+      setView(nextView);
+      setProductDetailId(nextProductId);
+      setLegalSlug(legalSlugFromPath(window.location.pathname));
     };
 
     window.addEventListener("popstate", onPopState);
@@ -1256,10 +1468,7 @@ export default function App() {
   }, []);
 
   const filteredProducts = storefront?.products ?? [];
-  // Reference-equality check against the already-exported fallback fixture — fetchStorefront()
-  // never clones fallbackStorefront's categories array (storefrontApi.ts), so this reliably
-  // detects fallback mode without any change to the fetch/http layer.
-  const isShowingFallbackStorefront = storefront != null && storefront.categories === fallbackStorefront.categories;
+  const isShowingFallbackStorefront = storefront != null && isStorefrontFallback;
 
   useEffect(() => {
     if (isShowingFallbackStorefront) {
@@ -1277,7 +1486,14 @@ export default function App() {
 
   const openProductDetail = (productId: number) => {
     startTransition(() => {
-      window.history.pushState({ ekowayStorefrontProduct: view === "store" }, "", `/shop/products/${productId}`);
+      window.history.pushState(
+        {
+          ekowayStorefrontProduct: view === "store",
+          storefrontReturnProductId: productReturnFocusRef.current
+        },
+        "",
+        `/shop/products/${productId}`
+      );
       setProductDetailId(productId);
       setView("product");
     });
@@ -1584,15 +1800,22 @@ export default function App() {
   }, []);
 
   const addToCart = (product: Product) => {
+    latestProductsById.current.set(product.id, product);
+    const currentProduct = latestProductsById.current.get(product.id) ?? product;
+    const stockLimit = Math.max(0, Math.floor(currentProduct.stock_quantity));
+    if (stockLimit === 0) return;
+
     setCart((current) => {
       const existing = current.find((item) => item.product.id === product.id);
       if (existing) {
         return current.map((item) =>
-          item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+          item.product.id === product.id
+            ? { ...item, product: currentProduct, quantity: Math.min(item.quantity + 1, stockLimit) }
+            : item
         );
       }
 
-      return [...current, { product, quantity: 1 }];
+      return [...current, { product: currentProduct, quantity: 1 }];
     });
     setIsCartOpen(true);
   };
@@ -1607,9 +1830,20 @@ export default function App() {
       return;
     }
 
-    setCart((current) =>
-      current.map((item) => (item.product.id === productId ? { ...item, quantity } : item))
-    );
+    setCart((current) => {
+      const item = current.find((candidate) => candidate.product.id === productId);
+      if (!item) return current;
+
+      const currentProduct = latestProductsById.current.get(productId) ?? item.product;
+      const stockLimit = Math.max(0, Math.floor(currentProduct.stock_quantity));
+      if (stockLimit === 0) return current.filter((candidate) => candidate.product.id !== productId);
+
+      return current.map((candidate) =>
+        candidate.product.id === productId
+          ? { ...candidate, product: currentProduct, quantity: Math.min(quantity, stockLimit) }
+          : candidate
+      );
+    });
   };
 
   const clearCart = () => {
@@ -2387,6 +2621,16 @@ export default function App() {
     return <StatusPage code="404" onGoHome={() => openView("landing")} onShop={openShop} />;
   }
 
+  // Policy pages render before the storefront-data gate: they must stay readable when the
+  // API is down, and a payment gateway reviewing the site should never hit a loading screen.
+  if (view === "legal" && legalSlug) {
+    return (
+      <div className="app-shell legal-shell">
+        <LegalPage onBack={openShop} onHome={() => openView("landing")} slug={legalSlug} />
+      </div>
+    );
+  }
+
   // Show landing page immediately without waiting for storefront data
   if (view === "landing") {
     return (
@@ -2418,7 +2662,11 @@ export default function App() {
             onChangeCategory={(slug) => {
               setActiveJobId(null);
               setSelectedCategory(slug);
-              if (view !== "store") openView("store");
+              if (view !== "store") {
+                productReturnFocusRef.current = null;
+                setReturnFocusProductId(null);
+                openView("store");
+              }
             }}
             onChangeSearch={setSearchTerm}
             onOpenAccount={() => {
@@ -2428,6 +2676,14 @@ export default function App() {
             onOpenCart={() => {
               setIsAccountOpen(false);
               setIsCartOpen(true);
+            }}
+            onSubmitSearch={() => {
+              setActiveJobId(null);
+              if (view !== "store") {
+                productReturnFocusRef.current = null;
+                setReturnFocusProductId(null);
+                openView("store");
+              }
             }}
             searchTerm={searchTerm}
             selectedCategory={
@@ -2443,6 +2699,9 @@ export default function App() {
               filteredProducts={filteredProducts}
               isRefetching={isStorefrontRefetching}
               isShowingFallbackData={isShowingFallbackStorefront}
+              isLoadingMoreProducts={isLoadingMoreProducts}
+              onLoadMoreProducts={() => void loadMoreProducts()}
+              totalProducts={storefront.total_products}
               maxPriceCents={maxPriceCents}
               minPriceCents={minPriceCents}
               onAddToCart={addToCart}
@@ -2459,8 +2718,16 @@ export default function App() {
                 setActiveJobId(jobId);
                 setSelectedCategory("all");
               }}
-              onViewProduct={openProductDetail}
+              onReturnFocusComplete={() => {
+                productReturnFocusRef.current = null;
+                setReturnFocusProductId(null);
+              }}
+              onViewProduct={(productId) => {
+                productReturnFocusRef.current = productId;
+                openProductDetail(productId);
+              }}
               publicOffers={publicOffers}
+              returnFocusProductId={returnFocusProductId}
               searchTerm={searchTerm}
               selectedCategory={selectedCategory}
               sortOption={sortOption}
@@ -2475,12 +2742,14 @@ export default function App() {
               }
               fallbackProduct={
                 isShowingFallbackStorefront && productDetailId != null
-                  ? storefront?.products.find((product) => product.id === productDetailId) ?? null
+                  ? fallbackStorefront.products.find((product) => product.id === productDetailId) ?? null
                   : null
               }
               isCatalogueLoaded={storefront !== null}
               onAddToCart={addToCart}
               onBack={() => {
+                setIsStorefrontRefetching(true);
+                setReturnFocusProductId(productReturnFocusRef.current);
                 if (window.history.state?.ekowayStorefrontProduct === true) {
                   window.history.back();
                   return;
@@ -2488,6 +2757,8 @@ export default function App() {
                 openView("store");
               }}
               onOpenDepartment={(slug) => {
+                productReturnFocusRef.current = null;
+                setReturnFocusProductId(null);
                 setActiveJobId(null);
                 setSelectedCategory(slug);
                 openView("store");
@@ -2498,7 +2769,16 @@ export default function App() {
             />
           )}
 
-          <ShopFooter storefront={storefront} />
+          <ShopFooter
+            onOpenCategory={(slug) => {
+              productReturnFocusRef.current = null;
+              setReturnFocusProductId(null);
+              setActiveJobId(null);
+              setSelectedCategory(slug);
+              if (view !== "store") openView("store");
+            }}
+            storefront={storefront}
+          />
 
           <CartDrawer
             cart={cart}
@@ -2525,16 +2805,22 @@ export default function App() {
             }}
             onClose={() => setIsAccountOpen(false)}
           />
-          <SupportChatWidget customerEmail={customerAccountEmail} isSuppressed={isCartOpen || isAccountOpen} />
+          <SupportChatWidget
+            customerEmail={customerAccountEmail}
+            isSuppressed={isCartOpen || isAccountOpen || view === "store" || view === "product"}
+          />
         </div>
       ) : adminAuth === "unauthenticated" ? (
-        <AdminLoginScreen
-          onBackToStore={() => openView("store")}
-          onLogin={handleAdminLogin}
-        />
+        <Suspense fallback={<main className="loading-shell">Loading admin console...</main>}>
+          <AdminLoginScreen
+            onBackToStore={() => openView("store")}
+            onLogin={handleAdminLogin}
+          />
+        </Suspense>
       ) : adminAuth === "checking" || !dashboard || !adminCatalog ? (
         <main className="loading-shell">Loading admin console...</main>
       ) : (
+        <Suspense fallback={<main className="loading-shell">Loading admin console...</main>}>
         <AdminView
           activityFeed={activityFeed}
           activeRoleId={activeRoleId}
@@ -2617,6 +2903,7 @@ export default function App() {
           onUpdateCustomerPortalProfile={updateCustomerPortalProfile}
           vouchers={vouchers}
         />
+        </Suspense>
       )}
     </div>
   );
@@ -2627,6 +2914,9 @@ type StorefrontViewProps = {
   filteredProducts: Product[];
   isRefetching: boolean;
   isShowingFallbackData: boolean;
+  isLoadingMoreProducts: boolean;
+  onLoadMoreProducts: () => void;
+  totalProducts: number;
   maxPriceCents: number | null;
   minPriceCents: number | null;
   onAddToCart: (product: Product) => void;
@@ -2636,9 +2926,11 @@ type StorefrontViewProps = {
   onChangeSearch: (value: string) => void;
   onChangeSort: (value: StorefrontSort) => void;
   onGrabPromotion: (promotionId: number) => void;
+  onReturnFocusComplete: () => void;
   onSelectJob: (jobId: JobLensId) => void;
   onViewProduct: (productId: number) => void;
   publicOffers: PublicOffersPayload | null;
+  returnFocusProductId: number | null;
   searchTerm: string;
   selectedCategory: string;
   sortOption: StorefrontSort;
@@ -2687,38 +2979,6 @@ function isGenericPlaceholderImage(imageUrl: string): boolean {
   }
 }
 
-function StarRating({ avgRating, reviewCount }: { avgRating: number | null; reviewCount: number }) {
-  const { t } = useI18n();
-  if (avgRating == null || reviewCount === 0) {
-    return <span className="star-rating star-rating--empty">{t("shop.product.reviews.none")}</span>;
-  }
-
-  const rounded = Math.round(avgRating);
-  return (
-    <span className="star-rating" title={`${avgRating.toFixed(1)} out of 5`}>
-      <span className="star-rating-stars" aria-hidden="true">
-        {"★".repeat(rounded)}
-        {"☆".repeat(5 - rounded)}
-      </span>
-      <b>{avgRating.toFixed(1)}</b>
-      <span>({reviewCount})</span>
-    </span>
-  );
-}
-
-function StockBadge({ product }: { product: Product }) {
-  const { t } = useI18n();
-  const state = productStockState(product);
-  const label =
-    state === "out" ? t("shop.product.stock.out") : state === "low" ? t("shop.product.stock.low") : t("shop.product.stock.in");
-  return (
-    <span className={`avail avail--${state}`}>
-      <i aria-hidden="true" />
-      {label}
-    </span>
-  );
-}
-
 function IconClose() {
   return (
     <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
@@ -2728,9 +2988,7 @@ function IconClose() {
   );
 }
 
-// Listing-specific stock line (real quantity, not just the state word). Deliberately
-// separate from <StockBadge>, which ProductDetailView also renders — this keeps
-// ProductDetailView's copy completely unchanged (Pass 2 does not redesign it).
+// Listing-specific stock line (real quantity, not just the state word).
 function ListingStockLine({ product }: { product: Product }) {
   const { t } = useI18n();
   const state = productStockState(product);
@@ -2775,7 +3033,12 @@ function ListingProductMedia({
   const showImage = !imageFailed && !isGenericPlaceholderImage(product.image_url);
 
   return (
-    <button className="shop-listing-media" onClick={onOpen} type="button">
+    <button
+      aria-label={`${t("shop.product.view")}: ${product.name}`}
+      className="shop-listing-media"
+      onClick={onOpen}
+      type="button"
+    >
       {showImage ? (
         <img
           src={product.image_url}
@@ -2987,8 +3250,11 @@ function EmptyResults({ hasSearch, onBrowseAll, onClearAll, onClearSearch, searc
 function StorefrontView({
   activeJobId,
   filteredProducts,
+  isLoadingMoreProducts,
   isRefetching,
   isShowingFallbackData,
+  onLoadMoreProducts,
+  totalProducts,
   maxPriceCents,
   minPriceCents,
   onAddToCart,
@@ -2997,8 +3263,10 @@ function StorefrontView({
   onChangeMinPrice,
   onChangeSearch,
   onChangeSort,
+  onReturnFocusComplete,
   onSelectJob,
   onViewProduct,
+  returnFocusProductId,
   searchTerm,
   selectedCategory,
   sortOption,
@@ -3009,7 +3277,25 @@ function StorefrontView({
   const [inStockOnly, setInStockOnly] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const filtersToggleRef = useRef<HTMLButtonElement | null>(null);
+  const productFieldRef = useRef<HTMLElement | null>(null);
   const sidebarRef = useRef<HTMLElement | null>(null);
+  // Host for the filter drawer portal. It carries `storefront-shell` because every
+  // drawer/backdrop rule in styles.css is scoped under that class, and `display:
+  // contents` keeps the host itself out of layout.
+  const filterHostRef = useRef<HTMLDivElement | null>(null);
+  if (filterHostRef.current === null) {
+    const host = document.createElement("div");
+    host.className = "storefront-shell";
+    host.style.display = "contents";
+    filterHostRef.current = host;
+  }
+
+  useEffect(() => {
+    const host = filterHostRef.current;
+    if (!host) return;
+    document.body.appendChild(host);
+    return () => host.remove();
+  }, []);
   const availableJobs = isShowingFallbackData
     ? []
     : JOB_LENSES.filter(
@@ -3051,12 +3337,41 @@ function StorefrontView({
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     document.addEventListener("keydown", onKeyDown);
+
+    // The drawer is portalled to <body>, so marking the app shell inert keeps a
+    // screen reader's virtual cursor out of the page behind it — Tab alone only
+    // traps the keyboard.
+    const appShell = document.querySelector<HTMLElement>(".app-shell");
+    appShell?.setAttribute("inert", "");
+
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", onKeyDown);
-      filtersToggleRef.current?.focus();
+      appShell?.removeAttribute("inert");
+      // Only restore focus when the toggle is still on the page; on unmount it
+      // is gone and focusing it would steal focus from the next view.
+      if (filtersToggleRef.current?.isConnected) {
+        filtersToggleRef.current.focus();
+      }
     };
   }, [isFiltersOpen]);
+
+  useEffect(() => {
+    if (returnFocusProductId === null) return;
+
+    const timeout = window.setTimeout(() => {
+      const productControl = productFieldRef.current?.querySelector<HTMLButtonElement>(
+        `[data-product-focus-id="${returnFocusProductId}"]`
+      );
+      if (!productControl && isRefetching) return;
+
+      (productControl ?? productFieldRef.current)?.focus();
+      productControl?.scrollIntoView({ block: "center", inline: "nearest" });
+      onReturnFocusComplete();
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
+  }, [isRefetching, returnFocusProductId]);
 
   const jobProducts = activeJob
     ? filteredProducts.filter((product) => activeJob.departmentSlugs.includes(product.category_slug))
@@ -3109,7 +3424,12 @@ function StorefrontView({
           </>
         ) : null}
 
-        <section className="worklist-product-field" aria-label={t("shop.products.title")}>
+        <section
+          aria-label={t("shop.products.title")}
+          className="worklist-product-field"
+          ref={productFieldRef}
+          tabIndex={-1}
+        >
           {isShowingFallbackData ? (
             <div className="shop-offline-banner worklist-offline-notice" role="status">
               <span>{t("shop.offline.banner")}</span>
@@ -3147,7 +3467,7 @@ function StorefrontView({
             </div>
           </div>
 
-          {isFiltersOpen ? (
+          {isFiltersOpen ? createPortal(
             <>
               <button
                 aria-label={t("shop.filters.close")}
@@ -3242,7 +3562,8 @@ function StorefrontView({
                   {t("shop.filters.clearAll")}
                 </button>
               </aside>
-            </>
+            </>,
+            filterHostRef.current
           ) : null}
 
           <div className="shop-listing-region" aria-busy={isRefetching}>
@@ -3254,7 +3575,7 @@ function StorefrontView({
             ) : visibleProducts.length === 0 ? (
               <EmptyResults
                 hasSearch={Boolean(searchTerm)}
-                onBrowseAll={() => onChangeCategory("all")}
+                onBrowseAll={clearAllFilters}
                 onClearAll={clearAllFilters}
                 onClearSearch={() => onChangeSearch("")}
                 searchTerm={searchTerm}
@@ -3273,7 +3594,13 @@ function StorefrontView({
                       <div className="shop-product-card-body">
                         <span className="shop-product-category">{categoryName}</span>
                         <h2>
-                          <button className="shop-listing-name-link" onClick={() => onViewProduct(product.id)} type="button">
+                          <button
+                            aria-label={`${t("shop.product.view")}: ${product.name}`}
+                            className="shop-listing-name-link"
+                            data-product-focus-id={product.id}
+                            onClick={() => onViewProduct(product.id)}
+                            type="button"
+                          >
                             {product.name}
                           </button>
                         </h2>
@@ -3282,10 +3609,16 @@ function StorefrontView({
                           <ListingStockLine product={product} />
                         </div>
                         <div className="shop-product-card__actions">
-                          <button className="worklist-view-product" onClick={() => onViewProduct(product.id)} type="button">
+                          <button
+                            aria-label={`${t("shop.product.view")}: ${product.name}`}
+                            className="worklist-view-product"
+                            onClick={() => onViewProduct(product.id)}
+                            type="button"
+                          >
                             {t("shop.product.view")} <span aria-hidden="true">→</span>
                           </button>
                           <button
+                            aria-label={`${t("shop.product.add")}: ${product.name}`}
                             className="shop-add-to-cart"
                             disabled={stockState === "out"}
                             onClick={() => onAddToCart(product)}
@@ -3300,6 +3633,25 @@ function StorefrontView({
                 })}
               </div>
             )}
+
+            {!isRefetching && filteredProducts.length < totalProducts ? (
+              <div className="shop-load-more">
+                <p aria-live="polite">
+                  {t("shop.listing.shownOfTotal", {
+                    shown: filteredProducts.length,
+                    total: totalProducts
+                  })}
+                </p>
+                <button
+                  className="outline-button"
+                  disabled={isLoadingMoreProducts}
+                  onClick={onLoadMoreProducts}
+                  type="button"
+                >
+                  {isLoadingMoreProducts ? t("shop.listing.loading") : t("shop.listing.loadMore")}
+                </button>
+              </div>
+            ) : null}
           </div>
         </section>
       </main>
@@ -3336,9 +3688,15 @@ function ProductDetailView({
   const [isFallbackDetail, setIsFallbackDetail] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [retryVersion, setRetryVersion] = useState(0);
   const [showCondensedActions, setShowCondensedActions] = useState(false);
   const primaryActionsRef = useRef<HTMLDivElement | null>(null);
+  const headingRef = useRef<HTMLHeadingElement | null>(null);
   const hasSeenPrimaryActions = useRef(false);
+
+  useLayoutEffect(() => {
+    window.scrollTo({ behavior: "auto", left: 0, top: 0 });
+  }, [productId]);
 
   useEffect(() => {
     if (productId == null) {
@@ -3378,7 +3736,7 @@ function ProductDetailView({
     return () => {
       cancelled = true;
     };
-  }, [fallbackProduct, isCatalogueLoaded, productId]);
+  }, [fallbackProduct, isCatalogueLoaded, productId, retryVersion]);
 
   useEffect(() => {
     const actions = primaryActionsRef.current;
@@ -3399,6 +3757,10 @@ function ProductDetailView({
 
     observer.observe(actions);
     return () => observer.disconnect();
+  }, [productId, status]);
+
+  useEffect(() => {
+    if (status !== "loading") headingRef.current?.focus({ preventScroll: true });
   }, [productId, status]);
 
   const renderContextBar = (
@@ -3451,10 +3813,15 @@ function ProductDetailView({
     return (
       <main className="pdp-shell">
         {renderContextBar()}
-        <section className="pdp-not-found">
-          <h1>{status === "error" ? t("shop.detail.errorTitle") : t("shop.detail.notFoundTitle")}</h1>
+        <section className="pdp-not-found" role={status === "error" ? "alert" : undefined}>
+          <h1 ref={headingRef} tabIndex={-1}>{status === "error" ? t("shop.detail.errorTitle") : t("shop.detail.notFoundTitle")}</h1>
           <p>{status === "error" ? t("shop.detail.errorBody") : t("shop.detail.notFoundBody")}</p>
           <div className="pdp-not-found__actions">
+            {status === "error" ? (
+              <button className="pdp-add" onClick={() => setRetryVersion((current) => current + 1)} type="button">
+                {t("shop.detail.retry")}
+              </button>
+            ) : null}
             <button className="pdp-add" onClick={onBack} type="button">{t("shop.detail.backProducts")}</button>
             <a className="pdp-whatsapp" href="https://wa.me/60174056993" rel="noopener" target="_blank">
               <i aria-hidden="true" />{t("shop.detail.askStore")}
@@ -3498,8 +3865,8 @@ function ProductDetailView({
       <input aria-label={t("shop.detail.quantity")} disabled={stockState === "out"} inputMode="numeric" readOnly value={quantity} />
       <button
         aria-label={t("shop.detail.increaseQuantity")}
-        disabled={stockState === "out"}
-        onClick={() => setQuantity((current) => current + 1)}
+        disabled={stockState === "out" || quantity >= product.stock_quantity}
+        onClick={() => setQuantity((current) => Math.min(product.stock_quantity, current + 1))}
         type="button"
       >+</button>
     </div>
@@ -3532,7 +3899,7 @@ function ProductDetailView({
             </div>
           ) : null}
           <span className="pdp-buy__department">{categoryName}</span>
-          <h1 className="pdp-buy__name">{product.name}</h1>
+          <h1 className="pdp-buy__name" ref={headingRef} tabIndex={-1}>{product.name}</h1>
           <div className="pdp-buy__rule" aria-hidden="true" />
           <div className="pdp-buy__price">{formatWorklistPrice(product.price_cents)}</div>
           <div className={`pdp-stock pdp-stock--${stockState}`}><i aria-hidden="true" /><span>{stockLabel}</span></div>
@@ -3586,16 +3953,31 @@ function ProductDetailView({
                 <ListingProductMedia product={item} onOpen={() => onViewProduct(item.id)} />
                 <div className="shop-product-card-body">
                   <span className="shop-product-category">{categoryName}</span>
-                  <h3><button className="shop-listing-name-link" onClick={() => onViewProduct(item.id)} type="button">{item.name}</button></h3>
+                  <h3>
+                    <button
+                      aria-label={`${t("shop.product.view")}: ${item.name}`}
+                      className="shop-listing-name-link"
+                      onClick={() => onViewProduct(item.id)}
+                      type="button"
+                    >
+                      {item.name}
+                    </button>
+                  </h3>
                   <div className="shop-product-card__commerce">
                     <span className="shop-price">{formatWorklistPrice(item.price_cents)}</span>
                     <ListingStockLine product={item} />
                   </div>
                   <div className="shop-product-card__actions">
-                    <button className="worklist-view-product" onClick={() => onViewProduct(item.id)} type="button">
+                    <button
+                      aria-label={`${t("shop.product.view")}: ${item.name}`}
+                      className="worklist-view-product"
+                      onClick={() => onViewProduct(item.id)}
+                      type="button"
+                    >
                       {t("shop.product.view")} <span aria-hidden="true">→</span>
                     </button>
                     <button
+                      aria-label={`${t("shop.product.add")}: ${item.name}`}
                       className="shop-add-to-cart"
                       disabled={productStockState(item) === "out"}
                       onClick={() => onAddToCart(item)}
@@ -4529,12 +4911,14 @@ function CartDrawer({
   const [form, setForm] = useState<{
     customer_name: string;
     customer_email: string;
+    customer_phone: string;
     fulfillment_method: FulfillmentMethod;
     shipping_address: ShippingAddressInput;
     shipping_service_code: string;
   }>({
     customer_name: "",
     customer_email: "",
+    customer_phone: "",
     fulfillment_method: "pickup",
     shipping_address: EMPTY_SHIPPING_ADDRESS,
     shipping_service_code: ""
@@ -4545,6 +4929,23 @@ function CartDrawer({
   const [quote, setQuote] = useState<CheckoutQuote | null>(null);
   const [quoteFeedback, setQuoteFeedback] = useState<string | null>(null);
   const [isQuoting, setIsQuoting] = useState(false);
+  const drawerRef = useRef<HTMLElement | null>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
+
+  const close = () => {
+    setStage("cart");
+    setForm({
+      customer_name: "",
+      customer_email: "",
+      customer_phone: "",
+      fulfillment_method: "pickup",
+      shipping_address: EMPTY_SHIPPING_ADDRESS,
+      shipping_service_code: ""
+    });
+    setFeedback(null);
+    setConfirmedOrder(null);
+    onClose();
+  };
 
   useEffect(() => {
     if (!open) {
@@ -4564,6 +4965,67 @@ function CartDrawer({
       return { ...current, customer_email: email };
     });
   }, [customerAccountEmail, open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const drawer = drawerRef.current;
+    const focusableSelector =
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const focusableElements = () =>
+      drawer ? Array.from(drawer.querySelectorAll<HTMLElement>(focusableSelector)) : [];
+
+    (focusableElements()[0] ?? drawer)?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        close();
+        return;
+      }
+
+      if (event.key !== "Tab" || !drawer) return;
+      const elements = focusableElements();
+      if (elements.length === 0) {
+        event.preventDefault();
+        drawer.focus();
+        return;
+      }
+
+      const first = elements[0];
+      const last = elements[elements.length - 1];
+      if (event.shiftKey && (document.activeElement === first || !drawer.contains(document.activeElement))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !drawer.contains(document.activeElement))) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      if (openerRef.current?.isConnected) openerRef.current.focus();
+      openerRef.current = null;
+    };
+  }, [open]);
+
+  useEffect(() => {
+    const drawer = drawerRef.current;
+    if (!open || !drawer || drawer.contains(document.activeElement)) return;
+
+    drawer
+      .querySelector<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+      ?.focus();
+  }, [cart, open]);
 
   const isDelivery = form.fulfillment_method === "delivery";
   const addressReady = !isDelivery || isShippingAddressComplete(form.shipping_address);
@@ -4648,20 +5110,6 @@ function CartDrawer({
   const eligibleVouchers =
     publicOffers?.vouchers.filter((voucher) => subtotalCents >= voucher.minimum_subtotal_cents) ?? [];
 
-  const close = () => {
-    setStage("cart");
-    setForm({
-      customer_name: "",
-      customer_email: "",
-      fulfillment_method: "pickup",
-      shipping_address: EMPTY_SHIPPING_ADDRESS,
-      shipping_service_code: ""
-    });
-    setFeedback(null);
-    setConfirmedOrder(null);
-    onClose();
-  };
-
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFeedback(null);
@@ -4671,6 +5119,7 @@ function CartDrawer({
       const order = await onCheckout({
         customer_name: form.customer_name,
         customer_email: form.customer_email,
+        customer_phone: form.customer_phone,
         fulfillment_method: form.fulfillment_method,
         items: cart.map((item) => ({ product_id: item.product.id, quantity: item.quantity })),
         promotion_id: selectedPromotionId ?? undefined,
@@ -4741,7 +5190,7 @@ function CartDrawer({
   return (
     <div className="cart-overlay" role="dialog" aria-modal="true" aria-label="Shopping cart">
       <button className="cart-scrim" aria-label={t("shop.cartd.close")} onClick={close} />
-      <aside className="cart-drawer">
+      <aside className="cart-drawer" ref={drawerRef} tabIndex={-1}>
         <header className="cart-drawer-head">
           <h2>{title}</h2>
           <button className="cart-close" onClick={close} aria-label="Close cart">
@@ -4808,6 +5257,7 @@ function CartDrawer({
                           </button>
                           <span>{item.quantity}</span>
                           <button
+                            disabled={item.quantity >= item.product.stock_quantity}
                             onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
                             aria-label={`Increase ${item.product.name} quantity`}
                           >
@@ -4827,7 +5277,7 @@ function CartDrawer({
             <section className="cart-checkout-form" aria-labelledby="cart-deals-title">
               <h3 id="cart-deals-title">Deals &amp; vouchers</h3>
               <label>
-                <span>Promotion</span>
+                <span>{t("shop.checkout.promotion")}</span>
                 <select
                   aria-label="Select a promotion"
                   onChange={(event) =>
@@ -4853,7 +5303,7 @@ function CartDrawer({
                 </button>
               ) : null}
               <label>
-                <span>Voucher code</span>
+                <span>{t("shop.checkout.voucherCode")}</span>
                 <input
                   aria-label="Voucher code"
                   onChange={(event) => onVoucherCodeChange(event.target.value)}
@@ -4910,7 +5360,7 @@ function CartDrawer({
         ) : (
           <form className="cart-checkout-form" onSubmit={handleSubmit}>
             <label>
-              <span>Full name</span>
+              <span>{t("shop.checkout.fullName")}</span>
               <input
                 value={form.customer_name}
                 onChange={(event) => setForm((current) => ({ ...current, customer_name: event.target.value }))}
@@ -4918,7 +5368,7 @@ function CartDrawer({
               />
             </label>
             <label>
-              <span>Email</span>
+              <span>{t("shop.checkout.email")}</span>
               <input
                 type="email"
                 value={form.customer_email}
@@ -4929,7 +5379,18 @@ function CartDrawer({
               />
             </label>
             <label>
-              <span>Fulfillment</span>
+              <span>{t("shop.checkout.phone")}</span>
+              <input
+                type="tel"
+                value={form.customer_phone}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, customer_phone: event.target.value }))
+                }
+                required
+              />
+            </label>
+            <label>
+              <span>{t("shop.checkout.fulfillment")}</span>
               <select
                 value={form.fulfillment_method}
                 onChange={(event) =>
@@ -4940,15 +5401,15 @@ function CartDrawer({
                   }))
                 }
               >
-                <option value="pickup">Pickup</option>
-                <option value="delivery">Delivery</option>
+                <option value="pickup">{t("shop.checkout.pickup")}</option>
+                <option value="delivery">{t("shop.checkout.delivery")}</option>
               </select>
             </label>
             {isDelivery ? (
               <div className="cart-shipping-fields">
-                <p className="cart-shipping-note">Delivery is available within Malaysia.</p>
+                <p className="cart-shipping-note">{t("shop.checkout.deliveryNote")}</p>
                 <label>
-                  <span>Recipient name</span>
+                  <span>{t("shop.checkout.recipientName")}</span>
                   <input
                     value={form.shipping_address.recipient_name}
                     onChange={(event) =>
@@ -4961,7 +5422,7 @@ function CartDrawer({
                   />
                 </label>
                 <label>
-                  <span>Phone</span>
+                  <span>{t("shop.checkout.phone")}</span>
                   <input
                     type="tel"
                     value={form.shipping_address.phone}
@@ -4975,7 +5436,7 @@ function CartDrawer({
                   />
                 </label>
                 <label>
-                  <span>Address line 1</span>
+                  <span>{t("shop.checkout.address1")}</span>
                   <input
                     value={form.shipping_address.address_line1}
                     onChange={(event) =>
@@ -4988,7 +5449,7 @@ function CartDrawer({
                   />
                 </label>
                 <label>
-                  <span>Address line 2 (optional)</span>
+                  <span>{t("shop.checkout.address2")}</span>
                   <input
                     value={form.shipping_address.address_line2}
                     onChange={(event) =>
@@ -5000,7 +5461,7 @@ function CartDrawer({
                   />
                 </label>
                 <label>
-                  <span>City</span>
+                  <span>{t("shop.checkout.city")}</span>
                   <input
                     value={form.shipping_address.city}
                     onChange={(event) =>
@@ -5013,7 +5474,7 @@ function CartDrawer({
                   />
                 </label>
                 <label>
-                  <span>State</span>
+                  <span>{t("shop.checkout.state")}</span>
                   <input
                     value={form.shipping_address.state}
                     onChange={(event) =>
@@ -5026,7 +5487,7 @@ function CartDrawer({
                   />
                 </label>
                 <label>
-                  <span>Postal code</span>
+                  <span>{t("shop.checkout.postalCode")}</span>
                   <input
                     value={form.shipping_address.postal_code}
                     onChange={(event) =>
@@ -5040,7 +5501,7 @@ function CartDrawer({
                 </label>
                 {quote && quote.shipping_options.length > 0 ? (
                   <label>
-                    <span>Delivery service</span>
+                    <span>{t("shop.checkout.deliveryService")}</span>
                     <select
                       value={form.shipping_service_code}
                       onChange={(event) =>
@@ -5058,7 +5519,11 @@ function CartDrawer({
                 ) : null}
               </div>
             ) : null}
-            {feedback ? <p className="cart-feedback">{feedback}</p> : null}
+            {feedback ? (
+              <p className="cart-feedback" role="alert">
+                {feedback}
+              </p>
+            ) : null}
             {isQuoting ? <p className="cart-feedback">Updating checkout total…</p> : null}
             {quoteFeedback ? (
               <p className="cart-feedback" role="alert">
