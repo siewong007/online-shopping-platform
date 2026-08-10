@@ -39,6 +39,7 @@ export type ShippingOption = {
 export type CreateOrderInput = {
   customer_name: string;
   customer_email: string;
+  customer_phone?: string;
   fulfillment_method?: FulfillmentMethod;
   items: CreateOrderItemInput[];
   promotion_id?: number;
@@ -97,6 +98,7 @@ export type Order = {
   id: number;
   customer_name: string;
   customer_email: string;
+  customer_phone?: string;
   subtotal_cents: number;
   discount_cents?: number;
   tax_cents?: number;

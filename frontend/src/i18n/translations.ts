@@ -725,6 +725,7 @@ export const translations = {
     bm: "Sila kembali ke katalog dan cuba lagi.",
     zh: "请返回商品目录后重试。"
   },
+  "shop.detail.retry": { en: "Try again", bm: "Cuba lagi", zh: "重试" },
   "shop.detail.askStore": {
     en: "Ask the store on WhatsApp",
     bm: "Tanya kedai di WhatsApp",
@@ -746,7 +747,49 @@ export const translations = {
     bm: "© 2017–2026 Ekoway Hardware Sdn Bhd",
     zh: "© 2017–2026 Ekoway Hardware Sdn Bhd"
   },
-  "shop.wa.chat": { en: "Chat on WhatsApp", bm: "Sembang di WhatsApp", zh: "WhatsApp 咨询" }
+  "shop.wa.chat": { en: "Chat on WhatsApp", bm: "Sembang di WhatsApp", zh: "WhatsApp 咨询" },
+
+  /* ---- shop: cart and checkout ---- */
+  "shop.checkout.promotion": { en: "Promotion", bm: "Promosi", zh: "促销" },
+  "shop.checkout.voucherCode": { en: "Voucher code", bm: "Kod baucar", zh: "优惠码" },
+  "shop.checkout.fullName": { en: "Full name", bm: "Nama penuh", zh: "姓名" },
+  "shop.checkout.email": { en: "Email", bm: "E-mel", zh: "电子邮件" },
+  "shop.checkout.fulfillment": { en: "Fulfillment", bm: "Cara terima", zh: "取货方式" },
+  "shop.checkout.pickup": { en: "Pickup", bm: "Ambil sendiri", zh: "到店自取" },
+  "shop.checkout.delivery": { en: "Delivery", bm: "Penghantaran", zh: "送货" },
+  "shop.checkout.deliveryNote": {
+    en: "Delivery is available across Sarawak.",
+    bm: "Penghantaran tersedia di seluruh Sarawak.",
+    zh: "砂拉越全境提供送货服务。"
+  },
+  "shop.checkout.recipientName": { en: "Recipient name", bm: "Nama penerima", zh: "收件人姓名" },
+  "shop.checkout.phone": { en: "Phone", bm: "Telefon", zh: "联系电话" },
+  "shop.checkout.address1": { en: "Address line 1", bm: "Alamat baris 1", zh: "地址第一行" },
+  "shop.checkout.address2": {
+    en: "Address line 2 (optional)",
+    bm: "Alamat baris 2 (pilihan)",
+    zh: "地址第二行（选填）"
+  },
+  "shop.checkout.city": { en: "City", bm: "Bandar", zh: "城市" },
+  "shop.checkout.state": { en: "State", bm: "Negeri", zh: "州属" },
+  "shop.checkout.postalCode": { en: "Postal code", bm: "Poskod", zh: "邮编" },
+  "shop.checkout.deliveryService": { en: "Delivery service", bm: "Perkhidmatan penghantaran", zh: "配送方式" },
+
+  /* ---- shop: footer policy links ---- */
+  "shop.footer.legal": { en: "Policies", bm: "Polisi", zh: "条款政策" },
+  "shop.footer.link.privacy": { en: "Privacy Notice", bm: "Notis Privasi", zh: "隐私声明" },
+  "shop.footer.link.terms": { en: "Terms & Conditions", bm: "Terma & Syarat", zh: "条款与细则" },
+  "shop.footer.link.returns": { en: "Returns & Refunds", bm: "Pemulangan & Bayaran Balik", zh: "退换与退款" },
+  "shop.footer.link.delivery": { en: "Delivery & Collection", bm: "Penghantaran & Ambilan", zh: "配送与自取" },
+  "shop.footer.link.contact": { en: "Contact us", bm: "Hubungi kami", zh: "联系我们" },
+
+  /* ---- shop: catalogue paging ---- */
+  "shop.listing.loadMore": { en: "Load more products", bm: "Muatkan lagi produk", zh: "加载更多商品" },
+  "shop.listing.shownOfTotal": {
+    en: "Showing {shown} of {total} products",
+    bm: "Memaparkan {shown} daripada {total} produk",
+    zh: "已显示 {total} 件中的 {shown} 件"
+  }
 } as const satisfies Record<string, Entry>;
 
 export type TranslationKey = keyof typeof translations;

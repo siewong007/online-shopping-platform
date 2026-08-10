@@ -7160,3 +7160,110 @@ body:has(.support-chat-widget) .notification-region--toasts {
 @media (prefers-reduced-motion: reduce) {
   .storefront-shell .pdp-shell * { scroll-behavior: auto !important; }
 }
+
+/* ---- policy pages (privacy, terms, returns, delivery, contact) ---- */
+.legal-shell {
+  min-height: 100vh;
+  background: #fffefb;
+}
+
+.legal-page {
+  padding: clamp(2rem, 6vw, 4rem) 1.25rem clamp(3rem, 8vw, 5rem);
+}
+
+.legal-page__inner {
+  width: min(100%, 46rem);
+  margin: 0 auto;
+  color: #2a2c2d;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.legal-page__inner .eyebrow {
+  margin: 0 0 0.4rem;
+  color: #7a6a4f;
+}
+
+.legal-page__inner h1 {
+  margin: 0;
+  color: #17191a;
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  line-height: 1.15;
+}
+
+.legal-page__updated {
+  margin: 0.5rem 0 0;
+  color: #6d7472;
+  font-size: 0.875rem;
+}
+
+.legal-page__intro {
+  margin: 1.5rem 0 0;
+  font-size: 1.0625rem;
+}
+
+.legal-page__section {
+  margin-top: 2.25rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e4dfd5;
+}
+
+.legal-page__section h2 {
+  margin: 0 0 0.75rem;
+  color: #17191a;
+  font-size: clamp(1.15rem, 2.6vw, 1.4rem);
+  line-height: 1.25;
+}
+
+.legal-page__section p {
+  margin: 0 0 0.85rem;
+}
+
+.legal-page__section p:last-child {
+  margin-bottom: 0;
+}
+
+.legal-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2.75rem;
+}
+
+.legal-page__actions button {
+  min-height: 2.75rem;
+}
+
+@media (max-width: 540px) {
+  .legal-page__actions { align-items: stretch; flex-direction: column; }
+}
+
+/* ---- catalogue import (admin) ---- */
+.catalogue-import { position: relative; overflow: hidden; cursor: pointer; }
+.catalogue-import input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.catalogue-import.is-disabled { opacity: 0.55; cursor: not-allowed; }
+.catalogue-import.is-disabled input[type="file"] { cursor: not-allowed; }
+
+.catalogue-import-report {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border: 1px solid #e4dfd5;
+  border-radius: 6px;
+  background: #fffefb;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.catalogue-import-report ul { margin: 8px 0 0; padding-left: 18px; max-height: 220px; overflow-y: auto; }
+.catalogue-import-report summary { margin-top: 6px; cursor: pointer; }
+
+/* ---- catalogue paging ---- */
+.shop-load-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 28px 0 8px;
+  text-align: center;
+}
+.shop-load-more p { margin: 0; color: #6d7472; font-size: 0.875rem; }
+.shop-load-more button { min-height: 2.75rem; min-width: 12rem; }

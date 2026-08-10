@@ -72,22 +72,39 @@ function buildQueryString(params?: StorefrontQueryParams): string {
     search.set("sort", params.sort);
   }
 
+  if (params.limit != null) {
+    search.set("limit", String(params.limit));
+  }
+
+  if (params.offset != null) {
+    search.set("offset", String(params.offset));
+  }
+
   const query = search.toString();
   return query ? `?${query}` : "";
 }
 
-export async function fetchStorefront(params?: StorefrontQueryParams): Promise<StorefrontPayload> {
+export type StorefrontResult = {
+  /** True when the API was unreachable and `payload` is the offline fixture. */
+  isFallback: boolean;
+  payload: StorefrontPayload;
+};
+
+export async function fetchStorefront(params?: StorefrontQueryParams): Promise<StorefrontResult> {
   const { data: payload, isFallback } = await fetchJsonResult(
     `/api/storefront${buildQueryString(params)}`,
     fallbackStorefront
   );
 
   if (!isFallback || !params) {
-    return payload;
+    return { isFallback, payload };
   }
 
   return {
-    ...payload,
-    products: sortProducts(payload.products.filter((product) => matchesQuery(product, params)), params.sort)
+    isFallback,
+    payload: {
+      ...payload,
+      products: sortProducts(payload.products.filter((product) => matchesQuery(product, params)), params.sort)
+    }
   };
 }

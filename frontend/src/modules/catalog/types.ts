@@ -19,3 +19,11 @@ export type AdminCatalogPayload = {
   categories: Category[];
   products: Product[];
 };
+
+export type CatalogueImportReport = {
+  rows_read: number;
+  products_created: number;
+  products_updated: number;
+  categories_created: number;
+  problems: string[];
+};

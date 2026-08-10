@@ -4,7 +4,9 @@ import { ManagementTable } from "../../../shared/components/ManagementTable";
 import { RecordForm, type RecordFormField, RecordModal } from "../../../shared/components/RecordModal";
 import { currencyFromCents } from "../../../shared/formatters";
 import { useNotifications } from "../../../shared/notifications";
+import { importCatalogue } from "../api/catalogApi";
 import type {
+  CatalogueImportReport,
   Category,
   CreateCategoryInput,
   CreateProductInput,
@@ -290,6 +292,33 @@ export function CatalogPanel({
   const [deletingProductId, setDeletingProductId] = useState<number | null>(null);
   const [selectedProductIds, setSelectedProductIds] = useState<Set<number | string>>(new Set());
   const [isBulkActionRunning, setIsBulkActionRunning] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importReport, setImportReport] = useState<CatalogueImportReport | null>(null);
+
+  // Calls the API directly rather than taking a prop: the import is self-contained and
+  // threading another handler through the admin tree buys nothing here.
+  const handleImportFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setIsImporting(true);
+    setImportReport(null);
+    try {
+      const report = await importCatalogue(await file.text());
+      setImportReport(report);
+      notify({
+        severity: report.problems.length > 0 ? "warning" : "success",
+        title: "Catalogue imported",
+        message: `${report.products_created} created, ${report.products_updated} updated.`,
+        scope: "catalogue-import"
+      });
+    } catch (error) {
+      notifyError(error, { operation: "import the catalogue", scope: "catalogue-import" });
+    } finally {
+      setIsImporting(false);
+    }
+  };
   const productFieldList = useMemo(() => productFields(categories), [categories]);
   const categoryNameBySlug = useMemo(
     () => new Map(categories.map((category) => [category.slug, category.name])),
@@ -690,7 +719,38 @@ export function CatalogPanel({
         <button className="solid-button" disabled={!canCreate} onClick={openCreateProduct} type="button">
           {variant === "inventory" ? "Add Inventory Item" : "Create Product"}
         </button>
+        {variant === "catalog" ? (
+          <label className={`outline-button catalogue-import${canCreate ? "" : " is-disabled"}`}>
+            {isImporting ? "Importing…" : "Import from AutoCount"}
+            <input
+              accept=".csv,text/csv"
+              disabled={!canCreate || isImporting}
+              onChange={handleImportFile}
+              type="file"
+            />
+          </label>
+        ) : null}
       </div>
+
+      {importReport ? (
+        <div className="catalogue-import-report" role="status">
+          <strong>
+            {importReport.rows_read} rows read · {importReport.products_created} created ·{" "}
+            {importReport.products_updated} updated · {importReport.categories_created} new
+            categories
+          </strong>
+          {importReport.problems.length > 0 ? (
+            <details>
+              <summary>{importReport.problems.length} row(s) skipped</summary>
+              <ul>
+                {importReport.problems.map((problem) => (
+                  <li key={problem}>{problem}</li>
+                ))}
+              </ul>
+            </details>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className={variant === "catalog" ? "admin-panels two-up" : "admin-panels"}>
         {variant === "catalog" ? (

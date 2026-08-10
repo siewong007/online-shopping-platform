@@ -19,6 +19,7 @@ import type {
 } from "../types";
 
 export const fallbackStorefront: StorefrontPayload = {
+  total_products: 8,
   categories: [
     { slug: "all", name: "Shop All Departments", teaser: "Browse the homepage the way Ekoway customers expect to shop it." },
     { slug: "tools", name: "Tools", teaser: "Cordless systems, combo kits and garage-ready essentials." },

@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /forbidden
+
+Sitemap: https://ekowayhardware.com/sitemap.xml
