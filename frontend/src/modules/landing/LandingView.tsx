@@ -57,11 +57,11 @@ function charSpans(text: string): ReactNode[] {
 
 const catRows = [
   { num: "/01", name: "cat.01.name", sub: "cat.01.sub", img: "/ekoway/slots/cat-power-tools.png", topic: "Power%20Tools" },
-  { num: "/02", name: "cat.02.name", sub: "cat.02.sub", img: "/ekoway/slots/cat-paints.png", topic: "Paint" },
-  { num: "/03", name: "cat.03.name", sub: "cat.03.sub", img: "/ekoway/slots/cat-building.png", topic: "Building%20Materials" },
-  { num: "/04", name: "cat.04.name", sub: "cat.04.sub", img: "/ekoway/slots/cat-bathroom.png", topic: "Bathroom%20Accessories" },
-  { num: "/05", name: "cat.05.name", sub: "cat.05.sub", img: "/ekoway/slots/cat-kitchen.png", topic: "Kitchen%20Accessories" },
-  { num: "/06", name: "cat.06.name", sub: "cat.06.sub", img: "/ekoway/slots/cat-electrical.png", topic: "Electrical%20Appliances" }
+  { num: "/02", name: "cat.02.name", sub: "cat.02.sub", img: "/ekoway/categories/paint-v1.jpg", topic: "Paint" },
+  { num: "/03", name: "cat.03.name", sub: "cat.03.sub", img: "/ekoway/categories/building-v1.jpg", topic: "Building%20Materials" },
+  { num: "/04", name: "cat.04.name", sub: "cat.04.sub", img: "/ekoway/categories/bathroom-v1.jpg", topic: "Bathroom%20Accessories" },
+  { num: "/05", name: "cat.05.name", sub: "cat.05.sub", img: "/ekoway/categories/kitchen-v1.jpg", topic: "Kitchen%20Accessories" },
+  { num: "/06", name: "cat.06.name", sub: "cat.06.sub", img: "/ekoway/categories/electrical-v1.jpg", topic: "Electrical%20Appliances" }
 ] as const;
 
 const dealCards = [

@@ -52,6 +52,7 @@ export {
 } from "../modules/customer_portal/api/customerPortalApi";
 export {
   checkout,
+  startPaymentCheckout,
   createAdminOrder,
   deleteAdminOrder,
   fetchOrders,

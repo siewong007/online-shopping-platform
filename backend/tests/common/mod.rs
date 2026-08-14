@@ -95,3 +95,42 @@ pub async fn request(
 
     (status, value)
 }
+
+pub async fn request_text(
+    app: Router,
+    method: Method,
+    path: &str,
+    token: Option<&str>,
+    content_type: &'static str,
+    body: &str,
+) -> (StatusCode, Value) {
+    let mut builder = Request::builder()
+        .method(method)
+        .uri(path)
+        .header(CONTENT_TYPE, content_type);
+    if let Some(token) = token {
+        builder = builder.header(AUTHORIZATION, format!("Bearer {token}"));
+    }
+
+    let response = app
+        .oneshot(
+            builder
+                .body(Body::from(body.to_string()))
+                .expect("request should build"),
+        )
+        .await
+        .expect("router request should complete");
+    let status = response.status();
+    let bytes = response
+        .into_body()
+        .collect()
+        .await
+        .expect("response body should collect")
+        .to_bytes();
+    if bytes.is_empty() {
+        return (status, Value::Null);
+    }
+    let text = String::from_utf8(bytes.to_vec()).expect("response should be utf-8");
+    let value = serde_json::from_str(&text).unwrap_or(Value::String(text));
+    (status, value)
+}

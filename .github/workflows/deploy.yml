@@ -104,6 +104,7 @@ jobs:
             --platform linux/amd64 \
             --pull \
             --build-arg VITE_API_URL= \
+            --build-arg VITE_ENABLE_DELIVERY=false \
             --label "org.opencontainers.image.revision=$DEPLOY_SHA" \
             --tag "online-shopping-frontend:$DEPLOY_SHA" \
             --file frontend/Dockerfile \
@@ -127,6 +128,7 @@ jobs:
 
           cp deploy/deploy.sh "$bundle_dir/deploy.sh"
           cp deploy/docker-compose.prod.yml "$bundle_dir/docker-compose.prod.yml"
+          cp deploy/ekowayhardware.Caddyfile "$bundle_dir/ekowayhardware.Caddyfile"
           cp backend/migrations/*.sql "$bundle_dir/initdb/"
 
           (

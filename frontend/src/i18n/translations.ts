@@ -13,30 +13,30 @@ export const translations = {
 
   /* ---- landing hero ---- */
   "hero.sub": {
-    en: "From Bosch power tools to Nippon Paint and everyday essentials — genuine brands in Salim, near Farley, Sibu since 2017.",
-    bm: "Dari alatan kuasa Bosch hingga cat Nippon Paint dan keperluan harian — jenama terpercaya di Salim, berhampiran Farley, Sibu sejak 2017.",
-    zh: "从 Bosch 电动工具到立邦漆与日常用品 — 自 2017 年起，正品品牌尽在诗巫 Salim 区，毗邻 Farley。"
+    en: "Tools, building supplies and everyday hardware from our store in Salim, Sibu.",
+    bm: "Alatan, bahan binaan dan perkakasan harian dari kedai kami di Salim, Sibu.",
+    zh: "工具、建筑用品与日常五金，来自诗巫 Salim 门市。"
   },
   "hero.cta": { en: "WhatsApp us", bm: "WhatsApp kami", zh: "WhatsApp 我们" },
   "hero.browse": { en: "Browse categories", bm: "Lihat kategori", zh: "浏览分类" },
 
   /* ---- landing ticker ---- */
-  "tick.1": { en: "Genuine brands · full warranty", bm: "Jenama terpercaya · waranti penuh", zh: "正品品牌 · 完整保修" },
+  "tick.1": { en: "Tools · materials · everyday hardware", bm: "Alatan · bahan · perkakasan harian", zh: "工具 · 材料 · 日常五金" },
   "tick.2": { en: "New arrivals in store", bm: "Stok baharu di kedai", zh: "新货到店" },
   "tick.3": { en: "WhatsApp 017-405 6993", bm: "WhatsApp 017-405 6993", zh: "WhatsApp 017-405 6993" },
   "tick.4": {
-    en: "Open Mon–Sat 8am–6pm · Sun 9am–2pm",
-    bm: "Buka Isn–Sab 8pg–6ptg · Ahd 9pg–2ptg",
-    zh: "营业 周一至周六 8am–6pm · 周日 9am–2pm"
+    en: "Call or WhatsApp to confirm today's hours",
+    bm: "Telefon atau WhatsApp untuk sahkan waktu hari ini",
+    zh: "请致电或 WhatsApp 确认当天营业时间"
   },
 
   /* ---- landing about ---- */
-  "about.label": { en: "Serving Sibu since 2017", bm: "Berkhidmat di Sibu sejak 2017", zh: "自 2017 年服务诗巫" },
+  "about.label": { en: "Your Sibu hardware store", bm: "Kedai perkakasan anda di Sibu", zh: "您的诗巫五金店" },
   "about.head.1": { en: "We are Ekoway Hardware, ", bm: "Kami Ekoway Hardware, ", zh: "我们是 Ekoway Hardware，" },
   "about.head.serif": {
-    en: "永光五金 — Sibu’s hardware counter since 2017.",
-    bm: "永光五金 — kedai perkakasan Sibu sejak 2017.",
-    zh: "永光五金 — 自 2017 年起服务诗巫的五金店。"
+    en: "永光五金 — hardware supplies in Sibu.",
+    bm: "永光五金 — bekalan perkakasan di Sibu.",
+    zh: "永光五金 — 诗巫五金用品。"
   },
   "about.head.2": {
     en: " Power tools to building materials, for DIY and contractors alike.",
@@ -44,9 +44,9 @@ export const translations = {
     zh: " 从电动工具到建筑材料，为 DIY 爱好者与承包商而备。"
   },
   "about.body": {
-    en: "Ekoway Hardware has served Sibu since 2017 — 永光五金 — from our store in Salim, near Farley Commercial Centre. We stock everything from power tools to building materials for DIY customers and contractors, with trusted brands and straightforward service. Visit us or message us on WhatsApp — we’re happy to help.",
-    bm: "Ekoway Hardware telah berkhidmat di Sibu sejak 2017 — 永光五金 — dari kedai kami di Salim, berhampiran Farley Commercial Centre. Kami menyediakan semua keperluan dari alatan kuasa hingga bahan binaan untuk pelanggan DIY dan kontraktor, dengan jenama terpercaya dan servis yang mudah. Kunjungi kami atau WhatsApp kami — kami sedia membantu.",
-    zh: "Ekoway Hardware 自 2017 年起服务诗巫 — 永光五金 — 门市位于 Salim 区，毗邻 Farley 商业中心。我们备有从电动工具到建筑材料的各类商品，服务 DIY 顾客与承包商，提供正品品牌与实在的服务。欢迎到店或通过 WhatsApp 联系我们 — 我们乐意效劳。"
+    en: "Ekoway Hardware — 永光五金 — operates from Lorong Salim 17 in Sibu. Browse tools, fittings and building supplies for home projects and trade work, or message us on WhatsApp if you need help finding the right item.",
+    bm: "Ekoway Hardware — 永光五金 — beroperasi di Lorong Salim 17, Sibu. Lihat alatan, kelengkapan dan bahan binaan untuk projek rumah serta kerja perdagangan, atau WhatsApp kami jika anda perlukan bantuan.",
+    zh: "Ekoway Hardware — 永光五金 — 位于诗巫 Lorong Salim 17。这里提供家居工程与专业工作所需的工具、配件和建筑用品；如需选购协助，欢迎 WhatsApp 联系我们。"
   },
 
   /* ---- landing categories ---- */
@@ -108,15 +108,15 @@ export const translations = {
     zh: "应对认真工作的门市级库存。"
   },
   "why.head2": {
-    en: "Genuine brands. Honest service. Real advice.",
-    bm: "Jenama terpercaya. Servis jujur. Nasihat sebenar.",
-    zh: "正品品牌。诚实服务。实用建议。"
+    en: "Clear information. Practical help. Local pickup.",
+    bm: "Maklumat jelas. Bantuan praktikal. Ambil di kedai.",
+    zh: "资料清楚。实用协助。门市自取。"
   },
   "why.cap": { en: "Your projects, supplied.", bm: "Projek anda, dibekalkan.", zh: "供应您的每个项目。" },
-  "why.1.title": { en: "Genuine brands.", bm: "Jenama terpercaya.", zh: "正品品牌。" },
-  "why.1.a": { en: "Sourced from authorised distributors", bm: "Dari pengedar yang sah", zh: "来自授权经销商" },
-  "why.1.b": { en: "Genuine stock — no greys, no fakes", bm: "Stok tulen — bukan tiruan", zh: "正品库存 — 绝无水货或假货" },
-  "why.1.c": { en: "18 trusted brands on the shelves", bm: "18 jenama terpercaya di rak", zh: "货架上 18 个信赖品牌" },
+  "why.1.title": { en: "Useful product details.", bm: "Butiran produk berguna.", zh: "实用产品资料。" },
+  "why.1.a": { en: "Product details taken from our stock records", bm: "Butiran produk daripada rekod stok kami", zh: "产品资料来自我们的库存记录" },
+  "why.1.b": { en: "Ask our team about the item before buying", bm: "Tanya pasukan kami tentang barangan sebelum membeli", zh: "购买前可向我们的团队查询产品" },
+  "why.1.c": { en: "Practical ranges for home and trade work", bm: "Pilihan praktikal untuk kerja rumah dan perdagangan", zh: "适合家居与专业工作的实用选择" },
   "why.1.d": {
     en: "Bosch · DONGCHENG · Nippon Paint · Panasonic",
     bm: "Bosch · DONGCHENG · Nippon Paint · Panasonic",
@@ -124,8 +124,8 @@ export const translations = {
   },
   "why.1.learn": { en: "See the brands", bm: "Lihat jenama", zh: "查看品牌" },
   "why.2.title": { en: "Fair, honest pricing.", bm: "Harga yang jujur.", zh: "公道诚实的价格。" },
-  "why.2.a": { en: "Ask us about price matching", bm: "Tanya kami tentang padanan harga", zh: "欢迎询问价格匹配" },
-  "why.2.b": { en: "Genuine brands at counter prices", bm: "Jenama tulen pada harga kaunter", zh: "正品品牌门市价" },
+  "why.2.a": { en: "Prices shown clearly in Malaysian Ringgit", bm: "Harga dipaparkan dengan jelas dalam Ringgit Malaysia", zh: "价格以马来西亚令吉清楚显示" },
+  "why.2.b": { en: "The checkout total is shown before payment", bm: "Jumlah bayaran dipaparkan sebelum pembayaran", zh: "付款前会显示结账总额" },
   "why.2.c": { en: "Tell us your budget — we’ll help", bm: "Beritahu bajet anda — kami bantu", zh: "告诉我们您的预算 — 我们帮您" },
   "why.2.learn": { en: "Ask us", bm: "Tanya kami", zh: "咨询我们" },
   "why.3.title": { en: "Advice that’s useful.", bm: "Nasihat yang berguna.", zh: "实用的建议。" },
@@ -152,16 +152,16 @@ export const translations = {
   /* ---- landing proof ---- */
   "sec.proof.title": { en: "Word around Sibu", bm: "Kata orang Sibu", zh: "诗巫口碑" },
   "proof.quote": {
-    en: "“One of Sibu’s most complete hardware stores.”",
-    bm: "“Antara kedai perkakasan paling lengkap di Sibu.”",
-    zh: "“诗巫货品最齐全的五金店之一。”"
+    en: "Browse online, ask on WhatsApp, or visit our Sibu store.",
+    bm: "Lihat dalam talian, tanya di WhatsApp, atau kunjungi kedai kami di Sibu.",
+    zh: "可在线浏览、WhatsApp 咨询，或到访诗巫门市。"
   },
-  "proof.attr": { en: "— Sibu shopping guide", bm: "— Panduan beli-belah Sibu", zh: "— 诗巫购物指南" },
+  "proof.attr": { en: "— Ekoway Hardware", bm: "— Ekoway Hardware", zh: "— Ekoway Hardware" },
   "proof.fb.k": { en: "On Facebook", bm: "Di Facebook", zh: "Facebook 上" },
   "proof.fb.v": {
-    en: "4,000+ followers — follow @ekowayhardware",
-    bm: "4,000+ pengikut — ikuti @ekowayhardware",
-    zh: "4,000+ 粉丝 — 关注 @ekowayhardware"
+    en: "Follow @ekowayhardware",
+    bm: "Ikuti @ekowayhardware",
+    zh: "关注 @ekowayhardware"
   },
   "proof.g.k": { en: "On the map", bm: "Di peta", zh: "地图上" },
   "proof.g.v": { en: "Find us on Google Maps", bm: "Cari kami di Google Maps", zh: "在 Google 地图找到我们" },
@@ -208,10 +208,10 @@ export const translations = {
   "sec.contact.title": { en: "Visit Us", bm: "Lawati Kami", zh: "到店参观" },
   "contact.addr.k": { en: "Address", bm: "Alamat", zh: "地址" },
   "contact.hours.k": { en: "Hours", bm: "Waktu", zh: "营业时间" },
-  "contact.hours.wk": { en: "Mon – Sat", bm: "Isnin – Sabtu", zh: "周一至周六" },
-  "contact.hours.wkt": { en: "8:00 AM – 6:00 PM", bm: "8:00 pagi – 6:00 petang", zh: "上午 8:00 – 傍晚 6:00" },
-  "contact.hours.sun": { en: "Sunday", bm: "Ahad", zh: "周日" },
-  "contact.hours.sunt": { en: "9:00 AM – 2:00 PM", bm: "9:00 pagi – 2:00 petang", zh: "上午 9:00 – 下午 2:00" },
+  "contact.hours.wk": { en: "Current hours", bm: "Waktu semasa", zh: "当前营业时间" },
+  "contact.hours.wkt": { en: "Please call to confirm", bm: "Sila telefon untuk sahkan", zh: "请致电确认" },
+  "contact.hours.sun": { en: "Before travelling", bm: "Sebelum datang", zh: "到访之前" },
+  "contact.hours.sunt": { en: "Call or WhatsApp us", bm: "Telefon atau WhatsApp kami", zh: "请致电或 WhatsApp" },
   "contact.wa": { en: "WhatsApp us", bm: "WhatsApp kami", zh: "WhatsApp 我们" },
   "contact.call": { en: "Call 084-253883", bm: "Telefon 084-253883", zh: "致电 084-253883" },
   "contact.email": { en: "Email us", bm: "E-mel kami", zh: "电邮我们" },
@@ -219,9 +219,9 @@ export const translations = {
 
   /* ---- landing footer ---- */
   "foot.tag.1": {
-    en: "Ekoway Hardware · 永光五金 · Est. 2017",
-    bm: "Ekoway Hardware · 永光五金 · Sejak 2017",
-    zh: "Ekoway Hardware · 永光五金 · 始于 2017"
+    en: "Ekoway Hardware · 永光五金 · Sibu",
+    bm: "Ekoway Hardware · 永光五金 · Sibu",
+    zh: "Ekoway Hardware · 永光五金 · 诗巫"
   },
   "foot.tag.2": { en: "Sibu’s hardware counter.", bm: "Kedai perkakasan Sibu.", zh: "诗巫的五金店。" },
   "foot.shop": { en: "Shop", bm: "Produk", zh: "商品" },
@@ -237,16 +237,16 @@ export const translations = {
 
   /* ---- storefront chrome ---- */
   "shop.strip.before": {
-    en: "Genuine brands at counter prices — shop online or WhatsApp ",
-    bm: "Jenama tulen pada harga kaunter — beli online atau WhatsApp ",
-    zh: "正品品牌门市价 — 在线购买或 WhatsApp "
+    en: "Hardware supplies in Sibu — shop online or WhatsApp ",
+    bm: "Bekalan perkakasan di Sibu — beli dalam talian atau WhatsApp ",
+    zh: "诗巫五金用品 — 在线购买或 WhatsApp "
   },
   "shop.strip.after": { en: ".", bm: ".", zh: "。" },
   "shop.strip.cta": { en: "Open Ops Console", bm: "Buka Konsol Operasi", zh: "打开运营控制台" },
   "shop.eyebrow": {
-    en: "Sibu’s hardware counter since 2017",
-    bm: "Kedai perkakasan Sibu sejak 2017",
-    zh: "自 2017 年服务诗巫的五金店"
+    en: "Hardware supplies in Sibu",
+    bm: "Bekalan perkakasan di Sibu",
+    zh: "诗巫五金用品"
   },
   "shop.brand": { en: "Ekoway Hardware", bm: "Ekoway Hardware", zh: "Ekoway Hardware" },
   "shop.tagline": {
@@ -280,27 +280,27 @@ export const translations = {
     zh: "在线下单，Salim 门市自取"
   },
   "shop.hero.title": {
-    en: "Genuine-brand tools, paint and home essentials at counter prices.",
-    bm: "Alatan jenama tulen, cat dan keperluan rumah pada harga kaunter.",
-    zh: "正品工具、油漆与家居必需品，一律门市价。"
+    en: "Tools, paint and everyday hardware for pickup in Sibu.",
+    bm: "Alatan, cat dan perkakasan harian untuk diambil di Sibu.",
+    zh: "工具、油漆与日常五金，可在诗巫门市自取。"
   },
   "shop.hero.body": {
-    en: "Browse the shelves online — power tools to building materials — then pick up at the store or arrange delivery around Sibu.",
-    bm: "Lihat rak kami secara online — alatan kuasa hingga bahan binaan — kemudian ambil di kedai atau atur penghantaran sekitar Sibu.",
-    zh: "在线浏览货架 — 从电动工具到建筑材料 — 到店自取或安排诗巫周边送货。"
+    en: "Browse online — from power tools to building materials — and collect a confirmed order from our Salim store.",
+    bm: "Lihat dalam talian — daripada alatan kuasa hingga bahan binaan — dan ambil pesanan yang disahkan di kedai Salim kami.",
+    zh: "在线浏览从电动工具到建筑材料的商品，并在 Salim 门市领取已确认的订单。"
   },
   "shop.hero.cta1": { en: "Shop deals", bm: "Lihat tawaran", zh: "查看优惠" },
   "shop.hero.cta2": { en: "Explore services", bm: "Lihat perkhidmatan", zh: "了解服务" },
-  "shop.hero.m1.v": { en: "Since 2017", bm: "Sejak 2017", zh: "始于 2017" },
+  "shop.hero.m1.v": { en: "Salim", bm: "Salim", zh: "Salim" },
   "shop.hero.m1.k": {
-    en: "serving Sibu’s DIY and contractors",
-    bm: "berkhidmat untuk DIY dan kontraktor Sibu",
-    zh: "服务诗巫的 DIY 与承包商"
+    en: "pickup location in Sibu",
+    bm: "lokasi pengambilan di Sibu",
+    zh: "诗巫自取地点"
   },
-  "shop.hero.m2.v": { en: "18+", bm: "18+", zh: "18+" },
-  "shop.hero.m2.k": { en: "trusted brands on the shelves", bm: "jenama terpercaya di rak", zh: "货架上的信赖品牌" },
-  "shop.hero.m3.v": { en: "10,000+", bm: "10,000+", zh: "10,000+" },
-  "shop.hero.m3.k": { en: "product types under one roof", bm: "jenis produk di bawah satu bumbung", zh: "同一屋檐下的产品种类" },
+  "shop.hero.m2.v": { en: "WhatsApp", bm: "WhatsApp", zh: "WhatsApp" },
+  "shop.hero.m2.k": { en: "help choosing an item", bm: "bantuan memilih barangan", zh: "协助选择商品" },
+  "shop.hero.m3.v": { en: "Live stock", bm: "Stok langsung", zh: "实时库存" },
+  "shop.hero.m3.k": { en: "checked again at checkout", bm: "disemak semula semasa pembayaran", zh: "结账时再次检查" },
 
   "shop.panel2.eyebrow": { en: "This month’s picks", bm: "Pilihan bulan ini", zh: "本月推荐" },
   "shop.panel2.title": { en: "Deals stacked for real projects.", bm: "Tawaran untuk projek sebenar.", zh: "为真实项目准备的优惠。" },
@@ -734,18 +734,18 @@ export const translations = {
 
   /* ---- shop: footer ---- */
   "shop.footer.about": {
-    en: "永光五金 · Salim, Sibu, Sarawak. Sibu's hardware counter since 2017 — genuine brands, counter prices, and real advice.",
-    bm: "永光五金 · Salim, Sibu, Sarawak. Kedai perkakasan Sibu sejak 2017 — jenama tulen, harga kedai, dan nasihat sebenar.",
-    zh: "永光五金 · 砂拉越诗巫沙林。自 2017 年起服务诗巫的五金柜台 — 正品品牌、柜台价格、真诚建议。"
+    en: "永光五金 · Salim, Sibu, Sarawak. Browse hardware supplies online and collect confirmed orders from our store.",
+    bm: "永光五金 · Salim, Sibu, Sarawak. Lihat bekalan perkakasan dalam talian dan ambil pesanan yang disahkan di kedai kami.",
+    zh: "永光五金 · 砂拉越诗巫 Salim。在线浏览五金用品，并到门市领取已确认的订单。"
   },
   "shop.footer.shop": { en: "Shop", bm: "Beli-belah", zh: "商店" },
   "shop.footer.services": { en: "Services", bm: "Perkhidmatan", zh: "服务" },
   "shop.footer.contact": { en: "Contact", bm: "Hubungi", zh: "联系我们" },
-  "shop.footer.hours": { en: "Mon–Sat · 8am–6pm", bm: "Isnin–Sabtu · 8pg–6ptg", zh: "周一至周六 · 8am–6pm" },
+  "shop.footer.hours": { en: "Call to confirm current hours", bm: "Telefon untuk sahkan waktu semasa", zh: "请致电确认营业时间" },
   "shop.footer.copy": {
-    en: "© 2017–2026 Ekoway Hardware Sdn Bhd",
-    bm: "© 2017–2026 Ekoway Hardware Sdn Bhd",
-    zh: "© 2017–2026 Ekoway Hardware Sdn Bhd"
+    en: "© 2026 Ekoway Hardware Sdn Bhd",
+    bm: "© 2026 Ekoway Hardware Sdn Bhd",
+    zh: "© 2026 Ekoway Hardware Sdn Bhd"
   },
   "shop.wa.chat": { en: "Chat on WhatsApp", bm: "Sembang di WhatsApp", zh: "WhatsApp 咨询" },
 

@@ -27,3 +27,14 @@ export type CatalogueImportReport = {
   categories_created: number;
   problems: string[];
 };
+
+export type ProductImageImportReport = {
+  dry_run: boolean;
+  rows_read: number;
+  rows_pending: number;
+  approved_rows: number;
+  products_matched: number;
+  products_updated: number;
+  products_unchanged: number;
+  problems: string[];
+};

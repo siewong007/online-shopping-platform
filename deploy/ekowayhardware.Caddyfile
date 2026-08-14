@@ -1,0 +1,35 @@
+ekowayhardware.com {
+    encode zstd gzip
+
+    header ?Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+    # Keep the proven HitPay sandbox isolated from production. This exact route is evaluated
+    # before the general /api matcher and is the only sandbox endpoint exposed publicly.
+    handle /api/payments/hitpay-sandbox/webhook {
+        rewrite * /api/payments/hitpay/webhook
+        reverse_proxy 127.0.0.1:4001
+    }
+
+    # The currently deployed legacy frontend posts directly to /api/checkout without taking
+    # payment. Keep that route closed until provider-backed production checkout is deployed.
+    @legacy_unpaid_checkout {
+        path /api/checkout
+        method POST
+    }
+    handle @legacy_unpaid_checkout {
+        respond "Online checkout is temporarily unavailable. Please contact Ekoway Hardware." 503
+    }
+
+    @backend path /api /api/*
+    handle @backend {
+        reverse_proxy 127.0.0.1:4000
+    }
+
+    handle {
+        reverse_proxy 127.0.0.1:8082
+    }
+}
+
+www.ekowayhardware.com {
+    redir https://ekowayhardware.com{uri} permanent
+}

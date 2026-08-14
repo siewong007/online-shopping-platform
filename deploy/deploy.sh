@@ -5,8 +5,9 @@
 #   deploy.sh <7-to-40-char-hex-git-ref> <extracted-release-directory>
 #
 # Verifies the release payload checksum, loads the Docker images, generates
-# persistent secrets on first run, backs up the existing database, brings the
-# stack up, waits for every service to become healthy, configures the host
+# persistent secrets on first run, backs up the existing database, applies
+# checksummed SQL migrations, brings the stack up, waits for every service to
+# become healthy, configures the host
 # Caddy site block, and rolls the application images back when a release
 # fails. It never contacts a registry, Secrets Manager, or Route53 — DNS is
 # handled separately by Terraform in the payroll-system repo, and the deploy
@@ -42,6 +43,7 @@ flock -n 9 || die "another online-shopping deployment is already running"
 required_payload=(
   deploy.sh
   docker-compose.prod.yml
+  ekowayhardware.Caddyfile
   SHA256SUMS
   images/backend.tar.gz
   images/frontend.tar.gz
@@ -164,14 +166,59 @@ wait_for_healthy() {
 
 deploy_tag() {
   local target_tag=$1
+  local run_migrations=${2:-yes}
   export IMAGE_TAG=$target_tag
   compose config >/dev/null || return 1
-  compose up --detach --remove-orphans || return 1
+  compose up --detach postgres || return 1
   wait_for_healthy online-shopping-db || return 1
+  if [[ "$run_migrations" == yes ]]; then
+    apply_pending_migrations || return 1
+  fi
+  compose up --detach --remove-orphans backend frontend || return 1
   wait_for_healthy online-shopping-backend || return 1
   wait_for_healthy online-shopping-frontend || return 1
   curl -fsS http://127.0.0.1:4000/api/health >/dev/null || return 1
   curl -fsS http://127.0.0.1:8082/health >/dev/null || return 1
+}
+
+apply_pending_migrations() {
+  local migration filename version checksum recorded
+
+  compose exec -T postgres psql \
+    -v ON_ERROR_STOP=1 -U shop_admin -d online_shopping <<'SQL'
+CREATE TABLE IF NOT EXISTS app_schema_migrations (
+    version     INTEGER PRIMARY KEY,
+    filename    TEXT NOT NULL UNIQUE,
+    checksum    TEXT NOT NULL,
+    applied_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+SQL
+
+  for migration in "$APP_DIR/initdb"/[0-9][0-9][0-9][0-9]_*.sql; do
+    [[ -f "$migration" ]] || continue
+    filename=${migration##*/}
+    version=${filename%%_*}
+    [[ "$version" =~ ^[0-9]{4}$ ]] || die "invalid migration filename: $filename"
+    checksum=$(sha256sum "$migration" | cut -d' ' -f1)
+    recorded=$(compose exec -T postgres psql \
+      -v ON_ERROR_STOP=1 -U shop_admin -d online_shopping -Atc \
+      "SELECT checksum FROM app_schema_migrations WHERE version = $((10#$version))")
+
+    if [[ -n "$recorded" ]]; then
+      [[ "$recorded" == "$checksum" ]] \
+        || die "migration checksum changed after application: $filename"
+      continue
+    fi
+
+    log "Applying database migration $filename"
+    {
+      printf 'BEGIN;\n'
+      cat "$migration"
+      printf "\nINSERT INTO app_schema_migrations (version, filename, checksum) VALUES (%d, '%s', '%s');\nCOMMIT;\n" \
+        "$((10#$version))" "$filename" "$checksum"
+    } | compose exec -T postgres psql \
+      -v ON_ERROR_STOP=1 -U shop_admin -d online_shopping || return 1
+  done
 }
 
 show_diagnostics() {
@@ -218,26 +265,7 @@ configure_caddy() {
     cp -p "$CADDY_SITE_FILE" "$site_backup"
   fi
 
-  cat > "$site_tmp" <<'CADDY'
-ekowayhardware.com {
-    encode zstd gzip
-
-    header ?Strict-Transport-Security "max-age=31536000; includeSubDomains"
-
-    @backend path /api /api/*
-    handle @backend {
-        reverse_proxy 127.0.0.1:4000
-    }
-
-    handle {
-        reverse_proxy 127.0.0.1:8082
-    }
-}
-
-www.ekowayhardware.com {
-    redir https://ekowayhardware.com{uri} permanent
-}
-CADDY
+  install -m 0644 "$RELEASE_DIR/ekowayhardware.Caddyfile" "$site_tmp"
 
   install -m 0644 "$site_tmp" "$CADDY_SITE_FILE"
   if ! grep -Fqx "import $CADDY_SITE_FILE" "$CADDY_FILE"; then
@@ -320,7 +348,7 @@ if [[ -n "$previous_tag" ]] \
   if [[ -f "$RELEASES_DIR/$previous_tag/docker-compose.prod.yml" ]]; then
     install -m 0644 "$RELEASES_DIR/$previous_tag/docker-compose.prod.yml" "$COMPOSE_FILE"
   fi
-  if deploy_tag "$previous_tag"; then
+  if deploy_tag "$previous_tag" no; then
     log "Rollback succeeded"
   else
     log "Rollback failed; manual intervention is required"

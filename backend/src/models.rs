@@ -1010,3 +1010,32 @@ pub struct CatalogueImportReport {
     pub categories_created: usize,
     pub problems: Vec<String>,
 }
+
+#[derive(Debug, Clone)]
+pub struct ProductImageManifestRow {
+    pub item_code: String,
+    pub uom: String,
+    pub image_url: String,
+    pub source_owner: String,
+    pub source_page_url: String,
+    pub rights_status: String,
+    pub match_confidence: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct ProductImageImportQuery {
+    #[serde(default)]
+    pub dry_run: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ProductImageImportReport {
+    pub dry_run: bool,
+    pub rows_read: usize,
+    pub rows_pending: usize,
+    pub approved_rows: usize,
+    pub products_matched: usize,
+    pub products_updated: usize,
+    pub products_unchanged: usize,
+    pub problems: Vec<String>,
+}

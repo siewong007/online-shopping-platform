@@ -1295,11 +1295,12 @@ pub async fn delete_order(pool: &PgPool, order_id: i32) -> Result<()> {
 /// Releases stock held by orders that were never paid for and have gone stale, so an abandoned
 /// checkout cannot hold inventory forever. Returns the number of orders released.
 ///
-/// Controlled by `inventory.unpaid_release_minutes`; `0` (the seeded default) disables it
-/// entirely. Only orders still sitting at the `received` fulfillment stage are eligible, so an
-/// order staff have already started working is never swept out from under them.
+/// Controlled by `inventory.unpaid_release_minutes`; the seeded and in-code default is 60
+/// minutes. Setting it to `0` disables release. Only orders still sitting at the `received`
+/// fulfillment stage are eligible, so an order staff have already started working is never
+/// swept out from under them.
 pub async fn release_abandoned_order_stock(pool: &PgPool) -> Result<usize> {
-    let minutes = fetch_setting_int(pool, "inventory.unpaid_release_minutes", 0).await?;
+    let minutes = fetch_setting_int(pool, "inventory.unpaid_release_minutes", 60).await?;
     if minutes <= 0 {
         return Ok(0);
     }

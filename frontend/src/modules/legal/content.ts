@@ -1,8 +1,7 @@
 // Policy copy for the storefront's legal pages.
 //
 // These are drafts prepared from the business details already in the site (company name,
-// address, contact, Sarawak-only delivery). Values marked CONFIRM below are sensible
-// defaults, not decisions the business has made — check them before relying on this text.
+// address and contact). Owner-controlled policy values are intentionally not invented.
 //
 // Kept out of i18n/translations.ts deliberately: long-form prose would bloat that file and
 // these documents change on a different cadence to UI strings.
@@ -21,11 +20,14 @@ export type LegalDocument = {
   sections: LegalSection[];
 };
 
-const COMPANY = "Ekoway Hardware Sdn Bhd";
-const ADDRESS = "Lorong Salim 17, near Farley, Sibu, Sarawak, Malaysia";
-const PHONE = "084-253883";
-const WHATSAPP = "017-405 6993";
-const UPDATED = "10 August 2026";
+const COMPANY = "EKOWAY HARDWARE SDN. BHD.";
+const REGISTRATION_NUMBER = "1353510-A";
+const ADDRESS = "No. 43-44, Ground Floor, Lorong Salim 17, Jalan Salim, 96000 Sibu, Sarawak";
+const PHONE = "084-253 883";
+const WHATSAPP = "+60 17-405 6993";
+const PRIVACY_CONTACT = "James Wong";
+const PRIVACY_EMAIL = "ekowayhardware@gmail.com";
+const UPDATED = "14 August 2026";
 
 export const LEGAL_DOCUMENTS: Record<LegalSlug, LegalDocument> = {
   privacy: {
@@ -36,7 +38,7 @@ export const LEGAL_DOCUMENTS: Record<LegalSlug, LegalDocument> = {
       {
         heading: "Who we are",
         body: [
-          `${COMPANY}, ${ADDRESS}. You can reach us on ${PHONE} or WhatsApp ${WHATSAPP}.`
+          `${COMPANY} (Registration No. ${REGISTRATION_NUMBER}), ${ADDRESS}. You can reach us on ${PHONE}, WhatsApp ${WHATSAPP}, or email ${PRIVACY_EMAIL}.`
         ]
       },
       {
@@ -78,7 +80,7 @@ export const LEGAL_DOCUMENTS: Record<LegalSlug, LegalDocument> = {
         body: [
           "You may request access to the personal data we hold about you, ask us to correct it if it is inaccurate, or limit how we process it.",
           "You may withdraw consent to our processing, though this may mean we cannot complete an order in progress.",
-          `To make any of these requests, contact us on ${PHONE}, WhatsApp ${WHATSAPP}, or in person at ${ADDRESS}. We will respond within the period required by the PDPA.`
+          `To make any of these requests, contact ${PRIVACY_CONTACT} at ${PRIVACY_EMAIL}, call ${PHONE}, use WhatsApp ${WHATSAPP}, or visit ${ADDRESS}. We will respond within the period required by the PDPA.`
         ]
       },
       {
@@ -88,7 +90,7 @@ export const LEGAL_DOCUMENTS: Record<LegalSlug, LegalDocument> = {
           "Data yang kami kumpul: nama, alamat e-mel, nombor telefon, dan bagi penghantaran, alamat penghantaran anda serta butiran penerima. Kami juga menyimpan rekod pesanan anda.",
           "Tujuan: untuk memproses dan memenuhi pesanan anda, menghubungi anda berkenaan pesanan tersebut, dan menyimpan rekod perakaunan seperti yang dikehendaki undang-undang. Data ini diperlukan untuk melengkapkan pembelian.",
           "Pendedahan: kepada rakan penghantaran dan kurier, penyedia pembayaran kami, sistem perakaunan dan penasihat profesional kami, serta pihak berkuasa apabila dikehendaki undang-undang. Kami tidak menjual data peribadi anda.",
-          `Hak anda: anda boleh memohon akses kepada data peribadi anda, meminta pembetulan, mengehadkan pemprosesan, atau menarik balik kebenaran. Hubungi kami di ${PHONE} atau WhatsApp ${WHATSAPP}.`
+          `Hak anda: anda boleh memohon akses kepada data peribadi anda, meminta pembetulan, mengehadkan pemprosesan, atau menarik balik kebenaran. Hubungi ${PRIVACY_CONTACT} di ${PRIVACY_EMAIL}, telefon ${PHONE}, atau WhatsApp ${WHATSAPP}.`
         ]
       }
     ]
@@ -158,8 +160,8 @@ export const LEGAL_DOCUMENTS: Record<LegalSlug, LegalDocument> = {
       {
         heading: "Return window",
         body: [
-          // CONFIRM: 7 days is a common Malaysian hardware-retail default, not a decision you have made.
-          "You may return an unused item within 7 days of collection or delivery, provided it is in its original condition and packaging with proof of purchase."
+          "Contact us as soon as possible if you want to return an item. Keep it unused, in its original condition and packaging, and retain your proof of purchase while we assess the request.",
+          "This policy does not limit any rights or remedies you have under applicable Malaysian consumer law."
         ]
       },
       {
@@ -188,8 +190,7 @@ export const LEGAL_DOCUMENTS: Record<LegalSlug, LegalDocument> = {
         heading: "Refunds",
         body: [
           "Approved refunds are returned to the original payment method.",
-          // CONFIRM: gateway settlement timing — verify once your payment provider is live.
-          "Once approved, refunds are processed within 7 working days. How quickly it appears depends on your bank.",
+          "We will submit an approved refund promptly. How quickly it appears after submission depends on your bank and payment provider.",
           "Delivery charges are refunded where the return is due to our error, and are otherwise non-refundable."
         ]
       }
@@ -200,29 +201,28 @@ export const LEGAL_DOCUMENTS: Record<LegalSlug, LegalDocument> = {
     title: "Delivery & Collection",
     updated: UPDATED,
     intro:
-      "We deliver across Sarawak, and you are always welcome to collect from our store in Sibu.",
+      "Online orders are currently available for collection from our Sibu store. Contact us before ordering if you need delivery, so we can confirm availability and the charge.",
     sections: [
       {
         heading: "Collection",
         body: [
           `Collect free of charge from ${ADDRESS}.`,
           "We will contact you when your order is ready. Please bring your order number.",
-          "Store hours: Monday to Saturday, 8:00 AM – 6:00 PM. Sunday, 9:00 AM – 2:00 PM."
+          `Contact us on ${PHONE} or WhatsApp ${WHATSAPP} to confirm the current opening hours and collection time before travelling.`
         ]
       },
       {
         heading: "Delivery coverage",
         body: [
-          "We deliver within Sarawak. We do not currently deliver to Sabah or Peninsular Malaysia.",
-          "If you are unsure whether we reach your area, message us before ordering and we will confirm."
+          "Delivery is arranged manually and is not currently offered as a standard online-checkout option.",
+          `Message us on WhatsApp ${WHATSAPP} before ordering and we will confirm whether delivery is possible for your location and items.`
         ]
       },
       {
         heading: "Charges and timing",
         body: [
           // CONFIRM: replace with your real zone pricing and lead times before launch.
-          "Delivery charges are calculated at checkout based on your address and the size of the items ordered.",
-          "Sibu and the immediate surrounding area is normally delivered within 1–2 working days. Other parts of Sarawak typically take 3–5 working days."
+          "Any delivery charge and estimated date will be quoted and agreed with you before the order is dispatched."
         ]
       },
       {
@@ -245,19 +245,21 @@ export const LEGAL_DOCUMENTS: Record<LegalSlug, LegalDocument> = {
   contact: {
     title: "Contact Us",
     updated: UPDATED,
-    intro: `${COMPANY} — 永光五金. Sibu's hardware counter since 2017.`,
+    intro: `${COMPANY} — 永光五金. Hardware supplies in Sibu, Sarawak.`,
     sections: [
       {
         heading: "Store",
-        body: [ADDRESS]
+        body: [`${COMPANY} (Registration No. ${REGISTRATION_NUMBER})`, ADDRESS]
       },
       {
         heading: "Phone and WhatsApp",
-        body: [`Phone ${PHONE}`, `WhatsApp ${WHATSAPP}`]
+        body: [`Phone ${PHONE}`, `WhatsApp ${WHATSAPP}`, `Email ${PRIVACY_EMAIL}`]
       },
       {
         heading: "Opening hours",
-        body: ["Monday – Saturday: 8:00 AM – 6:00 PM", "Sunday: 9:00 AM – 2:00 PM"]
+        body: [
+          `Call ${PHONE} or WhatsApp ${WHATSAPP} to confirm today's opening hours before travelling.`
+        ]
       },
       {
         heading: "Order enquiries",

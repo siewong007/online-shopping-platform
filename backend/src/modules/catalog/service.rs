@@ -8,7 +8,10 @@ use super::{
         CreateCategoryInput, CreateProductInput, UpdateCategoryInput, UpdateProductInput,
         UpdateProductStockInput,
     },
-    model::{AdminCatalogPayload, CatalogueImportReport, Category, Product, ProductRestockResult},
+    model::{
+        AdminCatalogPayload, CatalogueImportReport, Category, Product, ProductImageImportReport,
+        ProductRestockResult,
+    },
     repository,
 };
 
@@ -152,6 +155,29 @@ pub async fn import_catalogue(
         &format!(
             "{} created, {} updated, {} categories",
             report.products_created, report.products_updated, report.categories_created
+        ),
+    )
+    .await;
+    Ok(report)
+}
+
+pub async fn import_product_image_manifest(
+    pool: &PgPool,
+    identity: &AdminIdentity,
+    body: &str,
+    dry_run: bool,
+) -> Result<ProductImageImportReport> {
+    let report =
+        repository::import_product_image_manifest(pool, body, dry_run, &identity.username).await?;
+    audit::service::record_event(
+        pool,
+        &identity.username,
+        if dry_run { "validate" } else { "import" },
+        "product_images",
+        "manifest",
+        &format!(
+            "{} approved, {} matched, {} updated, dry_run={}",
+            report.approved_rows, report.products_matched, report.products_updated, dry_run
         ),
     )
     .await;

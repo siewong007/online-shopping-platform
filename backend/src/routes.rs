@@ -247,8 +247,33 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
             post(catalog::controller::import_catalogue)
                 .layer(DefaultBodyLimit::max(16 * 1024 * 1024)),
         )
+        .route(
+            "/api/admin/payments/{payment_id}/reconcile",
+            post(payments::controller::admin_reconcile_payment),
+        )
+        .route(
+            "/api/admin/payments/{payment_id}/refund",
+            post(payments::controller::admin_refund_payment),
+        )
+        .route(
+            "/api/admin/catalogue/images/import",
+            post(catalog::controller::import_product_image_manifest)
+                .layer(DefaultBodyLimit::max(16 * 1024 * 1024)),
+        )
         .route("/api/checkout", post(orders::controller::checkout))
+        .route(
+            "/api/checkout/payment",
+            post(payments::controller::checkout_with_gateway),
+        )
         .route("/api/checkout/quote", post(orders::controller::quote))
+        .route(
+            "/api/payments/senangpay/callback",
+            post(payments::controller::senangpay_callback),
+        )
+        .route(
+            "/api/payments/hitpay/webhook",
+            post(payments::controller::hitpay_webhook),
+        )
         .route(
             "/api/account/register",
             post(customer_auth::controller::register),

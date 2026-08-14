@@ -93,7 +93,7 @@ fn validate_setting_value(
         "general.currency_code" => {
             let is_valid = value.len() == 3 && value.bytes().all(|b| b.is_ascii_uppercase());
             if !is_valid {
-                bail!("Currency code must be three uppercase letters (e.g. USD).");
+                bail!("Currency code must be three uppercase letters (e.g. MYR).");
             }
         }
         _ if value_type == "bool" && !matches!(value, "true" | "false") => {

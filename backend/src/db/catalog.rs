@@ -2,7 +2,7 @@ use crate::models::*;
 use anyhow::{Result, anyhow, bail};
 use sqlx::PgPool;
 
-fn validate_image_url(image_url: &str) -> Result<()> {
+pub(crate) fn validate_product_image_url(image_url: &str) -> Result<()> {
     let lower = image_url.to_ascii_lowercase();
     let supported_local_image = [
         "data:image/png;base64,",
@@ -14,10 +14,20 @@ fn validate_image_url(image_url: &str) -> Result<()> {
     .iter()
     .any(|prefix| lower.starts_with(prefix));
 
+    let supported_first_party_path = lower.starts_with("/product-images/")
+        && !image_url.contains("..")
+        && !image_url.contains('\\')
+        && !image_url.contains('?')
+        && !image_url.contains('#')
+        && [".png", ".jpg", ".jpeg", ".webp", ".gif"]
+            .iter()
+            .any(|extension| lower.ends_with(extension));
+
     if !image_url.is_empty()
         && !lower.starts_with("http://")
         && !lower.starts_with("https://")
         && !supported_local_image
+        && !supported_first_party_path
     {
         bail!("Product image must be an uploaded PNG, JPEG, WebP, GIF, or a valid http/https URL.");
     }
@@ -211,7 +221,7 @@ pub async fn create_product(pool: &PgPool, input: &CreateProductInput) -> Result
     .await?;
 
     let image_url = input.image_url.as_deref().unwrap_or("").trim();
-    validate_image_url(image_url)?;
+    validate_product_image_url(image_url)?;
 
     sqlx::query_as::<_, Product>(
         r#"
@@ -275,7 +285,7 @@ pub async fn update_product(
     }
 
     let image_url = input.image_url.as_deref().unwrap_or("").trim();
-    validate_image_url(image_url)?;
+    validate_product_image_url(image_url)?;
 
     sqlx::query_as::<_, Product>(
         r#"

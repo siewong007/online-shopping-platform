@@ -1,6 +1,6 @@
 use axum::{
     Json,
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
 };
 
@@ -15,7 +15,10 @@ use super::{
         CreateCategoryInput, CreateProductInput, UpdateCategoryInput, UpdateProductInput,
         UpdateProductStockInput,
     },
-    model::{AdminCatalogPayload, CatalogueImportReport, Category, Product, ProductRestockResult},
+    model::{
+        AdminCatalogPayload, CatalogueImportReport, Category, Product, ProductImageImportQuery,
+        ProductImageImportReport, ProductRestockResult,
+    },
     service,
 };
 
@@ -217,6 +220,29 @@ pub async fn import_catalogue(
     .await?;
 
     service::import_catalogue(&state.pool, &identity, &body)
+        .await
+        .map(Json)
+        .map_err(error::map_admin_error)
+}
+
+/// Validates or applies the reviewed product-image manifest. Pending rows are ignored;
+/// approved rows require recorded commercial-use rights and an A/B identity match.
+pub async fn import_product_image_manifest(
+    State(state): State<AppState>,
+    identity: AdminIdentity,
+    Query(query): Query<ProductImageImportQuery>,
+    body: String,
+) -> Result<Json<ProductImageImportReport>, error::HttpError> {
+    permissions::service::ensure_permission(
+        &state.pool,
+        &identity,
+        permissions::model::ADMIN_CATALOG_PAGE,
+        permissions::model::PermissionAction::Update,
+        "catalog",
+    )
+    .await?;
+
+    service::import_product_image_manifest(&state.pool, &identity, &body, query.dry_run)
         .await
         .map(Json)
         .map_err(error::map_admin_error)

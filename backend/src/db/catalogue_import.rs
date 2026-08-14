@@ -17,7 +17,7 @@ const REQUIRED_HEADERS: &[&str] = &[
 
 /// Minimal RFC4180 reader: the export contains quoted fields with commas and doubled
 /// quotes inside product names, so splitting on ',' is not sufficient.
-fn parse_csv_line(line: &str) -> Vec<String> {
+pub(crate) fn parse_csv_line(line: &str) -> Vec<String> {
     let mut fields = Vec::new();
     let mut current = String::new();
     let mut in_quotes = false;

@@ -3,8 +3,16 @@ mod common;
 use axum::http::{Method, StatusCode};
 use sqlx::PgPool;
 
+async fn publish_seed_products(pool: &PgPool) {
+    sqlx::query("UPDATE products SET featured = TRUE WHERE source_item_code = ''")
+        .execute(pool)
+        .await
+        .expect("publish storefront test fixtures");
+}
+
 #[sqlx::test]
 async fn storefront_search_matches_name_and_description_case_insensitively(pool: PgPool) {
+    publish_seed_products(&pool).await;
     let app = common::app(pool);
     let (status, body) = common::request(
         app.clone(),
@@ -40,6 +48,7 @@ async fn storefront_search_matches_name_and_description_case_insensitively(pool:
 
 #[sqlx::test]
 async fn storefront_price_bounds_are_inclusive(pool: PgPool) {
+    publish_seed_products(&pool).await;
     let app = common::app(pool);
     let (status, body) = common::request(
         app,
@@ -58,6 +67,7 @@ async fn storefront_price_bounds_are_inclusive(pool: PgPool) {
 
 #[sqlx::test]
 async fn storefront_category_filter_narrows_results(pool: PgPool) {
+    publish_seed_products(&pool).await;
     let app = common::app(pool);
     let (status, body) = common::request(
         app,
@@ -76,6 +86,7 @@ async fn storefront_category_filter_narrows_results(pool: PgPool) {
 
 #[sqlx::test]
 async fn storefront_no_matches_returns_empty_array_not_404(pool: PgPool) {
+    publish_seed_products(&pool).await;
     let app = common::app(pool);
     let (status, body) = common::request(
         app,
@@ -92,6 +103,7 @@ async fn storefront_no_matches_returns_empty_array_not_404(pool: PgPool) {
 
 #[sqlx::test]
 async fn storefront_sort_price_asc_orders_ascending(pool: PgPool) {
+    publish_seed_products(&pool).await;
     let app = common::app(pool);
     let (status, body) = common::request(
         app,
@@ -115,6 +127,7 @@ async fn storefront_sort_price_asc_orders_ascending(pool: PgPool) {
 
 #[sqlx::test]
 async fn storefront_without_params_matches_previous_shape(pool: PgPool) {
+    publish_seed_products(&pool).await;
     let app = common::app(pool);
     let (status, body) = common::request(app, Method::GET, "/api/storefront", None, None).await;
 
@@ -126,6 +139,7 @@ async fn storefront_without_params_matches_previous_shape(pool: PgPool) {
 
 #[sqlx::test]
 async fn storefront_payload_includes_image_url(pool: PgPool) {
+    publish_seed_products(&pool).await;
     let app = common::app(pool);
     let (status, body) = common::request(app, Method::GET, "/api/storefront", None, None).await;
 
@@ -137,4 +151,27 @@ async fn storefront_payload_includes_image_url(pool: PgPool) {
             .get("image_url")
             .is_some_and(|value| value.is_string())
     }));
+}
+
+#[sqlx::test]
+async fn storefront_excludes_products_without_positive_stock(pool: PgPool) {
+    publish_seed_products(&pool).await;
+    sqlx::query(
+        r#"
+        UPDATE products
+        SET stock_quantity = 0
+        WHERE name = 'Milwaukee M18 9-Tool Combo Kit'
+        "#,
+    )
+    .execute(&pool)
+    .await
+    .expect("set product out of stock");
+
+    let app = common::app(pool);
+    let (status, body) =
+        common::request(app, Method::GET, "/api/storefront?q=MILWAUKEE", None, None).await;
+
+    assert_eq!(status, StatusCode::OK, "{body}");
+    assert_eq!(body["total_products"], 0);
+    assert!(body["products"].as_array().unwrap().is_empty());
 }

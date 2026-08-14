@@ -319,6 +319,58 @@ async fn product_image_url_scheme_is_validated_and_roundtrips(pool: PgPool) {
     assert_eq!(data_status, StatusCode::CREATED, "{data_body}");
     assert_eq!(data_body["image_url"], "data:image/png;base64,aGVsbG8=");
 
+    let mut first_party_path = base_product.clone();
+    first_party_path["image_url"] = json!("/product-images/test-wire-stripper.webp");
+    let (first_party_status, first_party_body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/admin/products",
+        Some(&token),
+        Some(first_party_path),
+    )
+    .await;
+    assert_eq!(
+        first_party_status,
+        StatusCode::CREATED,
+        "{first_party_body}"
+    );
+    assert_eq!(
+        first_party_body["image_url"],
+        "/product-images/test-wire-stripper.webp"
+    );
+
+    let mut unsafe_first_party_path = base_product.clone();
+    unsafe_first_party_path["image_url"] = json!("/product-images/../private.txt");
+    let (unsafe_path_status, unsafe_path_body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/admin/products",
+        Some(&token),
+        Some(unsafe_first_party_path),
+    )
+    .await;
+    assert_eq!(
+        unsafe_path_status,
+        StatusCode::BAD_REQUEST,
+        "{unsafe_path_body}"
+    );
+
+    let mut non_image_first_party_path = base_product.clone();
+    non_image_first_party_path["image_url"] = json!("/product-images/not-an-image.html");
+    let (non_image_path_status, non_image_path_body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/admin/products",
+        Some(&token),
+        Some(non_image_first_party_path),
+    )
+    .await;
+    assert_eq!(
+        non_image_path_status,
+        StatusCode::BAD_REQUEST,
+        "{non_image_path_body}"
+    );
+
     let mut unsupported_data_scheme = base_product.clone();
     unsupported_data_scheme["image_url"] = json!("data:text/html;base64,PHNjcmlwdD4=");
     let (unsupported_data_status, unsupported_data_body) = common::request(
@@ -371,6 +423,86 @@ async fn product_image_url_scheme_is_validated_and_roundtrips(pool: PgPool) {
             .iter()
             .any(|product| product["id"] == product_id && product["image_url"] == "")
     }));
+}
+
+#[sqlx::test]
+async fn product_image_manifest_checks_before_apply_and_records_history(pool: PgPool) {
+    common::create_admin(&pool, "Catalog Specialist", "image-import", "secret123").await;
+    let app = common::app(pool.clone());
+    let token = common::login(app.clone(), "image-import", "secret123").await;
+
+    sqlx::query(
+        r#"
+        INSERT INTO products (
+            name, category_slug, price_cents, badge, description, tone, featured,
+            sort_order, stock_quantity, low_stock_threshold, image_url,
+            source_item_code, source_uom, imported_at
+        )
+        VALUES (
+            'Manifest Product', 'tools', 1999, '', '', 'neutral', TRUE,
+            0, 4, 1, '', 'IMG-001', 'UNIT', now()
+        )
+        "#,
+    )
+    .execute(&pool)
+    .await
+    .expect("imported product should insert");
+
+    let manifest = concat!(
+        "item_code,uom,image_url,source_owner,rights_status,match_confidence,review_status,candidate_page_url\n",
+        "IMG-001,UNIT,/product-images/img-001.webp,Ekoway Hardware,owned,A,approved,\n",
+        "IMG-002,UNIT,,Unknown,pending,,pending,\n"
+    );
+
+    let (check_status, check_body) = common::request_text(
+        app.clone(),
+        Method::POST,
+        "/api/admin/catalogue/images/import?dry_run=true",
+        Some(&token),
+        "text/csv",
+        manifest,
+    )
+    .await;
+    assert_eq!(check_status, StatusCode::OK, "{check_body}");
+    assert_eq!(check_body["dry_run"], true);
+    assert_eq!(check_body["rows_pending"], 1);
+    assert_eq!(check_body["products_matched"], 1);
+    assert_eq!(check_body["products_updated"], 1);
+
+    let image_after_check = sqlx::query_scalar::<_, String>(
+        "SELECT image_url FROM products WHERE source_item_code = 'IMG-001'",
+    )
+    .fetch_one(&pool)
+    .await
+    .expect("product image should load");
+    assert_eq!(image_after_check, "");
+
+    let (apply_status, apply_body) = common::request_text(
+        app,
+        Method::POST,
+        "/api/admin/catalogue/images/import?dry_run=false",
+        Some(&token),
+        "text/csv",
+        manifest,
+    )
+    .await;
+    assert_eq!(apply_status, StatusCode::OK, "{apply_body}");
+    assert_eq!(apply_body["products_updated"], 1);
+
+    let applied = sqlx::query_as::<_, (String, i64, i64)>(
+        r#"
+        SELECT
+            products.image_url,
+            (SELECT COUNT(*) FROM product_image_metadata WHERE product_id = products.id),
+            (SELECT COUNT(*) FROM product_image_history WHERE product_id = products.id)
+        FROM products
+        WHERE products.source_item_code = 'IMG-001'
+        "#,
+    )
+    .fetch_one(&pool)
+    .await
+    .expect("image records should load");
+    assert_eq!(applied, ("/product-images/img-001.webp".to_string(), 1, 1));
 }
 
 #[sqlx::test]
@@ -552,6 +684,13 @@ async fn autocount_export_downloads_csv_and_marks_invoices(pool: PgPool) {
 #[sqlx::test]
 async fn fulfillment_status_flow_writes_history_and_advances_sales(pool: PgPool) {
     common::create_admin(&pool, "Super Admin", "fulfillment-admin", "secret123").await;
+    sqlx::query(
+        "UPDATE system_settings SET value = 'true' WHERE key = 'shipping.standard.enabled'",
+    )
+    .execute(&pool)
+    .await
+    .expect("enable standard delivery for the delivery fulfillment fixture");
+
     let app = common::app(pool.clone());
     let token = common::login(app.clone(), "fulfillment-admin", "secret123").await;
 
@@ -1096,6 +1235,16 @@ async fn admin_shipping_rate_update_changes_checkout_quote(pool: PgPool) {
     common::create_admin(&pool, "Super Admin", "shipping-settings", "secret123").await;
     let app = common::app(pool);
     let token = common::login(app.clone(), "shipping-settings", "secret123").await;
+
+    let (enable_status, enable_body) = common::request(
+        app.clone(),
+        Method::PUT,
+        "/api/admin/settings/shipping.standard.enabled",
+        Some(&token),
+        Some(json!({ "value": "true" })),
+    )
+    .await;
+    assert_eq!(enable_status, StatusCode::OK, "{enable_body}");
 
     let (update_status, update_body) = common::request(
         app.clone(),

@@ -64,9 +64,9 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Periodically returns stock held by abandoned, never-paid orders. The sweep itself is a
-/// no-op until `inventory.unpaid_release_minutes` is raised above 0, so this ticker is cheap
-/// while the setting stays at its seeded default.
+/// Periodically returns stock held by abandoned, never-paid orders using the 60-minute seeded
+/// default. Setting `inventory.unpaid_release_minutes` to 0 keeps the ticker running but makes
+/// each release pass a no-op.
 fn spawn_abandoned_stock_sweep(pool: sqlx::PgPool) {
     tokio::spawn(async move {
         let mut ticker = tokio::time::interval(Duration::from_secs(300));

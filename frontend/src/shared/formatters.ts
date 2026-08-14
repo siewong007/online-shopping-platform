@@ -1,9 +1,11 @@
 export function currencyFromCents(value: number): string {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-MY", {
     style: "currency",
-    currency: "USD",
+    currency: "MYR",
     maximumFractionDigits: 2
-  }).format(value / 100);
+  })
+    .format(value / 100)
+    .replace(/\u00a0/g, " ");
 }
 
 export function formatOrderDate(value: string): string {
@@ -14,7 +16,7 @@ export function formatOrderDate(value: string): string {
     return value;
   }
 
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat("en-MY", {
     month: "short",
     day: "numeric",
     hour: "numeric",

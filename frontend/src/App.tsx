@@ -12,7 +12,7 @@ import { createPortal } from "react-dom";
 
 import {
   changeOwnPassword as changeOwnPasswordRequest,
-  checkout as checkoutRequest,
+  startPaymentCheckout as startPaymentCheckoutRequest,
   createAdminOrder as createAdminOrderRequest,
   createAdminUser as createAdminUserRequest,
   createCategory as createCategoryRequest,
@@ -148,13 +148,7 @@ import type {
 import { quoteCheckout } from "./modules/orders/api/orderApi";
 import type { CheckoutQuote } from "./modules/orders/types";
 import { SupportChatWidget } from "./modules/support/components/SupportChatWidget";
-import {
-  fallbackCustomerPortalBenefits,
-  fallbackCustomerPortalMembership,
-  fallbackCustomerPortalTransactions,
-  fallbackPermissions,
-  fallbackStorefront
-} from "./data/fallback";
+import { fallbackPermissions, fallbackStorefront } from "./data/fallback";
 import {
   ApiError,
   getAuthToken,
@@ -211,6 +205,7 @@ import type {
   Role,
   RolePagePermission,
   SalesRecord,
+  PaymentCheckout,
   SalesSummaryPayload,
   SetAdminUserActiveInput,
   ShippingAddressInput,
@@ -231,9 +226,15 @@ import type {
   UpdateSalesStatusInput,
   UpdateSystemSettingInput
 } from "./types";
+import {
+  consumePaymentReturn,
+  rememberPendingPayment,
+  takePendingPayment
+} from "./modules/payments/paymentReturn";
 
 const CART_STORAGE_KEY = "depot-cart";
 const ACCOUNT_EMAIL_STORAGE_KEY = "depot-account-email";
+const DELIVERY_CHECKOUT_ENABLED = import.meta.env.VITE_ENABLE_DELIVERY === "true";
 
 function downloadBlob(blob: Blob, filename: string): void {
   const url = window.URL.createObjectURL(blob);
@@ -371,7 +372,7 @@ const changePasswordFields: RecordFormField<ChangeOwnPasswordInput>[] = [
 const membershipTiers = ["Bronze", "Silver", "Gold", "Pro Xtra", "VIP"];
 
 const seasonalTags = [
-  "Genuine Brands",
+  "Hardware Supplies",
   "Fast Counter Service",
   "This Month's Picks",
   "Power Tools",
@@ -1339,6 +1340,38 @@ export default function App() {
   const storefrontRequestGeneration = useRef(0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const { t } = useI18n();
+  const { notify } = useNotifications();
+
+  // A hosted gateway redirects the shopper back after showing its payment result. The signed
+  // server-to-server webhook remains the source of truth, so do not promise success here.
+  useEffect(() => {
+    const paymentReturn = consumePaymentReturn(window.location.search);
+    if (!paymentReturn.isPaymentReturn) {
+      return;
+    }
+
+    let pendingPayment = null;
+    try {
+      pendingPayment = takePendingPayment(window.sessionStorage);
+    } catch {
+      // Storage may be unavailable in privacy-restricted browsers; the return remains safe.
+    }
+
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${window.location.pathname}${paymentReturn.search ? `?${paymentReturn.search}` : ""}${window.location.hash}`
+    );
+    notify({
+      severity: "info",
+      title: "Payment verification in progress",
+      message: pendingPayment
+        ? `Order #${pendingPayment.orderId} has returned from the secure payment page. We are confirming it with the payment provider; the browser return itself does not mark it paid.`
+        : "We are securely confirming your payment. The browser return itself does not mark an order paid.",
+      scope: "payment-return",
+      dedupeKey: "payment-return:verification"
+    });
+  }, [notify]);
 
   useEffect(() => {
     document.title =
@@ -1765,9 +1798,16 @@ export default function App() {
       await loadAdminData(me);
       setAdminAuth("authenticated");
     } catch (error) {
-      if (error instanceof ApiError && error.isNetworkError) {
+      if (error instanceof ApiError && error.isNetworkError && import.meta.env.DEV) {
         await loadDemoAdminData();
         setAdminAuth("demo");
+        return;
+      }
+
+      if (error instanceof ApiError && error.isNetworkError) {
+        setCurrentAdmin(null);
+        setActiveRoleId(null);
+        setAdminAuth("unauthenticated");
         return;
       }
 
@@ -1866,8 +1906,9 @@ export default function App() {
     setIsCartOpen(true);
   };
 
-  const submitCheckout = async (input: CreateOrderInput): Promise<Order> => {
-    const order = await checkoutRequest(input);
+  const submitCheckout = async (input: CreateOrderInput): Promise<PaymentCheckout> => {
+    const checkout = await startPaymentCheckoutRequest(input);
+    const order = checkout.order;
     const checkoutEmail = order.customer_email.trim().toLowerCase();
 
     setCustomerAccountEmail(checkoutEmail);
@@ -1887,7 +1928,7 @@ export default function App() {
       ...current
     ]);
 
-    return order;
+    return checkout;
   };
 
   const createAdminOrder = async (input: CreateOrderInput): Promise<Order> => {
@@ -2332,6 +2373,16 @@ export default function App() {
       },
       ...current
     ]);
+  };
+
+  const refreshCatalog = async () => {
+    const catalogData = await fetchAdminCatalog();
+    const productsById = new Map(catalogData.products.map((product) => [product.id, product]));
+    setAdminCatalog(catalogData);
+    setStorefront((current) => current ? {
+      ...current,
+      products: current.products.map((product) => productsById.get(product.id) ?? product)
+    } : current);
   };
 
   const loadMoreActivity = async () => {
@@ -2881,6 +2932,7 @@ export default function App() {
           onLoadMoreSales={() => void loadMoreSales()}
           onOpenChangePassword={() => setIsChangePasswordOpen(true)}
           onRecordInvoicePayment={recordInvoicePayment}
+          onRefreshCatalog={refreshCatalog}
           onResetAdminUserPassword={resetAdminUserPassword}
           onRunSync={runSupplierSync}
           onSetAdminUserActive={setAdminUserActive}
@@ -4173,9 +4225,9 @@ function AccountDrawer({
         } else if (error instanceof ApiError && !error.isNetworkError && error.status === 401) {
           setMembershipStatus("error");
         } else {
-          // API unreachable — fall back to demo portal data rather than a blank crash.
-          setMembership(fallbackCustomerPortalMembership);
-          setMembershipStatus("success");
+          // Account data must fail closed; never substitute another customer's demo records.
+          setMembership(null);
+          setMembershipStatus("error");
         }
       }
     })();
@@ -4207,8 +4259,8 @@ function AccountDrawer({
         if (error instanceof ApiError && !error.isNetworkError && error.status === 401) {
           setBenefitsStatus("error");
         } else {
-          setBenefits(fallbackCustomerPortalBenefits);
-          setBenefitsStatus("success");
+          setBenefits(null);
+          setBenefitsStatus("error");
         }
       }
     })();
@@ -4243,8 +4295,8 @@ function AccountDrawer({
         if (error instanceof ApiError && !error.isNetworkError && error.status === 401) {
           setTransactionsStatus("error");
         } else {
-          setTransactions(fallbackCustomerPortalTransactions);
-          setTransactionsStatus("success");
+          setTransactions(null);
+          setTransactionsStatus("error");
         }
       }
     })();
@@ -4905,7 +4957,7 @@ type CartDrawerProps = {
   cart: CartItem[];
   customerAccountEmail: string;
   open: boolean;
-  onCheckout: (input: CreateOrderInput) => Promise<Order>;
+  onCheckout: (input: CreateOrderInput) => Promise<PaymentCheckout>;
   onClose: () => void;
   onCompleted: () => void;
   onPromotionChange: (promotionId: number | null) => void;
@@ -4951,7 +5003,7 @@ function CartDrawer({
   });
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null);
+  const [redirectingToPayment, setRedirectingToPayment] = useState(false);
   const [quote, setQuote] = useState<CheckoutQuote | null>(null);
   const [quoteFeedback, setQuoteFeedback] = useState<string | null>(null);
   const [isQuoting, setIsQuoting] = useState(false);
@@ -4969,7 +5021,7 @@ function CartDrawer({
       shipping_service_code: ""
     });
     setFeedback(null);
-    setConfirmedOrder(null);
+    setRedirectingToPayment(false);
     onClose();
   };
 
@@ -5142,7 +5194,7 @@ function CartDrawer({
     setIsSubmitting(true);
 
     try {
-      const order = await onCheckout({
+      const checkout = await onCheckout({
         customer_name: form.customer_name,
         customer_email: form.customer_email,
         customer_phone: form.customer_phone,
@@ -5153,8 +5205,17 @@ function CartDrawer({
         shipping_address: isDelivery ? form.shipping_address : undefined,
         shipping_service_code: isDelivery ? form.shipping_service_code || undefined : undefined
       });
-      setConfirmedOrder(order);
+      try {
+        rememberPendingPayment(window.sessionStorage, {
+          orderId: checkout.order.id,
+          provider: checkout.provider
+        });
+      } catch {
+        // The hosted checkout still works when session storage is unavailable.
+      }
       onCompleted();
+      setRedirectingToPayment(true);
+      window.location.assign(checkout.payment_url);
     } catch (error) {
       setFeedback(normalizeError(error, { operation: "checkout", scope: "checkout" }).userMessage);
     } finally {
@@ -5163,8 +5224,8 @@ function CartDrawer({
   };
 
   let title = t("shop.cartd.title");
-  if (confirmedOrder) {
-    title = "Order Confirmed";
+  if (redirectingToPayment) {
+    title = "Secure payment";
   } else if (stage === "checkout") {
     title = "Checkout";
   }
@@ -5224,20 +5285,10 @@ function CartDrawer({
           </button>
         </header>
 
-        {confirmedOrder ? (
+        {redirectingToPayment ? (
           <div className="cart-confirmation">
-            <p className="cart-confirm-badge">Order #{confirmedOrder.id}</p>
-            <p>
-              Thanks, {confirmedOrder.customer_name}! A confirmation is on its way to{" "}
-              {confirmedOrder.customer_email}.
-            </p>
-            <p className="cart-confirm-total">
-              {currencyFromCents(confirmedOrder.total_cents ?? confirmedOrder.subtotal_cents)} total
-            </p>
-            <p>{fulfillmentLabel(confirmedOrder.fulfillment_method)} order</p>
-            <button className="solid-button" onClick={close}>
-              Continue Shopping
-            </button>
+            <p className="cart-confirm-badge">Redirecting</p>
+            <p>Please wait while we open the secure payment page.</p>
           </div>
         ) : cart.length === 0 ? (
           <div className="cart-empty">
@@ -5415,22 +5466,29 @@ function CartDrawer({
                 required
               />
             </label>
-            <label>
-              <span>{t("shop.checkout.fulfillment")}</span>
-              <select
-                value={form.fulfillment_method}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    fulfillment_method: event.target.value as FulfillmentMethod,
-                    shipping_service_code: ""
-                  }))
-                }
-              >
-                <option value="pickup">{t("shop.checkout.pickup")}</option>
-                <option value="delivery">{t("shop.checkout.delivery")}</option>
-              </select>
-            </label>
+            {DELIVERY_CHECKOUT_ENABLED ? (
+              <label>
+                <span>{t("shop.checkout.fulfillment")}</span>
+                <select
+                  value={form.fulfillment_method}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      fulfillment_method: event.target.value as FulfillmentMethod,
+                      shipping_service_code: ""
+                    }))
+                  }
+                >
+                  <option value="pickup">{t("shop.checkout.pickup")}</option>
+                  <option value="delivery">{t("shop.checkout.delivery")}</option>
+                </select>
+              </label>
+            ) : (
+              <div className="cart-shipping-note" role="note">
+                <strong>Free pickup from the Salim store</strong>
+                <p>Online delivery is not enabled yet. For a delivery quote, WhatsApp +60 17-405 6993 before ordering.</p>
+              </div>
+            )}
             {isDelivery ? (
               <div className="cart-shipping-fields">
                 <p className="cart-shipping-note">{t("shop.checkout.deliveryNote")}</p>
@@ -5638,6 +5696,7 @@ type AdminViewProps = {
     invoiceId: number,
     input: RecordInvoicePaymentInput
   ) => Promise<Invoice>;
+  onRefreshCatalog: () => Promise<void>;
   onResetAdminUserPassword: (userId: number, input: AdminResetPasswordInput) => Promise<void>;
   onRunSync: () => void;
   onSetAdminUserActive: (userId: number, input: SetAdminUserActiveInput) => Promise<AdminUser>;
@@ -5730,6 +5789,7 @@ function AdminView({
   onLoadMoreSales,
   onOpenChangePassword,
   onRecordInvoicePayment,
+  onRefreshCatalog,
   onResetAdminUserPassword,
   onRunSync,
   onSetAdminUserActive,
@@ -5926,6 +5986,7 @@ function AdminView({
             onCreateProduct={onCreateProduct}
             onDeleteCategory={onDeleteCategory}
             onDeleteProduct={onDeleteProduct}
+            onRefreshCatalog={onRefreshCatalog}
             onUpdateCategory={onUpdateCategory}
             onUpdateProduct={onUpdateProduct}
             products={products}
@@ -5978,6 +6039,7 @@ function AdminView({
             onCreateProduct={onCreateProduct}
             onDeleteCategory={onDeleteCategory}
             onDeleteProduct={onDeleteProduct}
+            onRefreshCatalog={onRefreshCatalog}
             onUpdateCategory={onUpdateCategory}
             onUpdateProduct={onUpdateProduct}
             products={products}

@@ -84,6 +84,12 @@ export type CheckoutQuote = {
   requires_shipping_selection: boolean;
 };
 
+export type PaymentCheckout = {
+  order: Order;
+  payment_url: string;
+  provider: string;
+};
+
 export type OrderFulfillmentHistory = {
   id: number;
   order_id: number;

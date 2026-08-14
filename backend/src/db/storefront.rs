@@ -16,10 +16,6 @@ fn push_product_filters<'a>(
     query: &'a StorefrontQuery,
     include_category: bool,
 ) {
-    if query.in_stock_only.unwrap_or(false) {
-        builder.push(" AND stock_quantity > 0");
-    }
-
     if query.on_sale_only.unwrap_or(false) {
         builder.push(" AND badge ILIKE '%sale%'");
     }
@@ -71,7 +67,15 @@ pub async fn fetch_storefront(pool: &PgPool, query: &StorefrontQuery) -> Result<
         r#"
         SELECT slug, name, teaser
         FROM categories
-        ORDER BY sort_order
+        WHERE slug = 'all'
+           OR EXISTS (
+               SELECT 1
+               FROM products
+               WHERE products.category_slug = categories.slug
+                 AND products.featured = TRUE
+                 AND products.stock_quantity > 0
+           )
+        ORDER BY sort_order, name, slug
         "#,
     )
     .fetch_all(pool)
@@ -86,15 +90,16 @@ pub async fn fetch_storefront(pool: &PgPool, query: &StorefrontQuery) -> Result<
         .clamp(1, MAX_PAGE_SIZE);
     let offset = query.offset.unwrap_or(0).max(0);
 
-    let mut count_builder =
-        sqlx::QueryBuilder::new("SELECT COUNT(*) FROM products WHERE featured = true");
+    let mut count_builder = sqlx::QueryBuilder::new(
+        "SELECT COUNT(*) FROM products WHERE featured = true AND stock_quantity > 0",
+    );
     push_product_filters(&mut count_builder, query, true);
     let total_products: i64 = count_builder.build_query_scalar().fetch_one(pool).await?;
 
     // Department facet: how many products each department holds under every filter except
     // the department itself, so a shopper can see where else their search has results.
     let mut facet_builder = sqlx::QueryBuilder::new(
-        "SELECT category_slug, COUNT(*)::bigint FROM products WHERE featured = true",
+        "SELECT category_slug, COUNT(*)::bigint FROM products WHERE featured = true AND stock_quantity > 0",
     );
     push_product_filters(&mut facet_builder, query, false);
     facet_builder.push(" GROUP BY category_slug");
@@ -112,7 +117,7 @@ pub async fn fetch_storefront(pool: &PgPool, query: &StorefrontQuery) -> Result<
              SELECT product_id, AVG(rating)::float8 AS avg_rating, COUNT(*)::bigint AS review_count \
              FROM product_reviews GROUP BY product_id \
          ) review_stats ON review_stats.product_id = products.id \
-         WHERE featured = true",
+         WHERE featured = true AND stock_quantity > 0",
     );
 
     push_product_filters(&mut builder, query, true);

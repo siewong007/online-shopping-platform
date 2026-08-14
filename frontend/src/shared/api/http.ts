@@ -303,7 +303,15 @@ function handleUnauthorized(response: Response, scope: AuthScope): void {
 }
 
 export async function fetchJson<T>(path: string, fallback: T, scope: AuthScope = "admin"): Promise<T> {
-  const { data } = await fetchJsonResult(path, fallback, scope);
+  const { data, isFallback } = await fetchJsonResult(path, fallback, scope);
+  if (isFallback && scope === "admin" && !import.meta.env.DEV) {
+    throw safeApiError({
+      code: "SERVER_UNAVAILABLE",
+      isNetworkError: true,
+      operation: path,
+      technicalMessage: "The production admin API did not return live data."
+    });
+  }
   return data;
 }
 

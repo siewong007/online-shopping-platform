@@ -50,6 +50,7 @@ export type {
   OrderControlProduct,
   OrderFulfillmentHistory,
   OrderItem,
+  PaymentCheckout,
   ShippingAddressInput,
   ShippingOption,
   UpdateOrderFulfillmentInput

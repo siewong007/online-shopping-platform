@@ -1,3 +1,5 @@
+use std::env;
+
 use axum::{
     Json,
     extract::{Path, Query, State},
@@ -127,6 +129,19 @@ pub async fn checkout(
     identity: Option<CustomerIdentity>,
     Json(input): Json<CreateOrderInput>,
 ) -> Result<(StatusCode, Json<Order>), error::HttpError> {
+    // The shopper UI uses the gateway-backed checkout route. Keep this compatibility route
+    // available for local development and integration tests, but never let a public production
+    // deployment reserve stock without collecting payment.
+    if env::var("APP_ENV")
+        .map(|value| value.eq_ignore_ascii_case("production"))
+        .unwrap_or(false)
+    {
+        return Err((
+            StatusCode::GONE,
+            "This checkout route is unavailable. Please use the secure checkout.".to_string(),
+        ));
+    }
+
     let customer_account_id = identity.map(|identity| identity.customer_account_id);
     service::create_order(&state.pool, "customer", &input, customer_account_id)
         .await

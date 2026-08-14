@@ -1,3 +1,4 @@
 pub use crate::models::{
-    AdminCatalogPayload, CatalogueImportReport, Category, Product, ProductRestockResult,
+    AdminCatalogPayload, CatalogueImportReport, Category, Product, ProductImageImportQuery,
+    ProductImageImportReport, ProductRestockResult,
 };

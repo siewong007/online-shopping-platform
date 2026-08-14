@@ -4,13 +4,14 @@ import { ManagementTable } from "../../../shared/components/ManagementTable";
 import { RecordForm, type RecordFormField, RecordModal } from "../../../shared/components/RecordModal";
 import { currencyFromCents } from "../../../shared/formatters";
 import { useNotifications } from "../../../shared/notifications";
-import { importCatalogue } from "../api/catalogApi";
+import { importCatalogue, importProductImages } from "../api/catalogApi";
 import type {
   CatalogueImportReport,
   Category,
   CreateCategoryInput,
   CreateProductInput,
   Product,
+  ProductImageImportReport,
   UpdateCategoryInput,
   UpdateProductInput
 } from "../types";
@@ -40,6 +41,7 @@ type CatalogPanelProps = {
   onCreateProduct: (input: CreateProductInput) => Promise<Product>;
   onDeleteCategory: (slug: string) => Promise<void>;
   onDeleteProduct: (productId: number) => Promise<void>;
+  onRefreshCatalog: () => Promise<void>;
   onUpdateCategory: (slug: string, input: UpdateCategoryInput) => Promise<Category>;
   onUpdateProduct: (productId: number, input: UpdateProductInput) => Promise<Product>;
   products: Product[];
@@ -265,6 +267,7 @@ export function CatalogPanel({
   onCreateProduct,
   onDeleteCategory,
   onDeleteProduct,
+  onRefreshCatalog,
   onUpdateCategory,
   onUpdateProduct,
   products,
@@ -294,9 +297,14 @@ export function CatalogPanel({
   const [isBulkActionRunning, setIsBulkActionRunning] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importReport, setImportReport] = useState<CatalogueImportReport | null>(null);
+  const [imageManifestCsv, setImageManifestCsv] = useState("");
+  const [imageManifestName, setImageManifestName] = useState("");
+  const [imageImportReport, setImageImportReport] = useState<ProductImageImportReport | null>(null);
+  const [isCheckingImages, setIsCheckingImages] = useState(false);
+  const [isApplyingImages, setIsApplyingImages] = useState(false);
 
-  // Calls the API directly rather than taking a prop: the import is self-contained and
-  // threading another handler through the admin tree buys nothing here.
+  // The import calls are self-contained; the parent refresh callback synchronises the
+  // catalogue and any currently loaded storefront products after a successful apply.
   const handleImportFile = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -307,6 +315,7 @@ export function CatalogPanel({
     try {
       const report = await importCatalogue(await file.text());
       setImportReport(report);
+      await onRefreshCatalog();
       notify({
         severity: report.problems.length > 0 ? "warning" : "success",
         title: "Catalogue imported",
@@ -317,6 +326,59 @@ export function CatalogPanel({
       notifyError(error, { operation: "import the catalogue", scope: "catalogue-import" });
     } finally {
       setIsImporting(false);
+    }
+  };
+
+  const handleImageManifestFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setIsCheckingImages(true);
+    setImageImportReport(null);
+    try {
+      const csv = await file.text();
+      const report = await importProductImages(csv, true);
+      setImageManifestCsv(csv);
+      setImageManifestName(file.name);
+      setImageImportReport(report);
+      notify({
+        severity: report.problems.length > 0 ? "warning" : "success",
+        title: "Image manifest checked",
+        message: `${report.products_matched} approved row(s) match catalogue products. Nothing was changed.`,
+        scope: "product-image-import"
+      });
+    } catch (error) {
+      setImageManifestCsv("");
+      setImageManifestName("");
+      notifyError(error, { operation: "check the product image manifest", scope: "product-image-import" });
+    } finally {
+      setIsCheckingImages(false);
+    }
+  };
+
+  const handleApplyImageManifest = async () => {
+    if (!imageManifestCsv || !imageImportReport || imageImportReport.approved_rows === 0) return;
+    const confirmed = window.confirm(
+      `Apply ${imageImportReport.products_updated} verified image change(s) from ${imageManifestName}?`
+    );
+    if (!confirmed) return;
+
+    setIsApplyingImages(true);
+    try {
+      const report = await importProductImages(imageManifestCsv, false);
+      setImageImportReport(report);
+      await onRefreshCatalog();
+      notify({
+        severity: report.problems.length > 0 ? "warning" : "success",
+        title: "Verified images applied",
+        message: `${report.products_updated} image(s) updated and ${report.products_unchanged} unchanged.`,
+        scope: "product-image-import"
+      });
+    } catch (error) {
+      notifyError(error, { operation: "apply the product image manifest", scope: "product-image-import" });
+    } finally {
+      setIsApplyingImages(false);
     }
   };
   const productFieldList = useMemo(() => productFields(categories), [categories]);
@@ -667,15 +729,18 @@ export function CatalogPanel({
       label: "Image",
       render: (product: Product) =>
         product.image_url ? (
-          <img
-            src={product.image_url}
-            alt={product.name}
-            className="product-thumbnail"
-            onError={(event) => {
-              event.currentTarget.style.display = "none";
-            }}
-          />
-        ) : null
+          <div className="table-cell-main">
+            <img
+              src={product.image_url}
+              alt=""
+              className="product-thumbnail"
+              onError={(event) => {
+                event.currentTarget.style.display = "none";
+              }}
+            />
+            <span className="status-pill live">Ready</span>
+          </div>
+        ) : <span className="status-pill warning">Missing</span>
     },
     {
       key: "actions",
@@ -730,6 +795,27 @@ export function CatalogPanel({
             />
           </label>
         ) : null}
+        {variant === "catalog" ? (
+          <label className={`outline-button catalogue-import${canUpdate ? "" : " is-disabled"}`}>
+            {isCheckingImages ? "Checking images…" : "Check image manifest"}
+            <input
+              accept=".csv,text/csv"
+              disabled={!canUpdate || isCheckingImages || isApplyingImages}
+              onChange={handleImageManifestFile}
+              type="file"
+            />
+          </label>
+        ) : null}
+        {variant === "catalog" && imageImportReport?.dry_run && imageImportReport.approved_rows > 0 ? (
+          <button
+            className="solid-button"
+            disabled={!canUpdate || isApplyingImages || imageImportReport.products_updated === 0}
+            onClick={() => void handleApplyImageManifest()}
+            type="button"
+          >
+            {isApplyingImages ? "Applying…" : `Apply ${imageImportReport.products_updated} verified images`}
+          </button>
+        ) : null}
       </div>
 
       {importReport ? (
@@ -746,6 +832,25 @@ export function CatalogPanel({
                 {importReport.problems.map((problem) => (
                   <li key={problem}>{problem}</li>
                 ))}
+              </ul>
+            </details>
+          ) : null}
+        </div>
+      ) : null}
+
+      {imageImportReport ? (
+        <div className="catalogue-import-report" role="status">
+          <strong>
+            {imageImportReport.dry_run ? "Check only · no changes made · " : "Applied · "}
+            {imageImportReport.rows_read} rows · {imageImportReport.rows_pending} pending ·{" "}
+            {imageImportReport.approved_rows} approved · {imageImportReport.products_matched} matched ·{" "}
+            {imageImportReport.products_updated} {imageImportReport.dry_run ? "ready to update" : "updated"}
+          </strong>
+          {imageImportReport.problems.length > 0 ? (
+            <details>
+              <summary>{imageImportReport.problems.length} issue(s) need attention</summary>
+              <ul>
+                {imageImportReport.problems.map((problem) => <li key={problem}>{problem}</li>)}
               </ul>
             </details>
           ) : null}

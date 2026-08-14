@@ -10,7 +10,8 @@ import type {
   UpdateProductInput,
   UpdateProductStockInput,
   ProductRestockResult,
-  CatalogueImportReport
+  CatalogueImportReport,
+  ProductImageImportReport
 } from "../types";
 
 export function fetchAdminCatalog(): Promise<AdminCatalogPayload> {
@@ -71,4 +72,19 @@ export function importCatalogue(csv: string): Promise<CatalogueImportReport> {
     headers: { "Content-Type": "text/csv" },
     body: csv
   });
+}
+
+/** Checks or applies approved product-image rows from the internal sourcing manifest. */
+export function importProductImages(
+  csv: string,
+  dryRun: boolean
+): Promise<ProductImageImportReport> {
+  return requestJson<ProductImageImportReport>(
+    `/api/admin/catalogue/images/import?dry_run=${dryRun}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "text/csv" },
+      body: csv
+    }
+  );
 }
