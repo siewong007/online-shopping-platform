@@ -182,7 +182,7 @@ deploy_tag() {
 }
 
 apply_pending_migrations() {
-  local migration filename version checksum recorded
+  local migration filename version checksum recorded legacy_crlf_checksum
 
   compose exec -T postgres psql \
     -v ON_ERROR_STOP=1 -U shop_admin -d online_shopping <<'SQL'
@@ -198,15 +198,39 @@ SQL
     [[ -f "$migration" ]] || continue
     filename=${migration##*/}
     version=${filename%%_*}
-    [[ "$version" =~ ^[0-9]{4}$ ]] || die "invalid migration filename: $filename"
+    if [[ ! "$version" =~ ^[0-9]{4}$ ]]; then
+      log "Invalid migration filename: $filename"
+      return 1
+    fi
     checksum=$(sha256sum "$migration" | cut -d' ' -f1)
     recorded=$(compose exec -T postgres psql \
       -v ON_ERROR_STOP=1 -U shop_admin -d online_shopping -Atc \
       "SELECT checksum FROM app_schema_migrations WHERE version = $((10#$version))")
 
     if [[ -n "$recorded" ]]; then
-      [[ "$recorded" == "$checksum" ]] \
-        || die "migration checksum changed after application: $filename"
+      if [[ "$recorded" != "$checksum" ]]; then
+        # Migrations 0001-0027 were initially baselined on Windows before the release runner
+        # existed. Prove an old checksum is the byte-identical CRLF form before replacing it
+        # with the canonical LF Git-blob checksum. Any other difference still fails closed.
+        legacy_crlf_checksum=$(sed 's/$/\r/' "$migration" | sha256sum | cut -d' ' -f1)
+        if [[ "$recorded" != "$legacy_crlf_checksum" ]]; then
+          log "Migration checksum changed after application: $filename"
+          return 1
+        fi
+
+        log "Normalizing verified legacy CRLF checksum for $filename"
+        compose exec -T postgres psql \
+          -v ON_ERROR_STOP=1 -U shop_admin -d online_shopping -c \
+          "UPDATE app_schema_migrations SET checksum = '$checksum' WHERE version = $((10#$version)) AND checksum = '$recorded'" \
+          >/dev/null || return 1
+        recorded=$(compose exec -T postgres psql \
+          -v ON_ERROR_STOP=1 -U shop_admin -d online_shopping -Atc \
+          "SELECT checksum FROM app_schema_migrations WHERE version = $((10#$version))")
+        if [[ "$recorded" != "$checksum" ]]; then
+          log "Failed to normalize migration checksum: $filename"
+          return 1
+        fi
+      fi
       continue
     fi
 
