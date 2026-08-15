@@ -1,0 +1,27 @@
+[Unit]
+Description=Encrypted off-server backup of the online-shopping PostgreSQL database
+Documentation=file:///opt/online-shopping/backup.env.example
+After=docker.service network-online.target
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/online-shopping/backup.sh
+# backup.sh takes its own non-blocking flock, so a manual or deploy-invoked backup can run while
+# this one is queued without two dumps ever overlapping.
+Nice=10
+IOSchedulingClass=idle
+# Light hardening that does not break the Docker CLI, the backup directory, the rclone config or
+# outbound uploads. ProtectSystem=strict is avoided because it would force extra ReadWritePaths.
+ProtectSystem=full
+ReadWritePaths=/opt/online-shopping
+PrivateTmp=true
+NoNewPrivileges=true
+RestrictSUIDSGID=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+
+[Install]
+WantedBy=multi-user.target
