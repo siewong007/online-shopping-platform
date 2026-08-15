@@ -77,3 +77,52 @@ jobs:
 
       - name: Build
         run: bun run build
+
+  backup-restore:
+    name: Backup/restore guardrail tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Shell syntax check (bash -n)
+        run: |
+          set -euo pipefail
+          for f in deploy/deploy.sh deploy/backup.sh deploy/restore.sh \
+                   deploy/backup-env-parser.sh scripts/preflight-backup.sh \
+                   scripts/restore-proof.sh scripts/test-backup.sh \
+                   scripts/test-restore.sh scripts/test-predeploy.sh \
+                   scripts/test-deploy.sh scripts/test-restore-atomicity.sh \
+                   scripts/test-restore-proof-negative.sh; do
+            [[ -f "$f" ]] || { echo "missing script: $f" >&2; exit 1; }
+            sed 's/\r$//' "$f" | bash -n
+            echo "  ok: $f"
+          done
+
+      - name: ShellCheck (LF-normalized copies)
+        run: |
+          set -euo pipefail
+          for f in deploy/deploy.sh deploy/backup.sh deploy/restore.sh \
+                   deploy/backup-env-parser.sh scripts/preflight-backup.sh \
+                   scripts/restore-proof.sh scripts/test-backup.sh \
+                   scripts/test-restore.sh scripts/test-predeploy.sh \
+                   scripts/test-deploy.sh scripts/test-restore-atomicity.sh \
+                   scripts/test-restore-proof-negative.sh; do
+            sed 's/\r$//' "$f" > "/tmp/lf-$(basename "$f")"
+            shellcheck -x "/tmp/lf-$(basename "$f")"
+            echo "  ok: $f"
+          done
+
+      - name: Run backup guardrail suite
+        run: scripts/test-backup.sh
+
+      - name: Run restore guardrail suite
+        run: scripts/test-restore.sh
+
+      - name: Run predeploy guardrail suite
+        run: scripts/test-predeploy.sh
+
+      - name: Run deploy guardrail suite
+        run: scripts/test-deploy.sh

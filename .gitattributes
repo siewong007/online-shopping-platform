@@ -1,0 +1,6 @@
+# Shell scripts are normalized to LF in the repository and in working trees. The Windows
+# checkouts previously produced CRLF working copies that broke `bash -n` and shellcheck.
+*.sh text eol=lf
+*.bash text eol=lf
+
+# The two executable backup/restore helpers (also *.sh) are covered by the rule above.

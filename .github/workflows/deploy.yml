@@ -131,6 +131,20 @@ jobs:
           cp deploy/ekowayhardware.Caddyfile "$bundle_dir/ekowayhardware.Caddyfile"
           cp backend/migrations/*.sql "$bundle_dir/initdb/"
 
+          # C1: the backup components are a REQUIRED part of the release. Copy them in and then
+          # fail loudly if any is missing so the on-VPS verify_release_payload check never trips
+          # on a stale/incomplete bundle.
+          cp deploy/backup.sh "$bundle_dir/backup.sh"
+          cp deploy/restore.sh "$bundle_dir/restore.sh"
+          cp deploy/backup.env.example "$bundle_dir/backup.env.example"
+          cp deploy/online-shopping-backup.service "$bundle_dir/online-shopping-backup.service"
+          cp deploy/online-shopping-backup.timer "$bundle_dir/online-shopping-backup.timer"
+          for component in backup.sh restore.sh backup.env.example \
+                           online-shopping-backup.service online-shopping-backup.timer; do
+            test -s "$bundle_dir/$component" \
+              || { echo "Release bundle is missing required backup component: $component" >&2; exit 1; }
+          done
+
           (
             cd "$bundle_dir"
             find . -type f ! -name SHA256SUMS -print0 \

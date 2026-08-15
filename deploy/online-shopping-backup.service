@@ -8,6 +8,11 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 ExecStart=/opt/online-shopping/backup.sh
+# H2: a backup that hangs must not hold systemd or the deploy lock forever. The default oneshot
+# timeout (90s) is generous for a pg_dump of this size, but explicit is better than implicit:
+# systemd kills the job at TimeoutStartSec and backup.sh itself bounds every rclone call with
+# --contimeout/--timeout.
+TimeoutStartSec=600
 # backup.sh takes its own non-blocking flock, so a manual or deploy-invoked backup can run while
 # this one is queued without two dumps ever overlapping.
 Nice=10

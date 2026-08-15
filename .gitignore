@@ -8,3 +8,9 @@ node_modules
 .DS_Store
 postgres-data
 postgres-data-pg18-backup-20260711
+
+# Real backup configuration and status are root-only, outside Git. Only the .example template is
+# tracked (deploy/backup.env.example). Never commit the real file or the machine-readable status.
+deploy/backup.env
+deploy/backup-status.json
+**/backup-status.json

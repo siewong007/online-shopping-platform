@@ -24,6 +24,17 @@ cat > "$FAKEBIN/docker" <<'DOCKER'
 #!/bin/bash
 case "${1:-}" in
   inspect)
+    case "${FAKE_INSPECT_ERROR:-}" in
+      daemon)
+        echo "Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?" >&2
+        exit 1 ;;
+      absent)
+        echo "Error: No such object: online-shopping-db" >&2
+        exit 1 ;;
+      generic)
+        echo "some unexpected docker error" >&2
+        exit 1 ;;
+    esac
     printf '%s\n' "${FAKE_DB_RUNNING:-true}"
     exit 0 ;;
   exec)
@@ -73,9 +84,12 @@ BACKUP_DIR="$DEPLOY_BACKUP_DIR"
 
 # Source the real deploy.sh (defines functions only; the entrypoint guard skips execution). The
 # working copy carries Windows CRLF line endings, which bash would choke on at "set ... pipefail\r",
-# so source a LF-normalized copy.
+# so source a LF-normalized copy. deploy.sh loads deploy/backup-env-parser.sh from its own
+# directory, so the parser is copied next to the LF copy just like the real install puts them in
+# the same directory.
 LF_DEPLOY="$TMP/deploy.sh"
 sed 's/\r$//' "$ROOT/deploy/deploy.sh" > "$LF_DEPLOY"
+cp "$ROOT/deploy/backup-env-parser.sh" "$TMP/backup-env-parser.sh"
 # shellcheck disable=SC1090,SC1091,SC1094
 source "$LF_DEPLOY"
 
@@ -84,7 +98,7 @@ ENV_FILE="$APP_DIR/backup.env"
 reset_backup_dir() {
   rm -rf -- "$BACKUP_DIR"
   mkdir -p "$BACKUP_DIR"
-  unset FAKE_DB_RUNNING FAKE_DUMP_STATUS FAKE_AGE_MODE || true
+  unset FAKE_DB_RUNNING FAKE_DUMP_STATUS FAKE_AGE_MODE FAKE_INSPECT_ERROR || true
 }
 
 write_env() {
@@ -245,6 +259,77 @@ fi
 if [[ "$(find "$BACKUP_DIR" -maxdepth 1 -name 'predeploy-*.dump.age' | wc -l)" != 3 ]]; then echo "FAIL: expected 3 encrypted predeploy backups after retention"; FAIL=$((FAIL+1)); fi
 NEWEST="$(find "$BACKUP_DIR" -maxdepth 1 -name 'predeploy-*.dump.age' -printf '%T@ %f\n' | sort -nr | head -n 1 | cut -d' ' -f2-)"
 if [[ "$NEWEST" != predeploy-* ]]; then echo "FAIL: newest encrypted predeploy missing"; FAIL=$((FAIL+1)); fi
+
+# ------------------------------------------------------------------------------------------
+# 10. H2: pre-deploy backup lock contention with a bounded timeout -> clear failure, no hang
+# ------------------------------------------------------------------------------------------
+reset_backup_dir
+write_env <<'EOF'
+BACKUP_AGE_RECIPIENT=age1recipient
+EOF
+exec 8>"$TMP/app/backup.lock"
+flock -n 8
+export DEPLOY_BACKUP_LOCK_TIMEOUT=1
+if run_predeploy; then
+  FAIL=$((FAIL + 1)); echo "FAIL: lock contention should abort the deploy, not hang"
+else
+  PASS=$((PASS + 1)); echo "ok:   lock_contention_aborts_with_timeout"
+fi
+unset DEPLOY_BACKUP_LOCK_TIMEOUT
+exec 8>&-
+if grep -q "could not acquire the backup lock" "$TMP/.out"; then
+  PASS=$((PASS + 1)); echo "ok:   lock_timeout_message_clear"
+else
+  echo "FAIL: lock timeout message absent"; sed 's/^/      /' "$TMP/.out" | head -n 5; FAIL=$((FAIL+1))
+fi
+
+# ------------------------------------------------------------------------------------------
+# 11. H4: container absent (first deploy) -> pre-deploy backup skipped cleanly
+# ------------------------------------------------------------------------------------------
+reset_backup_dir
+export FAKE_INSPECT_ERROR=absent
+write_env <<'EOF'
+BACKUP_AGE_RECIPIENT=age1recipient
+EOF
+if run_predeploy; then
+  PASS=$((PASS + 1)); echo "ok:   absent_container_skips_cleanly"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: absent container should skip, not abort"; sed 's/^/      /' "$TMP/.out" | head -n 5
+fi
+if [[ -n "$(find "$BACKUP_DIR" -maxdepth 1 \( -name 'predeploy-*' -o -name '.predeploy.*' \) 2>/dev/null)" ]]; then echo "FAIL: artifacts created while container absent"; FAIL=$((FAIL+1)); fi
+
+# ------------------------------------------------------------------------------------------
+# 12. H4: docker daemon unreachable -> pre-deploy backup FAILS CLOSED, never silently skipped
+# ------------------------------------------------------------------------------------------
+reset_backup_dir
+export FAKE_INSPECT_ERROR=daemon
+write_env <<'EOF'
+BACKUP_AGE_RECIPIENT=age1recipient
+EOF
+if run_predeploy; then
+  FAIL=$((FAIL + 1)); echo "FAIL: daemon-unreachable must abort the deploy"
+else
+  PASS=$((PASS + 1)); echo "ok:   daemon_unreachable_aborts"
+fi
+if grep -q "cannot reach the docker daemon" "$TMP/.out"; then
+  PASS=$((PASS + 1)); echo "ok:   daemon_unreachable_message_clear"
+else
+  echo "FAIL: daemon-unreachable message absent"; sed 's/^/      /' "$TMP/.out" | head -n 5; FAIL=$((FAIL+1))
+fi
+
+# ------------------------------------------------------------------------------------------
+# 13. H4: unexpected docker inspect failure -> abort (fail closed)
+# ------------------------------------------------------------------------------------------
+reset_backup_dir
+export FAKE_INSPECT_ERROR=generic
+write_env <<'EOF'
+BACKUP_AGE_RECIPIENT=age1recipient
+EOF
+if run_predeploy; then
+  FAIL=$((FAIL + 1)); echo "FAIL: generic inspect error must abort the deploy"
+else
+  PASS=$((PASS + 1)); echo "ok:   generic_inspect_error_aborts"
+fi
 
 echo
 echo "PASS: $PASS  FAIL: $FAIL"
