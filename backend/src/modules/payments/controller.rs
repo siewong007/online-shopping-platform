@@ -12,7 +12,11 @@ use crate::{
 };
 
 use super::{
-    dto::{CreatePaymentInput, RefundPaymentInput, UpdatePaymentInput},
+    activation,
+    dto::{
+        CreateActivationGrantInput, CreatePaymentInput, IssuedActivationGrant, RefundPaymentInput,
+        UpdatePaymentInput,
+    },
     gateway::{self, GatewayReconciliationResult, GatewayRefundResult, PaymentCheckout},
     hitpay::HitPayConfig,
     model::Payment,
@@ -89,30 +93,48 @@ pub async fn hitpay_webhook(
 pub async fn checkout_with_gateway(
     State(state): State<AppState>,
     identity: Option<CustomerIdentity>,
+    headers: HeaderMap,
     Json(input): Json<crate::models::CreateOrderInput>,
 ) -> Result<(StatusCode, Json<PaymentCheckout>), error::HttpError> {
-    let gateway = match gateway::configured_gateway() {
-        Ok(Some(gateway)) => gateway,
-        Ok(None) => {
-            return Err((
-                StatusCode::SERVICE_UNAVAILABLE,
-                "Online payment is not configured yet. Please contact Ekoway Hardware.".to_string(),
-            ));
-        }
-        Err(config_error) => {
-            tracing::error!(%config_error, "payment gateway configuration is invalid");
-            return Err((
-                StatusCode::SERVICE_UNAVAILABLE,
-                "Online payment is temporarily unavailable. Please contact Ekoway Hardware."
-                    .to_string(),
-            ));
-        }
-    };
+    // The gate runs first and owns provider resolution, so nothing below it can execute until the
+    // deployment's activation mode has admitted this specific request.
+    let (gateway, approval) =
+        activation::authorize_checkout(&state, &headers, gateway::configured_gateway()).await?;
 
     let customer_account_id = identity.map(|identity| identity.customer_account_id);
-    service::start_gateway_checkout(&state.pool, gateway.as_ref(), &input, customer_account_id)
+    let checkout = service::start_gateway_checkout(
+        &state.pool,
+        gateway.as_ref(),
+        &input,
+        customer_account_id,
+        &approval,
+    )
+    .await
+    .map_err(error::map_admin_error)?;
+
+    activation::record_authorized_checkout(&state.pool, &approval, checkout.order.id).await;
+
+    Ok((StatusCode::CREATED, Json(checkout)))
+}
+
+/// Issuing a live-payment authorization is a narrower privilege than payment-ledger maintenance,
+/// so it is restricted to the super admin rather than to everyone holding `admin-payments`
+/// create rights. There is deliberately no self-service, listing or revocation surface.
+pub async fn admin_create_activation_grant(
+    State(state): State<AppState>,
+    identity: AdminIdentity,
+    Json(input): Json<CreateActivationGrantInput>,
+) -> Result<(StatusCode, Json<IssuedActivationGrant>), error::HttpError> {
+    if !identity.is_super_admin {
+        return Err((
+            StatusCode::FORBIDDEN,
+            "Only a super admin can issue a payment activation authorization.".to_string(),
+        ));
+    }
+
+    activation::issue_grant(&state.pool, &identity, &input)
         .await
-        .map(|checkout| (StatusCode::CREATED, Json(checkout)))
+        .map(|grant| (StatusCode::CREATED, Json(grant)))
         .map_err(error::map_admin_error)
 }
 

@@ -1,7 +1,12 @@
 use std::{env, io::ErrorKind, net::SocketAddr, time::Duration};
 
 use anyhow::Context;
-use online_shopping_api::{app_state::AppState, db, modules::auth, routes};
+use online_shopping_api::{
+    app_state::AppState,
+    db,
+    modules::{auth, payments::activation::PaymentActivationMode},
+    routes,
+};
 use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -24,6 +29,10 @@ async fn main() -> anyhow::Result<()> {
     let frontend_origin = env::var("FRONTEND_ORIGIN")
         .unwrap_or_else(|_| "http://localhost:5173".to_string())
         .parse()?;
+    // Resolved once, before the listener exists: a typo in the setting stops the process instead
+    // of becoming a runtime rejection nobody investigates. An unset setting is `disabled`.
+    let payment_activation_mode = PaymentActivationMode::from_environment()
+        .context("PAYMENT_ACTIVATION_MODE must be `disabled`, `controlled` or `public`")?;
 
     let pool = PgPoolOptions::new()
         .max_connections(10)
@@ -37,7 +46,14 @@ async fn main() -> anyhow::Result<()> {
 
     spawn_abandoned_stock_sweep(pool.clone());
 
-    let app = routes::build_router(AppState::new(pool), frontend_origin);
+    tracing::info!(
+        mode = payment_activation_mode.as_str(),
+        "payment activation gate resolved"
+    );
+    let app = routes::build_router(
+        AppState::with_payment_activation_mode(pool, payment_activation_mode),
+        frontend_origin,
+    );
 
     let address: SocketAddr = format!("{app_host}:{app_port}").parse()?;
     let listener = match TcpListener::bind(address).await {

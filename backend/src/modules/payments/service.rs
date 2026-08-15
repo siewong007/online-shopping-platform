@@ -4,6 +4,7 @@ use sqlx::PgPool;
 use crate::modules::{audit, auth::model::AdminIdentity};
 
 use super::{
+    activation::PaymentInitiationApproval,
     dto::{CreatePaymentInput, RefundPaymentInput, UpdatePaymentInput},
     gateway::{
         self, GatewayReconciliationResult, GatewayRefundInput, GatewayRefundResult,
@@ -123,11 +124,15 @@ pub async fn delete_payment(
     Ok(())
 }
 
+/// `_approval` is unused at runtime and required at compile time: it can only be produced by
+/// `activation::authorize_checkout`, so the activation gate cannot be skipped by adding another
+/// caller here. Everything below this line mutates commerce state.
 pub async fn start_gateway_checkout(
     pool: &PgPool,
     gateway: &dyn PaymentGateway,
     input: &crate::models::CreateOrderInput,
     customer_account_id: Option<i32>,
+    _approval: &PaymentInitiationApproval,
 ) -> Result<PaymentCheckout> {
     let order =
         crate::modules::orders::service::create_order(pool, "customer", input, customer_account_id)

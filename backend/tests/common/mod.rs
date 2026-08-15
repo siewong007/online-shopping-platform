@@ -6,14 +6,20 @@ use axum::{
     http::{HeaderValue, Method, Request, StatusCode, header::AUTHORIZATION, header::CONTENT_TYPE},
 };
 use http_body_util::BodyExt;
-use online_shopping_api::{app_state::AppState, db, routes, security::hash_password};
+use online_shopping_api::{
+    app_state::AppState, db, modules::payments::activation::PaymentActivationMode, routes,
+    security::hash_password,
+};
 use serde_json::{Value, json};
 use sqlx::PgPool;
 use tower::ServiceExt;
 
 pub fn app(pool: PgPool) -> Router {
+    // General integration tests exercise normal app behavior including the legacy checkout route,
+    // which only runs in `public` mode. Mode-specific behavior is tested explicitly via
+    // `with_payment_activation_mode` in the payment activation suites.
     routes::build_router(
-        AppState::new(pool),
+        AppState::with_payment_activation_mode(pool, PaymentActivationMode::Public),
         HeaderValue::from_static("http://localhost:5173"),
     )
 }

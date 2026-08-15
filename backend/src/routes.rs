@@ -1,7 +1,7 @@
 use axum::{
     Router,
     extract::DefaultBodyLimit,
-    http::{HeaderValue, Method, header::AUTHORIZATION, header::CONTENT_TYPE},
+    http::{HeaderName, HeaderValue, Method, header::AUTHORIZATION, header::CONTENT_TYPE},
     routing::{delete, get, post, put},
 };
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
@@ -19,7 +19,14 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
     let cors = CorsLayer::new()
         .allow_origin(frontend_origin)
         .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
-        .allow_headers([CONTENT_TYPE, AUTHORIZATION]);
+        // Allowing the activation header only lets an operator present a secret they were
+        // separately issued; it grants nothing on its own, and preflighting it is what makes a
+        // controlled-mode UAT executable through the real storefront rather than a side channel.
+        .allow_headers([
+            CONTENT_TYPE,
+            AUTHORIZATION,
+            HeaderName::from_static(payments::activation::ACTIVATION_HEADER),
+        ]);
 
     Router::new()
         .route("/api/health", get(health::controller::health))
@@ -242,6 +249,10 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
             // catalogue grows; give this one route its own ceiling.
             post(catalog::controller::import_catalogue)
                 .layer(DefaultBodyLimit::max(16 * 1024 * 1024)),
+        )
+        .route(
+            "/api/admin/payments/activation-grants",
+            post(payments::controller::admin_create_activation_grant),
         )
         .route(
             "/api/admin/payments/{payment_id}/reconcile",
