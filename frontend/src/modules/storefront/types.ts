@@ -46,12 +46,6 @@ export type UpdateProductStockInput = {
   low_stock_threshold: number;
 };
 
-export type ProductRestockResult = {
-  product_id: number;
-  name: string;
-  added: number;
-};
-
 export type Promotion = {
   label: string;
   title: string;

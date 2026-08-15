@@ -11,7 +11,6 @@ import type {
   Order,
   Payment,
   PermissionsPayload,
-  ProductRestockResult,
   SalesRecord,
   SalesSummaryPayload,
   StorefrontPayload,
@@ -835,5 +834,3 @@ export const fallbackAdminUsers: AdminUser[] = [
     updated_at: "2026-07-02 14:00:00+00"
   }
 ];
-
-export const fallbackSupplierSync: ProductRestockResult[] = [];

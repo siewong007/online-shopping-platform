@@ -9,7 +9,6 @@ import type {
   UpdateCategoryInput,
   UpdateProductInput,
   UpdateProductStockInput,
-  ProductRestockResult,
   CatalogueImportReport,
   ProductImageImportReport
 } from "../types";
@@ -59,10 +58,6 @@ export function updateProductStock(
     `/api/admin/products/${productId}/stock`,
     input
   );
-}
-
-export function supplierSync(): Promise<ProductRestockResult[]> {
-  return postJson<undefined, ProductRestockResult[]>("/api/admin/inventory/supplier-sync", undefined);
 }
 
 /** Sends the AutoCount export as raw CSV; the endpoint parses it server-side. */

@@ -8,7 +8,6 @@ use super::{
     },
     model::{
         AdminCatalogPayload, CatalogueImportReport, Category, Product, ProductImageImportReport,
-        ProductRestockResult,
     },
 };
 
@@ -54,10 +53,6 @@ pub async fn update_product_stock(
     input: &UpdateProductStockInput,
 ) -> Result<Product> {
     crate::db::update_product_stock(pool, product_id, input).await
-}
-
-pub async fn run_supplier_sync(pool: &PgPool) -> Result<Vec<ProductRestockResult>> {
-    crate::db::supplier_sync(pool).await
 }
 
 pub async fn import_catalogue(pool: &PgPool, body: &str) -> Result<CatalogueImportReport> {

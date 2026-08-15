@@ -59,7 +59,6 @@ import {
   recordInvoicePayment as recordInvoicePaymentRequest,
   resetAdminUserPassword as resetAdminUserPasswordRequest,
   setAdminUserActive as setAdminUserActiveRequest,
-  supplierSync,
   updateAdminOrder as updateAdminOrderRequest,
   updateAdminUserProfile as updateAdminUserProfileRequest,
   updateCategory as updateCategoryRequest,
@@ -2364,17 +2363,6 @@ export default function App() {
     ]);
   };
 
-  const runSupplierSync = async () => {
-    const restocked = await supplierSync();
-    setActivityFeed((current) => [
-      {
-        happened_at: "Now",
-        detail: `Supplier sync restocked ${restocked.length} product(s).`
-      },
-      ...current
-    ]);
-  };
-
   const refreshCatalog = async () => {
     const catalogData = await fetchAdminCatalog();
     const productsById = new Map(catalogData.products.map((product) => [product.id, product]));
@@ -2934,7 +2922,6 @@ export default function App() {
           onRecordInvoicePayment={recordInvoicePayment}
           onRefreshCatalog={refreshCatalog}
           onResetAdminUserPassword={resetAdminUserPassword}
-          onRunSync={runSupplierSync}
           onSetAdminUserActive={setAdminUserActive}
           onUpdateAdminOrder={updateAdminOrder}
           onUpdateAdminUserProfile={updateAdminUserProfile}
@@ -5698,7 +5685,6 @@ type AdminViewProps = {
   ) => Promise<Invoice>;
   onRefreshCatalog: () => Promise<void>;
   onResetAdminUserPassword: (userId: number, input: AdminResetPasswordInput) => Promise<void>;
-  onRunSync: () => void;
   onSetAdminUserActive: (userId: number, input: SetAdminUserActiveInput) => Promise<AdminUser>;
   onUpdateAdminOrder: (orderId: number, input: CreateOrderInput) => Promise<Order>;
   onUpdateAdminUserProfile: (
@@ -5791,7 +5777,6 @@ function AdminView({
   onRecordInvoicePayment,
   onRefreshCatalog,
   onResetAdminUserPassword,
-  onRunSync,
   onSetAdminUserActive,
   onUpdateAdminOrder,
   onUpdateAdminUserProfile,
@@ -5952,7 +5937,7 @@ function AdminView({
       <section className="admin-main">
         {adminTab !== "overview" ? <header className="admin-topbar">
           <div><p className="eyebrow">Store operations</p><h2>{adminTabs.find((item) => item.tab === adminTab)?.label}</h2></div>
-          <div className="admin-actions"><button className="solid-button" disabled={!canRunOperationsSync} onClick={onRunSync}>Refresh data</button></div>
+          <div className="admin-actions"><button className="solid-button" disabled={!canRunOperationsSync} onClick={() => void onRefreshCatalog()}>Refresh data</button></div>
         </header> : null}
 
         {demoMode && adminTab !== "overview" ? (
@@ -5970,7 +5955,7 @@ function AdminView({
             onOpenFulfillment={() => onChangeTab("fulfillment")}
             onOpenOrders={() => onChangeTab("orders")}
             onOpenPayments={() => onChangeTab("payments")}
-            onRefresh={onRunSync}
+            onRefresh={onRefreshCatalog}
             orders={orders}
             payments={payments}
           />

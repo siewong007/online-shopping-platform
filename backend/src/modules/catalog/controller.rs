@@ -17,7 +17,7 @@ use super::{
     },
     model::{
         AdminCatalogPayload, CatalogueImportReport, Category, Product, ProductImageImportQuery,
-        ProductImageImportReport, ProductRestockResult,
+        ProductImageImportReport,
     },
     service,
 };
@@ -182,25 +182,6 @@ pub async fn update_product_stock(
         .await
         .map(Json)
         .map_err(error::map_admin_error)
-}
-
-pub async fn supplier_sync(
-    State(state): State<AppState>,
-    identity: AdminIdentity,
-) -> Result<Json<Vec<ProductRestockResult>>, error::HttpError> {
-    permissions::service::ensure_permission(
-        &state.pool,
-        &identity,
-        permissions::model::ADMIN_OVERVIEW_PAGE,
-        permissions::model::PermissionAction::Update,
-        "inventory",
-    )
-    .await?;
-
-    service::run_supplier_sync(&state.pool)
-        .await
-        .map(Json)
-        .map_err(|error| error::map_admin_query_error("supplier sync failed", error))
 }
 
 /// Accepts the AutoCount catalogue export as a raw CSV body. Sent as text rather than a

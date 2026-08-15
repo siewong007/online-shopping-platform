@@ -882,18 +882,6 @@ pub struct UpdateProductStockInput {
     pub low_stock_threshold: i32,
 }
 
-#[derive(Debug, Clone, Deserialize)]
-pub struct SupplierSyncInput {
-    pub supplier: String,
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub struct ProductRestockResult {
-    pub product_id: i32,
-    pub name: String,
-    pub added: i32,
-}
-
 #[derive(Debug, Clone, Serialize, FromRow)]
 pub struct SupportConversation {
     pub id: i32,

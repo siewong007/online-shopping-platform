@@ -237,10 +237,6 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
             put(catalog::controller::update_product_stock),
         )
         .route(
-            "/api/admin/inventory/supplier-sync",
-            post(catalog::controller::supplier_sync),
-        )
-        .route(
             "/api/admin/catalogue/import",
             // The full AutoCount export is ~1 MB of CSV, over Axum's 2 MB default once the
             // catalogue grows; give this one route its own ceiling.

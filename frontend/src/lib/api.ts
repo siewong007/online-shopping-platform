@@ -26,8 +26,7 @@ export {
   createProduct,
   updateCategory,
   updateProduct,
-  updateProductStock,
-  supplierSync
+  updateProductStock
 } from "../modules/catalog/api/catalogApi";
 export {
   createCustomerPortalProfile,

@@ -10,7 +10,6 @@ use super::{
     },
     model::{
         AdminCatalogPayload, CatalogueImportReport, Category, Product, ProductImageImportReport,
-        ProductRestockResult,
     },
     repository,
 };
@@ -134,10 +133,6 @@ pub async fn update_product_stock(
     )
     .await;
     Ok(product)
-}
-
-pub async fn run_supplier_sync(pool: &PgPool) -> Result<Vec<ProductRestockResult>> {
-    repository::run_supplier_sync(pool).await
 }
 
 pub async fn import_catalogue(
