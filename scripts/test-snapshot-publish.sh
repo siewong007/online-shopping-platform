@@ -16,6 +16,10 @@
 #      temp source no longer exists
 #   D. 100 collisions                    -> fail closed, source removed, NO publication
 #   E. missing source                    -> fail closed (rc 1)
+#   F. ln fails + destination ABSENT (EACCES-class) -> NON-COLLISION publication failure: fail
+#      closed IMMEDIATELY with exactly ONE ln invocation (never 100 fake collision retries)
+#   G. ln fails + destination ABSENT (simulated EXDEV) -> same immediate fail-closed
+#      classification; a cross-device link error is not a collision
 #
 # Requires: bash, coreutils. No docker/age/rclone needed.
 #   scripts/test-snapshot-publish.sh
@@ -115,6 +119,70 @@ fi
 # E. missing source -> fail closed (rc 1).
 fresh
 check_publish "missing_source_fails_closed" "$DIR/.pre-restore.nope" 1 "" ""
+
+# F. ln fails while the destination name is ABSENT (an EACCES-class error on the snapshot
+# directory). This is a NON-COLLISION publication failure: retrying a different name can never
+# succeed, so the helper must fail closed IMMEDIATELY — exactly ONE ln invocation, never 100
+# fake collision retries — with no destination created and the temp source cleaned up.
+# The ln stub logs every invocation; its exit status is the whole contract under test.
+fresh
+SRC_F="$DIR/.pre-restore.mno345"
+printf 'SNAPSHOT-EXPECTED-CONTENT-FFF\n' > "$SRC_F"
+FAKEBIN_F="$TMP/failbin-eperm"
+mkdir -p "$FAKEBIN_F"
+LNCALLS_F="$TMP/ln-calls-eperm.log"
+cat > "$FAKEBIN_F/ln" <<STUB
+#!/usr/bin/env bash
+printf '%s\n' "\$*" >> "$LNCALLS_F"
+echo "ln: failed to create hard link: Permission denied" >&2
+exit 1
+STUB
+chmod 0700 "$FAKEBIN_F/ln"
+OLD_PATH="$PATH"
+PATH="$FAKEBIN_F:$PATH"
+check_publish "noncollision_eperm_fails_immediately" "$SRC_F" 1 "" ""
+PATH="$OLD_PATH"
+if [[ "$(wc -l < "$LNCALLS_F")" == 1 ]]; then
+  PASS=$((PASS + 1)); echo "ok:   noncollision_eperm_single_ln_invocation (no fake collision retries)"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: noncollision_eperm_single_ln_invocation — expected exactly 1 ln call, got $(wc -l < "$LNCALLS_F")"
+fi
+if [[ ! -e "$DIR/$STEM.dump.age" && -z "$(find "$DIR" -name "$STEM*.dump.age" 2>/dev/null)" ]]; then
+  PASS=$((PASS + 1)); echo "ok:   noncollision_eperm_no_publication"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: noncollision_eperm_no_publication — a snapshot file appeared despite publication failure"
+fi
+
+# G. simulated EXDEV: the destination name is absent and ln reports a cross-device link error.
+# Same classification as F — an EXDEV is a non-collision publication failure and must fail
+# closed after exactly ONE attempt, not burn the collision budget.
+fresh
+SRC_G="$DIR/.pre-restore.pqr678"
+printf 'SNAPSHOT-EXPECTED-CONTENT-GGG\n' > "$SRC_G"
+FAKEBIN_G="$TMP/failbin-exdev"
+mkdir -p "$FAKEBIN_G"
+LNCALLS_G="$TMP/ln-calls-exdev.log"
+cat > "$FAKEBIN_G/ln" <<STUB
+#!/usr/bin/env bash
+printf '%s\n' "\$*" >> "$LNCALLS_G"
+echo "ln: failed to create hard link: Invalid cross-device link" >&2
+exit 1
+STUB
+chmod 0700 "$FAKEBIN_G/ln"
+OLD_PATH="$PATH"
+PATH="$FAKEBIN_G:$PATH"
+check_publish "exdev_fails_immediately_not_collision" "$SRC_G" 1 "" ""
+PATH="$OLD_PATH"
+if [[ "$(wc -l < "$LNCALLS_G")" == 1 ]]; then
+  PASS=$((PASS + 1)); echo "ok:   exdev_single_ln_invocation (no fake collision retries)"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: exdev_single_ln_invocation — expected exactly 1 ln call, got $(wc -l < "$LNCALLS_G")"
+fi
+if [[ -z "$(find "$DIR" -name "$STEM*.dump.age" 2>/dev/null)" ]]; then
+  PASS=$((PASS + 1)); echo "ok:   exdev_no_publication"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: exdev_no_publication — a snapshot file appeared despite publication failure"
+fi
 
 echo
 echo "PASS: $PASS  FAIL: $FAIL"

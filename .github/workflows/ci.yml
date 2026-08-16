@@ -3,7 +3,9 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    # joseph runs CI on push so the backup/restore safety suites gate the working branch
+    # too; production deployment stays main-only (deploy.yml workflow_run gate).
+    branches: [main, joseph]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -81,6 +83,34 @@ jobs:
   backup-restore:
     name: Backup/restore guardrail tests
     runs-on: ubuntu-latest
+    # Single source of truth for the shell scripts that must pass bash -n and ShellCheck.
+    # Keep identical to the SCRIPTS list in scripts/run-all-checks.sh (CI cannot source that
+    # file: repository scripts are mode 100644 and CI must not depend on executable bits).
+    env:
+      SHELL_SCRIPTS: >-
+        deploy/deploy.sh
+        deploy/backup.sh
+        deploy/restore.sh
+        deploy/backup-capacity.sh
+        deploy/backup-env-parser.sh
+        deploy/notify-backup-failure.sh
+        scripts/preflight-backup.sh
+        scripts/check-backup-health.sh
+        scripts/restore-proof.sh
+        scripts/run-all-checks.sh
+        scripts/test-backup-env-parser.sh
+        scripts/test-backup.sh
+        scripts/test-restore.sh
+        scripts/test-predeploy.sh
+        scripts/test-deploy.sh
+        scripts/test-backup-health.sh
+        scripts/test-preflight-capacity.sh
+        scripts/test-release-bundle.sh
+        scripts/test-restore-atomicity.sh
+        scripts/test-restore-proof-negative.sh
+        scripts/test-age-header-helper.sh
+        scripts/test-restore-proof-cleanup.sh
+        scripts/test-snapshot-publish.sh
     steps:
       - uses: actions/checkout@v4
 
@@ -90,15 +120,7 @@ jobs:
       - name: Shell syntax check (bash -n)
         run: |
           set -euo pipefail
-          for f in deploy/deploy.sh deploy/backup.sh deploy/restore.sh \
-                   deploy/backup-capacity.sh deploy/backup-env-parser.sh \
-                   deploy/notify-backup-failure.sh scripts/preflight-backup.sh \
-                   scripts/check-backup-health.sh scripts/restore-proof.sh \
-                   scripts/test-backup.sh scripts/test-restore.sh \
-                   scripts/test-predeploy.sh scripts/test-deploy.sh \
-                   scripts/test-backup-env-parser.sh scripts/test-backup-health.sh \
-                   scripts/test-release-bundle.sh scripts/test-restore-atomicity.sh \
-                   scripts/test-restore-proof-negative.sh scripts/test-preflight-capacity.sh; do
+          for f in $SHELL_SCRIPTS; do
             [[ -f "$f" ]] || { echo "missing script: $f" >&2; exit 1; }
             sed 's/\r$//' "$f" | bash -n
             echo "  ok: $f"
@@ -107,15 +129,7 @@ jobs:
       - name: ShellCheck (LF-normalized copies)
         run: |
           set -euo pipefail
-          for f in deploy/deploy.sh deploy/backup.sh deploy/restore.sh \
-                   deploy/backup-capacity.sh deploy/backup-env-parser.sh \
-                   deploy/notify-backup-failure.sh scripts/preflight-backup.sh \
-                   scripts/check-backup-health.sh scripts/restore-proof.sh \
-                   scripts/test-backup.sh scripts/test-restore.sh \
-                   scripts/test-predeploy.sh scripts/test-deploy.sh \
-                   scripts/test-backup-env-parser.sh scripts/test-backup-health.sh \
-                   scripts/test-release-bundle.sh scripts/test-restore-atomicity.sh \
-                   scripts/test-restore-proof-negative.sh scripts/test-preflight-capacity.sh; do
+          for f in $SHELL_SCRIPTS; do
             sed 's/\r$//' "$f" > "/tmp/lf-$(basename "$f")"
             shellcheck -x "/tmp/lf-$(basename "$f")"
             echo "  ok: $f"
@@ -137,29 +151,40 @@ jobs:
             echo "  ok: $dep in manifest"
           done
 
+      # Repository scripts are mode 100644: every suite is invoked as `bash <script>` so CI
+      # never depends on executable bits.
       - name: Run backup env parser suite
-        run: scripts/test-backup-env-parser.sh
+        run: bash scripts/test-backup-env-parser.sh
 
       - name: Run backup guardrail suite
-        run: scripts/test-backup.sh
+        run: bash scripts/test-backup.sh
 
       - name: Run restore guardrail suite
-        run: scripts/test-restore.sh
+        run: bash scripts/test-restore.sh
 
       - name: Run predeploy guardrail suite
-        run: scripts/test-predeploy.sh
+        run: bash scripts/test-predeploy.sh
 
       - name: Run deploy guardrail suite
-        run: scripts/test-deploy.sh
+        run: bash scripts/test-deploy.sh
 
       - name: Run backup health suite
-        run: scripts/test-backup-health.sh
+        run: bash scripts/test-backup-health.sh
 
       - name: Run preflight/backup capacity parity suite
-        run: scripts/test-preflight-capacity.sh
+        run: bash scripts/test-preflight-capacity.sh
 
       - name: Run release bundle smoke test
-        run: scripts/test-release-bundle.sh
+        run: bash scripts/test-release-bundle.sh
+
+      - name: Run age header helper suite
+        run: bash scripts/test-age-header-helper.sh
+
+      - name: Run restore proof cleanup suite
+        run: bash scripts/test-restore-proof-cleanup.sh
+
+      - name: Run snapshot publish suite
+        run: bash scripts/test-snapshot-publish.sh
 
       - name: Start seeded source database for disaster-recovery tests
         run: |
@@ -198,10 +223,10 @@ jobs:
           echo "source DB seeded: $(docker exec online-shopping-db psql -At -U project_depot -d project_depot -c 'SELECT count(*) FROM orders') orders"
 
       - name: Run restore atomicity suite (isolated postgres)
-        run: scripts/test-restore-atomicity.sh
+        run: bash scripts/test-restore-atomicity.sh
 
       - name: Run full restore proof (isolated postgres)
-        run: scripts/restore-proof.sh
+        run: bash scripts/restore-proof.sh
 
       - name: Run restore proof negative suite (isolated postgres)
-        run: scripts/test-restore-proof-negative.sh
+        run: bash scripts/test-restore-proof-negative.sh

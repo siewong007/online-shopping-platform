@@ -136,6 +136,21 @@ exec /usr/bin/df "$@"
 DF
 chmod 0700 "$FAKEBIN/df"
 
+# P3 error-classification stub: publish_no_clobber must treat an ln failure with the
+# destination ABSENT (simulated EXDEV — a non-collision publication failure) as an immediate
+# abort, not as a name collision to retry 100 times. Delegates to the real ln otherwise; every
+# failing invocation is logged so the test can assert exactly ONE link attempt.
+cat > "$FAKEBIN/ln" <<'LN'
+#!/usr/bin/env bash
+if [[ "${FAKE_LN_PUBLISH_FAIL:-0}" == "1" ]]; then
+  printf '%s\n' "$*" >> "${FAKEBIN_DIR:-/nonexistent}/ln-argv.log"
+  echo "ln: failed to create hard link: Invalid cross-device link" >&2
+  exit 1
+fi
+exec /usr/bin/ln "$@"
+LN
+chmod 0700 "$FAKEBIN/ln"
+
 export PATH="$FAKEBIN:$PATH"
 export FAKEBIN_DIR="$FAKEBIN"
 export RESTORE_WORKDIR="$TMP/work"
@@ -488,6 +503,30 @@ if [[ "$PUBLISHED" =~ pre-restore-.*-[0-9][0-9]*\.dump\.age$ ]] \
   PASS=$((PASS + 1)); echo "ok:   snapshot_publish_preexisting_gets_suffix ($PUBLISHED)"
 else
   FAIL=$((FAIL + 1)); echo "FAIL: snapshot_publish_preexisting_gets_suffix — expected a suffixed published snapshot, got: ${PUBLISHED:-<none>}"
+fi
+
+# P3 error classification: an ln publication failure with the destination ABSENT (simulated
+# EXDEV) is NOT a collision. The production restore must abort with safety_snapshot_failed
+# after exactly ONE link attempt (never 100 fake collision retries), and the destructive
+# restore must never start: the snapshot pg_dump HAS run, but no pg_restore may be attempted.
+# The snapshot dir is cleared first so no pre-existing name can turn the single failing link
+# into a legitimate collision retry.
+rm -rf "$RESTORE_SNAPSHOT_DIR" && mkdir -p "$RESTORE_SNAPSHOT_DIR"
+rm -f "$FAKEBIN/ln-argv.log"
+export FAKE_LN_PUBLISH_FAIL=1
+run "snapshot_publish_exdev_aborts_restore" "non-collision ln failure must abort before any destructive step" 1 "safety_snapshot_failed" \
+  --restore "$A" --container online-shopping-db --database online_shopping --db-user shop_admin \
+  --destroy-target --target-kind production --confirm-production "RESTORE online_shopping" --identity "$I"
+unset FAKE_LN_PUBLISH_FAIL
+if [[ "$(wc -l < "$FAKEBIN/ln-argv.log")" == 1 ]]; then
+  PASS=$((PASS + 1)); echo "ok:   snapshot_publish_exdev_single_link_attempt"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: snapshot_publish_exdev_single_link_attempt — expected exactly 1 ln call, got $(wc -l < "$FAKEBIN/ln-argv.log")"
+fi
+if grep -q ' pg_restore' "$FAKEBIN/docker-argv.log"; then
+  echo "FAIL: snapshot_publish_exdev_aborts_restore — destructive pg_restore started after publication failure"; FAIL=$((FAIL + 1))
+else
+  PASS=$((PASS + 1)); echo "ok:   snapshot_publish_exdev_no_destructive_restore"
 fi
 
 # 35. M3 argv hygiene: password inherited by name, secret value NEVER in argv

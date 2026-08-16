@@ -319,11 +319,13 @@ snapshot_production() {
   # exit status cannot be trusted to mean a move happened. The publication is therefore a HARD
   # LINK (shared helper deploy/backup-capacity.sh:publish_no_clobber): atomic, and its success is
   # definitive — the destination did not exist and now holds EXACTLY this run's bytes. On
-  # collision (EEXIST) the name is retried with an incrementing numeric suffix; the temp file is
-  # removed ONLY after a successful link (consumed exactly once), and retry exhaustion fails
-  # closed — a snapshot that cannot be placed means no destructive restore.
+  # collision (EEXIST) the name is retried with an incrementing numeric suffix; a link failure
+  # with the destination ABSENT (EXDEV/EACCES/ENOSPC/EPERM) fails immediately instead of being
+  # mistaken for a collision. The temp file is removed ONLY after a successful link (consumed
+  # exactly once), and failure fails closed — a snapshot that cannot be placed means no
+  # destructive restore.
   snap="$(publish_no_clobber "$tmp" "$snap_dir" "pre-restore-$ts")" \
-    || fail "safety_snapshot_failed" "cannot place the pre-restore safety snapshot after 100 name collisions; refusing to restore production"
+    || fail "safety_snapshot_failed" "cannot place the pre-restore safety snapshot (publication failed: collision exhaustion or a non-collision link error); refusing to restore production"
   log "encrypted pre-restore safety snapshot written: $snap"
   log "  (emergency recovery: decrypt with the same identity and pg_restore into a clean database)"
 }

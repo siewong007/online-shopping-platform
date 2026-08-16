@@ -111,11 +111,16 @@ safe_rm_target() {
 # collision the destination is retried with an incrementing numeric suffix; the source temp file
 # is removed ONLY after a successful link (consumed exactly once). Prints the final destination
 # path on success; on `max_attempts` collisions it removes the source and returns 1 (fail closed).
+# Error classification: a failed `ln` is a COLLISION only when the destination name is actually
+# occupied (EEXIST); a failure with the name absent (EXDEV/EACCES/ENOSPC/EPERM) can never be
+# fixed by retrying a different name, so it fails closed IMMEDIATELY instead of burning
+# `max_attempts` fake collision retries.
 publish_no_clobber() {
   local src="$1" dir="$2" stem="$3" max="${4:-100}" attempt=0 candidate
   [[ -f "$src" ]] || return 1
   candidate="$dir/$stem.dump.age"
   while ! ln "$src" "$candidate" 2>/dev/null; do
+    [[ -e "$candidate" || -L "$candidate" ]] || { rm -f -- "$src"; return 1; }
     attempt=$((attempt + 1))
     (( attempt < max )) || { rm -f -- "$src"; return 1; }
     candidate="$dir/$stem-${attempt}.dump.age"

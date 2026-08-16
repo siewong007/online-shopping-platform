@@ -1,27 +1,58 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-echo "=== 1. Checking script syntax with bash -n ==="
+# Single source of truth for every shell script on the backup/restore safety surface: each
+# must pass bash -n and ShellCheck both here and in .github/workflows/ci.yml. Keep the two
+# lists identical (CI cannot source this file: repository scripts are mode 100644 and CI must
+# not depend on executable bits).
 SCRIPTS=(
   deploy/deploy.sh
   deploy/backup.sh
   deploy/restore.sh
+  deploy/backup-capacity.sh
   deploy/backup-env-parser.sh
+  deploy/notify-backup-failure.sh
   scripts/preflight-backup.sh
   scripts/check-backup-health.sh
   scripts/restore-proof.sh
+  scripts/run-all-checks.sh
+  scripts/test-backup-env-parser.sh
   scripts/test-backup.sh
   scripts/test-restore.sh
   scripts/test-predeploy.sh
   scripts/test-deploy.sh
-  scripts/test-backup-env-parser.sh
   scripts/test-backup-health.sh
+  scripts/test-preflight-capacity.sh
   scripts/test-release-bundle.sh
   scripts/test-restore-atomicity.sh
   scripts/test-restore-proof-negative.sh
+  scripts/test-age-header-helper.sh
+  scripts/test-restore-proof-cleanup.sh
+  scripts/test-snapshot-publish.sh
 )
 
+# Functional suites that need no postgres container. The three disaster-recovery suites
+# (scripts/test-restore-atomicity.sh, scripts/restore-proof.sh,
+# scripts/test-restore-proof-negative.sh) run in CI, which seeds an isolated database for
+# them. Every suite is invoked as `bash <script>`: repository scripts are mode 100644 and
+# must never be executed via a bare path.
+SUITES=(
+  scripts/test-backup-env-parser.sh
+  scripts/test-backup.sh
+  scripts/test-restore.sh
+  scripts/test-predeploy.sh
+  scripts/test-deploy.sh
+  scripts/test-backup-health.sh
+  scripts/test-preflight-capacity.sh
+  scripts/test-release-bundle.sh
+  scripts/test-age-header-helper.sh
+  scripts/test-restore-proof-cleanup.sh
+  scripts/test-snapshot-publish.sh
+)
+
+echo "=== 1. Checking script syntax with bash -n ==="
 for f in "${SCRIPTS[@]}"; do
+  [[ -f "$f" ]] || { echo "missing script: $f" >&2; exit 1; }
   sed 's/\r$//' "$f" | bash -n
   echo "  syntax OK: $f"
 done
@@ -34,26 +65,9 @@ for f in "${SCRIPTS[@]}"; do
 done
 
 echo "=== 3. Running Unit and Guardrail Test Suites ==="
-
-echo "--- test-backup-env-parser.sh ---"
-sed 's/\r$//' scripts/test-backup-env-parser.sh | bash
-
-echo "--- test-backup.sh ---"
-sed 's/\r$//' scripts/test-backup.sh | bash
-
-echo "--- test-restore.sh ---"
-sed 's/\r$//' scripts/test-restore.sh | bash
-
-echo "--- test-predeploy.sh ---"
-sed 's/\r$//' scripts/test-predeploy.sh | bash
-
-echo "--- test-deploy.sh ---"
-sed 's/\r$//' scripts/test-deploy.sh | bash
-
-echo "--- test-backup-health.sh ---"
-sed 's/\r$//' scripts/test-backup-health.sh | bash
-
-echo "--- test-release-bundle.sh ---"
-sed 's/\r$//' scripts/test-release-bundle.sh | bash
+for s in "${SUITES[@]}"; do
+  echo "--- $s ---"
+  bash "$s"
+done
 
 echo "=== ALL VERIFICATION CHECKS PASSED ==="
