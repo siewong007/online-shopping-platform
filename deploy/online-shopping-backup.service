@@ -4,6 +4,11 @@ Documentation=file:///opt/online-shopping/backup.env.example
 After=docker.service network-online.target
 Requires=docker.service
 Wants=network-online.target
+# N4: on ANY non-zero exit, systemd starts the failure notifier: a persistent marker file, a
+# CRITICAL journal entry, and the optional BACKUP_NOTIFY_HOOK (see notify-backup-failure.sh).
+# P0-BKP-01: OnFailure is a [Unit] directive — under [Service] systemd logs
+# "Unknown key 'OnFailure' in section [Service], ignoring." and the notifier NEVER fires.
+OnFailure=online-shopping-backup-notify.service
 
 [Service]
 Type=oneshot
@@ -12,9 +17,6 @@ ExecStart=/opt/online-shopping/backup.sh
 # runbook documents a drill to measure the real duration (status file: "duration_seconds"); once
 # measured, adjust via: systemctl edit online-shopping-backup.service  (TimeoutStartSec=).
 TimeoutStartSec=600
-# N4: on ANY non-zero exit, systemd starts the failure notifier: a persistent marker file, a
-# CRITICAL journal entry, and the optional BACKUP_NOTIFY_HOOK (see notify-backup-failure.sh).
-OnFailure=online-shopping-backup-notify.service
 # backup.sh takes its own non-blocking flock, so a manual or deploy-invoked backup can run while
 # this one is queued without two dumps ever overlapping.
 Nice=10

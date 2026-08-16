@@ -29,6 +29,7 @@ SCRIPTS=(
   scripts/test-age-header-helper.sh
   scripts/test-restore-proof-cleanup.sh
   scripts/test-snapshot-publish.sh
+  scripts/test-systemd-units.sh
 )
 
 # Functional suites that need no postgres container. The three disaster-recovery suites
@@ -64,7 +65,13 @@ for f in "${SCRIPTS[@]}"; do
   echo "  shellcheck OK: $f"
 done
 
-echo "=== 3. Running Unit and Guardrail Test Suites ==="
+echo "=== 3. Validating delivered systemd units (systemd-analyze verify) ==="
+# P0-BKP-01: static gate, deliberately NOT part of SUITES (the functional-suite count stays at
+# the 14 CI suites). Requires systemd-analyze, i.e. a Linux host; on other dev boxes run the
+# functional suites below directly.
+bash scripts/test-systemd-units.sh
+
+echo "=== 4. Running Unit and Guardrail Test Suites ==="
 for s in "${SUITES[@]}"; do
   echo "--- $s ---"
   bash "$s"

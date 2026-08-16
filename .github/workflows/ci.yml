@@ -111,6 +111,7 @@ jobs:
         scripts/test-age-header-helper.sh
         scripts/test-restore-proof-cleanup.sh
         scripts/test-snapshot-publish.sh
+        scripts/test-systemd-units.sh
     steps:
       - uses: actions/checkout@v4
 
@@ -134,6 +135,13 @@ jobs:
             shellcheck -x "/tmp/lf-$(basename "$f")"
             echo "  ok: $f"
           done
+
+      # P0-BKP-01: static unit-validation gate (ubuntu-latest ships systemd-analyze). This is
+      # deliberately a separate step, NOT a 15th functional suite: the 14 suites below keep
+      # their meaning. Catches unknown/wrong-section directives that systemd-analyze reports
+      # as warnings with exit status 0 (the production OnFailure-under-[Service] defect).
+      - name: Validate delivered systemd units (systemd-analyze verify)
+        run: bash scripts/test-systemd-units.sh
 
       # N3: CI asserts every runtime dependency of the backup scripts appears in
       # release-components.txt — the manifest cannot silently drop a component.
