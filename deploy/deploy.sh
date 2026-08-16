@@ -346,7 +346,7 @@ backup_existing_database() {
   # N6: docker inspect's stderr is captured into a mktemp file (0600, unpredictable name) inside
   # a self-cleaning subshell. The FIXED path /tmp/.deploy-inspect.err no longer exists, so a
   # pre-existing symlink or file at that path can never be followed or overwritten by the deploy.
-  local running inspect_rc inspect_err inspect_result inspect_lines
+  local running inspect_rc inspect_err inspect_result inspect_lines i
   set +e
   inspect_result=$({
     set +e
@@ -358,14 +358,23 @@ backup_existing_database() {
     printf '%s\n%s\n%s' "$inspect_rc" "$running" "$inspect_err"
   }) || true
   set -e
-  mapfile -t inspect_lines <<<"${inspect_result:-}"
+  mapfile -t inspect_lines <<<"${inspect_result:-}"$'\n'
   inspect_rc="${inspect_lines[0]:-}"
   running="${inspect_lines[1]:-}"
-  # D4: preserve ALL docker inspect stderr lines in the failure message — the mapfile element
-  # [2] is only the FIRST line. Extracting the raw remainder after the rc/running prefix keeps
-  # every stderr line (a daemon error often spans several lines).
-  inspect_err="${inspect_result#*$'\n'*$'\n'}"
-  inspect_err="${inspect_err%$'\n'}"
+  # D4/M4: the inspect result is framed as THREE sections — line 0 is the exit code, line 1 the
+  # stdout running-state, and every LATER line is stderr (0, 1 or N lines). stderr is rebuilt
+  # ONLY from array indices >= 2 (the final element is the empty artifact of the extra newline
+  # appended before mapfile; command substitution strips trailing newlines, so the last stderr
+  # line would otherwise be unterminated), meaning exit-code/stdout framing can NEVER be mistaken
+  # for stderr and a completely empty stderr stays empty (a daemon error often spans several
+  # lines; all of them are preserved).
+  inspect_err=""
+  if (( ${#inspect_lines[@]} > 2 )); then
+    for (( i = 2; i < ${#inspect_lines[@]} - 1; i++ )); do
+      inspect_err+="${inspect_lines[$i]}"$'\n'
+    done
+    inspect_err="${inspect_err%$'\n'}"
+  fi
   if (( inspect_rc != 0 )); then
     if grep -qiE 'no such (object|container)' <<<"$inspect_err"; then
       log "no database container present yet; skipping pre-deploy backup"
@@ -374,7 +383,7 @@ backup_existing_database() {
     if grep -qiE 'cannot connect to the docker daemon|is the docker daemon running|permission denied|got permission denied' <<<"$inspect_err"; then
       die "pre-deploy backup failed: cannot reach the docker daemon ($inspect_err)"
     fi
-    die "pre-deploy backup failed: docker inspect online-shopping-db reported: $inspect_err"
+    die "pre-deploy backup failed: docker inspect online-shopping-db reported: ${inspect_err:-<no stderr output>}"
   fi
   [[ -n "$running" ]] || die "pre-deploy backup failed: docker inspect online-shopping-db returned no running state"
   [[ "$running" == "true" ]] || { log "database container not running; skipping pre-deploy backup"; return 0; }

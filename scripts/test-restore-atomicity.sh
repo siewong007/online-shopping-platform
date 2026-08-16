@@ -33,6 +33,13 @@ RP_PROD_CONTAINER="${RP_PROD_CONTAINER:-online-shopping-db}"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RESTORE_SH="$REPO_ROOT/deploy/restore.sh"
+# M1: the shared fail-closed cleanup rule (deploy/backup-capacity.sh) — ONE definition for all
+# proof/atomicity harnesses.
+# shellcheck disable=SC1091,SC1090
+if ! source "$REPO_ROOT/deploy/backup-capacity.sh" 2>/dev/null; then
+  echo "ERROR: backup-capacity.sh is missing; refusing to run without the shared fail-closed cleanup rule" >&2
+  exit 1
+fi
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/restore-atomicity.XXXXXX")"
 chmod 0700 "$WORK"
@@ -62,14 +69,11 @@ assert_non_production_target() {
 # shellcheck disable=SC2317,SC2329
 cleanup() {
   set +e
-  if [[ -n "${TARGET_CONTAINER:-}" && "$TARGET_CONTAINER" != "$RP_PROD_CONTAINER" ]]; then
-    local target_id prod_id
-    target_id=$(docker inspect --format '{{.Id}}' "$TARGET_CONTAINER" 2>/dev/null | tr -d ' \r\n' || true)
-    prod_id=$(docker inspect --format '{{.Id}}' "$RP_PROD_CONTAINER" 2>/dev/null | tr -d ' \r\n' || true)
-    if [[ -z "$target_id" || -z "$prod_id" || "$target_id" != "$prod_id" ]]; then
-      docker rm -f "$TARGET_CONTAINER" >/dev/null 2>&1 || true
-    fi
-  fi
+  # M1: remove the throwaway target ONLY when both identities resolve and are proven DIFFERENT
+  # (shared safe_rm_target). If either identity is unresolvable or they are equal, delete
+  # NOTHING — a fail-closed refusal must never become a destructive docker rm of a
+  # possibly-production target.
+  safe_rm_target "${TARGET_CONTAINER:-}"
   if [[ -n "${WORK:-}" && -d "$WORK" ]]; then
     rm -rf -- "$WORK"
   fi

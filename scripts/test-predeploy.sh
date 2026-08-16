@@ -39,6 +39,22 @@ case "${1:-}" in
       echo "Is the docker daemon running on this host?" >&2
       exit 1
     fi
+    if [[ "${FAKE_CONTAINER_ABSENT_MULTI:-0}" == "1" ]]; then
+      # M4-1: "No such object" on the SECOND stderr line — every line must survive the framing.
+      echo "Could not inspect container online-shopping-db" >&2
+      echo "Error: No such object: online-shopping-db" >&2
+      exit 1
+    fi
+    if [[ "${FAKE_DOCKER_SINGLE_ERR:-0}" == "1" ]]; then
+      # M4-2: single-line stderr.
+      echo "Error: single-line daemon failure" >&2
+      exit 1
+    fi
+    if [[ "${FAKE_DOCKER_EMPTY_ERR:-0}" == "1" ]]; then
+      # M4-3: completely EMPTY stderr — the exit-code/stdout framing must never be mistaken for
+      # stderr, and the failure must still be classified fail closed.
+      exit 1
+    fi
     if [[ "${FAKE_CONTAINER_ABSENT:-0}" == "1" ]]; then
       echo "Error: No such container: online-shopping-db" >&2
       exit 1
@@ -93,7 +109,7 @@ setup_case() {
   export DEPLOY_BACKUP_DIR="$CASE_TMP/app/backups"
   export DEPLOY_LOCK_FILE="$CASE_TMP/app/deploy.lock"
   mkdir -p "$DEPLOY_APP_DIR" "$DEPLOY_BACKUP_DIR"
-  unset FAKE_DOCKER_DOWN FAKE_CONTAINER_ABSENT FAKE_DB_RUNNING FAKE_PGDUMP_FAIL FAKE_AGE_FAIL FAKE_AGE_NO_STANZA || true
+  unset FAKE_DOCKER_DOWN FAKE_CONTAINER_ABSENT FAKE_CONTAINER_ABSENT_MULTI FAKE_DOCKER_SINGLE_ERR FAKE_DOCKER_EMPTY_ERR FAKE_DB_RUNNING FAKE_PGDUMP_FAIL FAKE_AGE_FAIL FAKE_AGE_NO_STANZA || true
   : > "$FAKEBIN/docker-argv.log"
 }
 
@@ -192,6 +208,34 @@ run_backup "docker_down_aborts" 1 "cannot reach the docker daemon"
 # 7b. D4: docker inspect stderr spans MULTIPLE lines — ALL of them must appear in the abort
 # message (the old code truncated to the first stderr line).
 run_backup "inspect_stderr_all_lines_preserved" 1 "Is the docker daemon running on this host"
+
+# M4-1: "No such object" on the SECOND stderr line — the skip classification must still work
+# (fail closed, never a destructive interpretation of the framing).
+setup_case
+export FAKE_CONTAINER_ABSENT_MULTI=1
+run_backup "inspect_multiline_no_such_object_skips" 0 "no database container present yet"
+unset FAKE_CONTAINER_ABSENT_MULTI
+
+# M4-2: single-line stderr survives intact.
+setup_case
+export FAKE_DOCKER_SINGLE_ERR=1
+run_backup "inspect_single_line_stderr_preserved" 1 "Error: single-line daemon failure"
+unset FAKE_DOCKER_SINGLE_ERR
+
+# M4-3: completely EMPTY stderr — the exit-code/stdout framing must never be reported as stderr,
+# and the failure must still be classified fail closed (rc 1).
+setup_case
+export FAKE_DOCKER_EMPTY_ERR=1
+run_backup "inspect_empty_stderr_stays_empty" 1 "<no stderr output>"
+unset FAKE_DOCKER_EMPTY_ERR
+
+# M4-4: normal successful inspect (rc 0, running state on stdout, empty stderr) proceeds; the
+# inspect classification reports no stderr content.
+setup_case
+write_env <<EOF
+BACKUP_AGE_RECIPIENT=age1predeployrecipient
+EOF
+run_backup "inspect_success_proceeds_cleanly" 0 "Encrypted pre-deploy backup ready"
 
 # 8. pg_dump failure -> aborts, exit 1, no partial files
 setup_case

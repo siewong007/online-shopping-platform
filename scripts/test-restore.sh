@@ -464,6 +464,32 @@ else
   echo "FAIL: snapshot_runs_keep_archive_intact — archive missing/empty after snapshot runs"; FAIL=$((FAIL+1))
 fi
 
+# M2 integration: the safety snapshot publication is a hard-link no-clobber
+# (deploy/backup-capacity.sh:publish_no_clobber) with a RELIABLE exit status — unlike `mv -n`,
+# which may return 0 without moving. Pre-create name collisions for the next several seconds so
+# whatever timestamp the run computes hits a pre-existing base name AND suffix-1; the publication
+# must retry to a suffixed name that holds exactly this run's bytes, and never overwrite.
+rm -rf "$RESTORE_SNAPSHOT_DIR" && mkdir -p "$RESTORE_SNAPSHOT_DIR"
+for s in $(seq 0 9); do
+  tsn=$(date -u -d "+$s seconds" +%Y%m%dT%H%M%SZ 2>/dev/null || date -u +%Y%m%dT%H%M%SZ)
+  for n in "" -1 -2; do
+    printf 'PREEXISTING-MARKER\n' > "$RESTORE_SNAPSHOT_DIR/pre-restore-${tsn}${n}.dump.age"
+  done
+done
+export FAKE_AGE_DECRYPT_FAIL=1
+run "snapshot_publish_preexisting_gets_suffix" "pre-existing snapshot names force the publish retry" 1 "decrypt_failed" \
+  --restore "$A" --container online-shopping-db --database online_shopping --db-user shop_admin \
+  --destroy-target --target-kind production --confirm-production "RESTORE online_shopping" --identity "$I"
+unset FAKE_AGE_DECRYPT_FAIL
+PUBLISHED="$(sed -n 's/.*safety snapshot written: \(.*\)/\1/p' "$TMP/.out" | tail -n 1)"
+if [[ "$PUBLISHED" =~ pre-restore-.*-[0-9][0-9]*\.dump\.age$ ]] \
+    && [[ -f "$PUBLISHED" ]] && grep -q '^age-encryption.org/v1' "$PUBLISHED" \
+    && ! grep -q 'PREEXISTING-MARKER' "$PUBLISHED"; then
+  PASS=$((PASS + 1)); echo "ok:   snapshot_publish_preexisting_gets_suffix ($PUBLISHED)"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: snapshot_publish_preexisting_gets_suffix — expected a suffixed published snapshot, got: ${PUBLISHED:-<none>}"
+fi
+
 # 35. M3 argv hygiene: password inherited by name, secret value NEVER in argv
 export PGPASSWORD="my_secret_restore_password_9988"
 run "password_via_env_inheritance_not_argv" "password passed via env inheritance" 0 "" \

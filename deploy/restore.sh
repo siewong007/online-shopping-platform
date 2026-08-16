@@ -274,16 +274,8 @@ snapshot_production() {
   fi
   log "safety snapshot capacity check passed: $snap_dir has ${avail} bytes free (need >= $required)"
 
-  local ts snap_index=1
+  local ts
   ts=$(date -u +%Y%m%dT%H%M%SZ)
-  snap="$snap_dir/pre-restore-$ts.dump.age"
-  # N2: collision-safe snapshot names — an existing snapshot is NEVER overwritten; if the same
-  # second is reused (e.g. two restores racing), an incrementing suffix is tried until a free
-  # name is found.
-  while [[ -e "$snap" ]]; do
-    snap="$snap_dir/pre-restore-${ts}-${snap_index}.dump.age"
-    snap_index=$((snap_index + 1))
-  done
   tmp=$(mktemp "$snap_dir/.pre-restore.XXXXXX")
   chmod 0600 "$tmp"
   set +e
@@ -320,20 +312,18 @@ snapshot_production() {
     rm -f -- "$tmp"
     fail "safety_snapshot_failed" "pre-restore safety snapshot has no valid age X25519 recipient stanza; refusing to restore production"
   fi
-  # D7: TOCTOU-free placement. Between the `-e` collision check above and the rename below,
-  # another restore could create the same name — `mv -f` would then silently OVERWRITE another
-  # restore's safety snapshot. `mv -n` is atomic no-clobber (renameat2/RENAME_NOREPLACE,
-  # coreutils >= 8.16): it fails instead of overwriting, and the loop retries with an
-  # incrementing suffix. An existing snapshot is NEVER overwritten, even under a racing restore.
-  local attempt=0
-  while ! mv -n "$tmp" "$snap" 2>/dev/null; do
-    attempt=$((attempt + 1))
-    (( attempt < 100 )) || {
-      rm -f -- "$tmp"
-      fail "safety_snapshot_failed" "cannot place the pre-restore safety snapshot after 100 name collisions; refusing to restore production"
-    }
-    snap="$snap_dir/pre-restore-${ts}-${attempt}.dump.age"
-  done
+  # M2: TOCTOU-free, race-safe publication. `mv -f` could silently OVERWRITE a racing restore's
+  # snapshot, and `mv -n` is NOT a reliable no-clobber primitive: GNU mv may return 0 when the
+  # destination exists and the source is left untouched (RENAME_NOREPLACE is only attempted on
+  # Linux and silently degrades to a plain rename/overwrite on filesystems without it), so its
+  # exit status cannot be trusted to mean a move happened. The publication is therefore a HARD
+  # LINK (shared helper deploy/backup-capacity.sh:publish_no_clobber): atomic, and its success is
+  # definitive — the destination did not exist and now holds EXACTLY this run's bytes. On
+  # collision (EEXIST) the name is retried with an incrementing numeric suffix; the temp file is
+  # removed ONLY after a successful link (consumed exactly once), and retry exhaustion fails
+  # closed — a snapshot that cannot be placed means no destructive restore.
+  snap="$(publish_no_clobber "$tmp" "$snap_dir" "pre-restore-$ts")" \
+    || fail "safety_snapshot_failed" "cannot place the pre-restore safety snapshot after 100 name collisions; refusing to restore production"
   log "encrypted pre-restore safety snapshot written: $snap"
   log "  (emergency recovery: decrypt with the same identity and pg_restore into a clean database)"
 }
