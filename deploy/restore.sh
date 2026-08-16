@@ -311,18 +311,29 @@ snapshot_production() {
     rm -f -- "$tmp"
     fail "safety_snapshot_failed" "pre-restore safety snapshot is empty or invalid; refusing to restore production"
   fi
-  # N10: the X25519 recipient stanza check is limited to the age header area (ends at the first
-  # empty line); the body is encrypted binary and is never scanned. grep -q must NOT be used
-  # here — it exits on the first match, SIGPIPEs the awk still writing the rest of a large file,
-  # and pipefail then reports 141 (a false negative). grep -c reads to EOF, so the result is
-  # deterministic.
-  local stanza_count
-  stanza_count=$(awk '/^$/{exit} {print}' "$tmp" | grep -acE '^-> X25519 [A-Za-z0-9+/]{43,44}$')
-  if [[ "$stanza_count" == "0" ]]; then
+  # D2/D6: the shared set -e-safe helper (deploy/backup-capacity.sh) validates the X25519
+  # recipient stanza against the BOUNDED age header (ends at the `--- ` MAC line or a 16-line
+  # cap); the body is encrypted binary and is never scanned. The OLD standalone
+  # `stanza_count=$(... | grep -c ...)` assignment aborted the script BEFORE the cleanup and
+  # diagnostics below ran when zero lines matched (grep -c exits 1 under set -e).
+  if ! age_header_has_recipient_stanza "$tmp"; then
     rm -f -- "$tmp"
     fail "safety_snapshot_failed" "pre-restore safety snapshot has no valid age X25519 recipient stanza; refusing to restore production"
   fi
-  mv -f "$tmp" "$snap"
+  # D7: TOCTOU-free placement. Between the `-e` collision check above and the rename below,
+  # another restore could create the same name — `mv -f` would then silently OVERWRITE another
+  # restore's safety snapshot. `mv -n` is atomic no-clobber (renameat2/RENAME_NOREPLACE,
+  # coreutils >= 8.16): it fails instead of overwriting, and the loop retries with an
+  # incrementing suffix. An existing snapshot is NEVER overwritten, even under a racing restore.
+  local attempt=0
+  while ! mv -n "$tmp" "$snap" 2>/dev/null; do
+    attempt=$((attempt + 1))
+    (( attempt < 100 )) || {
+      rm -f -- "$tmp"
+      fail "safety_snapshot_failed" "cannot place the pre-restore safety snapshot after 100 name collisions; refusing to restore production"
+    }
+    snap="$snap_dir/pre-restore-${ts}-${attempt}.dump.age"
+  done
   log "encrypted pre-restore safety snapshot written: $snap"
   log "  (emergency recovery: decrypt with the same identity and pg_restore into a clean database)"
 }

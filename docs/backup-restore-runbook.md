@@ -273,6 +273,38 @@ scripts/test-restore-atomicity.sh        # injected mid-restore failure leaves t
    `scripts/restore-proof.sh` against an isolated source/target.
 5. Restart backend/frontend containers so the application reconnects.
 
+### Fresh or replacement host — the sanctioned sequence (D3)
+
+`restore.sh` refuses to run (fail closed) when it cannot **resolve** a container's docker identity:
+`target_resolution_failed` means the named target (or the production container `online-shopping-db`)
+could not be resolved by docker, and also that a production restore cannot prove the target IS
+production or an isolated restore cannot prove the target is NOT production. This is exactly the
+situation on a fresh or replacement VPS, where `online-shopping-db` does not exist yet. The correct
+procedure is **never** to bypass the guard (`--target-kind production` must always be a real
+production container with the canonical identity); instead:
+
+1. **Recreate the replacement production container under its canonical identity** first — start the
+   new `online-shopping-db` (image `postgres:19beta1`, volume, credentials) the normal way, WITHOUT
+   any destructive restore: `docker run -d --name online-shopping-db ...` (or `docker compose up -d
+   postgres`), exactly as a fresh deployment would. The container must be running and resolvable
+   before restore can begin.
+2. **Create a distinct, isolated target** for the actual restore work, e.g.
+   `--container online-shopping-db-restore --database restore_proof --target-kind isolated`. An
+   isolated target rejects the production names outright, so it can never be aimed at the wrong
+   database.
+3. **Restore into the isolated target** and run the full validation: the post-restore readiness +
+   migration-ledger checks built into `restore.sh`, and if desired `scripts/restore-proof.sh`
+   (row-count, content-fingerprint, schema-surface and ledger parity against a known-good source)
+   or manual spot checks.
+4. **Validate parity before promoting.** Only after the isolated restore passes every check, promote
+   it to the production database (e.g. stop the app, `pg_dump`/`pg_restore` the validated target into
+   `online_shopping`, or re-run the restore with `--target-kind production` against the now-resolvable
+   canonical container with the exact confirmation string). Promotion happens only after validation.
+5. Restart backend/frontend containers and confirm the readiness query.
+
+The pre-restore safety snapshot is taken automatically for `--target-kind production` runs (and only
+those); the sequence above keeps the destructive step as the LAST, validated action.
+
 ## Key custody
 
 - Public recipient: safe on the server and in configs.
@@ -313,7 +345,10 @@ flag (`--container`, `--database`, `--db-user`, `--destroy-target`, `--target-ki
 `--identity`) is omitted, with `invalid_target` when a database/user/container value is not a
 strict bare identifier (URIs, `=`, whitespace, duplicates) or when a production-named target uses
 the wrong `--target-kind`, and with `production_confirmation_required` when a production restore
-lacks the exact `--confirm-production "RESTORE online_shopping"` string. `--verify` and `--restore`
+lacks the exact `--confirm-production "RESTORE online_shopping"` string. `target_resolution_failed`
+means the target container (or the production container) could not be resolved by `docker inspect`
+— on a fresh host, create the canonical `online-shopping-db` container first (see the fresh-host
+sequence above); on an existing host, check `docker ps` for the container and the daemon. `--verify` and `--restore`
 together, multiple archive arguments, or duplicate value flags are rejected. After decryption:
 `archive_not_restorable` (not a readable pg_restore dump — corrupt or wrong key),
 `insufficient_staging_space`, `restore_failed` (pg_restore failed; the `--single-transaction`

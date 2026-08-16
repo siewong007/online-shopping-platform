@@ -75,10 +75,11 @@ fi
 
 echo "== 3. Testing verify_release_payload from deploy.sh =="
 # Source deploy.sh from bundle to load verify_release_payload function
-# Normalize LF for sourcing; the source guard requires backup-env-parser.sh NEXT TO the
-# copied deploy.sh (it cannot see the real repo layout).
+# Normalize LF for sourcing; the source guard requires backup-env-parser.sh AND backup-capacity.sh
+# NEXT TO the copied deploy.sh (it cannot see the real repo layout).
 sed 's/\r$//' "$BUNDLE_DIR/deploy.sh" > "$TMP/deploy_test.sh"
 cp "$BUNDLE_DIR/backup-env-parser.sh" "$TMP/backup-env-parser.sh"
+cp "$BUNDLE_DIR/backup-capacity.sh" "$TMP/backup-capacity.sh"
 # shellcheck disable=SC1090,SC1091
 source "$TMP/deploy_test.sh"
 

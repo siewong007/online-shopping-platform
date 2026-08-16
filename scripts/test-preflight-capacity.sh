@@ -211,6 +211,69 @@ export FAKE_DF_AVAIL=$(( FLOOR_REQUIRED - 1 ))
 expect_preflight "preflight_fail_below_floor" 1
 expect_backup "backup_fail_below_floor" 1 "insufficient_staging_space"
 
+# ------------------------------------------------------------------------------------------
+# D1: the LOCAL retention count resolves through ONE shared default/rule (deploy/backup-capacity.sh)
+# in BOTH scripts. The strict parser exports only keys PRESENT in backup.env, so an OMITTED key
+# stays unset: backup.sh used to default it to 3 while the preflight effectively used 0 — the
+# disagreement band below (between required(0) and required(3)) is where the preflight passed
+# while a real backup run failed. An explicit value must be honored and validated identically.
+# ------------------------------------------------------------------------------------------
+export FAKE_DB_SIZE=209715200
+
+# D1a: omitted key -> both use the SHARED default (3): required = 200MiB * (3+2) + 512MiB.
+write_env <<EOF
+BACKUP_AGE_RECIPIENT=age1recipient
+BACKUP_RCLONE_REMOTE=proof-remote
+BACKUP_RCLONE_PATH=$TMP/remote
+BACKUP_LOCAL_DIR=$LOCAL_DIR
+BACKUP_DB_CONTAINER=online-shopping-db
+BACKUP_DB_USER=shop_admin
+BACKUP_DB_NAME=online_shopping
+EOF
+OMIT_REQUIRED=$(( 209715200 * 5 + 536870912 ))
+export FAKE_DF_AVAIL="$OMIT_REQUIRED"
+expect_preflight "preflight_omitted_retention_uses_shared_default" 0
+expect_backup "backup_omitted_retention_uses_shared_default" 0
+# The disagreement band: old code passed the preflight here (required(0) = 200MiB*2+512MiB
+# = 956301312, far below) while backup.sh required the full 1585446912 -> preflight PASS but
+# backup FAIL. Both must now FAIL below the shared-default requirement.
+export FAKE_DF_AVAIL=$(( OMIT_REQUIRED - 1 ))
+expect_preflight "preflight_omitted_retention_fails_below_shared_default_requirement" 1
+expect_backup "backup_omitted_retention_fails_below_shared_default_requirement" 1 "insufficient_staging_space"
+
+# D1b: explicit 0 -> REJECTED by both (backup.sh's rule: positive integer).
+write_env <<EOF
+BACKUP_AGE_RECIPIENT=age1recipient
+BACKUP_RCLONE_REMOTE=proof-remote
+BACKUP_RCLONE_PATH=$TMP/remote
+BACKUP_LOCAL_DIR=$LOCAL_DIR
+BACKUP_LOCAL_RETENTION_COUNT=0
+BACKUP_DB_CONTAINER=online-shopping-db
+BACKUP_DB_USER=shop_admin
+BACKUP_DB_NAME=online_shopping
+EOF
+expect_preflight "preflight_explicit_zero_retention_rejected" 1 "positive integer"
+expect_backup "backup_explicit_zero_retention_rejected" 1 "must be a positive integer"
+
+# D1c: explicit 5 -> honored identically at the 5-boundary: required = 200MiB * (5+2) + 512MiB.
+write_env <<EOF
+BACKUP_AGE_RECIPIENT=age1recipient
+BACKUP_RCLONE_REMOTE=proof-remote
+BACKUP_RCLONE_PATH=$TMP/remote
+BACKUP_LOCAL_DIR=$LOCAL_DIR
+BACKUP_LOCAL_RETENTION_COUNT=5
+BACKUP_DB_CONTAINER=online-shopping-db
+BACKUP_DB_USER=shop_admin
+BACKUP_DB_NAME=online_shopping
+EOF
+FIVE_REQUIRED=$(( 209715200 * 7 + 536870912 ))
+export FAKE_DF_AVAIL="$FIVE_REQUIRED"
+expect_preflight "preflight_explicit_five_retention_boundary" 0
+expect_backup "backup_explicit_five_retention_boundary" 0
+export FAKE_DF_AVAIL=$(( FIVE_REQUIRED - 1 ))
+expect_preflight "preflight_explicit_five_retention_below" 1
+expect_backup "backup_explicit_five_retention_below" 1 "insufficient_staging_space"
+
 echo
 echo "PASS: $PASS  FAIL: $FAIL"
 if (( FAIL > 0 )); then

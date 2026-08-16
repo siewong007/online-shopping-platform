@@ -92,10 +92,12 @@ export FAKEBIN_DIR="$FAKEBIN"
 export APP_DIR="$DEPLOY_APP_DIR"
 export RELEASE_DIR="$TMP/release"
 
-# Source the real deploy.sh (LF-normalized; the parser is copied next to it like a real install).
+# Source the real deploy.sh (LF-normalized; the parser and capacity/helper scripts are copied
+# next to it like a real install).
 LF_DEPLOY="$TMP/deploy.sh"
 sed 's/\r$//' "$ROOT/deploy/deploy.sh" > "$LF_DEPLOY"
 cp "$ROOT/deploy/backup-env-parser.sh" "$TMP/backup-env-parser.sh"
+cp "$ROOT/deploy/backup-capacity.sh" "$TMP/backup-capacity.sh"
 # shellcheck disable=SC1090,SC1091,SC1094
 source "$LF_DEPLOY"
 

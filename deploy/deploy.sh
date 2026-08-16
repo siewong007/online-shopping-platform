@@ -40,6 +40,16 @@ fi
 if ! command -v parse_backup_env >/dev/null 2>&1; then
   die "backup-env-parser.sh failed to load (parse_backup_env not defined); refusing to deploy"
 fi
+# D2/D6: the shared age-header recipient-stanza check (and capacity rule) live in
+# backup-capacity.sh, ONE definition used by backup.sh, restore.sh and deploy.sh.
+# shellcheck disable=SC1091,SC1090
+if ! source "$SCRIPT_DIR/backup-capacity.sh" 2>/dev/null \
+  && ! source "$APP_DIR/backup-capacity.sh" 2>/dev/null; then
+  die "backup-capacity.sh is missing next to deploy.sh and in $APP_DIR; refusing to deploy without the shared backup rules"
+fi
+if ! command -v age_header_has_recipient_stanza >/dev/null 2>&1; then
+  die "backup-capacity.sh failed to load (age_header_has_recipient_stanza not defined); refusing to deploy"
+fi
 
 ensure_secrets() {
   if [[ ! -f "$SECRETS_FILE" ]]; then
@@ -351,7 +361,11 @@ backup_existing_database() {
   mapfile -t inspect_lines <<<"${inspect_result:-}"
   inspect_rc="${inspect_lines[0]:-}"
   running="${inspect_lines[1]:-}"
-  inspect_err="${inspect_lines[2]:-}"
+  # D4: preserve ALL docker inspect stderr lines in the failure message — the mapfile element
+  # [2] is only the FIRST line. Extracting the raw remainder after the rc/running prefix keeps
+  # every stderr line (a daemon error often spans several lines).
+  inspect_err="${inspect_result#*$'\n'*$'\n'}"
+  inspect_err="${inspect_err%$'\n'}"
   if (( inspect_rc != 0 )); then
     if grep -qiE 'no such (object|container)' <<<"$inspect_err"; then
       log "no database container present yet; skipping pre-deploy backup"
@@ -441,13 +455,10 @@ backup_existing_database() {
   # the bech32 "age1..." recipient string NEVER appears in the file and the stanza changes per
   # encryption, so it cannot name the recipient; validate the stanza STRUCTURE so a non-age or
   # mis-addressed output is caught (the DR suite proves actual addressing by identity-decrypt).
-  # N10: the scan is limited to the age header area (ends at the first empty line); the body is
-  # encrypted binary and is never scanned. grep -q must NOT be used here — it exits on the first
-  # match, SIGPIPEs the awk still writing the rest of a large file, and pipefail then reports 141
-  # (a false negative). grep -c reads to EOF, so the result is deterministic.
-  local stanza_count
-  stanza_count=$(awk '/^$/{exit} {print}' "$backup_tmp" | grep -acE '^-> X25519 [A-Za-z0-9+/]{43,44}$')
-  if [[ "$stanza_count" == "0" ]]; then
+  # D2/D6: the shared helper (backup-capacity.sh) is set -e-safe and scans only the bounded
+  # header area; the OLD standalone `stanza_count=$(... | grep -c ...)` assignment aborted the
+  # script BEFORE this cleanup and diagnostics ran when zero lines matched (grep -c exits 1).
+  if ! age_header_has_recipient_stanza "$backup_tmp"; then
     rm -f "$backup_tmp"
     exec 8>&-
     die "pre-deploy backup failed: encrypted output does not contain a valid age X25519 recipient stanza; deployment aborted"

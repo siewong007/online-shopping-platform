@@ -173,7 +173,6 @@ validate_config() {
   fi
 
   : "${BACKUP_LOCAL_DIR:=$APP_DIR/backups}"
-  : "${BACKUP_LOCAL_RETENTION_COUNT:=3}"
   : "${BACKUP_REMOTE_DAILY_RETENTION:=14}"
   : "${BACKUP_REMOTE_WEEKLY_RETENTION:=8}"
   : "${BACKUP_WEEKLY_DAY:=7}"
@@ -184,10 +183,18 @@ validate_config() {
   : "${BACKUP_DB_NAME:=online_shopping}"
 
   local value
-  for key in BACKUP_LOCAL_RETENTION_COUNT BACKUP_REMOTE_DAILY_RETENTION BACKUP_REMOTE_WEEKLY_RETENTION; do
+  for key in BACKUP_REMOTE_DAILY_RETENTION BACKUP_REMOTE_WEEKLY_RETENTION; do
     value="${!key}"
     [[ "$value" =~ ^[0-9]+$ && "$value" -ge 1 ]] || fail "config" "$key must be a positive integer (got: $value)"
   done
+  # D1: the LOCAL retention count resolves through the SHARED default and rule
+  # (deploy/backup-capacity.sh), exactly like the preflight. The strict parser exports only keys
+  # PRESENT in backup.env, so an omitted key must mean the same default (3) for both components
+  # and an explicit value must be validated identically by both — the preflight can never pass on
+  # a retention count that a real backup run would reject or interpret differently.
+  if ! BACKUP_LOCAL_RETENTION_COUNT=$(resolve_backup_retention_count); then
+    fail "config" "BACKUP_LOCAL_RETENTION_COUNT must be a positive integer (got: ${BACKUP_LOCAL_RETENTION_COUNT:-<unset, shared default $BACKUP_DEFAULT_RETENTION_COUNT>})"
+  fi
   [[ "${BACKUP_WEEKLY_DAY}" =~ ^[1-7]$ ]] || fail "config" "BACKUP_WEEKLY_DAY must be 1 (Mon)..7 (Sun)"
 
   RTIMEOUT=()
@@ -292,16 +299,9 @@ encrypt_dump() {
   fi
 }
 
-# N10: only the age HEADER is scanned for the recipient stanza. The header ends at the first
-# empty line; the body is encrypted binary and must never be scanned for stanza text.
-age_header_has_recipient_stanza() {
-  local file="$1" matches
-  # NOTE: grep -q must NOT be used here — it exits on the first match, SIGPIPEs the awk that is
-  # still writing the rest of a large file, and pipefail then reports 141 (a false negative).
-  # grep -c reads to EOF, so the exit status is deterministic.
-  matches=$(awk '/^$/{exit} {print}' "$file" | grep -acE '^-> X25519 [A-Za-z0-9+/]{43,44}$')
-  [[ "$matches" != "0" ]]
-}
+# N10/D6: the shared recipient-stanza helper lives in deploy/backup-capacity.sh (ONE definition
+# across backup.sh, deploy.sh and restore.sh). It is set -e-safe and must be called as
+# `if ! age_header_has_recipient_stanza "$file"; then ...; fi`.
 
 verify_remote() {
   # $1 = local encrypted file, $2 = rclone destination (no trailing slash), $3 = local .sha256

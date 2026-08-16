@@ -100,6 +100,11 @@ if [[ "${FAKE_AGE_ENCRYPT_FAIL:-0}" == "1" && "$*" == *"--encrypt"* ]]; then
   echo "age: snapshot encryption failed" >&2
   exit 6
 fi
+if [[ "${FAKE_AGE_NO_STANZA:-0}" == "1" && "$*" == *"--encrypt"* ]]; then
+  # D2/D6: an age header WITHOUT a well-formed X25519 recipient stanza (e.g. passphrase mode).
+  printf 'age-encryption.org/v1\n-> nope-not-a-stanza\n' > "$out"
+  exit 0
+fi
 printf 'age-encryption.org/v1\n-> X25519 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n' > "$out"
 cat >> "$out"
 exit 0
@@ -413,6 +418,27 @@ else
   PASS=$((PASS + 1)); echo "ok:   snapshot_capacity_no_dump_or_restore"
 fi
 unset FAKE_DF_SNAP_AVAIL
+
+# D2/D6: a production snapshot whose age header has NO valid X25519 recipient stanza fails
+# CLOSED with safety_snapshot_failed and leaves NO snapshot artifact and NO .pre-restore temp
+# file. (Regression: the old standalone `stanza_count=$(... | grep -c ...)` assignment aborted
+# the script BEFORE the cleanup and fail() ran when grep -c exited 1 on zero matches.)
+rm -rf "$RESTORE_SNAPSHOT_DIR" && mkdir -p "$RESTORE_SNAPSHOT_DIR"
+export FAKE_AGE_NO_STANZA=1
+run "snapshot_no_stanza_fails_closed" "production snapshot with no X25519 stanza must fail closed" 1 "safety_snapshot_failed" \
+  --restore "$A" --container online-shopping-db --database online_shopping --db-user shop_admin \
+  --destroy-target --target-kind production --confirm-production "RESTORE online_shopping" --identity "$I"
+unset FAKE_AGE_NO_STANZA
+if find "$RESTORE_SNAPSHOT_DIR" -name 'pre-restore-*.dump.age' 2>/dev/null | grep -q .; then
+  echo "FAIL: snapshot_no_stanza_fails_closed — snapshot artifact left behind"; FAIL=$((FAIL+1))
+else
+  PASS=$((PASS + 1)); echo "ok:   snapshot_no_stanza_no_artifact"
+fi
+if find "$RESTORE_SNAPSHOT_DIR" -name '.pre-restore.*' 2>/dev/null | grep -q .; then
+  echo "FAIL: snapshot_no_stanza_fails_closed — .pre-restore temp file left behind"; FAIL=$((FAIL+1))
+else
+  PASS=$((PASS + 1)); echo "ok:   snapshot_no_stanza_no_temp_leftover"
+fi
 
 # N2: collision-safe snapshot names — two production runs in the same second must produce two
 # DISTINCT snapshot files, never overwrite. Each run stops right after the snapshot (decrypt

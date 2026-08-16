@@ -23,6 +23,9 @@ TARGET_PASSWORD="${TARGET_PASSWORD:-restore}"
 TARGET_DB="${TARGET_DB:-restore_proof}"
 POSTGRES_IMAGE="${POSTGRES_IMAGE:-postgres:19beta1}"
 TARGET_CONTAINER="${TARGET_CONTAINER:-online-shopping-restore-proof-neg}"
+# D5: the canonical production container identity, overridable ONLY by tests to prove the
+# fail-closed refusal when production cannot be resolved (the override never widens safety).
+RP_PROD_CONTAINER="${RP_PROD_CONTAINER:-online-shopping-db}"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BACKUP_SH="$REPO_ROOT/deploy/backup.sh"
@@ -36,17 +39,18 @@ FAIL=0
 
 assert_non_production_target() {
   local target="$1"
-  if [[ "$target" == "online-shopping-db" ]]; then
+  if [[ "$target" == "$RP_PROD_CONTAINER" ]]; then
     echo "ERROR: target container name '$target' is the canonical production container; refusing to run" >&2
     exit 1
   fi
   local target_id prod_id
   target_id=$(docker inspect --format '{{.Id}}' "$target" 2>/dev/null | tr -d ' \r\n' || true)
-  # N1: FAIL CLOSED — if the PRODUCTION container identity cannot be resolved, this run cannot
-  # prove the target is not production, so it refuses instead of assuming safety.
-  prod_id=$(docker inspect --format '{{.Id}}' online-shopping-db 2>/dev/null | tr -d ' \r\n' || true)
+  # N1/D5: FAIL CLOSED — if the PRODUCTION container identity cannot be resolved, this run cannot
+  # prove the target is not production, so it refuses instead of assuming safety. Runs BEFORE any
+  # docker rm/run.
+  prod_id=$(docker inspect --format '{{.Id}}' "$RP_PROD_CONTAINER" 2>/dev/null | tr -d ' \r\n' || true)
   if [[ -z "$prod_id" ]]; then
-    echo "ERROR: cannot resolve the production container 'online-shopping-db' by docker; refusing a restore that cannot prove its target is not production" >&2
+    echo "ERROR: cannot resolve the production container '$RP_PROD_CONTAINER' by docker; refusing a restore that cannot prove its target is not production" >&2
     exit 1
   fi
   if [[ -n "$target_id" && "$target_id" == "$prod_id" ]]; then
@@ -58,10 +62,10 @@ assert_non_production_target() {
 # shellcheck disable=SC2317,SC2329
 cleanup() {
   set +e
-  if [[ -n "${TARGET_CONTAINER:-}" && "$TARGET_CONTAINER" != "online-shopping-db" ]]; then
+  if [[ -n "${TARGET_CONTAINER:-}" && "$TARGET_CONTAINER" != "$RP_PROD_CONTAINER" ]]; then
     local target_id prod_id
     target_id=$(docker inspect --format '{{.Id}}' "$TARGET_CONTAINER" 2>/dev/null | tr -d ' \r\n' || true)
-    prod_id=$(docker inspect --format '{{.Id}}' online-shopping-db 2>/dev/null | tr -d ' \r\n' || true)
+    prod_id=$(docker inspect --format '{{.Id}}' "$RP_PROD_CONTAINER" 2>/dev/null | tr -d ' \r\n' || true)
     if [[ -z "$target_id" || -z "$prod_id" || "$target_id" != "$prod_id" ]]; then
       docker rm -f "$TARGET_CONTAINER" >/dev/null 2>&1 || true
     fi
@@ -337,6 +341,26 @@ expect_fail "rp_ledger_mismatch_fails" \
       TARGET_CONTAINER="$TARGET_CONTAINER" TARGET_USER="$TARGET_USER" TARGET_PASSWORD="$TARGET_PASSWORD" TARGET_DB="$TARGET_DB" \
       bash "$RESTORE_PROOF_SH"
 grep -qE 'migration|ledger|MISMATCH|mismatch' "$WORK/.out" || { echo "FAIL: ledger-mismatch case did not report a ledger/migration mismatch"; sed 's/^/      /' "$WORK/.out" | head -n 20; FAIL=$((FAIL+1)); }
+
+# --- case 10: D5 — production identity UNRESOLVABLE -> every proof script refuses BEFORE any
+# docker rm/run (mirrors restore.sh's fail-closed target_resolution_failed). RP_PROD_CONTAINER is
+# a TEST-ONLY override pointing at a name docker cannot resolve; the refusal must happen at the
+# very first assert, before any container is removed or created.
+echo "== case 10: proof scripts refuse when the production container cannot be resolved"
+expect_fail "rp_prod_unresolvable_restore_proof_refuses" \
+  env RP_ONLY_PARITY=1 \
+      RP_PROD_CONTAINER="online-shopping-db-does-not-exist" \
+      SOURCE_CONTAINER="$SOURCE_CONTAINER" SOURCE_USER="$SOURCE_USER" SOURCE_DB="$SOURCE_DB" SOURCE_PASSWORD="$SOURCE_PASSWORD" \
+      TARGET_CONTAINER="$TARGET_CONTAINER" TARGET_USER="$TARGET_USER" TARGET_PASSWORD="$TARGET_PASSWORD" TARGET_DB="$TARGET_DB" \
+      bash "$RESTORE_PROOF_SH"
+grep -q 'cannot resolve the production container' "$WORK/.out" \
+  || { echo "FAIL: restore-proof did not refuse with the resolution message"; sed 's/^/      /' "$WORK/.out" | head -n 20; FAIL=$((FAIL+1)); }
+
+expect_fail "rp_prod_unresolvable_atomicity_refuses" \
+  env RP_PROD_CONTAINER="online-shopping-db-does-not-exist" \
+      bash "$REPO_ROOT/scripts/test-restore-atomicity.sh"
+grep -q 'cannot resolve the production container' "$WORK/.out" \
+  || { echo "FAIL: test-restore-atomicity did not refuse with the resolution message"; sed 's/^/      /' "$WORK/.out" | head -n 20; FAIL=$((FAIL+1)); }
 
 echo
 echo "PASS: $PASS  FAIL: $FAIL"

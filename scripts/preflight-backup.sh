@@ -149,12 +149,23 @@ if [[ -d "$PREFLIGHT_LOCAL_DIR" && -w "$PREFLIGHT_LOCAL_DIR" ]]; then
   prior_unit=$(find "$PREFLIGHT_LOCAL_DIR" -maxdepth 1 -type f -name '*.dump.age' -printf '%s\n' 2>/dev/null | sort -rn | head -n 1 || true)
   [[ "$prior_unit" =~ ^[0-9]+$ ]] || prior_unit=""
   unit=$(estimate_backup_unit "$db_size" "$prior_unit")
-  required=$(required_backup_space "$unit" "${BACKUP_LOCAL_RETENTION_COUNT:-0}")
-  avail=$(filesystem_avail "$PREFLIGHT_LOCAL_DIR" || true)
-  if [[ "$avail" =~ ^[0-9]+$ ]] && (( avail >= required )); then
-    ok "free space: $(( avail / 1048576 )) MiB (need >= $(( required / 1048576 )) MiB)"
-  else
-    bad "free space on $PREFLIGHT_LOCAL_DIR below the shared backup capacity requirement ($(( required / 1048576 )) MiB, have ${avail:-unknown})"
+  # D1: the local retention count resolves through the SAME shared default/rule as backup.sh
+  # (deploy/backup-capacity.sh). The strict parser exports only keys PRESENT in backup.env, so an
+  # OMITTED BACKUP_LOCAL_RETENTION_COUNT must NOT be treated as 0 here while backup.sh reads the
+  # default of 3 — the preflight would pass below the real requirement. An explicit invalid value
+  # must fail here exactly like backup.sh rejects it, never silently diverge.
+  if ! retention_count=$(resolve_backup_retention_count); then
+    bad "BACKUP_LOCAL_RETENTION_COUNT must be a positive integer (got: ${BACKUP_LOCAL_RETENTION_COUNT:-<unset, shared default $BACKUP_DEFAULT_RETENTION_COUNT>}); backup.sh rejects it the same way"
+    retention_count=""
+  fi
+  if [[ -n "$retention_count" ]]; then
+    required=$(required_backup_space "$unit" "$retention_count")
+    avail=$(filesystem_avail "$PREFLIGHT_LOCAL_DIR" || true)
+    if [[ "$avail" =~ ^[0-9]+$ ]] && (( avail >= required )); then
+      ok "free space: $(( avail / 1048576 )) MiB (need >= $(( required / 1048576 )) MiB)"
+    else
+      bad "free space on $PREFLIGHT_LOCAL_DIR below the shared backup capacity requirement ($(( required / 1048576 )) MiB, have ${avail:-unknown})"
+    fi
   fi
 else
   bad "local backup dir not writable: $PREFLIGHT_LOCAL_DIR"

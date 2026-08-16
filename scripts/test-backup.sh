@@ -91,6 +91,10 @@ case "${FAKE_AGE_MODE:-ok}" in
   partial)
     printf 'age-encryption.org/v1\npartial' > "$out"
     exit 6 ;;
+  nostanza)
+    # D2/D6: an age header WITHOUT a well-formed X25519 recipient stanza (e.g. passphrase mode).
+    printf 'age-encryption.org/v1\n-> nope-not-a-stanza\n' > "$out"
+    exit 0 ;;
 esac
 printf 'age-encryption.org/v1\n-> X25519 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n' > "$out"
 cat >> "$out"
@@ -382,6 +386,27 @@ t_expect_fail "incomplete_file_never_becomes_backup" "expected nonzero + no fina
 if [[ "$(status_category)" != "encrypt_failed" ]]; then echo "FAIL: expected category encrypt_failed, got '$(status_category)'"; FAIL=$((FAIL+1)); fi
 if [[ -n "$(find "$CASE_TMP/local" -name '*.dump.age' 2>/dev/null)" ]]; then echo "FAIL: partial output looks like a backup"; FAIL=$((FAIL+1)); fi
 assert_no_backup_artifacts || { echo "FAIL: leftover staging dir after partial age"; FAIL=$((FAIL+1)); }
+
+# ------------------------------------------------------------------------------------------
+# 7b. D2/D6: age output with a header but NO valid X25519 recipient stanza -> encrypt_failed
+# (the old standalone `grep -c` assignment aborted before the fail() diagnostic), no artifacts
+# ------------------------------------------------------------------------------------------
+setup_case
+export FAKE_AGE_MODE=nostanza
+write_env <<EOF
+BACKUP_AGE_RECIPIENT=age1recipient
+BACKUP_RCLONE_REMOTE=proof-remote
+BACKUP_RCLONE_PATH=$CASE_TMP/remote
+BACKUP_LOCAL_DIR=$CASE_TMP/local
+BACKUP_DB_CONTAINER=online-shopping-db
+BACKUP_DB_USER=shop_admin
+BACKUP_DB_NAME=online_shopping
+EOF
+t_expect_fail "stanza_less_output_rejected" "expected nonzero + encrypt_failed + no artifacts" bash "$BACKUP_SH"
+if [[ "$(status_category)" != "encrypt_failed" ]]; then echo "FAIL: expected category encrypt_failed, got '$(status_category)'"; FAIL=$((FAIL+1)); fi
+if [[ -n "$(find "$CASE_TMP/local" -name '*.dump.age' 2>/dev/null)" ]]; then echo "FAIL: stanza-less output looks like a backup"; FAIL=$((FAIL+1)); fi
+assert_no_backup_artifacts || { echo "FAIL: leftover staging dir after stanza-less age output"; FAIL=$((FAIL+1)); }
+unset FAKE_AGE_MODE
 
 # ------------------------------------------------------------------------------------------
 # 8. rclone upload failure -> status error, valid local file KEPT (not deleted by retention)

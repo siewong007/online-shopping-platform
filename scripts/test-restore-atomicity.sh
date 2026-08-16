@@ -27,6 +27,9 @@ TARGET_USER="${TARGET_USER:-restore}"
 TARGET_PASSWORD="${TARGET_PASSWORD:-restore}"
 TARGET_DB="${TARGET_DB:-restore_proof}"
 POSTGRES_IMAGE="${POSTGRES_IMAGE:-postgres:19beta1}"
+# D5: the canonical production container identity, overridable ONLY by tests to prove the
+# fail-closed refusal when production cannot be resolved (the override never widens safety).
+RP_PROD_CONTAINER="${RP_PROD_CONTAINER:-online-shopping-db}"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RESTORE_SH="$REPO_ROOT/deploy/restore.sh"
@@ -36,17 +39,18 @@ chmod 0700 "$WORK"
 
 assert_non_production_target() {
   local target="$1"
-  if [[ "$target" == "online-shopping-db" ]]; then
+  if [[ "$target" == "$RP_PROD_CONTAINER" ]]; then
     echo "ERROR: target container name '$target' is the canonical production container; refusing to run" >&2
     exit 1
   fi
   local target_id prod_id
   target_id=$(docker inspect --format '{{.Id}}' "$target" 2>/dev/null | tr -d ' \r\n' || true)
-  # N1: FAIL CLOSED — if the PRODUCTION container identity cannot be resolved, this run cannot
-  # prove the target is not production, so it refuses instead of assuming safety.
-  prod_id=$(docker inspect --format '{{.Id}}' online-shopping-db 2>/dev/null | tr -d ' \r\n' || true)
+  # N1/D5: FAIL CLOSED — if the PRODUCTION container identity cannot be resolved, this run cannot
+  # prove the target is not production, so it refuses instead of assuming safety. Runs BEFORE any
+  # docker rm/run.
+  prod_id=$(docker inspect --format '{{.Id}}' "$RP_PROD_CONTAINER" 2>/dev/null | tr -d ' \r\n' || true)
   if [[ -z "$prod_id" ]]; then
-    echo "ERROR: cannot resolve the production container 'online-shopping-db' by docker; refusing a restore that cannot prove its target is not production" >&2
+    echo "ERROR: cannot resolve the production container '$RP_PROD_CONTAINER' by docker; refusing a restore that cannot prove its target is not production" >&2
     exit 1
   fi
   if [[ -n "$target_id" && "$target_id" == "$prod_id" ]]; then
@@ -58,10 +62,10 @@ assert_non_production_target() {
 # shellcheck disable=SC2317,SC2329
 cleanup() {
   set +e
-  if [[ -n "${TARGET_CONTAINER:-}" && "$TARGET_CONTAINER" != "online-shopping-db" ]]; then
+  if [[ -n "${TARGET_CONTAINER:-}" && "$TARGET_CONTAINER" != "$RP_PROD_CONTAINER" ]]; then
     local target_id prod_id
     target_id=$(docker inspect --format '{{.Id}}' "$TARGET_CONTAINER" 2>/dev/null | tr -d ' \r\n' || true)
-    prod_id=$(docker inspect --format '{{.Id}}' online-shopping-db 2>/dev/null | tr -d ' \r\n' || true)
+    prod_id=$(docker inspect --format '{{.Id}}' "$RP_PROD_CONTAINER" 2>/dev/null | tr -d ' \r\n' || true)
     if [[ -z "$target_id" || -z "$prod_id" || "$target_id" != "$prod_id" ]]; then
       docker rm -f "$TARGET_CONTAINER" >/dev/null 2>&1 || true
     fi
@@ -143,15 +147,14 @@ mapfile -t TOC_TABLES < <(docker exec -i "$TARGET_CONTAINER" pg_restore --list <
 echo "  archive table data entries: ${TOC_TABLES[*]:-none}"
 [[ "${#TOC_TABLES[@]}" -ge 2 ]] || { echo "FAIL: archive has fewer than 2 tables" >&2; exit 1; }
 
-FIRST_TBL="${TOC_TABLES[0]}"
 BLOCKER_TBL="${TOC_TABLES[1]}"
-if [[ "$BLOCKER_TBL" == "$FIRST_TBL" ]]; then
-  BLOCKER_TBL="${TOC_TABLES[-1]}"
-fi
 # pg_restore --clean issues table DROPs in REVERSE TOC order (most-dependent tables first), so
-# the LAST archive table is dropped FIRST and the FIRST archive table is dropped LAST. The
-# first-DROPPED table (LAST in the TOC) is therefore the strongest witness that the destructive
-# DROPs really executed: if any drop executes, this one is among the very first.
+# the LAST archive table is dropped FIRST. The first-DROPPED table (LAST in the TOC) is therefore
+# the strongest witness that the destructive DROPs really executed: if any drop executes, this
+# one is among the very first. (D8: the FIRST TOC table — dropped LAST — is deliberately NOT
+# asserted as a rollback witness: with the blocker failing mid-restore, pg_restore may never
+# reach it at all, so its presence proves nothing. The DDL probe below is the authoritative
+# proof that DROPs executed, and the full baseline parity proves they rolled back.)
 LAST_DROPPED_TBL="${TOC_TABLES[-1]}"
 echo "== first table to be dropped: $LAST_DROPPED_TBL ; blocker table: $BLOCKER_TBL"
 [[ -n "${BASELINE[$BLOCKER_TBL]:-}" ]] || { echo "FAIL: blocker table $BLOCKER_TBL not in baseline" >&2; exit 1; }
@@ -220,14 +223,9 @@ for tbl in "${!BASELINE[@]}"; do
     ATOMIC_FAIL=1
   fi
 done
-# The first table's DROP must have rolled back — it is the strongest proof.
-if [[ -n "${BASELINE[$FIRST_TBL]:-}" ]]; then
-  first_now=$(tgt_psql "SELECT count(*) FROM public.$FIRST_TBL")
-  if [[ "$first_now" != "${BASELINE[$FIRST_TBL]}" ]]; then
-    echo "FAIL: $FIRST_TBL was dropped and NOT rolled back" >&2
-    ATOMIC_FAIL=1
-  fi
-fi
+# D8: no FIRST_TBL special-case here — the DDL probe already proved DROPs executed, and the full
+# baseline parity above is the rollback proof. (The first TOC table is dropped LAST, so with the
+# blocker failing mid-restore it may never have been dropped at all; asserting it adds nothing.)
 
 docker rm -f "$TARGET_CONTAINER" >/dev/null 2>&1
 

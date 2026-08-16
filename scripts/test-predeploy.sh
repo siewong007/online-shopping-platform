@@ -33,7 +33,10 @@ printf '%s\n' "$*" >> "${FAKEBIN_DIR:-/nonexistent}/docker-argv.log"
 case "${1:-}" in
   inspect)
     if [[ "${FAKE_DOCKER_DOWN:-0}" == "1" ]]; then
-      echo "Cannot connect to the Docker daemon" >&2
+      # D4: a realistic daemon failure spans several stderr lines; the deploy must preserve ALL
+      # of them in the abort message (regression for the old head-first-line truncation).
+      echo "Cannot connect to the Docker daemon at unix:///var/run/docker.sock" >&2
+      echo "Is the docker daemon running on this host?" >&2
       exit 1
     fi
     if [[ "${FAKE_CONTAINER_ABSENT:-0}" == "1" ]]; then
@@ -68,6 +71,12 @@ if [[ "${FAKE_AGE_FAIL:-0}" == "1" ]]; then
   echo "age: encryption failed" >&2
   exit 3
 fi
+if [[ "${FAKE_AGE_NO_STANZA:-0}" == "1" ]]; then
+  # D2/D6: an age header WITHOUT a well-formed X25519 recipient stanza (e.g. passphrase mode).
+  printf 'age-encryption.org/v1\n-> nope-not-a-stanza\n' > "$out"
+  cat >> "$out"
+  exit 0
+fi
 printf 'age-encryption.org/v1\n-> X25519 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n' > "$out"
 cat >> "$out"
 exit 0
@@ -84,7 +93,7 @@ setup_case() {
   export DEPLOY_BACKUP_DIR="$CASE_TMP/app/backups"
   export DEPLOY_LOCK_FILE="$CASE_TMP/app/deploy.lock"
   mkdir -p "$DEPLOY_APP_DIR" "$DEPLOY_BACKUP_DIR"
-  unset FAKE_DOCKER_DOWN FAKE_CONTAINER_ABSENT FAKE_DB_RUNNING FAKE_PGDUMP_FAIL FAKE_AGE_FAIL || true
+  unset FAKE_DOCKER_DOWN FAKE_CONTAINER_ABSENT FAKE_DB_RUNNING FAKE_PGDUMP_FAIL FAKE_AGE_FAIL FAKE_AGE_NO_STANZA || true
   : > "$FAKEBIN/docker-argv.log"
 }
 
@@ -100,10 +109,11 @@ run_backup() {
   set +e
   (
     # Source deploy.sh to load backup_existing_database
-    # Normalize CRLF; the source guard requires backup-env-parser.sh NEXT TO the copied
-    # deploy.sh (it cannot see the real repo layout).
+    # Normalize CRLF; the source guard requires backup-env-parser.sh AND backup-capacity.sh NEXT
+    # TO the copied deploy.sh (it cannot see the real repo layout).
     sed 's/\r$//' "$DEPLOY_SH" > "$CASE_TMP/deploy_clean.sh"
     cp "$ROOT/deploy/backup-env-parser.sh" "$CASE_TMP/backup-env-parser.sh"
+    cp "$ROOT/deploy/backup-capacity.sh" "$CASE_TMP/backup-capacity.sh"
     # shellcheck disable=SC1090,SC1091
     source "$CASE_TMP/deploy_clean.sh"
     backup_existing_database
@@ -179,6 +189,10 @@ setup_case
 export FAKE_DOCKER_DOWN=1
 run_backup "docker_down_aborts" 1 "cannot reach the docker daemon"
 
+# 7b. D4: docker inspect stderr spans MULTIPLE lines — ALL of them must appear in the abort
+# message (the old code truncated to the first stderr line).
+run_backup "inspect_stderr_all_lines_preserved" 1 "Is the docker daemon running on this host"
+
 # 8. pg_dump failure -> aborts, exit 1, no partial files
 setup_case
 export FAKE_PGDUMP_FAIL=1
@@ -200,6 +214,20 @@ run_backup "age_fail_aborts" 1 "age encryption failed"
 if [[ -n "$(find "$DEPLOY_BACKUP_DIR" -type f 2>/dev/null)" ]]; then
   echo "FAIL: partial archive left behind on age failure"; FAIL=$((FAIL+1))
 fi
+
+# 9b. D2/D6: age output with NO valid X25519 recipient stanza -> aborts with the stanza message
+# (grep -c returning 1 used to abort the script BEFORE this diagnostic/cleanup) and no partial
+# files remain.
+setup_case
+export FAKE_AGE_NO_STANZA=1
+write_env <<EOF
+BACKUP_AGE_RECIPIENT=age1predeployrecipient
+EOF
+run_backup "stanza_less_output_aborts" 1 "valid age X25519 recipient stanza"
+if [[ -n "$(find "$DEPLOY_BACKUP_DIR" -type f 2>/dev/null)" ]]; then
+  echo "FAIL: partial archive left behind on stanza-less output"; FAIL=$((FAIL+1))
+fi
+unset FAKE_AGE_NO_STANZA
 
 # 10. Retention keeps 3 newest, prunes older
 setup_case
