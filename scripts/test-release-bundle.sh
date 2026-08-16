@@ -116,6 +116,32 @@ else
   echo "ok:   verify_release_payload rejects bundle missing preflight-backup.sh"
 fi
 
+# N3 negative: an EMPTY manifest must fail the independent hard-minimum count, even though every
+# bundle file (images, initdb, SHA256SUMS) is present.
+rm -rf "$BAD_BUNDLE"
+cp -r "$BUNDLE_DIR" "$BAD_BUNDLE"
+: > "$BAD_BUNDLE/release-components.txt"
+if ( verify_release_payload "$BAD_BUNDLE" >/dev/null 2>&1 ); then
+  FAIL=$((FAIL + 1))
+  echo "FAIL: verify_release_payload accepted bundle with an empty manifest"
+else
+  PASS=$((PASS + 1))
+  echo "ok:   verify_release_payload rejects bundle with an empty manifest"
+fi
+
+# N3 negative: a truncated manifest (only the first entry) must fail the hard-minimum count.
+rm -rf "$BAD_BUNDLE"
+cp -r "$BUNDLE_DIR" "$BAD_BUNDLE"
+head -n 1 "$BAD_BUNDLE/release-components.txt" > "$BAD_BUNDLE/release-components.txt.tmp"
+mv "$BAD_BUNDLE/release-components.txt.tmp" "$BAD_BUNDLE/release-components.txt"
+if ( verify_release_payload "$BAD_BUNDLE" >/dev/null 2>&1 ); then
+  FAIL=$((FAIL + 1))
+  echo "FAIL: verify_release_payload accepted bundle with a truncated manifest"
+else
+  PASS=$((PASS + 1))
+  echo "ok:   verify_release_payload rejects bundle with a truncated manifest"
+fi
+
 echo "== 4. Testing runtime parser resolution in bundle deploy.sh =="
 # Running bash deploy.sh in the bundle directory must load backup-env-parser.sh and show usage / check EUID
 OUT=$(bash "$BUNDLE_DIR/deploy.sh" 2>&1 || true)
@@ -133,9 +159,11 @@ mkdir -p "$MOCK_APP"
 # Simulate install_backup_components
 install -m 0750 "$BUNDLE_DIR/backup.sh" "$MOCK_APP/backup.sh"
 install -m 0750 "$BUNDLE_DIR/restore.sh" "$MOCK_APP/restore.sh"
+install -m 0644 "$BUNDLE_DIR/backup-capacity.sh" "$MOCK_APP/backup-capacity.sh"
 install -m 0644 "$BUNDLE_DIR/backup-env-parser.sh" "$MOCK_APP/backup-env-parser.sh"
 install -m 0750 "$BUNDLE_DIR/preflight-backup.sh" "$MOCK_APP/preflight-backup.sh"
 install -m 0750 "$BUNDLE_DIR/check-backup-health.sh" "$MOCK_APP/check-backup-health.sh"
+install -m 0750 "$BUNDLE_DIR/notify-backup-failure.sh" "$MOCK_APP/notify-backup-failure.sh"
 install -m 0644 "$BUNDLE_DIR/backup.env.example" "$MOCK_APP/backup.env.example"
 
 # Mock config
@@ -154,6 +182,17 @@ if grep -q "config parses strictly" <<<"$OUT_PREFLIGHT"; then
 else
   FAIL=$((FAIL + 1))
   echo "FAIL: installed preflight-backup.sh failed to load parser: $OUT_PREFLIGHT"
+fi
+
+# Prove installed notify-backup-failure.sh runs from the installed layout and writes the marker
+# with no configured hook (N4: marker + hook=<none> is the actionable no-hook state).
+OUT_NOTIFY=$(NOTIFY_APP_DIR="$MOCK_APP" NOTIFY_STATUS_FILE="$MOCK_APP/backup-status.json" bash "$MOCK_APP/notify-backup-failure.sh" 2>&1 || true)
+if [[ -f "$MOCK_APP/backup-failure.marker" ]] && grep -q "hook=<none>" "$MOCK_APP/backup-failure.marker"; then
+  PASS=$((PASS + 1))
+  echo "ok:   installed notify-backup-failure.sh writes marker without hook"
+else
+  FAIL=$((FAIL + 1))
+  echo "FAIL: installed notify-backup-failure.sh marker missing: $OUT_NOTIFY"
 fi
 
 echo

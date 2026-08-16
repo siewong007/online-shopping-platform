@@ -243,6 +243,35 @@ else
   PASS=$((PASS + 1)); echo "ok:   predeploy_password_value_never_in_argv"
 fi
 
+# 12. N6: docker inspect stderr goes to a self-cleaning mktemp file, NEVER to the FIXED path
+# /tmp/.deploy-inspect.err. Regression: pre-create that fixed path as a SYMLINK to a canary file.
+# OLD code opened it with `2>` (O_TRUNC through the symlink) and then rm'd the symlink — the
+# canary's CONTENT is the discriminator: it survives only if the fixed path was never touched.
+CANARY="$TMP/inspect-canary.txt"
+printf 'CANARY-PAYLOAD-8899\n' > "$CANARY"
+rm -f /tmp/.deploy-inspect.err
+ln -s "$CANARY" /tmp/.deploy-inspect.err
+setup_case
+write_env <<EOF
+BACKUP_AGE_RECIPIENT=age1predeployrecipient
+EOF
+run_backup "inspect_fixed_path_never_touched" 0 "Encrypted pre-deploy backup ready"
+if [[ "$(cat "$CANARY" 2>/dev/null || true)" == "CANARY-PAYLOAD-8899" ]]; then
+  PASS=$((PASS + 1)); echo "ok:   inspect_canary_content_intact"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: /tmp/.deploy-inspect.err (or its target) was written through — canary content destroyed"
+fi
+# The fixed path may legitimately still exist (the new code never touches it); what must hold is
+# that a deploy never CREATES it. Remove the canary symlink and re-run: the path must stay absent.
+rm -f /tmp/.deploy-inspect.err
+run_backup "inspect_fixed_path_never_recreated" 0 "Encrypted pre-deploy backup ready"
+if [[ -e /tmp/.deploy-inspect.err ]]; then
+  FAIL=$((FAIL + 1)); echo "FAIL: /tmp/.deploy-inspect.err was re-created by the deploy"
+else
+  PASS=$((PASS + 1)); echo "ok:   inspect_fixed_path_absent_after_run"
+fi
+rm -f /tmp/.deploy-inspect.err "$CANARY"
+
 echo
 echo "PASS: $PASS  FAIL: $FAIL"
 if (( FAIL > 0 )); then

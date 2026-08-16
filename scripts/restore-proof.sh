@@ -67,8 +67,15 @@ assert_non_production_target() {
   fi
   local target_id prod_id
   target_id=$(docker inspect --format '{{.Id}}' "$target" 2>/dev/null | tr -d ' \r\n' || true)
+  # N1: FAIL CLOSED — if the PRODUCTION container identity cannot be resolved, this run cannot
+  # prove the target is not production, so it refuses instead of assuming safety. A resolution
+  # failure is NEVER interpreted as "production is absent".
   prod_id=$(docker inspect --format '{{.Id}}' online-shopping-db 2>/dev/null | tr -d ' \r\n' || true)
-  if [[ -n "$target_id" && -n "$prod_id" && "$target_id" == "$prod_id" ]]; then
+  if [[ -z "$prod_id" ]]; then
+    echo "ERROR: cannot resolve the production container 'online-shopping-db' by docker; refusing a restore that cannot prove its target is not production" >&2
+    exit 1
+  fi
+  if [[ -n "$target_id" && "$target_id" == "$prod_id" ]]; then
     echo "ERROR: target container '$target' resolves to the production container ID; refusing to run" >&2
     exit 1
   fi

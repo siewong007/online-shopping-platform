@@ -42,8 +42,14 @@ assert_non_production_target() {
   fi
   local target_id prod_id
   target_id=$(docker inspect --format '{{.Id}}' "$target" 2>/dev/null | tr -d ' \r\n' || true)
+  # N1: FAIL CLOSED — if the PRODUCTION container identity cannot be resolved, this run cannot
+  # prove the target is not production, so it refuses instead of assuming safety.
   prod_id=$(docker inspect --format '{{.Id}}' online-shopping-db 2>/dev/null | tr -d ' \r\n' || true)
-  if [[ -n "$target_id" && -n "$prod_id" && "$target_id" == "$prod_id" ]]; then
+  if [[ -z "$prod_id" ]]; then
+    echo "ERROR: cannot resolve the production container 'online-shopping-db' by docker; refusing a restore that cannot prove its target is not production" >&2
+    exit 1
+  fi
+  if [[ -n "$target_id" && "$target_id" == "$prod_id" ]]; then
     echo "ERROR: target container '$target' resolves to the production container ID; refusing to run" >&2
     exit 1
   fi
@@ -143,9 +149,11 @@ if [[ "$BLOCKER_TBL" == "$FIRST_TBL" ]]; then
   BLOCKER_TBL="${TOC_TABLES[-1]}"
 fi
 # pg_restore --clean issues table DROPs in REVERSE TOC order (most-dependent tables first), so
-# the LAST archive table is dropped FIRST and the FIRST archive table is dropped LAST.
-DROP_FIRST_TBL="${TOC_TABLES[-1]}"
-echo "== first table to be dropped: $DROP_FIRST_TBL ; blocker table: $BLOCKER_TBL"
+# the LAST archive table is dropped FIRST and the FIRST archive table is dropped LAST. The
+# first-DROPPED table (LAST in the TOC) is therefore the strongest witness that the destructive
+# DROPs really executed: if any drop executes, this one is among the very first.
+LAST_DROPPED_TBL="${TOC_TABLES[-1]}"
+echo "== first table to be dropped: $LAST_DROPPED_TBL ; blocker table: $BLOCKER_TBL"
 [[ -n "${BASELINE[$BLOCKER_TBL]:-}" ]] || { echo "FAIL: blocker table $BLOCKER_TBL not in baseline" >&2; exit 1; }
 
 echo "== creating a dependent VIEW on $BLOCKER_TBL so its DROP fails mid-restore"

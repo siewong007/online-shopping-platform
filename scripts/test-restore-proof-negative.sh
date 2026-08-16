@@ -42,8 +42,14 @@ assert_non_production_target() {
   fi
   local target_id prod_id
   target_id=$(docker inspect --format '{{.Id}}' "$target" 2>/dev/null | tr -d ' \r\n' || true)
+  # N1: FAIL CLOSED — if the PRODUCTION container identity cannot be resolved, this run cannot
+  # prove the target is not production, so it refuses instead of assuming safety.
   prod_id=$(docker inspect --format '{{.Id}}' online-shopping-db 2>/dev/null | tr -d ' \r\n' || true)
-  if [[ -n "$target_id" && -n "$prod_id" && "$target_id" == "$prod_id" ]]; then
+  if [[ -z "$prod_id" ]]; then
+    echo "ERROR: cannot resolve the production container 'online-shopping-db' by docker; refusing a restore that cannot prove its target is not production" >&2
+    exit 1
+  fi
+  if [[ -n "$target_id" && "$target_id" == "$prod_id" ]]; then
     echo "ERROR: target container '$target' resolves to the production container ID; refusing to run" >&2
     exit 1
   fi
@@ -141,6 +147,31 @@ expect_fail() {
   fi
 }
 
+# N7: shared helper — fresh app/local/remote + a REAL backup of the source database; prints the
+# archive path AND the remote path of the same archive.
+make_archive() {
+  rm -rf "$APP_DIR" "$LOCAL_DIR" "$REMOTE_PATH"
+  mkdir -p "$APP_DIR" "$LOCAL_DIR" "$REMOTE_PATH"
+  write_env <<EOF
+BACKUP_AGE_RECIPIENT=$RECIPIENT
+BACKUP_RCLONE_REMOTE=$REMOTE_NAME
+BACKUP_RCLONE_PATH=$REMOTE_PATH
+BACKUP_LOCAL_DIR=$LOCAL_DIR
+BACKUP_LOCAL_RETENTION_COUNT=2
+BACKUP_REMOTE_DAILY_RETENTION=2
+BACKUP_REMOTE_WEEKLY_RETENTION=1
+BACKUP_WEEKLY_DAY=7
+BACKUP_DB_CONTAINER=$SOURCE_CONTAINER
+BACKUP_DB_USER=$SOURCE_USER
+BACKUP_DB_NAME=$SOURCE_DB
+EOF
+  bash "$BACKUP_SH" >/dev/null 2>&1 || { echo "FAIL: backup.sh failed in case setup" >&2; exit 1; }
+  local name
+  name=$(sed -n 's/.*"filename": "\([^"]*\)".*/\1/p' "$APP_DIR/backup-status.json" | head -n 1)
+  [[ -f "$LOCAL_DIR/$name" ]] || { echo "FAIL: archive missing after backup" >&2; exit 1; }
+  printf '%s\n' "$LOCAL_DIR/$name"
+}
+
 # --- case 1: empty target ----------------------------------------------------------------------
 echo "== case 1: restore proof against an EMPTY target must fail"
 start_target
@@ -213,6 +244,99 @@ else
   FAIL=$((FAIL + 1)); echo "FAIL: rp_wrong_source_records_dump_failed (status: $(cat "$APP_DIR/backup-status.json" 2>/dev/null || echo missing))"
 fi
 grep -q '"status": "ok"' "$APP_DIR/backup-status.json" && { echo "FAIL: wrong-source run left a stale ok"; FAIL=$((FAIL+1)); }
+
+# --- case 4: wrong identity ----------------------------------------------------------------------
+echo "== case 4: restore with a WRONG age identity must fail at decrypt"
+ARCHIVE4="$(make_archive)"
+start_target
+age-keygen -o "$WORK/wrong-identity.txt" >/dev/null 2>&1
+chmod 0600 "$WORK/wrong-identity.txt"
+expect_fail "rp_wrong_identity_fails" \
+  env PGPASSWORD="$TARGET_PASSWORD" bash "$RESTORE_SH" --restore "$ARCHIVE4" \
+      --container "$TARGET_CONTAINER" --database "$TARGET_DB" --db-user "$TARGET_USER" \
+      --identity "$WORK/wrong-identity.txt" --destroy-target --target-kind isolated
+grep -q 'decrypt_failed' "$WORK/.out" || { echo "FAIL: wrong-identity case did not report decrypt_failed"; sed 's/^/      /' "$WORK/.out" | head -n 20; FAIL=$((FAIL+1)); }
+
+# --- case 5: corrupted remote archive -------------------------------------------------------------
+echo "== case 5: a CORRUPTED remote archive (provider-side damage) must fail"
+ARCHIVE5="$(make_archive)"
+# Corrupt the REMOTE copy (the object the provider actually holds) and re-download it.
+REMOTE5="$REMOTE_PATH/$(basename "$ARCHIVE5")"
+printf 'CORRUPTION-APPENDED-BY-PROVIDER\n' >> "$REMOTE5"
+rclone copy --contimeout 15s --timeout 120s "$REMOTE_NAME:$REMOTE_PATH/$(basename "$ARCHIVE5")" "$WORK/download5/"
+start_target
+expect_fail "rp_corrupted_remote_fails" \
+  env PGPASSWORD="$TARGET_PASSWORD" bash "$RESTORE_SH" --restore "$WORK/download5/$(basename "$ARCHIVE5")" \
+      --container "$TARGET_CONTAINER" --database "$TARGET_DB" --db-user "$TARGET_USER" \
+      --identity "$WORK/identity.txt" --destroy-target --target-kind isolated
+grep -qE 'decrypt_failed|archive_not_restorable' "$WORK/.out" || { echo "FAIL: corrupted-remote case did not report decrypt_failed/archive_not_restorable"; sed 's/^/      /' "$WORK/.out" | head -n 20; FAIL=$((FAIL+1)); }
+
+# --- case 6: truncated remote archive -------------------------------------------------------------
+echo "== case 6: a TRUNCATED remote archive must fail"
+ARCHIVE6="$(make_archive)"
+head -c 100 "$REMOTE_PATH/$(basename "$ARCHIVE6")" > "$WORK/truncated6.dump.age"
+start_target
+expect_fail "rp_truncated_remote_fails" \
+  env PGPASSWORD="$TARGET_PASSWORD" bash "$RESTORE_SH" --restore "$WORK/truncated6.dump.age" \
+      --container "$TARGET_CONTAINER" --database "$TARGET_DB" --db-user "$TARGET_USER" \
+      --identity "$WORK/identity.txt" --destroy-target --target-kind isolated
+grep -qE 'decrypt_failed|archive_not_restorable' "$WORK/.out" || { echo "FAIL: truncated-remote case did not report decrypt_failed/archive_not_restorable"; sed 's/^/      /' "$WORK/.out" | head -n 20; FAIL=$((FAIL+1)); }
+
+# --- case 7: same row counts, different content ----------------------------------------------------
+echo "== case 7: SAME row counts but different content must fail the content fingerprint"
+ARCHIVE7="$(make_archive)"
+start_target
+PGPASSWORD="$TARGET_PASSWORD" bash "$RESTORE_SH" --restore "$ARCHIVE7" \
+  --container "$TARGET_CONTAINER" --database "$TARGET_DB" --db-user "$TARGET_USER" \
+  --identity "$WORK/identity.txt" --destroy-target --target-kind isolated >/dev/null
+PGPASSWORD="$TARGET_PASSWORD" docker exec -e PGPASSWORD "$TARGET_CONTAINER" \
+  psql -v ON_ERROR_STOP=1 -U "$TARGET_USER" -d "$TARGET_DB" \
+  -c "UPDATE public.products SET source_item_code = source_item_code || '-content-mutated-' || id::text" >/dev/null
+expect_fail "rp_same_count_content_changed_fails" \
+  env RP_ONLY_PARITY=1 \
+      SOURCE_CONTAINER="$SOURCE_CONTAINER" SOURCE_USER="$SOURCE_USER" SOURCE_DB="$SOURCE_DB" SOURCE_PASSWORD="$SOURCE_PASSWORD" \
+      TARGET_CONTAINER="$TARGET_CONTAINER" TARGET_USER="$TARGET_USER" TARGET_PASSWORD="$TARGET_PASSWORD" TARGET_DB="$TARGET_DB" \
+      bash "$RESTORE_PROOF_SH"
+grep -qE 'MISMATCH|mismatch' "$WORK/.out" || { echo "FAIL: same-count-content case did not report a parity mismatch"; sed 's/^/      /' "$WORK/.out" | head -n 20; FAIL=$((FAIL+1)); }
+
+# --- case 8: schema mismatch ----------------------------------------------------------------------
+echo "== case 8: a SCHEMA mismatch (column dropped from products) must fail"
+ARCHIVE8="$(make_archive)"
+start_target
+PGPASSWORD="$TARGET_PASSWORD" bash "$RESTORE_SH" --restore "$ARCHIVE8" \
+  --container "$TARGET_CONTAINER" --database "$TARGET_DB" --db-user "$TARGET_USER" \
+  --identity "$WORK/identity.txt" --destroy-target --target-kind isolated >/dev/null
+# Drop the first non-id column of products — row counts stay identical; the schema surface differs.
+DROPPED_COL=$(PGPASSWORD="$TARGET_PASSWORD" docker exec -e PGPASSWORD "$TARGET_CONTAINER" \
+  psql -At -v ON_ERROR_STOP=1 -U "$TARGET_USER" -d "$TARGET_DB" \
+  -c "SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name='products' AND column_name <> 'id' ORDER BY ordinal_position LIMIT 1" | tr -d ' \r')
+[[ -n "$DROPPED_COL" ]] || { echo "FAIL: no droppable column found in products" >&2; exit 1; }
+PGPASSWORD="$TARGET_PASSWORD" docker exec -e PGPASSWORD "$TARGET_CONTAINER" \
+  psql -v ON_ERROR_STOP=1 -U "$TARGET_USER" -d "$TARGET_DB" \
+  -c "DO \$\$ BEGIN EXECUTE 'ALTER TABLE public.products DROP COLUMN \"' || '$DROPPED_COL' || '\"'; END \$\$;" >/dev/null
+expect_fail "rp_schema_mismatch_fails" \
+  env RP_ONLY_PARITY=1 \
+      SOURCE_CONTAINER="$SOURCE_CONTAINER" SOURCE_USER="$SOURCE_USER" SOURCE_DB="$SOURCE_DB" SOURCE_PASSWORD="$SOURCE_PASSWORD" \
+      TARGET_CONTAINER="$TARGET_CONTAINER" TARGET_USER="$TARGET_USER" TARGET_PASSWORD="$TARGET_PASSWORD" TARGET_DB="$TARGET_DB" \
+      bash "$RESTORE_PROOF_SH"
+grep -qE 'schema|column|MISMATCH|mismatch' "$WORK/.out" || { echo "FAIL: schema-mismatch case did not report a schema/parity mismatch"; sed 's/^/      /' "$WORK/.out" | head -n 20; FAIL=$((FAIL+1)); }
+
+# --- case 9: migration-ledger mismatch -------------------------------------------------------------
+echo "== case 9: a MIGRATION-LEDGER mismatch must fail"
+ARCHIVE9="$(make_archive)"
+start_target
+PGPASSWORD="$TARGET_PASSWORD" bash "$RESTORE_SH" --restore "$ARCHIVE9" \
+  --container "$TARGET_CONTAINER" --database "$TARGET_DB" --db-user "$TARGET_USER" \
+  --identity "$WORK/identity.txt" --destroy-target --target-kind isolated >/dev/null
+PGPASSWORD="$TARGET_PASSWORD" docker exec -e PGPASSWORD "$TARGET_CONTAINER" \
+  psql -v ON_ERROR_STOP=1 -U "$TARGET_USER" -d "$TARGET_DB" \
+  -c "DELETE FROM public.app_schema_migrations WHERE version = (SELECT min(version) FROM public.app_schema_migrations)" >/dev/null
+expect_fail "rp_ledger_mismatch_fails" \
+  env RP_ONLY_PARITY=1 \
+      SOURCE_CONTAINER="$SOURCE_CONTAINER" SOURCE_USER="$SOURCE_USER" SOURCE_DB="$SOURCE_DB" SOURCE_PASSWORD="$SOURCE_PASSWORD" \
+      TARGET_CONTAINER="$TARGET_CONTAINER" TARGET_USER="$TARGET_USER" TARGET_PASSWORD="$TARGET_PASSWORD" TARGET_DB="$TARGET_DB" \
+      bash "$RESTORE_PROOF_SH"
+grep -qE 'migration|ledger|MISMATCH|mismatch' "$WORK/.out" || { echo "FAIL: ledger-mismatch case did not report a ledger/migration mismatch"; sed 's/^/      /' "$WORK/.out" | head -n 20; FAIL=$((FAIL+1)); }
 
 echo
 echo "PASS: $PASS  FAIL: $FAIL"

@@ -3,4 +3,13 @@
 *.sh text eol=lf
 *.bash text eol=lf
 
+# N13: the remaining bundle components and CI manifests are also LF-normalized (unit files and
+# systemd *.service/timer files with CRLF would fail to load; YAML and *.txt with CRLF break
+# sha256sum --check on Windows checkouts).
+*.service text eol=lf
+*.timer text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.txt text eol=lf
+
 # The two executable backup/restore helpers (also *.sh) are covered by the rule above.

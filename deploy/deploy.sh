@@ -97,9 +97,10 @@ LOGROTATE
 }
 
 install_backup_components() {
-  # Installs the encrypted off-server backup suite (backup.sh, restore.sh, backup-env-parser.sh,
-  # preflight-backup.sh, check-backup-health.sh, systemd service/timer units, config template)
-  # shipped in the release bundle (enforced by verify_release_payload via release-components.txt).
+  # Installs the encrypted off-server backup suite (backup.sh, backup-capacity.sh, restore.sh,
+  # backup-env-parser.sh, preflight-backup.sh, check-backup-health.sh, notify-backup-failure.sh,
+  # systemd service/timer units, config template) shipped in the release bundle (enforced by
+  # verify_release_payload via release-components.txt).
   #
   # H3 failure policy (documented): a backup-component INSTALL failure is never allowed to turn a
   # safe application deployment into an uncontrolled shell abort. Each failure is caught, reported
@@ -112,17 +113,14 @@ install_backup_components() {
   # H5: merely enabling the timer is reported as "timer ACTIVE; verification pending" — the
   # ACTIVE/VERIFIED claim is only made after a fresh, verified off-server backup in
   # verify_backup_components(). The backup-HEALTH timer is enabled whenever the backup timer is.
-  if [[ ! -f "$RELEASE_DIR/backup.sh" ]]; then
-    log "release contains no backup components; scheduled encrypted backups unchanged"
-    return 0
-  fi
-
   log "Installing encrypted backup components"
   if ! install -m 0750 "$RELEASE_DIR/backup.sh" "$APP_DIR/backup.sh" \
     || ! install -m 0750 "$RELEASE_DIR/restore.sh" "$APP_DIR/restore.sh" \
+    || ! install -m 0644 "$RELEASE_DIR/backup-capacity.sh" "$APP_DIR/backup-capacity.sh" \
     || ! install -m 0644 "$RELEASE_DIR/backup-env-parser.sh" "$APP_DIR/backup-env-parser.sh" \
     || ! install -m 0750 "$RELEASE_DIR/preflight-backup.sh" "$APP_DIR/preflight-backup.sh" \
     || ! install -m 0750 "$RELEASE_DIR/check-backup-health.sh" "$APP_DIR/check-backup-health.sh" \
+    || ! install -m 0750 "$RELEASE_DIR/notify-backup-failure.sh" "$APP_DIR/notify-backup-failure.sh" \
     || ! install -m 0644 "$RELEASE_DIR/backup.env.example" "$APP_DIR/backup.env.example"; then
     log "WARNING: failed to install the encrypted backup scripts under $APP_DIR"
     log "         scheduled encrypted backups are NOT AVAILABLE; the application deployment continues"
@@ -132,7 +130,8 @@ install_backup_components() {
   if ! install -m 0644 "$RELEASE_DIR/online-shopping-backup.service" "$SYSTEMD_DIR/online-shopping-backup.service" \
     || ! install -m 0644 "$RELEASE_DIR/online-shopping-backup.timer" "$SYSTEMD_DIR/online-shopping-backup.timer" \
     || ! install -m 0644 "$RELEASE_DIR/online-shopping-backup-health.service" "$SYSTEMD_DIR/online-shopping-backup-health.service" \
-    || ! install -m 0644 "$RELEASE_DIR/online-shopping-backup-health.timer" "$SYSTEMD_DIR/online-shopping-backup-health.timer"; then
+    || ! install -m 0644 "$RELEASE_DIR/online-shopping-backup-health.timer" "$SYSTEMD_DIR/online-shopping-backup-health.timer" \
+    || ! install -m 0644 "$RELEASE_DIR/online-shopping-backup-notify.service" "$SYSTEMD_DIR/online-shopping-backup-notify.service"; then
     log "WARNING: failed to install the backup systemd units into $SYSTEMD_DIR"
     log "         scheduled encrypted backups are NOT ACTIVE; the application deployment continues"
     return 0
@@ -333,13 +332,26 @@ backup_existing_database() {
   # inspection failure. A daemon problem must NEVER silently skip the required pre-deploy backup.
   # The inspect exit status (not a merged stdout+stderr text) drives the classification: success
   # yields the running state on stdout; failure routes stderr separately.
-  local running inspect_rc inspect_err
+  #
+  # N6: docker inspect's stderr is captured into a mktemp file (0600, unpredictable name) inside
+  # a self-cleaning subshell. The FIXED path /tmp/.deploy-inspect.err no longer exists, so a
+  # pre-existing symlink or file at that path can never be followed or overwritten by the deploy.
+  local running inspect_rc inspect_err inspect_result inspect_lines
   set +e
-  running=$(docker inspect --format '{{.State.Running}}' online-shopping-db 2>/tmp/.deploy-inspect.err)
-  inspect_rc=$?
+  inspect_result=$({
+    set +e
+    err_tmp=$(mktemp "${TMPDIR:-/tmp}/deploy-inspect.XXXXXX")
+    running=$(docker inspect --format '{{.State.Running}}' online-shopping-db 2>"$err_tmp")
+    inspect_rc=$?
+    inspect_err=$(cat "$err_tmp" 2>/dev/null || true)
+    rm -f -- "$err_tmp"
+    printf '%s\n%s\n%s' "$inspect_rc" "$running" "$inspect_err"
+  }) || true
   set -e
-  inspect_err=$(cat /tmp/.deploy-inspect.err 2>/dev/null || true)
-  rm -f /tmp/.deploy-inspect.err
+  mapfile -t inspect_lines <<<"${inspect_result:-}"
+  inspect_rc="${inspect_lines[0]:-}"
+  running="${inspect_lines[1]:-}"
+  inspect_err="${inspect_lines[2]:-}"
   if (( inspect_rc != 0 )); then
     if grep -qiE 'no such (object|container)' <<<"$inspect_err"; then
       log "no database container present yet; skipping pre-deploy backup"
@@ -397,7 +409,10 @@ backup_existing_database() {
   pipeline_status=("${PIPESTATUS[@]}")
   set -e
 
-  if (( pipeline_status[1] != 0 )); then
+  # N14: classify the ROOT CAUSE. age exits 141 (SIGPIPE) when the dump dies mid-stream — that is
+  # a SYMPTOM of the dump failing, not an encryption failure. An age exit other than 141 means age
+  # itself failed and is the root cause even when the dump also died on the broken pipe.
+  if (( pipeline_status[1] != 0 && pipeline_status[1] != 141 )); then
     rm -f "$backup_tmp"
     exec 8>&-
     die "pre-deploy backup failed: age encryption failed (exit ${pipeline_status[1]}); deployment aborted"
@@ -406,6 +421,11 @@ backup_existing_database() {
     rm -f "$backup_tmp"
     exec 8>&-
     die "pre-deploy backup failed: pg_dump failed (exit ${pipeline_status[0]}); deployment aborted"
+  fi
+  if (( pipeline_status[1] != 0 )); then
+    rm -f "$backup_tmp"
+    exec 8>&-
+    die "pre-deploy backup failed: age encryption failed (exit ${pipeline_status[1]}); deployment aborted"
   fi
   if [[ ! -s "$backup_tmp" ]]; then
     rm -f "$backup_tmp"
@@ -421,7 +441,13 @@ backup_existing_database() {
   # the bech32 "age1..." recipient string NEVER appears in the file and the stanza changes per
   # encryption, so it cannot name the recipient; validate the stanza STRUCTURE so a non-age or
   # mis-addressed output is caught (the DR suite proves actual addressing by identity-decrypt).
-  if ! grep -aqE '^-> X25519 [A-Za-z0-9+/]{43,44}$' "$backup_tmp"; then
+  # N10: the scan is limited to the age header area (ends at the first empty line); the body is
+  # encrypted binary and is never scanned. grep -q must NOT be used here — it exits on the first
+  # match, SIGPIPEs the awk still writing the rest of a large file, and pipefail then reports 141
+  # (a false negative). grep -c reads to EOF, so the result is deterministic.
+  local stanza_count
+  stanza_count=$(awk '/^$/{exit} {print}' "$backup_tmp" | grep -acE '^-> X25519 [A-Za-z0-9+/]{43,44}$')
+  if [[ "$stanza_count" == "0" ]]; then
     rm -f "$backup_tmp"
     exec 8>&-
     die "pre-deploy backup failed: encrypted output does not contain a valid age X25519 recipient stanza; deployment aborted"
@@ -522,6 +548,20 @@ cleanup_old_images() {
   done < <(docker image ls "$repository" --format '{{.Tag}}')
 }
 
+# N3: an INDEPENDENT hard minimum for the release bundle. The manifest alone cannot self-validate
+# — a manifest that is empty, truncated, malformed or silently missing a line must fail the
+# deploy. This static list CANNOT drift with release-components.txt (CI also asserts every
+# runtime script dependency appears in the manifest), and the count check makes a truncated
+# manifest fail even when every present file happens to exist.
+readonly RELEASE_HARD_MIN_COMPONENTS="deploy.sh docker-compose.prod.yml ekowayhardware.Caddyfile \
+backup.sh backup-capacity.sh backup-env-parser.sh restore.sh backup.env.example \
+online-shopping-backup.service online-shopping-backup.timer online-shopping-backup-health.service \
+online-shopping-backup-health.timer online-shopping-backup-notify.service notify-backup-failure.sh \
+preflight-backup.sh check-backup-health.sh"
+read -ra RELEASE_HARD_MIN_ARRAY <<< "$RELEASE_HARD_MIN_COMPONENTS"
+readonly RELEASE_HARD_MIN_ARRAY
+readonly MIN_RELEASE_COMPONENT_COUNT=${#RELEASE_HARD_MIN_ARRAY[@]}
+
 verify_release_payload() {
   # C1: the release bundle is REQUIRED to ship every component listed in release-components.txt —
   # the SAME manifest the CI workflow uses to build the bundle, so the two cannot drift. A
@@ -529,18 +569,35 @@ verify_release_payload() {
   # backup-env-parser.sh, preflight-backup.sh, check-backup-health.sh, systemd units) fails loudly
   # before anything is loaded or deployed. The SHA256SUMS check in main_deploy then folds every
   # shipped file into the integrity verification.
-  local dir="$1" payload missing=0
+  local dir="$1" missing=0 count=0 component src target
+  # N3: independent hard minimum — checked even when the manifest itself is absent/empty.
+  for component in "${RELEASE_HARD_MIN_ARRAY[@]}"; do
+    if [[ ! -f "$dir/$component" ]]; then
+      log "release payload is missing $component"
+      missing=1
+    fi
+  done
   if [[ ! -f "$dir/release-components.txt" ]]; then
     log "release payload is missing release-components.txt"
     missing=1
   else
-    while IFS=$'\t' read -r _src payload || [[ -n "$payload" ]]; do
-      [[ -n "$payload" ]] || continue
-      if [[ ! -f "$dir/$payload" ]]; then
-        log "release payload is missing $payload"
+    while IFS=$'\t' read -r src target || [[ -n "$src" ]]; do
+      [[ -n "$src" ]] || continue   # trailing empty line (file ends with a newline)
+      if [[ -z "$target" ]]; then
+        log "release-components.txt contains a malformed line (no TAB-separated target): '$src'"
+        missing=1
+        continue
+      fi
+      count=$((count + 1))
+      if [[ ! -f "$dir/$target" ]]; then
+        log "release payload is missing $target"
         missing=1
       fi
     done < "$dir/release-components.txt"
+    if (( count < MIN_RELEASE_COMPONENT_COUNT )); then
+      log "release-components.txt declares only $count components (independent minimum $MIN_RELEASE_COMPONENT_COUNT); the manifest is empty, truncated or malformed"
+      missing=1
+    fi
   fi
   [[ -f "$dir/SHA256SUMS" ]] || { log "release payload is missing SHA256SUMS"; missing=1; }
   [[ -f "$dir/images/backend.tar.gz" ]] || { log "release payload is missing images/backend.tar.gz"; missing=1; }

@@ -91,13 +91,14 @@ jobs:
         run: |
           set -euo pipefail
           for f in deploy/deploy.sh deploy/backup.sh deploy/restore.sh \
-                   deploy/backup-env-parser.sh scripts/preflight-backup.sh \
+                   deploy/backup-capacity.sh deploy/backup-env-parser.sh \
+                   deploy/notify-backup-failure.sh scripts/preflight-backup.sh \
                    scripts/check-backup-health.sh scripts/restore-proof.sh \
                    scripts/test-backup.sh scripts/test-restore.sh \
                    scripts/test-predeploy.sh scripts/test-deploy.sh \
                    scripts/test-backup-env-parser.sh scripts/test-backup-health.sh \
                    scripts/test-release-bundle.sh scripts/test-restore-atomicity.sh \
-                   scripts/test-restore-proof-negative.sh; do
+                   scripts/test-restore-proof-negative.sh scripts/test-preflight-capacity.sh; do
             [[ -f "$f" ]] || { echo "missing script: $f" >&2; exit 1; }
             sed 's/\r$//' "$f" | bash -n
             echo "  ok: $f"
@@ -107,16 +108,33 @@ jobs:
         run: |
           set -euo pipefail
           for f in deploy/deploy.sh deploy/backup.sh deploy/restore.sh \
-                   deploy/backup-env-parser.sh scripts/preflight-backup.sh \
+                   deploy/backup-capacity.sh deploy/backup-env-parser.sh \
+                   deploy/notify-backup-failure.sh scripts/preflight-backup.sh \
                    scripts/check-backup-health.sh scripts/restore-proof.sh \
                    scripts/test-backup.sh scripts/test-restore.sh \
                    scripts/test-predeploy.sh scripts/test-deploy.sh \
                    scripts/test-backup-env-parser.sh scripts/test-backup-health.sh \
                    scripts/test-release-bundle.sh scripts/test-restore-atomicity.sh \
-                   scripts/test-restore-proof-negative.sh; do
+                   scripts/test-restore-proof-negative.sh scripts/test-preflight-capacity.sh; do
             sed 's/\r$//' "$f" > "/tmp/lf-$(basename "$f")"
             shellcheck -x "/tmp/lf-$(basename "$f")"
             echo "  ok: $f"
+          done
+
+      # N3: CI asserts every runtime dependency of the backup scripts appears in
+      # release-components.txt — the manifest cannot silently drop a component.
+      - name: Check release manifest covers runtime dependencies
+        run: |
+          set -euo pipefail
+          for dep in deploy/backup.sh deploy/backup-capacity.sh deploy/backup-env-parser.sh \
+                     deploy/restore.sh deploy/notify-backup-failure.sh \
+                     deploy/online-shopping-backup.service deploy/online-shopping-backup.timer \
+                     deploy/online-shopping-backup-health.service deploy/online-shopping-backup-health.timer \
+                     deploy/online-shopping-backup-notify.service scripts/preflight-backup.sh \
+                     scripts/check-backup-health.sh; do
+            grep -qxF "$(printf '%s\t%s' "$dep" "$(basename "$dep")")" deploy/release-components.txt \
+              || { echo "release-components.txt missing dependency: $dep" >&2; exit 1; }
+            echo "  ok: $dep in manifest"
           done
 
       - name: Run backup env parser suite
@@ -136,6 +154,9 @@ jobs:
 
       - name: Run backup health suite
         run: scripts/test-backup-health.sh
+
+      - name: Run preflight/backup capacity parity suite
+        run: scripts/test-preflight-capacity.sh
 
       - name: Run release bundle smoke test
         run: scripts/test-release-bundle.sh

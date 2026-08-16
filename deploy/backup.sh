@@ -56,6 +56,19 @@ if ! command -v parse_backup_env >/dev/null 2>&1; then
   exit 1
 fi
 
+# N5: the capacity rule is SHARED with scripts/preflight-backup.sh and restore.sh's pre-restore
+# safety snapshot (deploy/backup-capacity.sh), so every component computes the same requirement.
+# shellcheck disable=SC1091,SC1090
+if ! source "$(dirname "${BASH_SOURCE[0]}")/backup-capacity.sh" 2>/dev/null \
+  && ! source "$APP_DIR/backup-capacity.sh" 2>/dev/null; then
+  echo "[online-shopping-backup] ERROR: backup-capacity.sh is missing next to backup.sh and in $APP_DIR; refusing to continue" >&2
+  exit 1
+fi
+if ! command -v estimate_backup_unit >/dev/null 2>&1 || ! command -v required_backup_space >/dev/null 2>&1; then
+  echo "[online-shopping-backup] ERROR: backup-capacity.sh failed to load (capacity functions not defined); refusing to continue" >&2
+  exit 1
+fi
+
 log() { printf '[online-shopping-backup] %s\n' "$*"; }
 warn() { printf '[online-shopping-backup] WARNING: %s\n' "$*" >&2; }
 
@@ -87,7 +100,7 @@ json_size() {
 
 write_status() {
   local status="$1" category="${2:-}" filename="${3:-}" size="${4:-}" remote_id="${5:-}"
-  local sdir now attempt last_success tmp
+  local sdir now attempt last_success tmp dur
   STATUS_LAST="$status"
   sdir="${STATUS_FILE%/*}"
   [[ "$sdir" == "$STATUS_FILE" ]] && sdir="."
@@ -101,6 +114,13 @@ write_status() {
     [[ -n "$last_success" ]] || last_success="null"
   fi
   [[ "$status" == "ok" ]] && last_success="$now"
+  # N9: the run duration is recorded so the operator can see how long backups take (the
+  # production TimeoutStartSec decision must be based on MEASURED durations, see the runbook).
+  dur=0
+  if (( RUN_START > 0 )); then
+    dur=$(( $(date +%s) - RUN_START ))
+    [[ "$dur" -ge 0 ]] || dur=0
+  fi
 
   tmp=$(mktemp "$sdir/.backup-status.XXXXXX")
   {
@@ -111,6 +131,7 @@ write_status() {
     printf '  "last_success": %s,\n'             "$(json_str "$last_success")"
     printf '  "filename": %s,\n'                 "$(json_str "$filename")"
     printf '  "encrypted_size": %s,\n'           "$(json_size "$size")"
+    printf '  "duration_seconds": %s,\n'         "$dur"
     printf '  "remote_destination_identifier": %s\n' "$(json_str "$remote_id")"
     printf '}\n'
   } > "$tmp"
@@ -187,7 +208,9 @@ validate_config() {
 
 verify_deps() {
   local tool
-  for tool in docker age rclone sha256sum flock df stat; do
+  # N14: age-keygen is a runtime dependency of the backup pipeline (preflight derives the
+  # recipient from the identity and the DR proof derives a recipient from a generated key).
+  for tool in docker age age-keygen rclone sha256sum flock df stat; do
     command -v "$tool" >/dev/null 2>&1 || fail "deps" "required tool not found: $tool"
   done
 }
@@ -199,13 +222,12 @@ verify_db_running() {
 }
 
 verify_capacity() {
-  # Capacity safety: estimate how much space this run and the retention it must keep could need,
-  # and refuse to start BEFORE staging anything, so a backup run can never fill the filesystem.
-  #   estimate_unit = max(largest prior local archive, live database size, 100 MiB floor)
-  #   required     = estimate_unit * (local retention count + 1 new archive + 1) + 512 MiB headroom
-  # The database-size probe is tolerant: a non-numeric answer simply falls back to the other
-  # estimates. df(1) reports on the backup filesystem; a stub (FAKE_DF_AVAIL) is used in tests.
-  local db_size prior_unit max_unit required avail
+  # N5: the capacity rule is SHARED with scripts/preflight-backup.sh and restore.sh's safety
+  # snapshot (deploy/backup-capacity.sh): estimate_unit = max(prior archive, live DB size,
+  # 100 MiB floor), required = unit * (retention + 2) + 512 MiB. A preflight PASS therefore
+  # always implies this check passes for the same inputs, and vice versa. The check runs BEFORE
+  # staging anything, so a backup run can never fill the filesystem.
+  local db_size prior_unit unit required avail
   db_size=""
   local -a size_env=()
   if [[ -n "${BACKUP_DB_PASSWORD:-}" ]]; then
@@ -217,17 +239,13 @@ verify_capacity() {
       -c "SELECT pg_database_size(current_database())" 2>/dev/null | tr -d ' \r' || true)
   [[ "$db_size" =~ ^[0-9]+$ ]] || db_size=""
 
-  prior_unit=""
-  prior_unit=$(find "$BACKUP_LOCAL_DIR" -maxdepth 1 -type f -name '*.dump.age' -printf '%s\n' 2>/dev/null | sort -rn | head -n 1)
+  prior_unit=$(find "$BACKUP_LOCAL_DIR" -maxdepth 1 -type f -name '*.dump.age' -printf '%s\n' 2>/dev/null | sort -rn | head -n 1 || true)
   [[ "$prior_unit" =~ ^[0-9]+$ ]] || prior_unit=""
 
-  max_unit=104857600
-  if [[ -n "$prior_unit" && "$prior_unit" -gt "$max_unit" ]]; then max_unit=$prior_unit; fi
-  if [[ -n "$db_size" && "$db_size" -gt "$max_unit" ]]; then max_unit=$db_size; fi
+  unit=$(estimate_backup_unit "$db_size" "$prior_unit")
+  required=$(required_backup_space "$unit" "$BACKUP_LOCAL_RETENTION_COUNT")
 
-  required=$(( max_unit * (BACKUP_LOCAL_RETENTION_COUNT + 2) + 536870912 ))
-
-  avail=$(df --output=avail -B1 "$BACKUP_LOCAL_DIR" 2>/dev/null | tail -n 1 | tr -d ' ')
+  avail=$(filesystem_avail "$BACKUP_LOCAL_DIR" || true)
   if [[ ! "$avail" =~ ^[0-9]+$ ]] || (( avail < required )); then
     fail "insufficient_staging_space" "not enough free space on $BACKUP_LOCAL_DIR (need at least $required bytes, have ${avail:-unknown}); refusing to risk exhausting the filesystem"
   fi
@@ -258,12 +276,31 @@ encrypt_dump() {
   pipeline_status=("${PIPESTATUS[@]}")
   trap on_error ERR
   set -e
-  if (( pipeline_status[1] != 0 )); then
+  # N14: classify the ROOT CAUSE. age exits 141 (SIGPIPE) when the dump dies mid-stream — that is
+  # a SYMPTOM of the dump failing, not an encryption failure. An age exit other than 141 means age
+  # itself failed (e.g. bad recipient) and is the root cause even when the dump also died on the
+  # broken pipe. With --output, age's stdout is never read, so a genuine 141 cannot originate
+  # downstream of age.
+  if (( pipeline_status[1] != 0 && pipeline_status[1] != 141 )); then
     fail "encrypt_failed" "age encryption failed (exit ${pipeline_status[1]})"
   fi
   if (( pipeline_status[0] != 0 )); then
     fail "dump_failed" "pg_dump failed (exit ${pipeline_status[0]})"
   fi
+  if (( pipeline_status[1] != 0 )); then
+    fail "encrypt_failed" "age encryption failed (exit ${pipeline_status[1]})"
+  fi
+}
+
+# N10: only the age HEADER is scanned for the recipient stanza. The header ends at the first
+# empty line; the body is encrypted binary and must never be scanned for stanza text.
+age_header_has_recipient_stanza() {
+  local file="$1" matches
+  # NOTE: grep -q must NOT be used here — it exits on the first match, SIGPIPEs the awk that is
+  # still writing the rest of a large file, and pipefail then reports 141 (a false negative).
+  # grep -c reads to EOF, so the exit status is deterministic.
+  matches=$(awk '/^$/{exit} {print}' "$file" | grep -acE '^-> X25519 [A-Za-z0-9+/]{43,44}$')
+  [[ "$matches" != "0" ]]
 }
 
 verify_remote() {
@@ -318,6 +355,8 @@ prune_tier() {
   # listing actually returned and that match the backup name pattern are deleted, each by exact
   # name under the configured destination. Scope can never escape the backup prefix. Retention is
   # deterministic: names sort lexically, so the oldest (lowest ISO timestamp) are pruned first.
+  # N8: the .sha256 integrity sidecar is pruned TOGETHER with its archive, so a pruned backup
+  # never leaves an orphaned sidecar behind on the remote.
   local dest="$1" tier="$2" keep="$3"
   local names=() name count excess i
   while IFS= read -r name; do
@@ -330,6 +369,9 @@ prune_tier() {
     name="${names[$i]}"
     if rclone delete "${RTIMEOUT[@]}" "$dest/$name" >/dev/null 2>&1; then
       log "pruned remote $tier backup $name"
+      if ! rclone delete "${RTIMEOUT[@]}" "$dest/$name.sha256" >/dev/null 2>&1; then
+        warn "failed to prune remote $tier sidecar $name.sha256"
+      fi
     else
       warn "failed to prune remote $tier backup $name"
     fi
@@ -348,6 +390,10 @@ on_exit() {
     rm -rf -- "$STAGEDIR"
   fi
 }
+
+# Set by main() as soon as the lock is acquired (N9); used by write_status to record the run
+# duration in the status file.
+RUN_START=0
 
 # shellcheck disable=SC2329
 interrupt_handler() {
@@ -372,6 +418,7 @@ main() {
   trap on_error ERR
   trap interrupt_handler INT TERM HUP
 
+  RUN_START=$(date +%s)
   acquire_lock
   load_config
   validate_config
@@ -408,8 +455,9 @@ main() {
   # cryptographically requires decrypting with the identity, which the backup job does not hold;
   # the disaster-recovery suite proves addressing by decrypting the archive with its identity).
   # Validate the stanza STRUCTURE so a non-age or mis-addressed output (e.g. passphrase mode)
-  # is caught and never treated as a valid backup.
-  if ! grep -aqE '^-> X25519 [A-Za-z0-9+/]{43,44}$' "$stage"; then
+  # is caught and never treated as a valid backup. N10: the scan is limited to the age header
+  # area (the body is encrypted binary and is never scanned).
+  if ! age_header_has_recipient_stanza "$stage"; then
     fail "encrypt_failed" "encrypted output does not contain a valid age X25519 recipient stanza"
   fi
 
@@ -442,7 +490,10 @@ main() {
   remote_retention "$dest"
 
   write_status "ok" "" "$(basename "$final_path")" "$size" "$remote_id"
-  log "backup complete: $filename ($size bytes) -> $remote_id"
+  local dur
+  dur=$(( $(date +%s) - RUN_START ))
+  [[ "$dur" -ge 0 ]] || dur=0
+  log "backup complete: $filename ($size bytes) -> $remote_id (duration ${dur}s)"
 }
 
 main "$@"

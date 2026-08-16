@@ -67,6 +67,14 @@ PROD_CONTAINER="online-shopping-db"
 PROD_DATABASE="online_shopping"
 CONFIRM_STRING="RESTORE online_shopping"
 
+# N5: the shared capacity rule (deploy/backup-capacity.sh) is also used by the pre-restore
+# safety snapshot, so every component computes the same requirement.
+# shellcheck disable=SC1091,SC1090
+if ! source "$(dirname "${BASH_SOURCE[0]}")/backup-capacity.sh" 2>/dev/null; then
+  echo "[online-shopping-restore] ERROR [deps] backup-capacity.sh is missing next to restore.sh; refusing to continue without the shared capacity rule" >&2
+  exit 1
+fi
+
 log() { printf '[online-shopping-restore] %s\n' "$*"; }
 fail() { local category="${1:-unknown}" message="${2:-restore failed}"; log "ERROR [$category] $message"; exit 1; }
 
@@ -208,11 +216,13 @@ resolve_target_identity() {
         || fail "invalid_target" "container '$CONTAINER' resolves to a different container than production (id mismatch); refusing a production restore"
       ;;
     isolated)
-      if prod_id=$(docker_resolve_id "$PROD_CONTAINER"); then
-        if [[ "$target_id" == "$prod_id" ]]; then
-          fail "invalid_target" "isolated target '$CONTAINER' resolves to the production container by name, short/full ID or alias; refusing to destroy production"
-        fi
-      fi
+      # N1: FAIL CLOSED — if the PRODUCTION container identity cannot be resolved, this run
+      # cannot prove the target is not production, so it must refuse instead of assuming
+      # safety. A resolution failure is NEVER interpreted as "production is absent".
+      prod_id=$(docker_resolve_id "$PROD_CONTAINER") \
+        || fail "target_resolution_failed" "cannot resolve the production container '$PROD_CONTAINER' by docker (name, short/full ID or alias); refusing an isolated restore that cannot prove its target is not production"
+      [[ "$target_id" == "$prod_id" ]] \
+        && fail "invalid_target" "isolated target '$CONTAINER' resolves to the production container by name, short/full ID or alias; refusing to destroy production"
       ;;
   esac
   log "target container '$CONTAINER' resolved to docker id ${target_id:0:12}"
@@ -238,15 +248,42 @@ snapshot_production() {
   local snap_dir="${RESTORE_SNAPSHOT_DIR:-/opt/online-shopping/backups}"
   install -d -m 0700 "$snap_dir" \
     || fail "safety_snapshot_failed" "cannot create the safety-snapshot directory $snap_dir"
-  local ts recipient snap tmp pipeline pass_env=()
+  local recipient snap tmp pipeline pass_env=()
   if [[ -n "${PGPASSWORD:-}" ]]; then
     export PGPASSWORD
     pass_env=(-e PGPASSWORD)
   fi
-  ts=$(date -u +%Y%m%dT%H%M%SZ)
   recipient=$(age-keygen -y "$IDENTITY" 2>/dev/null | tail -n 1) \
     || fail "safety_snapshot_failed" "cannot derive the age recipient from the identity for the pre-restore safety snapshot"
+
+  # N2: capacity check BEFORE pg_dump — the snapshot plus headroom must fit in snap_dir, and a
+  # production restore must never be the thing that fills the filesystem. Uses the SAME shared
+  # capacity rule as backup.sh and the preflight (deploy/backup-capacity.sh).
+  local db_size prior_unit unit required avail
+  db_size=$(docker exec "${pass_env[@]}" "$CONTAINER" \
+      psql -At -v ON_ERROR_STOP=1 -U "$DB_USER" -d "$DATABASE" \
+      -c "SELECT pg_database_size(current_database())" 2>/dev/null | tr -d ' \r' || true)
+  [[ "$db_size" =~ ^[0-9]+$ ]] || db_size=""
+  prior_unit=$(find "$snap_dir" -maxdepth 1 -type f -name 'pre-restore-*.dump.age' -printf '%s\n' 2>/dev/null | sort -rn | head -n 1 || true)
+  [[ "$prior_unit" =~ ^[0-9]+$ ]] || prior_unit=""
+  unit=$(estimate_backup_unit "$db_size" "$prior_unit")
+  required=$(required_backup_space "$unit" 0)
+  avail=$(filesystem_avail "$snap_dir" || true)
+  if [[ ! "$avail" =~ ^[0-9]+$ ]] || (( avail < required )); then
+    fail "safety_snapshot_failed" "not enough free space in $snap_dir for the pre-restore safety snapshot (need at least $required bytes, have ${avail:-unknown}); refusing to restore production"
+  fi
+  log "safety snapshot capacity check passed: $snap_dir has ${avail} bytes free (need >= $required)"
+
+  local ts snap_index=1
+  ts=$(date -u +%Y%m%dT%H%M%SZ)
   snap="$snap_dir/pre-restore-$ts.dump.age"
+  # N2: collision-safe snapshot names — an existing snapshot is NEVER overwritten; if the same
+  # second is reused (e.g. two restores racing), an incrementing suffix is tried until a free
+  # name is found.
+  while [[ -e "$snap" ]]; do
+    snap="$snap_dir/pre-restore-${ts}-${snap_index}.dump.age"
+    snap_index=$((snap_index + 1))
+  done
   tmp=$(mktemp "$snap_dir/.pre-restore.XXXXXX")
   chmod 0600 "$tmp"
   set +e
@@ -255,7 +292,10 @@ snapshot_production() {
     | age --encrypt --recipient "$recipient" --output "$tmp"
   pipeline=("${PIPESTATUS[@]}")
   set -e
-  if (( pipeline[1] != 0 )); then
+  # N14: classify the ROOT CAUSE. age exits 141 (SIGPIPE) when the dump dies mid-stream — that is
+  # a SYMPTOM of the dump failing, not an encryption failure. An age exit other than 141 means age
+  # itself failed and is the root cause even when the dump also died on the broken pipe.
+  if (( pipeline[1] != 0 && pipeline[1] != 141 )); then
     rm -f -- "$tmp"
     fail "safety_snapshot_failed" "age encryption of the pre-restore safety snapshot failed (exit ${pipeline[1]})"
   fi
@@ -263,9 +303,24 @@ snapshot_production() {
     rm -f -- "$tmp"
     fail "safety_snapshot_failed" "pg_dump of the current database failed (exit ${pipeline[0]}); refusing to restore production without a safety snapshot"
   fi
+  if (( pipeline[1] != 0 )); then
+    rm -f -- "$tmp"
+    fail "safety_snapshot_failed" "age encryption of the pre-restore safety snapshot failed (exit ${pipeline[1]})"
+  fi
   if [[ ! -s "$tmp" ]] || ! head -c 100 "$tmp" | grep -q '^age-encryption.org/v1'; then
     rm -f -- "$tmp"
     fail "safety_snapshot_failed" "pre-restore safety snapshot is empty or invalid; refusing to restore production"
+  fi
+  # N10: the X25519 recipient stanza check is limited to the age header area (ends at the first
+  # empty line); the body is encrypted binary and is never scanned. grep -q must NOT be used
+  # here — it exits on the first match, SIGPIPEs the awk still writing the rest of a large file,
+  # and pipefail then reports 141 (a false negative). grep -c reads to EOF, so the result is
+  # deterministic.
+  local stanza_count
+  stanza_count=$(awk '/^$/{exit} {print}' "$tmp" | grep -acE '^-> X25519 [A-Za-z0-9+/]{43,44}$')
+  if [[ "$stanza_count" == "0" ]]; then
+    rm -f -- "$tmp"
+    fail "safety_snapshot_failed" "pre-restore safety snapshot has no valid age X25519 recipient stanza; refusing to restore production"
   fi
   mv -f "$tmp" "$snap"
   log "encrypted pre-restore safety snapshot written: $snap"

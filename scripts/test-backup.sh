@@ -118,6 +118,15 @@ case "${1:-}" in
     if [[ "${FAKE_RCLONE_SIDECAR_MISSING:-0}" == "1" && "$src" == *.sha256 ]]; then
       exit 0
     fi
+    # N7 (sidecar negative, stub-driven): upload a WRONG sidecar content — the remote .sha256
+    # then matches neither the local sidecar nor the remote archive. Deterministic real-tool
+    # injection is impossible (the verify re-downloads the actual uploaded bytes), so this is the
+    # stub equivalent of a corrupted or maliciously-replaced sidecar.
+    if [[ "${FAKE_RCLONE_SIDECAR_WRONG:-0}" == "1" && "$src" == *.sha256 ]]; then
+      printf 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef  wrong\n' \
+        > "$dest/$(basename "$src")"
+      exit 0
+    fi
     cp -f "$src" "$dest/$(basename "$src")"
     # Corruption simulation: the remote copy of the archive differs from the local file.
     if [[ "${FAKE_RCLONE_CORRUPT:-0}" == "1" && "$src" == *.dump.age ]]; then
@@ -167,9 +176,10 @@ esac
 RCLONE
 chmod 0700 "$FAKEBIN/rclone"
 
-# Deterministic clock (H8): backup.sh reads the time with `date -u +%Y%m%dT%H%M%SZ`, `+%u` and
-# `+%Y-%m-%dT%H:%M:%SZ`; the stub serves them from the FAKE_DATE_* environment so weekly-tier
-# behaviour is fully deterministic regardless of the real day of the week.
+# Deterministic clock (H8): backup.sh reads the time with `date -u +%Y%m%dT%H%M%SZ`, `+%u`,
+# `+%Y-%m-%dT%H:%M:%SZ` and `+%s` (N9: RUN_START / duration_seconds); the stub serves them from
+# the FAKE_DATE_* environment so weekly-tier behaviour and run-duration accounting are fully
+# deterministic regardless of the real day of the week.
 cat > "$FAKEBIN/date" <<'DATE'
 #!/usr/bin/env bash
 if [[ "${FAKE_DATE_FAIL:-0}" == "1" && "$*" == *%Y%m%dT%H%M%SZ* ]]; then
@@ -180,6 +190,7 @@ case "$*" in
   *%Y-%m-%dT%H:%M:%SZ*) printf '%s\n' "${FAKE_DATE_ISO_Z:-2026-01-01T00:00:00Z}" ;;
   *%Y%m%dT%H%M%SZ*)     printf '%s\n' "${FAKE_DATE_COMPACT:-20260101T000000Z}" ;;
   *%u*)                 printf '%s\n' "${FAKE_DATE_DOW:-1}" ;;
+  *%s*)                 printf '%s\n' "${FAKE_DATE_EPOCH:-1735689600}" ;;
   *) exit 1 ;;
 esac
 DATE
@@ -224,7 +235,7 @@ setup_case() {
   export FAKE_DATE_DOW=1
   unset FAKE_DB_RUNNING FAKE_DUMP_STATUS FAKE_AGE_MODE FAKE_RCLONE_MODE FAKE_RCLONE_LSF_SIZE \
         FAKE_RCLONE_DELETE_FAIL FAKE_RCLONE_HASHSUM_BAD FAKE_RCLONE_CORRUPT FAKE_RCLONE_SIDECAR_MISSING \
-        FAKE_DATE_FAIL FAKE_DUMP_DELAY FAKE_DF_AVAIL || true
+        FAKE_RCLONE_SIDECAR_WRONG FAKE_DATE_FAIL FAKE_DUMP_DELAY FAKE_DF_AVAIL || true
   : > "$FAKEBIN/docker-argv.log"
 }
 
@@ -449,6 +460,7 @@ EOF
 for old in 20260101T000000Z-daily 20260102T000000Z-daily 20260103T000000Z-weekly; do
   touch -d '2026-01-01 00:00:00' "$CASE_TMP/local/online-shopping-$old.dump.age"
   touch -d '2026-01-01 00:00:00' "$CASE_TMP/remote/online-shopping-$old.dump.age"
+  touch -d '2026-01-01 00:00:00' "$CASE_TMP/remote/online-shopping-$old.dump.age.sha256"
 done
 t "retention_prunes_oldest_only" "expected success + local keeps 2 + remote keeps daily<=2 weekly<=1 + fresh kept" bash "$BACKUP_SH"
 LOCAL_AFTER="$(find "$CASE_TMP/local" -name '*.dump.age' | wc -l)"
@@ -464,6 +476,12 @@ NEWEST_LOCAL="$(find "$CASE_TMP/local" -name '*.dump.age' -printf '%T@ %f\n' | s
 if [[ "$NEWEST_LOCAL" != online-shopping-* ]]; then echo "FAIL: newest local backup missing"; FAIL=$((FAIL+1)); fi
 if [[ -n "$FRESH_NAME" && ! -f "$CASE_TMP/remote/$FRESH_NAME" ]]; then echo "FAIL: the freshly created remote backup '$FRESH_NAME' did not survive retention"; FAIL=$((FAIL+1)); fi
 if [[ -f "$CASE_TMP/remote/online-shopping-20260101T000000Z-daily.dump.age" ]]; then echo "FAIL: oldest remote daily was not pruned"; FAIL=$((FAIL+1)); fi
+# N8: the .sha256 sidecar is pruned TOGETHER with its archive, retained ones are kept, and the
+# fresh backup's sidecar is uploaded.
+if [[ -f "$CASE_TMP/remote/online-shopping-20260101T000000Z-daily.dump.age.sha256" ]]; then echo "FAIL: sidecar of the pruned remote daily was not pruned"; FAIL=$((FAIL+1)); fi
+if [[ ! -f "$CASE_TMP/remote/online-shopping-20260102T000000Z-daily.dump.age.sha256" ]]; then echo "FAIL: sidecar of the retained remote daily was deleted"; FAIL=$((FAIL+1)); fi
+if [[ ! -f "$CASE_TMP/remote/online-shopping-20260103T000000Z-weekly.dump.age.sha256" ]]; then echo "FAIL: sidecar of the retained remote weekly was deleted"; FAIL=$((FAIL+1)); fi
+if [[ -n "$FRESH_NAME" && ! -f "$CASE_TMP/remote/$FRESH_NAME.sha256" ]]; then echo "FAIL: fresh remote backup '$FRESH_NAME' has no uploaded .sha256 sidecar"; FAIL=$((FAIL+1)); fi
 
 # ------------------------------------------------------------------------------------------
 # 12. Remote upload verification hash mismatch -> backup fails, local copy retained
@@ -500,6 +518,24 @@ EOF
 t_expect_fail "upload_verify_missing_sidecar_fails" "missing .sha256 sidecar must fail verification" bash "$BACKUP_SH"
 if [[ "$(status_category)" != "upload_verify_failed" ]]; then echo "FAIL: expected category upload_verify_failed, got '$(status_category)'"; FAIL=$((FAIL+1)); fi
 if [[ "$(find "$CASE_TMP/local" -name '*.dump.age' | wc -l)" != 1 ]]; then echo "FAIL: valid local backup deleted after verify failure"; FAIL=$((FAIL+1)); fi
+
+# ------------------------------------------------------------------------------------------
+# 12c. Remote upload verification WRONG sidecar content -> backup fails, local copy retained
+# ------------------------------------------------------------------------------------------
+setup_case
+export FAKE_RCLONE_SIDECAR_WRONG=1
+write_env <<EOF
+BACKUP_AGE_RECIPIENT=age1recipient
+BACKUP_RCLONE_REMOTE=proof-remote
+BACKUP_RCLONE_PATH=$CASE_TMP/remote
+BACKUP_LOCAL_DIR=$CASE_TMP/local
+BACKUP_DB_CONTAINER=online-shopping-db
+BACKUP_DB_USER=shop_admin
+BACKUP_DB_NAME=online_shopping
+EOF
+t_expect_fail "upload_verify_wrong_sidecar_fails" "wrong .sha256 sidecar content must fail verification" bash "$BACKUP_SH"
+if [[ "$(status_category)" != "upload_verify_failed" ]]; then echo "FAIL: expected category upload_verify_failed, got '$(status_category)'"; FAIL=$((FAIL+1)); fi
+if [[ "$(find "$CASE_TMP/local" -name '*.dump.age' | wc -l)" != 1 ]]; then echo "FAIL: valid local backup deleted after sidecar-content verify failure"; FAIL=$((FAIL+1)); fi
 
 # ------------------------------------------------------------------------------------------
 # 13. rclone retention delete failure -> warning only, backup reports ok, valid backups survive

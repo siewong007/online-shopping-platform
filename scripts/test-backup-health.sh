@@ -181,6 +181,126 @@ cat > "$STATUS_FILE" <<'EOF'
 EOF
 run_check "unknown_status_fails" 1 "unknown status value"
 
+# ------------------------------------------------------------------------------------------
+# N4: deploy/notify-backup-failure.sh (systemd OnFailure= notifier)
+# ------------------------------------------------------------------------------------------
+NOTIFY_SH="$ROOT/deploy/notify-backup-failure.sh"
+NOTIFY_DIR="$TMP/notify"
+mkdir -p "$NOTIFY_DIR"
+
+# 10. No hook configured -> rc 0, marker written with hook=<none>, category from status file,
+# and a CRITICAL journal entry is emitted (logger(1) intercepted by a recording stub).
+cat > "$STATUS_FILE" <<'EOF'
+{
+  "status": "error",
+  "error_category": "upload_failed",
+  "last_attempt": "2026-08-15T12:00:00Z",
+  "last_success": "2026-08-14T12:00:00Z",
+  "filename": null,
+  "encrypted_size": null,
+  "remote_destination_identifier": null
+}
+EOF
+mkdir -p "$TMP/bin"
+cat > "$TMP/bin/logger" <<'LOGGER'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "${LOGGER_LOG:-/nonexistent/logger.log}"
+LOGGER
+chmod 0750 "$TMP/bin/logger"
+rm -f "$NOTIFY_DIR/backup-failure.marker" "$TMP/logger.log"
+set +e
+PATH="$TMP/bin:$PATH" LOGGER_LOG="$TMP/logger.log" NOTIFY_APP_DIR="$NOTIFY_DIR" NOTIFY_STATUS_FILE="$STATUS_FILE" \
+  bash "$NOTIFY_SH" >"$TMP/notify.out" 2>&1
+NRC=$?
+set -e
+if (( NRC == 0 )); then
+  PASS=$((PASS + 1)); echo "ok:   notify_no_hook_rc0"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: notify_no_hook_rc0 (rc $NRC)"; sed 's/^/      /' "$TMP/notify.out" | head -n 5
+fi
+if [[ -f "$NOTIFY_DIR/backup-failure.marker" ]] && grep -q "category=upload_failed" "$NOTIFY_DIR/backup-failure.marker" \
+  && grep -q "hook=<none>" "$NOTIFY_DIR/backup-failure.marker"; then
+  PASS=$((PASS + 1)); echo "ok:   notify_marker_written_with_category_and_no_hook"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: notify marker missing/wrong content"; head -n 5 "$NOTIFY_DIR/backup-failure.marker" 2>/dev/null
+fi
+if [[ -f "$TMP/logger.log" ]] && grep -q "user.crit" "$TMP/logger.log" \
+  && grep -q "online-shopping backup failure" "$TMP/logger.log"; then
+  PASS=$((PASS + 1)); echo "ok:   notify_critical_journal_entry_emitted"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: logger(1) not invoked with the CRITICAL message: '$(cat "$TMP/logger.log" 2>/dev/null)'"
+fi
+
+# 11. Hook configured via env (test override) -> called with `backup_failed <status-file> <category>`
+cat > "$NOTIFY_DIR/fake-hook.sh" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$*" > "$FAKE_HOOK_LOG"
+exit 0
+EOF
+chmod 0750 "$NOTIFY_DIR/fake-hook.sh"
+: > "$NOTIFY_DIR/hook.log"
+set +e
+NOTIFY_APP_DIR="$NOTIFY_DIR" NOTIFY_STATUS_FILE="$STATUS_FILE" NOTIFY_HOOK="$NOTIFY_DIR/fake-hook.sh" \
+  FAKE_HOOK_LOG="$NOTIFY_DIR/hook.log" bash "$NOTIFY_SH" >"$TMP/notify.out" 2>&1
+NRC=$?
+set -e
+if (( NRC == 0 )); then
+  PASS=$((PASS + 1)); echo "ok:   notify_hook_rc0"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: notify_hook_rc0 (rc $NRC)"; sed 's/^/      /' "$TMP/notify.out" | head -n 5
+fi
+if [[ "$(cat "$NOTIFY_DIR/hook.log" 2>/dev/null || true)" == "backup_failed $STATUS_FILE upload_failed" ]]; then
+  PASS=$((PASS + 1)); echo "ok:   notify_hook_called_with_expected_args"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: hook args wrong: '$(cat "$NOTIFY_DIR/hook.log" 2>/dev/null)'"
+fi
+if grep -q "hook=$NOTIFY_DIR/fake-hook.sh" "$NOTIFY_DIR/backup-failure.marker"; then
+  PASS=$((PASS + 1)); echo "ok:   notify_marker_records_configured_hook"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: marker does not record the configured hook"
+fi
+
+# 12. Hook configured via backup.env (strict parser) -> used without env override
+mkdir -p "$NOTIFY_DIR/env"
+cat > "$NOTIFY_DIR/env/backup.env" <<EOF
+BACKUP_AGE_RECIPIENT=age1recipient
+BACKUP_NOTIFY_HOOK=$NOTIFY_DIR/fake-hook.sh
+EOF
+chmod 0600 "$NOTIFY_DIR/env/backup.env"
+set +e
+NOTIFY_APP_DIR="$NOTIFY_DIR/env" NOTIFY_STATUS_FILE="$STATUS_FILE" \
+  FAKE_HOOK_LOG="$NOTIFY_DIR/hook.log" bash "$NOTIFY_SH" >"$TMP/notify.out" 2>&1
+NRC=$?
+set -e
+if (( NRC == 0 )) && [[ "$(cat "$NOTIFY_DIR/hook.log" 2>/dev/null || true)" == "backup_failed $STATUS_FILE upload_failed" ]]; then
+  PASS=$((PASS + 1)); echo "ok:   notify_hook_from_env_file"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: notify_hook_from_env_file (rc $NRC, log '$(cat "$NOTIFY_DIR/hook.log" 2>/dev/null)')"
+fi
+rm -f "$NOTIFY_DIR/env/backup-failure.marker"
+
+# 13. Hook configured but NOT executable -> rc 1, marker still written
+set +e
+NOTIFY_APP_DIR="$NOTIFY_DIR" NOTIFY_STATUS_FILE="$STATUS_FILE" NOTIFY_HOOK="$NOTIFY_DIR/not-executable.sh" \
+  bash "$NOTIFY_SH" >"$TMP/notify.out" 2>&1
+NRC=$?
+set -e
+if (( NRC == 1 )); then
+  PASS=$((PASS + 1)); echo "ok:   notify_nonexec_hook_fails_rc1"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: notify_nonexec_hook_fails_rc1 (rc $NRC)"
+fi
+if grep -q "not executable" "$TMP/notify.out"; then
+  PASS=$((PASS + 1)); echo "ok:   notify_nonexec_hook_reports_reason"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: notify_nonexec_hook_reports_reason missing"
+fi
+if [[ -f "$NOTIFY_DIR/backup-failure.marker" ]]; then
+  PASS=$((PASS + 1)); echo "ok:   notify_marker_written_even_on_hook_failure"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: marker missing on hook failure"
+fi
+
 echo
 echo "PASS: $PASS  FAIL: $FAIL"
 if (( FAIL > 0 )); then

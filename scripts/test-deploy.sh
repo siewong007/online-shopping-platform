@@ -173,6 +173,39 @@ rm -f "$RELEASE_DIR/online-shopping-backup-health.service"
 expect_rc "missing_health_service_fails_payload" 1 verify_release_payload "$RELEASE_DIR"
 
 # ------------------------------------------------------------------------------------------
+# N3: hard-minimum manifest validation (independent of release-components.txt)
+# ------------------------------------------------------------------------------------------
+# N3a: empty release-components.txt -> fails (count < independent minimum)
+make_release
+: > "$RELEASE_DIR/release-components.txt"
+expect_rc "empty_manifest_fails_payload" 1 verify_release_payload "$RELEASE_DIR"
+assert_output "empty_manifest_reports_truncated" "empty, truncated or malformed"
+
+# N3b: truncated manifest (first 5 lines only) -> fails (count below the 16-component minimum)
+make_release
+head -n 5 "$ROOT/deploy/release-components.txt" > "$RELEASE_DIR/release-components.txt"
+expect_rc "truncated_manifest_fails_payload" 1 verify_release_payload "$RELEASE_DIR"
+assert_output "truncated_manifest_reports_truncated" "empty, truncated or malformed"
+
+# N3c: malformed manifest line (no TAB-separated target) -> fails
+make_release
+printf 'deploy.sh\n' >> "$RELEASE_DIR/release-components.txt"
+expect_rc "malformed_manifest_line_fails_payload" 1 verify_release_payload "$RELEASE_DIR"
+assert_output "malformed_manifest_reports_line" "malformed line"
+
+# N3d: manifest declares a file that does not exist -> fails
+make_release
+printf 'deploy.sh\tnot-in-bundle.sh\n' >> "$RELEASE_DIR/release-components.txt"
+expect_rc "manifest_missing_file_fails_payload" 1 verify_release_payload "$RELEASE_DIR"
+assert_output "manifest_missing_file_message" "missing not-in-bundle.sh"
+
+# N3e: independent minimum — a manifest that declares everything EXCEPT the hard-min list still
+# fails even though the manifest itself is complete.
+make_release
+printf 'images/backend.tar.gz\timages/backend.tar.gz\n' > "$RELEASE_DIR/release-components.txt"
+expect_rc "hard_min_violation_fails_payload" 1 verify_release_payload "$RELEASE_DIR"
+
+# ------------------------------------------------------------------------------------------
 # H3: happy path — installs, daemon-reload, timer ACTIVE (verification pending), rc 0
 # ------------------------------------------------------------------------------------------
 reset_install_state
@@ -186,6 +219,23 @@ chmod 0600 "$DEPLOY_APP_DIR/backup.env"
 expect_rc "install_backup_components_ok" 0 install_backup_components
 assert_output "install_reports_timer_active" "timer ACTIVE"
 grep -q 'daemon-reload' "$FAKEBIN/systemctl.log" || { echo "FAIL: daemon-reload not called"; FAIL=$((FAIL+1)); }
+# N4/N5: the notifier and the shared capacity rule are release components and MUST be installed
+# next to backup.sh; the notify unit must land in SYSTEMD_DIR.
+if [[ -x "$DEPLOY_APP_DIR/notify-backup-failure.sh" ]]; then
+  PASS=$((PASS + 1)); echo "ok:   notify_backup_failure_installed"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: notify-backup-failure.sh not installed in APP_DIR"
+fi
+if [[ -f "$DEPLOY_APP_DIR/backup-capacity.sh" ]]; then
+  PASS=$((PASS + 1)); echo "ok:   backup_capacity_installed"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: backup-capacity.sh not installed in APP_DIR"
+fi
+if [[ -f "$DEPLOY_SYSTEMD_DIR/online-shopping-backup-notify.service" ]]; then
+  PASS=$((PASS + 1)); echo "ok:   backup_notify_unit_installed"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: online-shopping-backup-notify.service not installed in SYSTEMD_DIR"
+fi
 
 # ------------------------------------------------------------------------------------------
 # H3: systemctl enable failure -> NOT ACTIVE warning, deployment continues (rc 0)

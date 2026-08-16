@@ -37,6 +37,14 @@ case "\${1:-}" in
       exit 1
     fi
     target="\${@: -1}"
+    if [[ "\${FAKE_PROD_INSPECT_FAIL:-0}" == "1" && "\$target" == "online-shopping-db" ]]; then
+      echo "Error: No such container" >&2
+      exit 1
+    fi
+    if [[ "\${FAKE_TARGET_INSPECT_FAIL:-0}" == "1" && "\$target" != "online-shopping-db" ]]; then
+      echo "Error: No such container" >&2
+      exit 1
+    fi
     case "\$target" in
       online-shopping-db|prod-alias|abcdef123456|"$PROD_CANONICAL_ID")
         printf '%s\n' "$PROD_CANONICAL_ID"
@@ -92,7 +100,7 @@ if [[ "${FAKE_AGE_ENCRYPT_FAIL:-0}" == "1" && "$*" == *"--encrypt"* ]]; then
   echo "age: snapshot encryption failed" >&2
   exit 6
 fi
-printf 'age-encryption.org/v1\n' > "$out"
+printf 'age-encryption.org/v1\n-> X25519 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n' > "$out"
 cat >> "$out"
 exit 0
 AGE
@@ -111,6 +119,10 @@ chmod 0700 "$FAKEBIN/age-keygen"
 
 cat > "$FAKEBIN/df" <<'DF'
 #!/usr/bin/env bash
+if [[ -n "${FAKE_DF_SNAP_AVAIL:-}" ]] && [[ "$*" == *"$RESTORE_SNAPSHOT_DIR"* ]]; then
+  printf 'Avail\n%s\n' "$FAKE_DF_SNAP_AVAIL"
+  exit 0
+fi
 if [[ -n "${FAKE_DF_AVAIL:-}" ]]; then
   printf 'Avail\n%s\n' "$FAKE_DF_AVAIL"
   exit 0
@@ -338,6 +350,93 @@ run "corrupt_archive_rejected_before_restore" "corrupt archive fails TOC listing
   --restore "$A" --container scratch-c --database scratch-db --db-user owner \
   --destroy-target --target-kind isolated --identity "$I"
 unset FAKE_PGRESTORE_LIST_FAIL
+
+# N1 regression A: PRODUCTION-kind restore, production identity UNRESOLVABLE -> fail closed
+# (target_resolution_failed) before any snapshot/decrypt.
+export FAKE_PROD_INSPECT_FAIL=1
+run "prod_unresolvable_production_kind_fails_closed" "production kind must fail closed when production identity is unresolvable" 1 "target_resolution_failed" \
+  --restore "$A" --container online-shopping-db --database online_shopping --db-user shop_admin \
+  --destroy-target --target-kind production --confirm-production "RESTORE online_shopping" --identity "$I"
+if grep -q ' pg_dump' "$FAKEBIN/docker-argv.log"; then
+  echo "FAIL: prod_unresolvable_production_kind_fails_closed — snapshot attempted despite unresolvable production identity"; FAIL=$((FAIL+1))
+else
+  PASS=$((PASS + 1)); echo "ok:   prod_unresolvable_production_kind_no_snapshot"
+fi
+unset FAKE_PROD_INSPECT_FAIL
+
+# N1 regression B (the original P0-BKP-01 flaw): ISOLATED-kind restore, production identity
+# UNRESOLVABLE -> the run must FAIL CLOSED (old code silently continued and permitted the
+# restore). Zero pg_dump/pg_restore may be attempted.
+export FAKE_PROD_INSPECT_FAIL=1
+run "prod_unresolvable_isolated_kind_fails_closed" "isolated kind must fail closed when production identity is unresolvable" 1 "target_resolution_failed" \
+  --restore "$A" --container scratch-c --database scratch-db --db-user owner \
+  --destroy-target --target-kind isolated --identity "$I"
+if grep -qE ' pg_dump| pg_restore' "$FAKEBIN/docker-argv.log"; then
+  echo "FAIL: prod_unresolvable_isolated_kind_fails_closed — dump/restore attempted despite unresolvable production identity"; FAIL=$((FAIL+1))
+else
+  PASS=$((PASS + 1)); echo "ok:   prod_unresolvable_isolated_kind_no_dump_or_restore"
+fi
+unset FAKE_PROD_INSPECT_FAIL
+
+# N1 regression C: PRODUCTION-kind restore with the docker resolution itself UNREACHABLE
+# (both target and production inspect fail) -> fail closed with target_resolution_failed before
+# any snapshot/decrypt.
+export FAKE_DOCKER_INSPECT_FAIL=1
+run "target_unresolvable_production_kind_fails_closed" "production kind must fail closed when the target identity is unresolvable" 1 "target_resolution_failed" \
+  --restore "$A" --container online-shopping-db --database online_shopping --db-user shop_admin \
+  --destroy-target --target-kind production --confirm-production "RESTORE online_shopping" --identity "$I"
+if grep -q ' pg_dump' "$FAKEBIN/docker-argv.log"; then
+  echo "FAIL: target_unresolvable_production_kind_fails_closed — snapshot attempted despite unresolvable target"; FAIL=$((FAIL+1))
+else
+  PASS=$((PASS + 1)); echo "ok:   target_unresolvable_production_kind_no_snapshot"
+fi
+unset FAKE_DOCKER_INSPECT_FAIL
+
+# N1 regression D: ISOLATED-kind restore, TARGET identity unresolvable -> fail closed.
+export FAKE_TARGET_INSPECT_FAIL=1
+run "target_unresolvable_isolated_kind_fails_closed" "isolated kind must fail closed when the target identity is unresolvable" 1 "target_resolution_failed" \
+  --restore "$A" --container scratch-c --database scratch-db --db-user owner \
+  --destroy-target --target-kind isolated --identity "$I"
+unset FAKE_TARGET_INSPECT_FAIL
+
+# N2: the pre-restore safety snapshot capacity check (shared rule, deploy/backup-capacity.sh)
+# runs before pg_dump and before any decrypt: with FAKE_DF_SNAP_AVAIL=1000 only the snapshot
+# directory is reported tiny (staging stays healthy), so the production restore must fail with
+# safety_snapshot_failed and attempt ZERO pg_dump and ZERO pg_restore.
+export FAKE_DF_SNAP_AVAIL=1000
+run "snapshot_capacity_check_fails_closed" "production snapshot capacity check must fail before pg_dump" 1 "safety_snapshot_failed" \
+  --restore "$A" --container online-shopping-db --database online_shopping --db-user shop_admin \
+  --destroy-target --target-kind production --confirm-production "RESTORE online_shopping" --identity "$I"
+if grep -qE ' pg_dump| pg_restore' "$FAKEBIN/docker-argv.log"; then
+  echo "FAIL: snapshot_capacity_check_fails_closed — dump/restore attempted despite insufficient snapshot space"; FAIL=$((FAIL+1))
+else
+  PASS=$((PASS + 1)); echo "ok:   snapshot_capacity_no_dump_or_restore"
+fi
+unset FAKE_DF_SNAP_AVAIL
+
+# N2: collision-safe snapshot names — two production runs in the same second must produce two
+# DISTINCT snapshot files, never overwrite. Each run stops right after the snapshot (decrypt
+# fails), then the snapshot directory must contain exactly the files of the runs.
+export FAKE_AGE_DECRYPT_FAIL=1
+run "snapshot_collision_run_1" "first production snapshot run" 1 "decrypt_failed" \
+  --restore "$A" --container online-shopping-db --database online_shopping --db-user shop_admin \
+  --destroy-target --target-kind production --confirm-production "RESTORE online_shopping" --identity "$I"
+run "snapshot_collision_run_2" "second production snapshot run (same second)" 1 "decrypt_failed" \
+  --restore "$A" --container online-shopping-db --database online_shopping --db-user shop_admin \
+  --destroy-target --target-kind production --confirm-production "RESTORE online_shopping" --identity "$I"
+unset FAKE_AGE_DECRYPT_FAIL
+SNAP_COUNT=$(find "$RESTORE_SNAPSHOT_DIR" -name 'pre-restore-*.dump.age' 2>/dev/null | wc -l)
+if (( SNAP_COUNT >= 2 )); then
+  PASS=$((PASS + 1)); echo "ok:   snapshot_collision_names_unique ($SNAP_COUNT snapshot files)"
+else
+  echo "FAIL: snapshot_collision_names_unique — expected >= 2 snapshot files, found $SNAP_COUNT"; FAIL=$((FAIL+1))
+fi
+# The archive itself must not have been destroyed by the snapshot runs (still readable).
+if [[ -s "$A" ]]; then
+  PASS=$((PASS + 1)); echo "ok:   snapshot_runs_keep_archive_intact"
+else
+  echo "FAIL: snapshot_runs_keep_archive_intact — archive missing/empty after snapshot runs"; FAIL=$((FAIL+1))
+fi
 
 # 35. M3 argv hygiene: password inherited by name, secret value NEVER in argv
 export PGPASSWORD="my_secret_restore_password_9988"

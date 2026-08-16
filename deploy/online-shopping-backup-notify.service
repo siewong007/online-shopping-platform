@@ -1,0 +1,19 @@
+[Unit]
+Description=Online Shopping Backup Failure Notification
+# N4: started ONLY by systemd OnFailure= from the backup service and the backup-health service.
+# The service runs with the caller's failure state in $EXIT_STATUS / $EXIT_CODE but those are
+# informational here: notify-backup-failure.sh reads the persistent marker/status file instead.
+Requires=local-fs.target
+After=local-fs.target
+
+[Service]
+Type=oneshot
+User=root
+# The notifier itself must never wedge the failure reporting path.
+TimeoutStartSec=30
+ExecStart=/opt/online-shopping/notify-backup-failure.sh
+# A failure to notify must never flip the original failing unit into a different state.
+SuccessExitStatus=0 1
+
+[Install]
+WantedBy=multi-user.target

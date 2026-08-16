@@ -47,11 +47,14 @@ Real file: `/opt/online-shopping/backup.env` (root, mode 0600). Template in Git:
 | `BACKUP_REMOTE_WEEKLY_RETENTION` | remote weekly tier to keep (default 8) |
 | `BACKUP_WEEKLY_DAY` | day of week for the weekly tier, 1=Mon..7=Sun (default 7) |
 | `BACKUP_DB_CONTAINER` / `BACKUP_DB_USER` / `BACKUP_DB_NAME` | source database (defaults match production) |
+| `BACKUP_NOTIFY_HOOK` | optional (N4): executable path invoked as `<hook> backup_failed <status-file> <category>` on any backup failure; leave unset to rely on the marker + CRITICAL journal entry |
 
 The config file is loaded by a **strict KEY=VALUE parser** (`deploy/backup-env-parser.sh`) — never
 `source`d as shell code — and must be root-owned with mode 0600 (enforced when running as root).
-The backup **fails closed**: if the recipient, remote or path are missing it errors out instead of
-producing an unencrypted or local-only archive.
+**Inline comments are NOT stripped**: `KEY=value # note` keeps `value # note` verbatim, so write
+notes only on their own `#` comment lines and never after a password value (N15). The backup
+**fails closed**: if the recipient, remote or path are missing it errors out instead of producing
+an unencrypted or local-only archive.
 
 ## Dependency setup (production, once)
 
@@ -150,7 +153,7 @@ cat /opt/online-shopping/backup-status.json
 
 `/opt/online-shopping/backup-status.json` is written atomically. Fields: `status`,
 `error_category`, `last_attempt`, `last_success`, `filename`, `encrypted_size`,
-`remote_destination_identifier`. No passwords, tokens or private keys. Lifecycle:
+`duration_seconds`, `remote_destination_identifier`. No passwords, tokens or private keys. Lifecycle:
 
 - `status: "running"` is written the moment the lock is acquired — before any work — so a crashed,
   killed or interrupted job can **never leave a stale `ok`**.
@@ -162,9 +165,51 @@ cat /opt/online-shopping/backup-status.json
   `unexpected_error`; SIGKILL leaves `running` — which is deliberately **not** `ok`.
 - Lock contention (another backup running) does not rewrite the file because the in-flight run
   owns it.
+- `duration_seconds` (N9) records how long the run took (lock acquisition to final status write).
+  It is the MEASURED baseline for the service timeout: the unit ships with
+  `TimeoutStartSec=600` that predates any measurement; after the drill below, set a real value
+  with `sudo systemctl edit online-shopping-backup.service` (`TimeoutStartSec=<measured + headroom>`).
 
 The file is valid JSON by construction; monitor tools should treat anything other than
 `"status": "ok"` as "not protected".
+
+## Failure visibility (N4)
+
+Every non-zero backup-service exit starts `online-shopping-backup-notify.service` (systemd
+`OnFailure=`) on the backup service AND the backup-health service. The notifier always:
+
+1. writes the persistent marker `/opt/online-shopping/backup-failure.marker` (mode 0600) with
+   `notified_at`, `category`, `status_file` and the configured `hook` — it survives reboots and
+   is the anchor of the staff check below,
+2. emits a CRITICAL journal entry (`logger -p user.crit`), so `journalctl -p crit` surfaces it,
+3. if `BACKUP_NOTIFY_HOOK` is set in `backup.env`, runs `<hook> backup_failed <status-file>
+   <category>` — the hook is your own channel (mail, ntfy, PagerDuty, ...). WITHOUT a configured
+   hook **no external notification exists**: the marker and the journal entry are the actionable
+   signal.
+
+Staff check (weekly, or immediately after any alert):
+
+```bash
+sudo test -e /opt/online-shopping/backup-failure.marker \
+  && echo "A BACKUP FAILED SINCE THE LAST CHECK — see /opt/online-shopping/backup-status.json" \
+  || echo "no backup failure marker"
+sudo systemctl status online-shopping-backup.service
+sudo journalctl -p crit -u online-shopping-backup.service -u online-shopping-backup-health.service -n 20
+```
+
+After resolving the cause: fix `backup.env`/provider, run a manual backup, then remove the marker
+only once `backup-status.json` shows `"status": "ok"`.
+
+## Backup duration drill (N9)
+
+Measure the real backup duration before trusting or raising any timeout:
+
+```bash
+sudo /opt/online-shopping/backup.sh
+sudo sed -n 's/.*"duration_seconds": \([0-9]*\).*/duration was \1 s/p' /opt/online-shopping/backup-status.json
+# optionally: time sudo /opt/online-shopping/backup.sh
+sudo systemctl edit online-shopping-backup.service   # set TimeoutStartSec=<measured + generous headroom>
+```
 
 ## Isolated restore proof
 
