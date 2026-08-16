@@ -214,7 +214,11 @@ DDL_PROBE="$(docker exec "$TARGET_CONTAINER" cat /tmp/ddl-probe.log 2>/dev/null 
 grep -q "DDL_PROBE DROP TABLE public." <<<"$DDL_PROBE" \
   || { echo "FAIL: no table DROP executed inside the transaction (probe log empty):" >&2; echo "${DDL_PROBE:-<empty>}" >&2; exit 1; }
 echo "  N-H8 proof: DDL probe log confirms destructive DROPs executed inside the transaction:"
-echo "$DDL_PROBE" | grep 'DDL_PROBE' | sed 's/^/      /' | head -n 4
+# Display-only pipeline: `head` closes the pipe after 4 lines and the multi-megabyte probe log
+# SIGPIPEs sed/grep; under `set -euo pipefail` that would abort the suite (the same class of
+# bug documented on age_header_has_recipient_stanza). `|| true` — the assertions above already
+# gate correctness; this line only prints evidence.
+echo "$DDL_PROBE" | grep 'DDL_PROBE' | sed 's/^/      /' | head -n 4 || true
 
 echo "== verifying the target is UNCHANGED after the rolled-back restore"
 ATOMIC_FAIL=0
