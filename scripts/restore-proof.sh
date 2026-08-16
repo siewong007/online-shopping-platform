@@ -58,7 +58,41 @@ RESTORE_SH="$REPO_ROOT/deploy/restore.sh"
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/restore-proof.XXXXXX")"
 chmod 0700 "$WORK"
-trap 'rm -rf "$WORK"' EXIT
+
+assert_non_production_target() {
+  local target="$1"
+  if [[ "$target" == "online-shopping-db" ]]; then
+    echo "ERROR: target container name '$target' is the canonical production container; refusing to run" >&2
+    exit 1
+  fi
+  local target_id prod_id
+  target_id=$(docker inspect --format '{{.Id}}' "$target" 2>/dev/null | tr -d ' \r\n' || true)
+  prod_id=$(docker inspect --format '{{.Id}}' online-shopping-db 2>/dev/null | tr -d ' \r\n' || true)
+  if [[ -n "$target_id" && -n "$prod_id" && "$target_id" == "$prod_id" ]]; then
+    echo "ERROR: target container '$target' resolves to the production container ID; refusing to run" >&2
+    exit 1
+  fi
+}
+
+# shellcheck disable=SC2317,SC2329
+cleanup() {
+  set +e
+  if [[ -n "${TARGET_CONTAINER:-}" && "$TARGET_CONTAINER" != "online-shopping-db" ]]; then
+    local target_id prod_id
+    target_id=$(docker inspect --format '{{.Id}}' "$TARGET_CONTAINER" 2>/dev/null | tr -d ' \r\n' || true)
+    prod_id=$(docker inspect --format '{{.Id}}' online-shopping-db 2>/dev/null | tr -d ' \r\n' || true)
+    if [[ -z "$target_id" || -z "$prod_id" || "$target_id" != "$prod_id" ]]; then
+      docker rm -f "$TARGET_CONTAINER" >/dev/null 2>&1 || true
+    fi
+  fi
+  if [[ -n "${WORK:-}" && -d "$WORK" ]]; then
+    rm -rf -- "$WORK"
+  fi
+}
+trap cleanup EXIT
+
+# Check safety immediately before doing anything
+assert_non_production_target "$TARGET_CONTAINER"
 
 req() {
   local tool
@@ -68,9 +102,11 @@ req() {
 }
 
 # Strict psql helpers: ON_ERROR_STOP=1, nothing swallowed, stderr shown on failure.
-src_psql() { docker exec -e "PGPASSWORD=$SOURCE_PASSWORD" "$SOURCE_CONTAINER" \
+# M3/N-H3: the password is forwarded to the container by NAME (`-e PGPASSWORD`) with the value
+# exported for the docker client only — it never appears in the host argv.
+src_psql() { PGPASSWORD="$SOURCE_PASSWORD" docker exec -e PGPASSWORD "$SOURCE_CONTAINER" \
   psql -At -v ON_ERROR_STOP=1 -U "$SOURCE_USER" -d "$SOURCE_DB" -c "$1"; }
-dst_psql() { docker exec -e "PGPASSWORD=$TARGET_PASSWORD" "$TARGET_CONTAINER" \
+dst_psql() { PGPASSWORD="$TARGET_PASSWORD" docker exec -e PGPASSWORD "$TARGET_CONTAINER" \
   psql -At -v ON_ERROR_STOP=1 -U "$TARGET_USER" -d "$TARGET_DB" -c "$1"; }
 
 # Deterministic content fingerprint: sorted row_to_json rows md5'd. Ordering by the JSON text
@@ -79,7 +115,7 @@ table_fingerprint() {
   local container="$1" password="$2" user="$3" db="$4" table="$5"
   # COALESCE: an empty table fingerprints to a fixed sentinel on both sides, so parity holds
   # for 0-row tables instead of producing NULL (empty) on both and failing the -n check.
-  docker exec -e "PGPASSWORD=$password" "$container" \
+  PGPASSWORD="$password" docker exec -e PGPASSWORD "$container" \
     psql -At -v ON_ERROR_STOP=1 -U "$user" -d "$db" -c \
     "SELECT COALESCE(md5(string_agg(row_to_json(x)::text, E'\\n' ORDER BY row_to_json(x)::text)), 'md5:empty') FROM (SELECT * FROM $table) x"
 }
@@ -185,8 +221,6 @@ if [[ "${RP_ONLY_PARITY:-0}" == "1" ]]; then
   exit 0
 fi
 
-trap 'set +e; docker rm -f "$TARGET_CONTAINER" >/dev/null 2>&1; rm -rf "$WORK"' EXIT
-
 running=$(docker inspect --format '{{.State.Running}}' "$SOURCE_CONTAINER" 2>/dev/null || true)
 [[ "$running" == "true" ]] || { echo "source DB container $SOURCE_CONTAINER is not running" >&2; exit 1; }
 echo "== source: $SOURCE_CONTAINER / $SOURCE_DB"
@@ -249,23 +283,36 @@ echo "== encrypted backup: $ENCRYPTED_FILE"
 rclone lsf --files-only "$REMOTE_NAME:$REMOTE_PATH/" | grep -qxF "$ENCRYPTED_FILE" \
   || { echo "FAIL: encrypted file missing on the remote" >&2; exit 1; }
 
-# M2: verify the remote object by size AND MD5 before trusting it.
-LOCAL_SIZE=$(stat -c %s "$LOCAL_DIR/$ENCRYPTED_FILE")
-LOCAL_MD5=$(md5sum "$LOCAL_DIR/$ENCRYPTED_FILE" | awk '{print $1}')
-REMOTE_MD5=$(rclone hashsum MD5 "$REMOTE_NAME:$REMOTE_PATH/$ENCRYPTED_FILE" 2>/dev/null | awk '{print $1}' | head -n 1)
-if [[ -z "$REMOTE_MD5" || "$REMOTE_MD5" != "$LOCAL_MD5" ]]; then
-  echo "FAIL: remote object hash mismatch (local=$LOCAL_MD5 remote=${REMOTE_MD5:-<none>})" >&2
+# N-H5: provider-independent verification. The remote object is downloaded back into a private
+# dir and hashed locally with SHA-256, and compared to the local SHA-256. No remote-computed hash
+# (S3 ETag, B2 SHA1, ...) is trusted. The .sha256 sidecar that backup.sh uploads is confirmed
+# present on the remote too.
+LOCAL_SHA=$(sha256sum "$LOCAL_DIR/$ENCRYPTED_FILE" | awk '{print $1}')
+SIDECAR="$ENCRYPTED_FILE.sha256"
+rclone lsf --files-only "$REMOTE_NAME:$REMOTE_PATH/" | grep -qxF "$SIDECAR" \
+  || { echo "FAIL: .sha256 sidecar missing on the remote" >&2; exit 1; }
+VERIFY_DIR="$WORK/verify-dl"
+mkdir -p "$VERIFY_DIR"
+rclone copy "$REMOTE_NAME:$REMOTE_PATH/$ENCRYPTED_FILE" "$VERIFY_DIR/"
+DL_SHA=$(sha256sum "$VERIFY_DIR/$ENCRYPTED_FILE" | awk '{print $1}')
+rm -rf "$VERIFY_DIR"
+if [[ -z "$DL_SHA" || "$DL_SHA" != "$LOCAL_SHA" ]]; then
+  echo "FAIL: remote object does not match local SHA-256 (local=$LOCAL_SHA remote=${DL_SHA:-<none>})" >&2
   exit 1
 fi
-echo "== remote object verified: size $LOCAL_SIZE bytes, MD5 match"
+echo "== remote object verified: downloaded back and SHA-256 match"
 
 echo "== confirming no plaintext dump persisted in backup dirs"
-PLAINTEXT="$(find "$LOCAL_DIR" "$REMOTE_PATH" -type f ! -name '*.dump.age' 2>/dev/null)"
+PLAINTEXT="$(find "$LOCAL_DIR" "$REMOTE_PATH" -type f ! -name '*.dump.age' ! -name '*.sha256' 2>/dev/null)"
 [[ -z "$PLAINTEXT" ]] || { echo "FAIL: plaintext file found in backup dirs: $PLAINTEXT" >&2; exit 1; }
 
 echo "== verifying archive with deploy/restore.sh --verify"
+# Addressing proof: decrypting with the generated identity succeeds ONLY if the archive is
+# addressed to the configured recipient (age >= 1.0 puts an ephemeral X25519 key in the
+# header, so the recipient can only be proven by decrypting with the identity).
 bash "$RESTORE_SH" --verify "$LOCAL_DIR/$ENCRYPTED_FILE" --identity "$WORK/identity.txt" \
   --container "$SOURCE_CONTAINER"
+echo "  N-H8 proof: archive decrypted with the configured identity (addressed to the recipient)"
 
 # M11: delete the local copy, download the remote object, restore THAT copy.
 echo "== downloading the remote object and restoring that copy (not the local file)"
@@ -274,15 +321,16 @@ mkdir -p "$DL_DIR"
 rclone copy "$REMOTE_NAME:$REMOTE_PATH/$ENCRYPTED_FILE" "$DL_DIR/"
 DOWNLOADED="$DL_DIR/$ENCRYPTED_FILE"
 [[ -f "$DOWNLOADED" ]] || { echo "FAIL: remote object did not download" >&2; exit 1; }
-DL_MD5=$(md5sum "$DOWNLOADED" | awk '{print $1}')
-if [[ "$DL_MD5" != "$REMOTE_MD5" ]]; then
-  echo "FAIL: downloaded object hash mismatch (remote=$REMOTE_MD5 downloaded=$DL_MD5)" >&2
+DL_SHA=$(sha256sum "$DOWNLOADED" | awk '{print $1}')
+if [[ "$DL_SHA" != "$LOCAL_SHA" ]]; then
+  echo "FAIL: downloaded object hash mismatch (local=$LOCAL_SHA downloaded=$DL_SHA)" >&2
   exit 1
 fi
 rm -f "$LOCAL_DIR/$ENCRYPTED_FILE"
 echo "== restored archive is the downloaded remote object: $DOWNLOADED"
 
 echo "== starting throwaway postgres target ($POSTGRES_IMAGE)"
+assert_non_production_target "$TARGET_CONTAINER"
 docker rm -f "$TARGET_CONTAINER" >/dev/null 2>&1 || true
 docker run -d --name "$TARGET_CONTAINER" \
   -e "POSTGRES_USER=$TARGET_USER" \
@@ -291,7 +339,10 @@ docker run -d --name "$TARGET_CONTAINER" \
   "$POSTGRES_IMAGE" >/dev/null
 READY=0
 for _ in {1..60}; do
-  if docker exec "$TARGET_CONTAINER" pg_isready -U "$TARGET_USER" -d "$TARGET_DB" >/dev/null 2>&1; then
+  # pg_isready succeeds during the image's temporary initdb server (before the target database
+  # exists), so poll for an actual query on the target database instead.
+  if PGPASSWORD="$TARGET_PASSWORD" docker exec -e PGPASSWORD "$TARGET_CONTAINER" \
+      psql -At -U "$TARGET_USER" -d "$TARGET_DB" -c 'SELECT 1' >/dev/null 2>&1; then
     READY=1
     break
   fi

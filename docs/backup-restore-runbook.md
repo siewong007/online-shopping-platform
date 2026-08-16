@@ -10,10 +10,10 @@ systemd timer (02:30 UTC) ──┐
 manual (root) ──────────────┼──► /opt/online-shopping/backup.sh
                             │        │  flock on backup.lock (no two dumps overlap)
                             ▼        ▼
-                       pg_dump → age → online-shopping-<UTC>-<daily|weekly>.dump.age
-                            │        │  mode 0600, atomic rename, then rclone copy
-                            │        │  + verify by SIZE and MD5 (bounded by rclone timeouts)
-                            ▼        ▼
+                        pg_dump → age → online-shopping-<UTC>-<daily|weekly>.dump.age
+                             │        │  mode 0600, atomic rename, .sha256 sidecar, rclone copy
+                             │        │  + provider-independent SHA-256 download verification
+                             ▼        ▼
                        deploy.sh pre-deploy safety: local age-encrypted predeploy-*.dump.age
                        (pg_dump → age only — no rclone/network; works even if the remote is down;
                         waits on the backup lock with a BOUNDED timeout)
@@ -40,7 +40,7 @@ Real file: `/opt/online-shopping/backup.env` (root, mode 0600). Template in Git:
 | `BACKUP_RCLONE_PATH` | destination directory on that remote |
 | `BACKUP_RCLONE_CONTIMEOUT` | connect timeout for every rclone call (default `15s`) |
 | `BACKUP_RCLONE_TIMEOUT` | overall timeout for every rclone call (default `120s`) |
-| `BACKUP_DB_PASSWORD` | optional; handed to the dump via `docker exec -e PGPASSWORD=...`, never argv |
+| `BACKUP_DB_PASSWORD` | optional; handed to the dump via `docker exec -e PGPASSWORD` (env-by-name inheritance), never argv |
 | `BACKUP_LOCAL_DIR` | local encrypted archive dir (default `/opt/online-shopping/backups`) |
 | `BACKUP_LOCAL_RETENTION_COUNT` | local encrypted copies to keep (default 3) |
 | `BACKUP_REMOTE_DAILY_RETENTION` | remote daily tier to keep (default 14) |

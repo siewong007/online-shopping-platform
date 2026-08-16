@@ -5,10 +5,14 @@
 # - dumps the configured database with pg_dump (custom format),
 # - streams it straight through age so a plaintext dump never touches disk,
 # - uploads the encrypted archive to an rclone destination,
-# - verifies the upload by re-listing the remote object (byte size) AND an MD5 hash of the
-#   remote object compared to the local file,
+# - verifies the upload provider-independently: the remote object is downloaded back and
+#   hashed with SHA-256 locally, and the local SHA-256 is compared with the remote object's
+#   bytes (a `.sha256` sidecar is uploaded alongside the archive). No remote-computed hash
+#   (S3 multipart ETag, B2 SHA1, etc.) is ever trusted, so this works on every backend,
 # - prunes local and remote archives by configured retention (deterministic: ordered by the
 #   ISO timestamp embedded in the archive name, never by file mtime),
+# - checks available disk space BEFORE staging, so a full filesystem can never be created by
+#   a backup run (estimate from prior archive sizes, the live database size, or a floor),
 # - records a machine-readable status file and returns nonzero on any material failure.
 #
 # Runtime configuration is loaded with the strict parser in deploy/backup-env-parser.sh (no
@@ -41,8 +45,16 @@ STATUS_LAST=""
 # Populated by validate_config once the timeouts are known; used to bound every rclone call.
 RTIMEOUT=()
 
-# shellcheck disable=SC1091
-source "$(dirname "${BASH_SOURCE[0]}")/backup-env-parser.sh"
+# shellcheck disable=SC1091,SC1090
+if ! source "$(dirname "${BASH_SOURCE[0]}")/backup-env-parser.sh" 2>/dev/null \
+  && ! source "$APP_DIR/backup-env-parser.sh" 2>/dev/null; then
+  echo "[online-shopping-backup] ERROR: backup-env-parser.sh is missing next to backup.sh and in $APP_DIR; refusing to continue" >&2
+  exit 1
+fi
+if ! command -v parse_backup_env >/dev/null 2>&1; then
+  echo "[online-shopping-backup] ERROR: backup-env-parser.sh failed to load (parse_backup_env not defined); refusing to continue" >&2
+  exit 1
+fi
 
 log() { printf '[online-shopping-backup] %s\n' "$*"; }
 warn() { printf '[online-shopping-backup] WARNING: %s\n' "$*" >&2; }
@@ -175,7 +187,7 @@ validate_config() {
 
 verify_deps() {
   local tool
-  for tool in docker age rclone; do
+  for tool in docker age rclone sha256sum flock df stat; do
     command -v "$tool" >/dev/null 2>&1 || fail "deps" "required tool not found: $tool"
   done
 }
@@ -186,15 +198,54 @@ verify_db_running() {
   [[ "$running" == "true" ]] || fail "db_unavailable" "database container $BACKUP_DB_CONTAINER is not running"
 }
 
+verify_capacity() {
+  # Capacity safety: estimate how much space this run and the retention it must keep could need,
+  # and refuse to start BEFORE staging anything, so a backup run can never fill the filesystem.
+  #   estimate_unit = max(largest prior local archive, live database size, 100 MiB floor)
+  #   required     = estimate_unit * (local retention count + 1 new archive + 1) + 512 MiB headroom
+  # The database-size probe is tolerant: a non-numeric answer simply falls back to the other
+  # estimates. df(1) reports on the backup filesystem; a stub (FAKE_DF_AVAIL) is used in tests.
+  local db_size prior_unit max_unit required avail
+  db_size=""
+  local -a size_env=()
+  if [[ -n "${BACKUP_DB_PASSWORD:-}" ]]; then
+    export PGPASSWORD="$BACKUP_DB_PASSWORD"
+    size_env=(-e PGPASSWORD)
+  fi
+  db_size=$(docker exec "${size_env[@]}" "$BACKUP_DB_CONTAINER" \
+      psql -At -v ON_ERROR_STOP=1 -U "$BACKUP_DB_USER" -d "$BACKUP_DB_NAME" \
+      -c "SELECT pg_database_size(current_database())" 2>/dev/null | tr -d ' \r' || true)
+  [[ "$db_size" =~ ^[0-9]+$ ]] || db_size=""
+
+  prior_unit=""
+  prior_unit=$(find "$BACKUP_LOCAL_DIR" -maxdepth 1 -type f -name '*.dump.age' -printf '%s\n' 2>/dev/null | sort -rn | head -n 1)
+  [[ "$prior_unit" =~ ^[0-9]+$ ]] || prior_unit=""
+
+  max_unit=104857600
+  if [[ -n "$prior_unit" && "$prior_unit" -gt "$max_unit" ]]; then max_unit=$prior_unit; fi
+  if [[ -n "$db_size" && "$db_size" -gt "$max_unit" ]]; then max_unit=$db_size; fi
+
+  required=$(( max_unit * (BACKUP_LOCAL_RETENTION_COUNT + 2) + 536870912 ))
+
+  avail=$(df --output=avail -B1 "$BACKUP_LOCAL_DIR" 2>/dev/null | tail -n 1 | tr -d ' ')
+  if [[ ! "$avail" =~ ^[0-9]+$ ]] || (( avail < required )); then
+    fail "insufficient_staging_space" "not enough free space on $BACKUP_LOCAL_DIR (need at least $required bytes, have ${avail:-unknown}); refusing to risk exhausting the filesystem"
+  fi
+  log "capacity check passed: $BACKUP_LOCAL_DIR has ${avail} bytes free (need >= $required)"
+}
+
 encrypt_dump() {
   # $1 = output path. Streams pg_dump through age so a plaintext dump is never written to disk.
   # PIPESTATUS distinguishes a dump failure from an encryption failure; pipefail alone could not
   # report which stage produced the truncated stream.
   local out="$1"
   local -a dump_env=() pipeline_status
-  # M3: the database password travels through the docker exec environment, never argv.
+  # M3: the database password travels to the container through the docker exec environment.
+  # `export PGPASSWORD` + `-e PGPASSWORD` (env-by-name) keeps the value OUT of the host argv
+  # (a `-e PGPASSWORD=...` form would expose it via /proc/*/cmdline and `ps`).
   if [[ -n "${BACKUP_DB_PASSWORD:-}" ]]; then
-    dump_env=(-e "PGPASSWORD=$BACKUP_DB_PASSWORD")
+    export PGPASSWORD="$BACKUP_DB_PASSWORD"
+    dump_env=(-e PGPASSWORD)
   fi
   # PIPESTATUS distinguishes a dump failure from an encryption failure, but the failing stage
   # would otherwise trip the ERR trap (which fires even inside `set +e`), mislabelling the run
@@ -216,19 +267,37 @@ encrypt_dump() {
 }
 
 verify_remote() {
-  # $1 = local encrypted file, $2 = rclone destination (no trailing slash). Returns 0 iff the
-  # remote object exists with the same byte size AND the same MD5 as the local file (M2: size
-  # alone is not a strong integrity signal).
-  local file="$1" dest="$2" name size listed local_md5 remote_md5
+  # $1 = local encrypted file, $2 = rclone destination (no trailing slash), $3 = local .sha256
+  # sidecar. Returns 0 iff (a) the remote object, downloaded back and hashed locally, matches the
+  # local SHA-256, and (b) the remote .sha256 sidecar is present and matches the local sidecar.
+  # No remote-computed hash (S3 ETag, B2 SHA1, ...) is trusted, so verification is
+  # provider-independent.
+  local file="$1" dest="$2" sidecar="$3" name expected downloaded dir s_local s_dl
   name=$(basename "$file")
-  size=$(stat -c %s "$file")
-  listed=$(rclone lsf "${RTIMEOUT[@]}" --files-only --format "sp" --separator "$(printf '\t')" "$dest/" 2>/dev/null \
-            | awk -F '\t' -v n="$name" '$2 == n { print $1 }' | head -n 1)
-  [[ -n "$listed" && "$listed" == "$size" ]] || return 1
-
-  local_md5=$(md5sum "$file" | awk '{print $1}')
-  remote_md5=$(rclone hashsum MD5 "${RTIMEOUT[@]}" "$dest/$name" 2>/dev/null | awk '{print $1}' | head -n 1)
-  [[ -n "$remote_md5" && "$remote_md5" == "$local_md5" ]]
+  expected=$(sha256sum "$file" | awk '{print $1}')
+  dir=$(mktemp -d "$BACKUP_LOCAL_DIR/.verify.XXXXXX")
+  chmod 0700 "$dir"
+  if ! rclone copy "${RTIMEOUT[@]}" "$dest/$name" "$dir/" >/dev/null 2>&1; then
+    rm -rf -- "$dir"
+    return 1
+  fi
+  if [[ ! -f "$dir/$name" ]]; then
+    rm -rf -- "$dir"
+    return 1
+  fi
+  downloaded=$(sha256sum "$dir/$name" | awk '{print $1}')
+  s_local=$(cat "$sidecar" 2>/dev/null || true)
+  if ! rclone copy "${RTIMEOUT[@]}" "$dest/$name.sha256" "$dir/" >/dev/null 2>&1; then
+    rm -rf -- "$dir"
+    return 1
+  fi
+  if [[ ! -f "$dir/$name.sha256" ]]; then
+    rm -rf -- "$dir"
+    return 1
+  fi
+  s_dl=$(cat "$dir/$name.sha256" 2>/dev/null || true)
+  rm -rf -- "$dir"
+  [[ -n "$downloaded" && "$downloaded" == "$expected" && -n "$s_dl" && "$s_dl" == "$s_local" ]]
 }
 
 local_retention() {
@@ -273,12 +342,14 @@ remote_retention() {
   prune_tier "$dest" weekly "${BACKUP_REMOTE_WEEKLY_RETENTION}"
 }
 
+# shellcheck disable=SC2329
 on_exit() {
   if [[ -n "$STAGEDIR" && -d "$STAGEDIR" ]]; then
     rm -rf -- "$STAGEDIR"
   fi
 }
 
+# shellcheck disable=SC2329
 interrupt_handler() {
   if [[ "$STATUS_LAST" != "ok" && "$STATUS_LAST" != "error" ]]; then
     write_status "error" "interrupted" "" "" ""
@@ -286,6 +357,7 @@ interrupt_handler() {
   exit 130
 }
 
+# shellcheck disable=SC2329
 on_error() {
   # Unexpected error not already classified by fail(). A final ok/error is never clobbered; a
   # "running" marker is always replaced so an unexpected failure can never look healthy.
@@ -305,6 +377,7 @@ main() {
   validate_config
   verify_deps
   verify_db_running
+  verify_capacity
 
   local ts dow tier weekly_day filename final_path dest stage size remote_id
   ts=$(date -u +%Y%m%dT%H%M%SZ)
@@ -329,20 +402,38 @@ main() {
   if ! head -c 100 "$stage" | grep -q '^age-encryption.org/v1'; then
     fail "encrypt_failed" "encrypted output does not have an age header"
   fi
+  # age >= 1.0 addresses archives with an EPHEMERAL X25519 stanza (`-> X25519 <ephemeral key>`);
+  # the bech32 "age1..." recipient string NEVER appears in the file, and the ephemeral key
+  # changes on every encryption, so the stanza cannot name the recipient (proving the recipient
+  # cryptographically requires decrypting with the identity, which the backup job does not hold;
+  # the disaster-recovery suite proves addressing by decrypting the archive with its identity).
+  # Validate the stanza STRUCTURE so a non-age or mis-addressed output (e.g. passphrase mode)
+  # is caught and never treated as a valid backup.
+  if ! grep -aqE '^-> X25519 [A-Za-z0-9+/]{43,44}$' "$stage"; then
+    fail "encrypt_failed" "encrypted output does not contain a valid age X25519 recipient stanza"
+  fi
 
   chmod 0600 "$stage"
   mv -f "$stage" "$final_path"   # atomic rename: a partial archive can never look complete
   log "encrypted backup ready: $final_path"
 
+  # Provider-independent integrity: upload the archive AND a .sha256 sidecar. Verification later
+  # downloads the remote object and compares its local SHA-256 against this sidecar/local value.
+  sha256sum "$final_path" | awk -v n="$(basename "$final_path")" '{printf "%s  %s\n", $1, n}' > "$STAGEDIR/$(basename "$final_path").sha256"
+  chmod 0600 "$STAGEDIR/$(basename "$final_path").sha256"
+
   if ! rclone copy "${RTIMEOUT[@]}" "$final_path" "$dest/"; then
     fail "upload_failed" "rclone copy to $dest failed"
   fi
+  if ! rclone copy "${RTIMEOUT[@]}" "$STAGEDIR/$(basename "$final_path").sha256" "$dest/"; then
+    fail "upload_failed" "rclone upload of the .sha256 sidecar to $dest failed"
+  fi
   log "uploaded to $dest"
 
-  if ! verify_remote "$final_path" "$dest"; then
-    fail "upload_verify_failed" "remote object for $(basename "$final_path") missing, size mismatch or hash mismatch"
+  if ! verify_remote "$final_path" "$dest" "$STAGEDIR/$(basename "$final_path").sha256"; then
+    fail "upload_verify_failed" "remote object or its .sha256 sidecar for $(basename "$final_path") could not be downloaded or does not match the local SHA-256"
   fi
-  log "remote object verified (size + MD5) for $(basename "$final_path")"
+  log "remote object verified (downloaded + SHA-256, sidecar confirmed) for $(basename "$final_path")"
 
   size=$(stat -c %s "$final_path")
   remote_id="$dest/$(basename "$final_path")"

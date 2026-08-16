@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 #
 # Tests for deploy/deploy.sh backup-component handling:
-#   C1  verify_release_payload — the release bundle MUST ship the backup components.
+#   C1  verify_release_payload — the release bundle MUST ship all components from release-components.txt.
 #   H3  install_backup_components — install failures are caught, reported, and never abort the
 #       application deployment; the protection state is made explicit.
 #   H5  verify_backup_components — "timer enabled" is not "verified": ACTIVE/VERIFIED is only
 #       logged after a fresh ok status with a remote destination.
 #   M4  backup.env permission enforcement before activation.
+#   N-H7 backup_existing_database releases lock so verify_backup_components succeeds in the same deploy.
 #
 # Sources the REAL deploy.sh (entrypoint behind a source guard) with stub systemctl/install
 # binaries against a temp APP_DIR/SYSTEMD_DIR/RELEASE_DIR.
@@ -58,6 +59,34 @@ exec /usr/bin/install "$@"
 INST
 chmod 0700 "$FAKEBIN/install"
 
+cat > "$FAKEBIN/docker" <<'DOCKER'
+#!/usr/bin/env bash
+case "${1:-}" in
+  inspect)
+    printf 'true\n'
+    exit 0 ;;
+  exec)
+    printf 'PGDMP-MOCK\n'
+    exit 0 ;;
+  *) exit 0 ;;
+esac
+DOCKER
+chmod 0700 "$FAKEBIN/docker"
+
+cat > "$FAKEBIN/age" <<'AGE'
+#!/usr/bin/env bash
+out=""
+prev=""
+for a in "$@"; do
+  if [[ "$prev" == "-o" || "$prev" == "--output" ]]; then out="$a"; fi
+  prev="$a"
+done
+printf 'age-encryption.org/v1\n-> X25519 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n' > "$out"
+cat >> "$out"
+exit 0
+AGE
+chmod 0700 "$FAKEBIN/age"
+
 export PATH="$FAKEBIN:$PATH"
 export FAKEBIN_DIR="$FAKEBIN"
 export APP_DIR="$DEPLOY_APP_DIR"
@@ -73,17 +102,15 @@ source "$LF_DEPLOY"
 make_release() {
   rm -rf "$RELEASE_DIR"
   mkdir -p "$RELEASE_DIR/images" "$RELEASE_DIR/initdb"
-  touch "$RELEASE_DIR/deploy.sh" \
-        "$RELEASE_DIR/docker-compose.prod.yml" \
-        "$RELEASE_DIR/ekowayhardware.Caddyfile" \
-        "$RELEASE_DIR/SHA256SUMS" \
+  cp "$ROOT/deploy/release-components.txt" "$RELEASE_DIR/release-components.txt"
+  while IFS=$'\t' read -r _src target || [[ -n "$target" ]]; do
+    [[ -n "$target" ]] || continue
+    touch "$RELEASE_DIR/$target"
+  done < "$RELEASE_DIR/release-components.txt"
+  touch "$RELEASE_DIR/SHA256SUMS" \
         "$RELEASE_DIR/images/backend.tar.gz" \
         "$RELEASE_DIR/images/frontend.tar.gz" \
-        "$RELEASE_DIR/backup.sh" \
-        "$RELEASE_DIR/restore.sh" \
-        "$RELEASE_DIR/backup.env.example" \
-        "$RELEASE_DIR/online-shopping-backup.service" \
-        "$RELEASE_DIR/online-shopping-backup.timer"
+        "$RELEASE_DIR/initdb/0001_init.sql"
 }
 
 reset_install_state() {
@@ -94,9 +121,6 @@ reset_install_state() {
 }
 
 expect_rc() {
-  # expect_rc <name> <expected_rc> <fn...>
-  # Runs inside a subshell so a `die`/`exit` inside the sourced deploy function only ends the
-  # subshell, never the whole test script.
   local name="$1" expected="$2"
   shift 2
   local rc=0
@@ -134,19 +158,19 @@ expect_rc "release_bundle_complete_ok" 0 verify_release_payload "$RELEASE_DIR"
 make_release
 rm -f "$RELEASE_DIR/backup.sh"
 expect_rc "missing_backup_sh_fails_payload" 1 verify_release_payload "$RELEASE_DIR"
-assert_output "missing_backup_sh_message" "missing required backup components"
+assert_output "missing_backup_sh_message" "missing backup.sh"
 
 make_release
-rm -f "$RELEASE_DIR/restore.sh"
-expect_rc "missing_restore_sh_fails_payload" 1 verify_release_payload "$RELEASE_DIR"
+rm -f "$RELEASE_DIR/backup-env-parser.sh"
+expect_rc "missing_parser_fails_payload" 1 verify_release_payload "$RELEASE_DIR"
 
 make_release
-rm -f "$RELEASE_DIR/online-shopping-backup.service"
-expect_rc "missing_service_fails_payload" 1 verify_release_payload "$RELEASE_DIR"
+rm -f "$RELEASE_DIR/preflight-backup.sh"
+expect_rc "missing_preflight_fails_payload" 1 verify_release_payload "$RELEASE_DIR"
 
 make_release
-rm -f "$RELEASE_DIR/backup.env.example"
-expect_rc "missing_env_example_fails_payload" 1 verify_release_payload "$RELEASE_DIR"
+rm -f "$RELEASE_DIR/online-shopping-backup-health.service"
+expect_rc "missing_health_service_fails_payload" 1 verify_release_payload "$RELEASE_DIR"
 
 # ------------------------------------------------------------------------------------------
 # H3: happy path — installs, daemon-reload, timer ACTIVE (verification pending), rc 0
@@ -282,11 +306,35 @@ expect_rc "verify_backup_failure_nonfatal" 0 verify_backup_components
 assert_output "verify_reports_not_verified" "NOT VERIFIED"
 
 # ------------------------------------------------------------------------------------------
-# H5: missing installed backup.sh -> NOT VERIFIED warning
+# N-H7: sequential pre-deploy backup -> verify_backup_components in the SAME process
 # ------------------------------------------------------------------------------------------
 reset_install_state
-expect_rc "verify_missing_backup_nonfatal" 0 verify_backup_components
-assert_output "verify_missing_reports_not_verified" "NOT VERIFIED"
+cat > "$DEPLOY_APP_DIR/backup.env" <<'EOF'
+BACKUP_AGE_RECIPIENT=age1recipient
+BACKUP_RCLONE_REMOTE=proof-remote
+BACKUP_RCLONE_PATH=/backups
+EOF
+chmod 0600 "$DEPLOY_APP_DIR/backup.env"
+cat > "$DEPLOY_APP_DIR/backup.sh" <<'STUB'
+#!/usr/bin/env bash
+exec 9>"$DEPLOY_APP_DIR/backup.lock"
+flock -n 9 || { echo "lock contended in verify step" >&2; exit 1; }
+cat > "$DEPLOY_APP_DIR/backup-status.json" <<'EOF'
+{"status": "ok", "error_category": null, "last_attempt": "x", "last_success": "x", "filename": "a.dump.age", "encrypted_size": 1, "remote_destination_identifier": "proof-remote:/backups/a.dump.age"}
+EOF
+exit 0
+STUB
+chmod 0750 "$DEPLOY_APP_DIR/backup.sh"
+# shellcheck disable=SC2016
+expect_rc "predeploy_then_verify_lock_unlocked" 0 bash -c '
+  export DEPLOY_APP_DIR="'"$DEPLOY_APP_DIR"'"
+  export DEPLOY_BACKUP_DIR="'"$DEPLOY_BACKUP_DIR"'"
+  export PATH="'"$FAKEBIN"':$PATH"
+  source "'"$LF_DEPLOY"'"
+  backup_existing_database
+  verify_backup_components
+'
+assert_output "sequential_run_verifies" "ACTIVE and VERIFIED"
 
 echo
 echo "PASS: $PASS  FAIL: $FAIL"

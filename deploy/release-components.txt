@@ -1,0 +1,13 @@
+deploy/deploy.sh	deploy.sh
+deploy/docker-compose.prod.yml	docker-compose.prod.yml
+deploy/ekowayhardware.Caddyfile	ekowayhardware.Caddyfile
+deploy/backup.sh	backup.sh
+deploy/backup-env-parser.sh	backup-env-parser.sh
+deploy/restore.sh	restore.sh
+deploy/backup.env.example	backup.env.example
+deploy/online-shopping-backup.service	online-shopping-backup.service
+deploy/online-shopping-backup.timer	online-shopping-backup.timer
+deploy/online-shopping-backup-health.service	online-shopping-backup-health.service
+deploy/online-shopping-backup-health.timer	online-shopping-backup-health.timer
+scripts/preflight-backup.sh	preflight-backup.sh
+scripts/check-backup-health.sh	check-backup-health.sh

@@ -92,7 +92,7 @@ case "${FAKE_AGE_MODE:-ok}" in
     printf 'age-encryption.org/v1\npartial' > "$out"
     exit 6 ;;
 esac
-printf 'age-encryption.org/v1\n' > "$out"
+printf 'age-encryption.org/v1\n-> X25519 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n' > "$out"
 cat >> "$out"
 exit 0
 AGE
@@ -111,14 +111,20 @@ case "${1:-}" in
       echo "rclone copy failed" >&2
       exit 7
     fi
-    local src dest
-    src="${@: -2:1}"
+    src="$(resolve "${@: -2:1}")"
     dest="$(resolve "${@: -1}")"
     mkdir -p "$dest"
+    # Sidecar-missing simulation: the .sha256 upload/download is silently skipped.
+    if [[ "${FAKE_RCLONE_SIDECAR_MISSING:-0}" == "1" && "$src" == *.sha256 ]]; then
+      exit 0
+    fi
     cp -f "$src" "$dest/$(basename "$src")"
+    # Corruption simulation: the remote copy of the archive differs from the local file.
+    if [[ "${FAKE_RCLONE_CORRUPT:-0}" == "1" && "$src" == *.dump.age ]]; then
+      printf 'CORRUPT' >> "$dest/$(basename "$src")"
+    fi
     exit 0 ;;
   lsf)
-    local d fmt="p" sep=$'\t' a
     d="$(resolve "${@: -1}")"
     for a in "$@"; do
       if [[ "$prev" == "--format" ]]; then fmt="$a"; fi
@@ -179,6 +185,19 @@ esac
 DATE
 chmod 0700 "$FAKEBIN/date"
 
+# Capacity-safety stub: backup.sh reads `df --output=avail -B1 <dir>`. When FAKE_DF_AVAIL is set
+# it is reported verbatim (tiny values force the insufficient_staging_space path); otherwise the
+# real df is used so normal cases see the host's actual free space.
+cat > "$FAKEBIN/df" <<'DF'
+#!/usr/bin/env bash
+if [[ -n "${FAKE_DF_AVAIL:-}" ]]; then
+  printf 'Avail\n%s\n' "$FAKE_DF_AVAIL"
+  exit 0
+fi
+exec /usr/bin/df "$@"
+DF
+chmod 0700 "$FAKEBIN/df"
+
 # ------------------------------------------------------------------------------------------
 # Case setup helpers
 # ------------------------------------------------------------------------------------------
@@ -204,7 +223,8 @@ setup_case() {
   export FAKE_DATE_ISO_Z="2026-09-${day}T12:00:00Z"
   export FAKE_DATE_DOW=1
   unset FAKE_DB_RUNNING FAKE_DUMP_STATUS FAKE_AGE_MODE FAKE_RCLONE_MODE FAKE_RCLONE_LSF_SIZE \
-        FAKE_RCLONE_DELETE_FAIL FAKE_RCLONE_HASHSUM_BAD FAKE_DATE_FAIL FAKE_DUMP_DELAY || true
+        FAKE_RCLONE_DELETE_FAIL FAKE_RCLONE_HASHSUM_BAD FAKE_RCLONE_CORRUPT FAKE_RCLONE_SIDECAR_MISSING \
+        FAKE_DATE_FAIL FAKE_DUMP_DELAY FAKE_DF_AVAIL || true
   : > "$FAKEBIN/docker-argv.log"
 }
 
@@ -220,8 +240,8 @@ status_category() {
 }
 
 assert_no_backup_artifacts() {
-  [[ -z "$(find "$CASE_TMP/local" "$CASE_TMP/remote" -type f ! -name '*.dump.age' 2>/dev/null)" ]] \
-    && [[ -z "$(find "$CASE_TMP/local" -maxdepth 1 -type d -name '.backup.*' 2>/dev/null)" ]]
+  [[ -z "$(find "$CASE_TMP/local" "$CASE_TMP/remote" -type f ! -name '*.dump.age' ! -name '*.sha256' 2>/dev/null)" ]] \
+    && [[ -z "$(find "$CASE_TMP/local" -maxdepth 1 -type d -name '.backup.*' -o -name '.verify.*' 2>/dev/null)" ]]
 }
 
 # ------------------------------------------------------------------------------------------
@@ -241,7 +261,7 @@ BACKUP_DB_USER=shop_admin
 BACKUP_DB_NAME=online_shopping
 EOF
 t "success_encrypted_upload" "expected exit 0, status ok, remote+local file present, no plaintext" bash "$BACKUP_SH"
-if [[ "$(status_category)" != "" ]]; then echo "FAIL: success case has error_category '$ (status_category)'"; FAIL=$((FAIL+1)); fi
+if [[ "$(status_category)" != "" ]]; then echo "FAIL: success case has error_category '$(status_category)'"; FAIL=$((FAIL+1)); fi
 if [[ "$(find "$CASE_TMP/local" -name '*.dump.age' | wc -l)" != 1 ]]; then echo "FAIL: local encrypted file missing"; FAIL=$((FAIL+1)); fi
 if [[ "$(find "$CASE_TMP/remote" -name '*.dump.age' | wc -l)" != 1 ]]; then echo "FAIL: remote encrypted file missing"; FAIL=$((FAIL+1)); fi
 assert_no_backup_artifacts || { echo "FAIL: plaintext/leftover artifact in success case"; FAIL=$((FAIL+1)); }
@@ -446,10 +466,10 @@ if [[ -n "$FRESH_NAME" && ! -f "$CASE_TMP/remote/$FRESH_NAME" ]]; then echo "FAI
 if [[ -f "$CASE_TMP/remote/online-shopping-20260101T000000Z-daily.dump.age" ]]; then echo "FAIL: oldest remote daily was not pruned"; FAIL=$((FAIL+1)); fi
 
 # ------------------------------------------------------------------------------------------
-# 12. Remote upload verification size mismatch -> backup fails, local copy retained
+# 12. Remote upload verification hash mismatch -> backup fails, local copy retained
 # ------------------------------------------------------------------------------------------
 setup_case
-export FAKE_RCLONE_LSF_SIZE=12345
+export FAKE_RCLONE_CORRUPT=1
 write_env <<EOF
 BACKUP_AGE_RECIPIENT=age1recipient
 BACKUP_RCLONE_REMOTE=proof-remote
@@ -459,7 +479,25 @@ BACKUP_DB_CONTAINER=online-shopping-db
 BACKUP_DB_USER=shop_admin
 BACKUP_DB_NAME=online_shopping
 EOF
-t_expect_fail "upload_verify_size_mismatch_fails" "expected nonzero + upload_verify_failed + local retained" bash "$BACKUP_SH"
+t_expect_fail "upload_verify_corrupt_fails" "corrupt remote object must fail verification" bash "$BACKUP_SH"
+if [[ "$(status_category)" != "upload_verify_failed" ]]; then echo "FAIL: expected category upload_verify_failed, got '$(status_category)'"; FAIL=$((FAIL+1)); fi
+if [[ "$(find "$CASE_TMP/local" -name '*.dump.age' | wc -l)" != 1 ]]; then echo "FAIL: valid local backup deleted after verify failure"; FAIL=$((FAIL+1)); fi
+
+# ------------------------------------------------------------------------------------------
+# 12b. Remote upload verification missing sidecar -> backup fails, local copy retained
+# ------------------------------------------------------------------------------------------
+setup_case
+export FAKE_RCLONE_SIDECAR_MISSING=1
+write_env <<EOF
+BACKUP_AGE_RECIPIENT=age1recipient
+BACKUP_RCLONE_REMOTE=proof-remote
+BACKUP_RCLONE_PATH=$CASE_TMP/remote
+BACKUP_LOCAL_DIR=$CASE_TMP/local
+BACKUP_DB_CONTAINER=online-shopping-db
+BACKUP_DB_USER=shop_admin
+BACKUP_DB_NAME=online_shopping
+EOF
+t_expect_fail "upload_verify_missing_sidecar_fails" "missing .sha256 sidecar must fail verification" bash "$BACKUP_SH"
 if [[ "$(status_category)" != "upload_verify_failed" ]]; then echo "FAIL: expected category upload_verify_failed, got '$(status_category)'"; FAIL=$((FAIL+1)); fi
 if [[ "$(find "$CASE_TMP/local" -name '*.dump.age' | wc -l)" != 1 ]]; then echo "FAIL: valid local backup deleted after verify failure"; FAIL=$((FAIL+1)); fi
 
@@ -618,29 +656,7 @@ else
 fi
 
 # ------------------------------------------------------------------------------------------
-# 18. M2: remote MD5 hash mismatch -> backup fails, local copy retained
-# ------------------------------------------------------------------------------------------
-setup_case
-export FAKE_RCLONE_HASHSUM_BAD=1
-write_env <<EOF
-BACKUP_AGE_RECIPIENT=age1recipient
-BACKUP_RCLONE_REMOTE=proof-remote
-BACKUP_RCLONE_PATH=$CASE_TMP/remote
-BACKUP_LOCAL_DIR=$CASE_TMP/local
-BACKUP_DB_CONTAINER=online-shopping-db
-BACKUP_DB_USER=shop_admin
-BACKUP_DB_NAME=online_shopping
-EOF
-t_expect_fail "upload_hash_mismatch_fails" "hash mismatch must fail the backup" bash "$BACKUP_SH"
-if [[ "$(status_category)" != "upload_verify_failed" ]]; then
-  echo "FAIL: expected category upload_verify_failed, got '$(status_category)'"; FAIL=$((FAIL+1))
-else
-  PASS=$((PASS + 1)); echo "ok:   upload_verify_failed_category"
-fi
-if [[ "$(find "$CASE_TMP/local" -name '*.dump.age' | wc -l)" != 1 ]]; then echo "FAIL: valid local backup deleted after hash mismatch"; FAIL=$((FAIL+1)); fi
-
-# ------------------------------------------------------------------------------------------
-# 19. M5: retention is ordered by the ISO timestamp in the NAME, never by mtime
+# 18. M5: retention is ordered by the ISO timestamp in the NAME, never by mtime
 # ------------------------------------------------------------------------------------------
 setup_case
 write_env <<EOF
@@ -678,7 +694,29 @@ else
 fi
 
 # ------------------------------------------------------------------------------------------
-# 20. M3: database password travels via docker exec -e env, never argv, never a URI
+# 19. Capacity safety: insufficient free space fails before staging
+# ------------------------------------------------------------------------------------------
+setup_case
+export FAKE_DF_AVAIL=1000000   # 1 MB free space, far below required
+write_env <<EOF
+BACKUP_AGE_RECIPIENT=age1recipient
+BACKUP_RCLONE_REMOTE=proof-remote
+BACKUP_RCLONE_PATH=$CASE_TMP/remote
+BACKUP_LOCAL_DIR=$CASE_TMP/local
+BACKUP_DB_CONTAINER=online-shopping-db
+BACKUP_DB_USER=shop_admin
+BACKUP_DB_NAME=online_shopping
+EOF
+t_expect_fail "capacity_check_fails_on_low_disk" "refuses to start when space below requirement" bash "$BACKUP_SH"
+if [[ "$(status_category)" != "insufficient_staging_space" ]]; then
+  echo "FAIL: expected category insufficient_staging_space, got '$(status_category)'"; FAIL=$((FAIL+1))
+else
+  PASS=$((PASS + 1)); echo "ok:   capacity_check_rejects_insufficient_space"
+fi
+assert_no_backup_artifacts || { echo "FAIL: artifacts created despite insufficient capacity"; FAIL=$((FAIL+1)); }
+
+# ------------------------------------------------------------------------------------------
+# 20. M3: database password travels via docker exec -e PGPASSWORD (env inheritance), never argv value
 # ------------------------------------------------------------------------------------------
 setup_case
 write_env <<EOF
@@ -689,14 +727,19 @@ BACKUP_LOCAL_DIR=$CASE_TMP/local
 BACKUP_DB_CONTAINER=online-shopping-db
 BACKUP_DB_USER=shop_admin
 BACKUP_DB_NAME=online_shopping
-BACKUP_DB_PASSWORD=supersecret
+BACKUP_DB_PASSWORD=supersecret_fake_password_12345
 EOF
 t "password_via_env_not_argv" "backup succeeds with BACKUP_DB_PASSWORD set" bash "$BACKUP_SH"
 EXEC_LINE="$(grep -E '^exec ' "$FAKEBIN/docker-argv.log" | head -n 1 || true)"
-if [[ "$EXEC_LINE" == *"-e PGPASSWORD=supersecret"* ]]; then
-  PASS=$((PASS + 1)); echo "ok:   pgpassword_via_docker_exec_env"
+if [[ "$EXEC_LINE" == *"-e PGPASSWORD "* || "$EXEC_LINE" == *"-e PGPASSWORD" ]]; then
+  PASS=$((PASS + 1)); echo "ok:   pgpassword_inherited_by_name"
 else
-  echo "FAIL: PGPASSWORD not passed via -e env (line: $EXEC_LINE)"; FAIL=$((FAIL+1))
+  echo "FAIL: -e PGPASSWORD not found in docker argv (line: $EXEC_LINE)"; FAIL=$((FAIL+1))
+fi
+if grep -q "supersecret_fake_password_12345" "$FAKEBIN/docker-argv.log"; then
+  echo "FAIL: password value leaked into docker argv!"; FAIL=$((FAIL+1))
+else
+  PASS=$((PASS + 1)); echo "ok:   password_value_never_in_argv"
 fi
 if [[ "$EXEC_LINE" == *"postgres://"* ]]; then
   echo "FAIL: conninfo URI present in docker exec argv"; FAIL=$((FAIL+1))

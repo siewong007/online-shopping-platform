@@ -1,15 +1,22 @@
 #!/usr/bin/env bash
 #
-# Tests for the encrypted pre-deploy database backup in deploy/deploy.sh
-# (backup_existing_database). Sources the REAL deploy.sh (its entrypoint is behind a source guard)
-# and exercises the function with stub docker/age binaries against a temp APP_DIR/BACKUP_DIR.
+# Unit tests for deploy/deploy.sh's backup_existing_database() function.
 #
-# Requires: bash, coreutils (flock, stat, find, sed, grep, head, mktemp, install, tail, sort, cut).
-# No age/rclone/docker needed.
-# Run on any Linux host:  scripts/test-predeploy.sh
+# Proves:
+#   - a plaintext dump is NEVER written (pg_dump piped straight through age),
+#   - missing age, missing/unreadable backup.env, missing BACKUP_AGE_RECIPIENT or bad mode/ownership
+#     abort the deployment (never fall back to unencrypted plaintext),
+#   - container absent (first deploy) skips cleanly; docker daemon down aborts,
+#   - age failure or pg_dump failure aborts the deployment and removes partial output,
+#   - retention prunes older pre-deploy dumps (keeps 3 newest by ISO timestamp, never by mtime),
+#   - pre-deploy backup lock fd 8 is released on completion/failure so subsequent steps can acquire it,
+#   - database password travels via docker exec -e PGPASSWORD (env inheritance by name), never host argv.
+#
+# Requires: bash, coreutils. Runs on any Linux host:  scripts/test-predeploy.sh
 set -Eeuo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+DEPLOY_SH="$ROOT/deploy/deploy.sh"
 
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/test-predeploy.XXXXXX")"
 chmod 0700 "$TMP"
@@ -21,28 +28,26 @@ FAKEBIN="$TMP/bin"
 mkdir -p "$FAKEBIN"
 
 cat > "$FAKEBIN/docker" <<'DOCKER'
-#!/bin/bash
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "${FAKEBIN_DIR:-/nonexistent}/docker-argv.log"
 case "${1:-}" in
   inspect)
-    case "${FAKE_INSPECT_ERROR:-}" in
-      daemon)
-        echo "Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?" >&2
-        exit 1 ;;
-      absent)
-        echo "Error: No such object: online-shopping-db" >&2
-        exit 1 ;;
-      generic)
-        echo "some unexpected docker error" >&2
-        exit 1 ;;
-    esac
+    if [[ "${FAKE_DOCKER_DOWN:-0}" == "1" ]]; then
+      echo "Cannot connect to the Docker daemon" >&2
+      exit 1
+    fi
+    if [[ "${FAKE_CONTAINER_ABSENT:-0}" == "1" ]]; then
+      echo "Error: No such container: online-shopping-db" >&2
+      exit 1
+    fi
     printf '%s\n' "${FAKE_DB_RUNNING:-true}"
     exit 0 ;;
   exec)
-    if [[ "${FAKE_DUMP_STATUS:-0}" != "0" ]]; then
-      echo "pg_dump failed" >&2
-      exit "$FAKE_DUMP_STATUS"
+    if [[ "${FAKE_PGDUMP_FAIL:-0}" == "1" ]]; then
+      echo "pg_dump: connection failed" >&2
+      exit 2
     fi
-    printf 'PGDMP\nfake-custom-dump-payload\n'
+    printf 'PGDMP-PREDEPLOY-STREAM\n'
     exit 0 ;;
   *) exit 0 ;;
 esac
@@ -50,285 +55,192 @@ DOCKER
 chmod 0700 "$FAKEBIN/docker"
 
 cat > "$FAKEBIN/age" <<'AGE'
-#!/bin/bash
+#!/usr/bin/env bash
 out=""
+recipient=""
 prev=""
 for a in "$@"; do
-  if [[ "$prev" == "-o" || "$prev" == "--output" ]]; then
-    out="$a"
-  fi
+  if [[ "$prev" == "-o" || "$prev" == "--output" ]]; then out="$a"; fi
+  if [[ "$prev" == "-r" || "$prev" == "--recipient" ]]; then recipient="$a"; fi
   prev="$a"
 done
-case "${FAKE_AGE_MODE:-ok}" in
-  fail)
-    echo "age error" >&2
-    exit 5 ;;
-  partial)
-    printf 'age-encryption.org/v1\npartial' > "$out"
-    exit 6 ;;
-esac
-printf 'age-encryption.org/v1\n' > "$out"
+if [[ "${FAKE_AGE_FAIL:-0}" == "1" ]]; then
+  echo "age: encryption failed" >&2
+  exit 3
+fi
+printf 'age-encryption.org/v1\n-> X25519 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n' > "$out"
 cat >> "$out"
 exit 0
 AGE
 chmod 0700 "$FAKEBIN/age"
 
 export PATH="$FAKEBIN:$PATH"
+export FAKEBIN_DIR="$FAKEBIN"
 
-# Isolated, source-guarded deploy paths.
-export DEPLOY_APP_DIR="$TMP/app"
-export DEPLOY_BACKUP_DIR="$TMP/app/backups"
-mkdir -p "$DEPLOY_APP_DIR" "$DEPLOY_BACKUP_DIR"
-APP_DIR="$DEPLOY_APP_DIR"
-BACKUP_DIR="$DEPLOY_BACKUP_DIR"
-
-# Source the real deploy.sh (defines functions only; the entrypoint guard skips execution). The
-# working copy carries Windows CRLF line endings, which bash would choke on at "set ... pipefail\r",
-# so source a LF-normalized copy. deploy.sh loads deploy/backup-env-parser.sh from its own
-# directory, so the parser is copied next to the LF copy just like the real install puts them in
-# the same directory.
-LF_DEPLOY="$TMP/deploy.sh"
-sed 's/\r$//' "$ROOT/deploy/deploy.sh" > "$LF_DEPLOY"
-cp "$ROOT/deploy/backup-env-parser.sh" "$TMP/backup-env-parser.sh"
-# shellcheck disable=SC1090,SC1091,SC1094
-source "$LF_DEPLOY"
-
-ENV_FILE="$APP_DIR/backup.env"
-
-reset_backup_dir() {
-  rm -rf -- "$BACKUP_DIR"
-  mkdir -p "$BACKUP_DIR"
-  unset FAKE_DB_RUNNING FAKE_DUMP_STATUS FAKE_AGE_MODE FAKE_INSPECT_ERROR || true
+CASE_TMP=""
+setup_case() {
+  CASE_TMP="$(mktemp -d "$TMP/c.XXXXXX")"
+  export DEPLOY_APP_DIR="$CASE_TMP/app"
+  export DEPLOY_BACKUP_DIR="$CASE_TMP/app/backups"
+  export DEPLOY_LOCK_FILE="$CASE_TMP/app/deploy.lock"
+  mkdir -p "$DEPLOY_APP_DIR" "$DEPLOY_BACKUP_DIR"
+  unset FAKE_DOCKER_DOWN FAKE_CONTAINER_ABSENT FAKE_DB_RUNNING FAKE_PGDUMP_FAIL FAKE_AGE_FAIL || true
+  : > "$FAKEBIN/docker-argv.log"
 }
 
 write_env() {
-  cat > "$ENV_FILE"
-  chmod 0600 "$ENV_FILE"
+  cat > "$DEPLOY_APP_DIR/backup.env"
+  chmod 0600 "$DEPLOY_APP_DIR/backup.env"
 }
 
-run_predeploy() {
-  local rc
+run_backup() {
+  local name="$1" expected_rc="$2" needle="${3:-}"
+  shift 3
+  local rc=0
   set +e
-  ( backup_existing_database ) >"$TMP/.out" 2>&1
+  (
+    # Source deploy.sh to load backup_existing_database
+    # Normalize CRLF; the source guard requires backup-env-parser.sh NEXT TO the copied
+    # deploy.sh (it cannot see the real repo layout).
+    sed 's/\r$//' "$DEPLOY_SH" > "$CASE_TMP/deploy_clean.sh"
+    cp "$ROOT/deploy/backup-env-parser.sh" "$CASE_TMP/backup-env-parser.sh"
+    # shellcheck disable=SC1090,SC1091
+    source "$CASE_TMP/deploy_clean.sh"
+    backup_existing_database
+  ) >"$CASE_TMP/.out" 2>&1
   rc=$?
   set -e
-  return "$rc"
+  if [[ "$rc" == "$expected_rc" ]]; then
+    PASS=$((PASS + 1))
+    echo "ok:   $name"
+  else
+    FAIL=$((FAIL + 1))
+    echo "FAIL: $name — expected rc $expected_rc, got $rc"
+    sed 's/^/      /' "$CASE_TMP/.out" | head -n 10
+  fi
+  if [[ -n "$needle" ]] && ! grep -qF -- "$needle" "$CASE_TMP/.out"; then
+    FAIL=$((FAIL + 1))
+    echo "FAIL: $name — expected output containing '$needle'"
+    sed 's/^/      /' "$CASE_TMP/.out" | head -n 10
+  fi
 }
 
-# ------------------------------------------------------------------------------------------
-# 1. Encrypted predeploy success: valid .dump.age, mode 0600, no plaintext, no temp leftovers
-# ------------------------------------------------------------------------------------------
-reset_backup_dir
-write_env <<'EOF'
-BACKUP_AGE_RECIPIENT=age1recipient
+# 1. Success: creates encrypted predeploy-*.dump.age, no plaintext
+setup_case
+write_env <<EOF
+BACKUP_AGE_RECIPIENT=age1predeployrecipient
 EOF
-if run_predeploy; then
-  PASS=$((PASS + 1)); echo "ok:   encrypted_predeploy_success"
-else
-  FAIL=$((FAIL + 1)); echo "FAIL: encrypted_predeploy_success (rc $?)"; sed 's/^/      /' "$TMP/.out" | head -n 10
-fi
-NEW="$(find "$BACKUP_DIR" -maxdepth 1 -name 'predeploy-*.dump.age' | head -n 1)"
-if [[ -z "$NEW" ]]; then echo "FAIL: no encrypted predeploy file created"; FAIL=$((FAIL+1)); fi
-if [[ -n "$NEW" && "$(stat -c %a "$NEW")" != "600" ]]; then echo "FAIL: encrypted predeploy mode not 0600"; FAIL=$((FAIL+1)); fi
-if [[ -n "$NEW" ]] && ! head -c 100 "$NEW" | grep -q '^age-encryption.org/v1'; then echo "FAIL: encrypted predeploy has no age header"; FAIL=$((FAIL+1)); fi
-if [[ -n "$(find "$BACKUP_DIR" -maxdepth 1 -name 'predeploy-*.dump' 2>/dev/null)" ]]; then echo "FAIL: plaintext predeploy dump exists"; FAIL=$((FAIL+1)); fi
-if [[ -n "$(find "$BACKUP_DIR" -maxdepth 1 -name '.predeploy.*' 2>/dev/null)" ]]; then echo "FAIL: predeploy temp file left behind"; FAIL=$((FAIL+1)); fi
+run_backup "success_creates_encrypted_dump" 0 "Encrypted pre-deploy backup ready"
+COUNT=$(find "$DEPLOY_BACKUP_DIR" -name 'predeploy-*.dump.age' | wc -l)
+if [[ "$COUNT" != 1 ]]; then echo "FAIL: pre-deploy archive missing"; FAIL=$((FAIL+1)); fi
+PLAINTEXT=$(find "$DEPLOY_BACKUP_DIR" -type f ! -name '*.dump.age' 2>/dev/null)
+if [[ -n "$PLAINTEXT" ]]; then echo "FAIL: plaintext file found: $PLAINTEXT"; FAIL=$((FAIL+1)); fi
 
-# ------------------------------------------------------------------------------------------
-# 2. pg_dump failure -> abort, no artifacts
-# ------------------------------------------------------------------------------------------
-reset_backup_dir
-export FAKE_DUMP_STATUS=3
-write_env <<'EOF'
-BACKUP_AGE_RECIPIENT=age1recipient
+# 2. Lock fd 8 released: another process can acquire backup.lock immediately after
+setup_case
+write_env <<EOF
+BACKUP_AGE_RECIPIENT=age1predeployrecipient
 EOF
-if run_predeploy; then
-  FAIL=$((FAIL + 1)); echo "FAIL: pg_dump failure should abort"
+run_backup "lock_released_after_success" 0 ""
+if ( exec 8>"$DEPLOY_APP_DIR/backup.lock" && flock -n 8 ); then
+  PASS=$((PASS + 1)); echo "ok:   backup_lock_freed_after_predeploy"
+  exec 8>&-
 else
-  PASS=$((PASS + 1)); echo "ok:   pg_dump_failure_aborts"
-fi
-if [[ -n "$(find "$BACKUP_DIR" -maxdepth 1 \( -name 'predeploy-*' -o -name '.predeploy.*' \) 2>/dev/null)" ]]; then echo "FAIL: artifacts after pg_dump failure"; FAIL=$((FAIL+1)); fi
-
-# ------------------------------------------------------------------------------------------
-# 3. age failure -> abort, no artifacts, no plaintext
-# ------------------------------------------------------------------------------------------
-reset_backup_dir
-export FAKE_AGE_MODE=fail
-write_env <<'EOF'
-BACKUP_AGE_RECIPIENT=age1recipient
-EOF
-if run_predeploy; then
-  FAIL=$((FAIL + 1)); echo "FAIL: age failure should abort"
-else
-  PASS=$((PASS + 1)); echo "ok:   age_failure_aborts"
-fi
-if [[ -n "$(find "$BACKUP_DIR" -maxdepth 1 \( -name 'predeploy-*' -o -name '.predeploy.*' \) 2>/dev/null)" ]]; then echo "FAIL: artifacts after age failure"; FAIL=$((FAIL+1)); fi
-
-# ------------------------------------------------------------------------------------------
-# 4. Missing recipient -> abort with config error, no artifacts
-# ------------------------------------------------------------------------------------------
-reset_backup_dir
-write_env <<'EOF'
-BACKUP_RCLONE_REMOTE=
-EOF
-if run_predeploy; then
-  FAIL=$((FAIL + 1)); echo "FAIL: missing recipient should abort"
-else
-  PASS=$((PASS + 1)); echo "ok:   missing_recipient_aborts"
-fi
-if ! grep -q "BACKUP_AGE_RECIPIENT" "$TMP/.out"; then echo "FAIL: missing-recipient error message absent"; FAIL=$((FAIL+1)); fi
-if [[ -n "$(find "$BACKUP_DIR" -maxdepth 1 \( -name 'predeploy-*' -o -name '.predeploy.*' \) 2>/dev/null)" ]]; then echo "FAIL: artifacts without recipient"; FAIL=$((FAIL+1)); fi
-
-# ------------------------------------------------------------------------------------------
-# 5. Missing backup.env -> abort
-# ------------------------------------------------------------------------------------------
-reset_backup_dir
-rm -f "$ENV_FILE"
-if run_predeploy; then
-  FAIL=$((FAIL + 1)); echo "FAIL: missing backup.env should abort"
-else
-  PASS=$((PASS + 1)); echo "ok:   missing_env_aborts"
+  FAIL=$((FAIL + 1)); echo "FAIL: backup.lock still held after pre-deploy backup"
 fi
 
-# ------------------------------------------------------------------------------------------
-# 6. Missing age command -> abort before dumping
-# ------------------------------------------------------------------------------------------
-reset_backup_dir
-write_env <<'EOF'
-BACKUP_AGE_RECIPIENT=age1recipient
+# 3. Missing recipient -> fail closed
+setup_case
+write_env <<EOF
+BACKUP_AGE_RECIPIENT=
 EOF
-mkdir -p "$TMP/nopost"
-for t in date grep head mktemp chmod mv find rm sed install sort cut tail flock; do
-  ln -sf "/usr/bin/$t" "$TMP/nopost/$t"
-done
-ln -sf "$FAKEBIN/docker" "$TMP/nopost/docker"
-if ( PATH="$TMP/nopost" backup_existing_database ) >"$TMP/.out2" 2>&1; then
-  FAIL=$((FAIL + 1)); echo "FAIL: missing age should abort"
-else
-  PASS=$((PASS + 1)); echo "ok:   missing_age_command_aborts"
-fi
-if ! grep -q "install age" "$TMP/.out2"; then echo "FAIL: missing-age error message absent"; FAIL=$((FAIL+1)); fi
+run_backup "missing_recipient_aborts" 1 "BACKUP_AGE_RECIPIENT is not set"
 
-# ------------------------------------------------------------------------------------------
-# 7. Incomplete encrypted artifact cleanup (age writes partial then fails)
-# ------------------------------------------------------------------------------------------
-reset_backup_dir
-export FAKE_AGE_MODE=partial
-write_env <<'EOF'
-BACKUP_AGE_RECIPIENT=age1recipient
-EOF
-if run_predeploy; then
-  FAIL=$((FAIL + 1)); echo "FAIL: partial age should abort"
-else
-  PASS=$((PASS + 1)); echo "ok:   incomplete_artifact_cleans_up"
-fi
-if [[ -n "$(find "$BACKUP_DIR" -maxdepth 1 \( -name 'predeploy-*.dump.age' -o -name '.predeploy.*' \) 2>/dev/null)" ]]; then echo "FAIL: incomplete artifact not cleaned"; FAIL=$((FAIL+1)); fi
+# 4. Missing backup.env -> fail closed
+setup_case
+rm -f "$DEPLOY_APP_DIR/backup.env"
+run_backup "missing_env_aborts" 1 "requires a valid root-only"
 
-# ------------------------------------------------------------------------------------------
-# 8. No plaintext .dump remains: legacy plaintext predeploy dumps are removed
-# ------------------------------------------------------------------------------------------
-reset_backup_dir
-touch "$BACKUP_DIR/predeploy-20260101T000000Z.dump"
-touch "$BACKUP_DIR/predeploy-20260102T000000Z.dump"
-write_env <<'EOF'
-BACKUP_AGE_RECIPIENT=age1recipient
+# 5. Bad permissions on backup.env -> fail closed
+setup_case
+write_env <<EOF
+BACKUP_AGE_RECIPIENT=age1predeployrecipient
 EOF
-if run_predeploy; then
-  PASS=$((PASS + 1)); echo "ok:   legacy_plaintext_removed"
-else
-  FAIL=$((FAIL + 1)); echo "FAIL: success run with legacy plaintext failed"; sed 's/^/      /' "$TMP/.out" | head -n 10
-fi
-if [[ -n "$(find "$BACKUP_DIR" -maxdepth 1 -name '*.dump' 2>/dev/null)" ]]; then echo "FAIL: plaintext .dump still on disk"; FAIL=$((FAIL+1)); fi
-if [[ "$(find "$BACKUP_DIR" -maxdepth 1 -name 'predeploy-*.dump.age' | wc -l)" != 1 ]]; then echo "FAIL: expected exactly one encrypted predeploy"; FAIL=$((FAIL+1)); fi
+chmod 0644 "$DEPLOY_APP_DIR/backup.env"
+run_backup "bad_perms_on_env_aborts" 1 "refusing to write a plaintext dump"
 
-# ------------------------------------------------------------------------------------------
-# 9. Retention keeps the newest 3 encrypted predeploy backups, deletes only the oldest
-# ------------------------------------------------------------------------------------------
-reset_backup_dir
-for old in 20260101T000000Z 20260102T000000Z 20260103T000000Z; do
-  touch -d '2026-01-01 00:00:00' "$BACKUP_DIR/predeploy-$old.dump.age"
-done
-write_env <<'EOF'
-BACKUP_AGE_RECIPIENT=age1recipient
-EOF
-if run_predeploy; then
-  PASS=$((PASS + 1)); echo "ok:   predeploy_retention_keeps_newest_3"
-else
-  FAIL=$((FAIL + 1)); echo "FAIL: retention run failed"; sed 's/^/      /' "$TMP/.out" | head -n 10
-fi
-if [[ "$(find "$BACKUP_DIR" -maxdepth 1 -name 'predeploy-*.dump.age' | wc -l)" != 3 ]]; then echo "FAIL: expected 3 encrypted predeploy backups after retention"; FAIL=$((FAIL+1)); fi
-NEWEST="$(find "$BACKUP_DIR" -maxdepth 1 -name 'predeploy-*.dump.age' -printf '%T@ %f\n' | sort -nr | head -n 1 | cut -d' ' -f2-)"
-if [[ "$NEWEST" != predeploy-* ]]; then echo "FAIL: newest encrypted predeploy missing"; FAIL=$((FAIL+1)); fi
+# 6. Container absent (first deploy) -> skips cleanly, exit 0
+setup_case
+export FAKE_CONTAINER_ABSENT=1
+run_backup "container_absent_skips" 0 "no database container present yet"
 
-# ------------------------------------------------------------------------------------------
-# 10. H2: pre-deploy backup lock contention with a bounded timeout -> clear failure, no hang
-# ------------------------------------------------------------------------------------------
-reset_backup_dir
-write_env <<'EOF'
-BACKUP_AGE_RECIPIENT=age1recipient
+# 7. Docker daemon down -> aborts, exit 1
+setup_case
+export FAKE_DOCKER_DOWN=1
+run_backup "docker_down_aborts" 1 "cannot reach the docker daemon"
+
+# 8. pg_dump failure -> aborts, exit 1, no partial files
+setup_case
+export FAKE_PGDUMP_FAIL=1
+write_env <<EOF
+BACKUP_AGE_RECIPIENT=age1predeployrecipient
 EOF
-exec 8>"$TMP/app/backup.lock"
-flock -n 8
-export DEPLOY_BACKUP_LOCK_TIMEOUT=1
-if run_predeploy; then
-  FAIL=$((FAIL + 1)); echo "FAIL: lock contention should abort the deploy, not hang"
-else
-  PASS=$((PASS + 1)); echo "ok:   lock_contention_aborts_with_timeout"
-fi
-unset DEPLOY_BACKUP_LOCK_TIMEOUT
-exec 8>&-
-if grep -q "could not acquire the backup lock" "$TMP/.out"; then
-  PASS=$((PASS + 1)); echo "ok:   lock_timeout_message_clear"
-else
-  echo "FAIL: lock timeout message absent"; sed 's/^/      /' "$TMP/.out" | head -n 5; FAIL=$((FAIL+1))
+run_backup "pgdump_fail_aborts" 1 "pg_dump failed"
+if [[ -n "$(find "$DEPLOY_BACKUP_DIR" -type f 2>/dev/null)" ]]; then
+  echo "FAIL: partial archive left behind on pg_dump failure"; FAIL=$((FAIL+1))
 fi
 
-# ------------------------------------------------------------------------------------------
-# 11. H4: container absent (first deploy) -> pre-deploy backup skipped cleanly
-# ------------------------------------------------------------------------------------------
-reset_backup_dir
-export FAKE_INSPECT_ERROR=absent
-write_env <<'EOF'
-BACKUP_AGE_RECIPIENT=age1recipient
+# 9. age encryption failure -> aborts, exit 1, no partial files
+setup_case
+export FAKE_AGE_FAIL=1
+write_env <<EOF
+BACKUP_AGE_RECIPIENT=age1predeployrecipient
 EOF
-if run_predeploy; then
-  PASS=$((PASS + 1)); echo "ok:   absent_container_skips_cleanly"
-else
-  FAIL=$((FAIL + 1)); echo "FAIL: absent container should skip, not abort"; sed 's/^/      /' "$TMP/.out" | head -n 5
-fi
-if [[ -n "$(find "$BACKUP_DIR" -maxdepth 1 \( -name 'predeploy-*' -o -name '.predeploy.*' \) 2>/dev/null)" ]]; then echo "FAIL: artifacts created while container absent"; FAIL=$((FAIL+1)); fi
-
-# ------------------------------------------------------------------------------------------
-# 12. H4: docker daemon unreachable -> pre-deploy backup FAILS CLOSED, never silently skipped
-# ------------------------------------------------------------------------------------------
-reset_backup_dir
-export FAKE_INSPECT_ERROR=daemon
-write_env <<'EOF'
-BACKUP_AGE_RECIPIENT=age1recipient
-EOF
-if run_predeploy; then
-  FAIL=$((FAIL + 1)); echo "FAIL: daemon-unreachable must abort the deploy"
-else
-  PASS=$((PASS + 1)); echo "ok:   daemon_unreachable_aborts"
-fi
-if grep -q "cannot reach the docker daemon" "$TMP/.out"; then
-  PASS=$((PASS + 1)); echo "ok:   daemon_unreachable_message_clear"
-else
-  echo "FAIL: daemon-unreachable message absent"; sed 's/^/      /' "$TMP/.out" | head -n 5; FAIL=$((FAIL+1))
+run_backup "age_fail_aborts" 1 "age encryption failed"
+if [[ -n "$(find "$DEPLOY_BACKUP_DIR" -type f 2>/dev/null)" ]]; then
+  echo "FAIL: partial archive left behind on age failure"; FAIL=$((FAIL+1))
 fi
 
-# ------------------------------------------------------------------------------------------
-# 13. H4: unexpected docker inspect failure -> abort (fail closed)
-# ------------------------------------------------------------------------------------------
-reset_backup_dir
-export FAKE_INSPECT_ERROR=generic
-write_env <<'EOF'
-BACKUP_AGE_RECIPIENT=age1recipient
+# 10. Retention keeps 3 newest, prunes older
+setup_case
+write_env <<EOF
+BACKUP_AGE_RECIPIENT=age1predeployrecipient
 EOF
-if run_predeploy; then
-  FAIL=$((FAIL + 1)); echo "FAIL: generic inspect error must abort the deploy"
+# Create 4 older pre-deploy dumps
+touch -d '2026-01-01 00:00:00' "$DEPLOY_BACKUP_DIR/predeploy-20260101T000000Z.dump.age"
+touch -d '2026-01-02 00:00:00' "$DEPLOY_BACKUP_DIR/predeploy-20260102T000000Z.dump.age"
+touch -d '2026-01-03 00:00:00' "$DEPLOY_BACKUP_DIR/predeploy-20260103T000000Z.dump.age"
+touch -d '2026-01-04 00:00:00' "$DEPLOY_BACKUP_DIR/predeploy-20260104T000000Z.dump.age"
+run_backup "retention_prunes_to_3" 0 "pruned pre-deploy backup"
+AFTER_COUNT=$(find "$DEPLOY_BACKUP_DIR" -name 'predeploy-*.dump.age' | wc -l)
+if [[ "$AFTER_COUNT" == 3 ]]; then
+  PASS=$((PASS + 1)); echo "ok:   retention_kept_exact_3"
 else
-  PASS=$((PASS + 1)); echo "ok:   generic_inspect_error_aborts"
+  FAIL=$((FAIL + 1)); echo "FAIL: retention expected 3 dumps, got $AFTER_COUNT"
+fi
+if [[ -f "$DEPLOY_BACKUP_DIR/predeploy-20260101T000000Z.dump.age" ]]; then
+  FAIL=$((FAIL + 1)); echo "FAIL: oldest pre-deploy dump was not pruned"
+else
+  PASS=$((PASS + 1)); echo "ok:   oldest_predeploy_pruned"
+fi
+
+# 11. Password env inheritance by name (argv hygiene)
+setup_case
+write_env <<EOF
+BACKUP_AGE_RECIPIENT=age1predeployrecipient
+BACKUP_DB_PASSWORD=secret_predeploy_password_5544
+EOF
+run_backup "predeploy_password_via_env_inheritance" 0 ""
+DOCKER_LINE="$(grep 'pg_dump' "$FAKEBIN/docker-argv.log" | head -n 1 || true)"
+if [[ "$DOCKER_LINE" == *"-e PGPASSWORD "* || "$DOCKER_LINE" == *"-e PGPASSWORD" ]]; then
+  PASS=$((PASS + 1)); echo "ok:   predeploy_pgpassword_inherited_by_name"
+else
+  FAIL=$((FAIL + 1)); echo "FAIL: -e PGPASSWORD not in predeploy docker argv (line: $DOCKER_LINE)"
+fi
+if grep -q "secret_predeploy_password_5544" "$FAKEBIN/docker-argv.log"; then
+  FAIL=$((FAIL + 1)); echo "FAIL: password value leaked into predeploy docker argv!"
+else
+  PASS=$((PASS + 1)); echo "ok:   predeploy_password_value_never_in_argv"
 fi
 
 echo

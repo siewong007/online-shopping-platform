@@ -1,0 +1,12 @@
+[Unit]
+Description=Run the online-shopping backup health check periodically
+
+[Timer]
+# Every 15 minutes. A fresh failure is detected no later than 15 minutes after it happens;
+# staleness (36h threshold) is likewise caught within 15 minutes of crossing it.
+OnCalendar=*-*-* *:00,15,30,45:00
+Persistent=true
+Unit=online-shopping-backup-health.service
+
+[Install]
+WantedBy=timers.target

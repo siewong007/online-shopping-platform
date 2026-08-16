@@ -26,15 +26,28 @@
 # PREFLIGHT_DB_CONTAINER, PREFLIGHT_DB_USER, PREFLIGHT_DB_NAME.
 set -Eeuo pipefail
 
-PREFLIGHT_CONFIG_FILE="${PREFLIGHT_CONFIG_FILE:-/opt/online-shopping/backup.env}"
-PREFLIGHT_LOCAL_DIR="${PREFLIGHT_LOCAL_DIR:-/opt/online-shopping/backups}"
+PREFLIGHT_APP_DIR="${PREFLIGHT_APP_DIR:-/opt/online-shopping}"
+PREFLIGHT_CONFIG_FILE="${PREFLIGHT_CONFIG_FILE:-$PREFLIGHT_APP_DIR/backup.env}"
+PREFLIGHT_LOCAL_DIR="${PREFLIGHT_LOCAL_DIR:-$PREFLIGHT_APP_DIR/backups}"
 PREFLIGHT_RCLONE_CONF="${PREFLIGHT_RCLONE_CONF:-/root/.config/rclone/rclone.conf}"
 PREFLIGHT_DB_CONTAINER="${PREFLIGHT_DB_CONTAINER:-online-shopping-db}"
 PREFLIGHT_DB_USER="${PREFLIGHT_DB_USER:-shop_admin}"
 PREFLIGHT_DB_NAME="${PREFLIGHT_DB_NAME:-online_shopping}"
 
-# shellcheck disable=SC1091
-source "$(dirname "${BASH_SOURCE[0]}")/backup-env-parser.sh"
+# The strict parser is a release component: resolve it from next to this script (installed runtime
+# layout), from the installed APP_DIR, or from the repo's deploy/ directory (repo-run layout).
+# N-C1: if it cannot be resolved, the preflight fails loudly rather than checking with no parser.
+# shellcheck disable=SC1090,SC1091
+if ! source "$(dirname "${BASH_SOURCE[0]}")/backup-env-parser.sh" 2>/dev/null \
+  && ! source "$PREFLIGHT_APP_DIR/backup-env-parser.sh" 2>/dev/null \
+  && ! source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/deploy/backup-env-parser.sh" 2>/dev/null; then
+  echo "PREFLIGHT: ERROR: backup-env-parser.sh not found (not next to this script, in APP_DIR, or in deploy/)" >&2
+  exit 1
+fi
+if ! command -v parse_backup_env >/dev/null 2>&1; then
+  echo "PREFLIGHT: ERROR: backup-env-parser.sh failed to load (parse_backup_env not defined)" >&2
+  exit 1
+fi
 
 FAILED=0
 note() { printf '  [check] %s\n' "$*"; }
@@ -44,7 +57,7 @@ bad()  { printf '  [FAIL] %s\n' "$*" >&2; FAILED=1; }
 echo "== online-shopping backup host readiness preflight =="
 
 note "tools present"
-for tool in age rclone docker; do
+for tool in age rclone docker sha256sum flock df stat; do
   if command -v "$tool" >/dev/null 2>&1; then
     ok "$tool: $(command -v "$tool")"
   else

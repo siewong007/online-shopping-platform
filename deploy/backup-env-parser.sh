@@ -4,13 +4,25 @@
 #
 # WHY NOT `source`: sourcing evaluates the file as shell code, so a malformed or malicious
 # line (e.g. `BACKUP_RCLONE_PATH=$(rm -rf /)`) executes. This parser reads the file as a
-# strict KEY=VALUE document and exports only valid variable assignments. It rejects:
-#   - non-identifier keys (anything not [A-Za-z_][A-Za-z0-9_]*),
+# strict KEY=VALUE document and exports only valid, allowlisted variable assignments. It rejects:
+#   - keys that are not bare identifiers [A-Za-z_][A-Za-z0-9_]* (anchored; the whole string must
+#     match, so `KEY` followed by junk can never sneak in),
+#   - keys outside the supported BACKUP_* allowlist (see BACKUP_ENV_ALLOWED_KEYS below) — an
+#     unknown key or attempt to override process variables (PATH, LD_PRELOAD, etc.) is a hard error,
+#   - duplicate keys (fail closed: the second occurrence is a hard error),
 #   - lines that are not `KEY=VALUE` or a pure comment,
 #   - files containing a NUL byte (bash would silently truncate such a value).
-# Values are unquoted once (leading/trailing single or double quotes are stripped) and a
-# trailing CR (Windows line endings) is removed. `$...` and backticks are treated as
-# literal text, never evaluated.
+#
+# Value semantics (documented):
+#   - the final line is processed even when the file has no trailing newline,
+#   - a single pair of matching surrounding quotes is stripped: KEY="value" and KEY='value' both
+#     parse to the exact value `value`; an unmatched or lone quote is left as literal text,
+#   - trailing whitespace (spaces/tabs) is trimmed; leading whitespace on the line is trimmed,
+#   - `$...` and backticks are literal data, never evaluated (no shell evaluation),
+#   - inline `#` characters are NOT stripped: `KEY=value # note` keeps `value # note` verbatim,
+#     ensuring passwords containing `#` are not corrupted,
+#   - a trailing CR (Windows line endings) is removed,
+#   - an empty value is legal (later per-key validation decides whether it is required).
 #
 # SECURITY (M4): when `parse_backup_env <file> enforce_perms` is used the file must be
 # owned by root and not readable by group/other (mode group/other bits zero). As root this
@@ -22,6 +34,15 @@
 #   parse_backup_env /opt/online-shopping/backup.env [enforce_perms]
 # After a successful parse the exported variables are the KEY=VALUE pairs in the file.
 
+# The complete set of supported configuration keys. Everything else is rejected.
+readonly BACKUP_ENV_ALLOWED_KEYS="BACKUP_AGE_RECIPIENT BACKUP_RCLONE_REMOTE BACKUP_RCLONE_PATH
+BACKUP_RCLONE_CONTIMEOUT BACKUP_RCLONE_TIMEOUT BACKUP_LOCAL_DIR BACKUP_LOCAL_RETENTION_COUNT
+BACKUP_REMOTE_DAILY_RETENTION BACKUP_REMOTE_WEEKLY_RETENTION BACKUP_WEEKLY_DAY BACKUP_DB_CONTAINER
+BACKUP_DB_USER BACKUP_DB_NAME BACKUP_DB_PASSWORD"
+
+# Anchored identifier: the WHOLE key must match (no trailing junk, no '=', no '-', no quotes).
+BACKUP_ENV_KEY_RE='^[A-Za-z_][A-Za-z0-9_]*$'
+
 # Internal: fail the caller. The parser is shared so it cannot assume its own log prefix;
 # it prints to stderr and returns nonzero. Callers trap ERR, so a parse failure aborts them.
 parse_env_fail() {
@@ -30,7 +51,7 @@ parse_env_fail() {
 }
 
 parse_backup_env() {
-  local file="$1" enforce="${2:-}" line key value qa
+  local file="$1" enforce="${2:-}" line key value
   [[ -f "$file" && -r "$file" ]] || { parse_env_fail "configuration file not found or not readable: $file"; return 1; }
 
   # Bash variables cannot hold a NUL byte, so a NUL anywhere in the file silently
@@ -57,40 +78,51 @@ parse_backup_env() {
     fi
   fi
 
+  # Duplicate-key detection. `local -A` is bash 4+; the parser targets bash (shebang) on Linux.
+  local -A seen=()
   local lineno=0
-  while IFS= read -r line; do
+  # The allowlist is defined across multiple lines; normalize newlines to spaces so the
+  # whitespace-delimited containment check below works for keys at the end of a line.
+  local allowlist
+  allowlist=$(printf '%s' "$BACKUP_ENV_ALLOWED_KEYS" | tr '\n' ' ')
+  # `|| [[ -n "$line" ]]` makes read process the FINAL line even when the file has no trailing
+  # newline (bash's read returns nonzero at EOF-without-newline but still has the content).
+  while IFS= read -r line || [[ -n "$line" ]]; do
     lineno=$((lineno + 1))
-    line=${line%$'\r'}
-    line=${line#"${line%%[![:space:]]*}"}
+    line=${line%$'\r'}                    # Windows line ending
+    line=${line#"${line%%[![:space:]]*}"} # strip leading whitespace on line
     [[ -z "$line" || "$line" == \#* ]] && continue
-    case "$line" in
-      *=*)
-        key=${line%%=*}
-        value=${line#*=}
-        case "$key" in
-          [A-Za-z_][A-Za-z0-9_]*)
-            ;;
-          *)
-            parse_env_fail "line $lineno: key is not a valid identifier: '$key'"
-            return 1
-            ;;
-        esac
-        # Strip one matching pair of surrounding quotes (single or double).
-        qa=${value%\"}
-        if [[ "$value" == \"* && "$qa" != "$value" ]]; then
-          value=${value#\"}
-        fi
-        qa=${value%\'}
-        if [[ "$value" == \'* && "$qa" != "$value" ]]; then
-          value=${value#\'}
-        fi
-        export "$key=$value"
-        ;;
-      *)
-        parse_env_fail "line $lineno: expected KEY=VALUE or a comment, got: $line"
-        return 1
-        ;;
-    esac
+    if [[ "$line" != *=* ]]; then
+      parse_env_fail "line $lineno: expected KEY=VALUE or a comment, got: $line"
+      return 1
+    fi
+    key=${line%%=*}
+    value=${line#*=}
+    if [[ ! "$key" =~ $BACKUP_ENV_KEY_RE ]]; then
+      parse_env_fail "line $lineno: key is not a valid bare identifier: '$key'"
+      return 1
+    fi
+    if [[ " $allowlist " != *" $key "* ]]; then
+      parse_env_fail "line $lineno: key '$key' is not in the supported BACKUP_* allowlist"
+      return 1
+    fi
+    if [[ -n "${seen[$key]:-}" ]]; then
+      parse_env_fail "line $lineno: duplicate key '$key' (a key may appear at most once)"
+      return 1
+    fi
+    seen[$key]=1
+    # Strip outer leading and trailing whitespace from unquoted value
+    value=${value#"${value%%[![:space:]]*}"}
+    value=${value%"${value##*[![:space:]]}"}
+    # Strip ONE matching pair of surrounding quotes so KEY="value" / KEY='value' == value.
+    # Unmatched quotes or quotes embedded in the middle are preserved verbatim.
+    if [[ "$value" == \"*\" && ${#value} -ge 2 ]]; then
+      value=${value:1:${#value}-2}
+    elif [[ "$value" == \'*\' && ${#value} -ge 2 ]]; then
+      value=${value:1:${#value}-2}
+    fi
+    # export failures (invalid name, readonly, etc.) must not be silently ignored.
+    export "$key=$value" || { parse_env_fail "line $lineno: failed to export '$key'"; return 1; }
   done < "$file"
   return 0
 }

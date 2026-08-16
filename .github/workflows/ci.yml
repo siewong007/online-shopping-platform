@@ -84,17 +84,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install shellcheck
-        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Install shellcheck, age and rclone
+        run: sudo apt-get update && sudo apt-get install -y shellcheck age rclone
 
       - name: Shell syntax check (bash -n)
         run: |
           set -euo pipefail
           for f in deploy/deploy.sh deploy/backup.sh deploy/restore.sh \
                    deploy/backup-env-parser.sh scripts/preflight-backup.sh \
-                   scripts/restore-proof.sh scripts/test-backup.sh \
-                   scripts/test-restore.sh scripts/test-predeploy.sh \
-                   scripts/test-deploy.sh scripts/test-restore-atomicity.sh \
+                   scripts/check-backup-health.sh scripts/restore-proof.sh \
+                   scripts/test-backup.sh scripts/test-restore.sh \
+                   scripts/test-predeploy.sh scripts/test-deploy.sh \
+                   scripts/test-backup-env-parser.sh scripts/test-backup-health.sh \
+                   scripts/test-release-bundle.sh scripts/test-restore-atomicity.sh \
                    scripts/test-restore-proof-negative.sh; do
             [[ -f "$f" ]] || { echo "missing script: $f" >&2; exit 1; }
             sed 's/\r$//' "$f" | bash -n
@@ -106,14 +108,19 @@ jobs:
           set -euo pipefail
           for f in deploy/deploy.sh deploy/backup.sh deploy/restore.sh \
                    deploy/backup-env-parser.sh scripts/preflight-backup.sh \
-                   scripts/restore-proof.sh scripts/test-backup.sh \
-                   scripts/test-restore.sh scripts/test-predeploy.sh \
-                   scripts/test-deploy.sh scripts/test-restore-atomicity.sh \
+                   scripts/check-backup-health.sh scripts/restore-proof.sh \
+                   scripts/test-backup.sh scripts/test-restore.sh \
+                   scripts/test-predeploy.sh scripts/test-deploy.sh \
+                   scripts/test-backup-env-parser.sh scripts/test-backup-health.sh \
+                   scripts/test-release-bundle.sh scripts/test-restore-atomicity.sh \
                    scripts/test-restore-proof-negative.sh; do
             sed 's/\r$//' "$f" > "/tmp/lf-$(basename "$f")"
             shellcheck -x "/tmp/lf-$(basename "$f")"
             echo "  ok: $f"
           done
+
+      - name: Run backup env parser suite
+        run: scripts/test-backup-env-parser.sh
 
       - name: Run backup guardrail suite
         run: scripts/test-backup.sh
@@ -126,3 +133,54 @@ jobs:
 
       - name: Run deploy guardrail suite
         run: scripts/test-deploy.sh
+
+      - name: Run backup health suite
+        run: scripts/test-backup-health.sh
+
+      - name: Run release bundle smoke test
+        run: scripts/test-release-bundle.sh
+
+      - name: Start seeded source database for disaster-recovery tests
+        run: |
+          set -euo pipefail
+          docker run -d --name online-shopping-db \
+            -e POSTGRES_USER=project_depot \
+            -e POSTGRES_PASSWORD=project_depot \
+            -e POSTGRES_DB=project_depot \
+            postgres:19beta1
+          ready=0
+          for _ in $(seq 1 60); do
+            if docker exec online-shopping-db pg_isready -U project_depot -d project_depot >/dev/null 2>&1; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          [[ "$ready" == 1 ]] || { echo "source DB never became ready" >&2; exit 1; }
+          docker exec -i online-shopping-db psql -v ON_ERROR_STOP=1 -U project_depot -d project_depot <<'SQL'
+          CREATE TABLE IF NOT EXISTS app_schema_migrations (
+              version     INTEGER PRIMARY KEY,
+              filename    TEXT NOT NULL UNIQUE,
+              checksum    TEXT NOT NULL,
+              applied_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+          );
+          SQL
+          for f in backend/migrations/[0-9][0-9][0-9][0-9]_*.sql; do
+            [[ -f "$f" ]] || continue
+            filename=$(basename "$f")
+            version=${filename%%_*}
+            checksum=$(sha256sum "$f" | cut -d' ' -f1)
+            { printf 'BEGIN;\n'; cat "$f"; printf "\nINSERT INTO app_schema_migrations (version, filename, checksum) VALUES (%d, '%s', '%s');\nCOMMIT;\n" "$((10#$version))" "$filename" "$checksum"; } \
+              | docker exec -i online-shopping-db psql -v ON_ERROR_STOP=1 -U project_depot -d project_depot
+          done
+          docker exec -i online-shopping-db psql -v ON_ERROR_STOP=1 -U project_depot -d project_depot < scripts/ci-seed-db.sql
+          echo "source DB seeded: $(docker exec online-shopping-db psql -At -U project_depot -d project_depot -c 'SELECT count(*) FROM orders') orders"
+
+      - name: Run restore atomicity suite (isolated postgres)
+        run: scripts/test-restore-atomicity.sh
+
+      - name: Run full restore proof (isolated postgres)
+        run: scripts/restore-proof.sh
+
+      - name: Run restore proof negative suite (isolated postgres)
+        run: scripts/test-restore-proof-negative.sh

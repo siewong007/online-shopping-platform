@@ -31,9 +31,15 @@ readonly CADDY_SITE_FILE=/etc/caddy/ekowayhardware.Caddyfile
 log() { printf '[online-shopping-deploy] %s\n' "$*"; }
 die() { printf '[online-shopping-deploy] ERROR: %s\n' "$*" >&2; exit 1; }
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # shellcheck disable=SC1091,SC1090
-source "${BASH_SOURCE[0]%/*}/backup-env-parser.sh" 2>/dev/null \
-  || source "$APP_DIR/backup-env-parser.sh"
+if ! source "$SCRIPT_DIR/backup-env-parser.sh" 2>/dev/null \
+  && ! source "$APP_DIR/backup-env-parser.sh" 2>/dev/null; then
+  die "backup-env-parser.sh is missing next to deploy.sh and in $APP_DIR; refusing to deploy without the strict parser"
+fi
+if ! command -v parse_backup_env >/dev/null 2>&1; then
+  die "backup-env-parser.sh failed to load (parse_backup_env not defined); refusing to deploy"
+fi
 
 ensure_secrets() {
   if [[ ! -f "$SECRETS_FILE" ]]; then
@@ -91,8 +97,9 @@ LOGROTATE
 }
 
 install_backup_components() {
-  # Installs the encrypted off-server backup suite (backup.sh, restore.sh, systemd service and
-  # timer, config template) shipped in the release bundle (enforced by verify_release_payload).
+  # Installs the encrypted off-server backup suite (backup.sh, restore.sh, backup-env-parser.sh,
+  # preflight-backup.sh, check-backup-health.sh, systemd service/timer units, config template)
+  # shipped in the release bundle (enforced by verify_release_payload via release-components.txt).
   #
   # H3 failure policy (documented): a backup-component INSTALL failure is never allowed to turn a
   # safe application deployment into an uncontrolled shell abort. Each failure is caught, reported
@@ -100,10 +107,11 @@ install_backup_components() {
   # different from bundle validation (verify_release_payload FAILS CLOSED if the release is
   # missing the components) and different from the pre-deploy backup (which aborts the deploy).
   #
-  # The timer is only ENABLED once a root-only, mode-0600 /opt/online-shopping/backup.env actually
-  # supplies the recipient, remote and path; otherwise the units are installed disabled. H5: merely
-  # enabling the timer is reported as "timer ACTIVE; verification pending" — the ACTIVE/VERIFIED
-  # claim is only made after a fresh, verified off-server backup in verify_backup_components().
+  # The backup timer is only ENABLED once a root-only, mode-0600 /opt/online-shopping/backup.env
+  # actually supplies the recipient, remote and path; otherwise the units are installed disabled.
+  # H5: merely enabling the timer is reported as "timer ACTIVE; verification pending" — the
+  # ACTIVE/VERIFIED claim is only made after a fresh, verified off-server backup in
+  # verify_backup_components(). The backup-HEALTH timer is enabled whenever the backup timer is.
   if [[ ! -f "$RELEASE_DIR/backup.sh" ]]; then
     log "release contains no backup components; scheduled encrypted backups unchanged"
     return 0
@@ -112,6 +120,9 @@ install_backup_components() {
   log "Installing encrypted backup components"
   if ! install -m 0750 "$RELEASE_DIR/backup.sh" "$APP_DIR/backup.sh" \
     || ! install -m 0750 "$RELEASE_DIR/restore.sh" "$APP_DIR/restore.sh" \
+    || ! install -m 0644 "$RELEASE_DIR/backup-env-parser.sh" "$APP_DIR/backup-env-parser.sh" \
+    || ! install -m 0750 "$RELEASE_DIR/preflight-backup.sh" "$APP_DIR/preflight-backup.sh" \
+    || ! install -m 0750 "$RELEASE_DIR/check-backup-health.sh" "$APP_DIR/check-backup-health.sh" \
     || ! install -m 0644 "$RELEASE_DIR/backup.env.example" "$APP_DIR/backup.env.example"; then
     log "WARNING: failed to install the encrypted backup scripts under $APP_DIR"
     log "         scheduled encrypted backups are NOT AVAILABLE; the application deployment continues"
@@ -119,7 +130,9 @@ install_backup_components() {
     return 0
   fi
   if ! install -m 0644 "$RELEASE_DIR/online-shopping-backup.service" "$SYSTEMD_DIR/online-shopping-backup.service" \
-    || ! install -m 0644 "$RELEASE_DIR/online-shopping-backup.timer" "$SYSTEMD_DIR/online-shopping-backup.timer"; then
+    || ! install -m 0644 "$RELEASE_DIR/online-shopping-backup.timer" "$SYSTEMD_DIR/online-shopping-backup.timer" \
+    || ! install -m 0644 "$RELEASE_DIR/online-shopping-backup-health.service" "$SYSTEMD_DIR/online-shopping-backup-health.service" \
+    || ! install -m 0644 "$RELEASE_DIR/online-shopping-backup-health.timer" "$SYSTEMD_DIR/online-shopping-backup-health.timer"; then
     log "WARNING: failed to install the backup systemd units into $SYSTEMD_DIR"
     log "         scheduled encrypted backups are NOT ACTIVE; the application deployment continues"
     return 0
@@ -137,6 +150,11 @@ install_backup_components() {
     && [[ -n "${BACKUP_AGE_RECIPIENT:-}" && -n "${BACKUP_RCLONE_REMOTE:-}" && -n "${BACKUP_RCLONE_PATH:-}" ]]; then
     if systemctl enable --now online-shopping-backup.timer >/dev/null 2>&1; then
       log "Scheduled encrypted backups timer ACTIVE; off-server VERIFICATION pending (runs after the stack is healthy)"
+      if systemctl enable --now online-shopping-backup-health.timer >/dev/null 2>&1; then
+        log "Backup health monitoring timer ACTIVE"
+      else
+        log "WARNING: online-shopping-backup-health.timer failed to enable; backup freshness will not be monitored"
+      fi
     else
       log "WARNING: scheduled encrypted backups are NOT ACTIVE"
       log "         failed to enable online-shopping-backup.timer; the application deployment continues"
@@ -145,6 +163,8 @@ install_backup_components() {
   else
     systemctl disable online-shopping-backup.timer >/dev/null 2>&1 || true
     systemctl stop online-shopping-backup.timer >/dev/null 2>&1 || true
+    systemctl disable online-shopping-backup-health.timer >/dev/null 2>&1 || true
+    systemctl stop online-shopping-backup-health.timer >/dev/null 2>&1 || true
     log "Scheduled encrypted backups installed but DISABLED: provision $APP_DIR/backup.env (root-owned, mode 0600)"
     log "with BACKUP_AGE_RECIPIENT, BACKUP_RCLONE_REMOTE and BACKUP_RCLONE_PATH to activate"
   fi
@@ -311,12 +331,16 @@ show_diagnostics() {
 backup_existing_database() {
   # H4: distinguish "container absent" (normal on the very first deploy) from a docker/daemon
   # inspection failure. A daemon problem must NEVER silently skip the required pre-deploy backup.
-  local running inspect_err
-  inspect_err=$(docker inspect --format '{{.State.Running}}' online-shopping-db 2>&1) || true
-  if [[ -z "$inspect_err" ]]; then
-    die "pre-deploy backup failed: docker inspect online-shopping-db returned nothing"
-  fi
-  if [[ "$inspect_err" != "true" && "$inspect_err" != "false" ]]; then
+  # The inspect exit status (not a merged stdout+stderr text) drives the classification: success
+  # yields the running state on stdout; failure routes stderr separately.
+  local running inspect_rc inspect_err
+  set +e
+  running=$(docker inspect --format '{{.State.Running}}' online-shopping-db 2>/tmp/.deploy-inspect.err)
+  inspect_rc=$?
+  set -e
+  inspect_err=$(cat /tmp/.deploy-inspect.err 2>/dev/null || true)
+  rm -f /tmp/.deploy-inspect.err
+  if (( inspect_rc != 0 )); then
     if grep -qiE 'no such (object|container)' <<<"$inspect_err"; then
       log "no database container present yet; skipping pre-deploy backup"
       return 0
@@ -326,7 +350,7 @@ backup_existing_database() {
     fi
     die "pre-deploy backup failed: docker inspect online-shopping-db reported: $inspect_err"
   fi
-  running="$inspect_err"
+  [[ -n "$running" ]] || die "pre-deploy backup failed: docker inspect online-shopping-db returned no running state"
   [[ "$running" == "true" ]] || { log "database container not running; skipping pre-deploy backup"; return 0; }
 
   install -d -m 0700 "$BACKUP_DIR"
@@ -360,9 +384,14 @@ backup_existing_database() {
   log "Creating encrypted local pre-deploy database backup (age only; no remote required)"
   log "Backing up database online_shopping"
 
-  local -a pipeline_status
+  local -a pipeline_status predeploy_env=()
+  # M3: forward BACKUP_DB_PASSWORD (if configured) by NAME only; never in the host argv.
+  if [[ -n "${BACKUP_DB_PASSWORD:-}" ]]; then
+    export PGPASSWORD="$BACKUP_DB_PASSWORD"
+    predeploy_env=(-e PGPASSWORD)
+  fi
   set +e
-  docker exec online-shopping-db \
+  docker exec "${predeploy_env[@]}" online-shopping-db \
     pg_dump --format=custom --no-owner --no-acl -U shop_admin online_shopping \
     | age --encrypt --recipient "$recipient" --output "$backup_tmp"
   pipeline_status=("${PIPESTATUS[@]}")
@@ -370,19 +399,32 @@ backup_existing_database() {
 
   if (( pipeline_status[1] != 0 )); then
     rm -f "$backup_tmp"
+    exec 8>&-
     die "pre-deploy backup failed: age encryption failed (exit ${pipeline_status[1]}); deployment aborted"
   fi
   if (( pipeline_status[0] != 0 )); then
     rm -f "$backup_tmp"
+    exec 8>&-
     die "pre-deploy backup failed: pg_dump failed (exit ${pipeline_status[0]}); deployment aborted"
   fi
   if [[ ! -s "$backup_tmp" ]]; then
     rm -f "$backup_tmp"
+    exec 8>&-
     die "pre-deploy backup failed: encrypted output is empty; deployment aborted"
   fi
   if ! head -c 100 "$backup_tmp" | grep -q '^age-encryption.org/v1'; then
     rm -f "$backup_tmp"
+    exec 8>&-
     die "pre-deploy backup failed: encrypted output has no age header; deployment aborted"
+  fi
+  # age >= 1.0 addresses archives with an EPHEMERAL X25519 stanza (`-> X25519 <ephemeral key>`);
+  # the bech32 "age1..." recipient string NEVER appears in the file and the stanza changes per
+  # encryption, so it cannot name the recipient; validate the stanza STRUCTURE so a non-age or
+  # mis-addressed output is caught (the DR suite proves actual addressing by identity-decrypt).
+  if ! grep -aqE '^-> X25519 [A-Za-z0-9+/]{43,44}$' "$backup_tmp"; then
+    rm -f "$backup_tmp"
+    exec 8>&-
+    die "pre-deploy backup failed: encrypted output does not contain a valid age X25519 recipient stanza; deployment aborted"
   fi
 
   chmod 0600 "$backup_tmp"
@@ -407,6 +449,10 @@ backup_existing_database() {
     rm -f -- "$BACKUP_DIR/${backups[$index]}"
     log "pruned pre-deploy backup ${backups[$index]}"
   done
+
+  # N-H7: release the backup lock BEFORE returning, so verify_backup_components() (which runs a
+  # real backup.sh in the same deploy process and needs the same lock file) can acquire it.
+  exec 8>&-
 }
 
 configure_caddy() {
@@ -477,30 +523,31 @@ cleanup_old_images() {
 }
 
 verify_release_payload() {
-  # C1: the release bundle is REQUIRED to ship the backup components. A new-format release that is
-  # missing any of them fails loudly before anything is loaded or deployed. The SHA256SUMS check in
-  # main_deploy then folds every shipped file (including these) into the integrity verification.
+  # C1: the release bundle is REQUIRED to ship every component listed in release-components.txt —
+  # the SAME manifest the CI workflow uses to build the bundle, so the two cannot drift. A
+  # new-format release missing any component (deploy.sh, compose file, Caddyfile, backup suite,
+  # backup-env-parser.sh, preflight-backup.sh, check-backup-health.sh, systemd units) fails loudly
+  # before anything is loaded or deployed. The SHA256SUMS check in main_deploy then folds every
+  # shipped file into the integrity verification.
   local dir="$1" payload missing=0
-  for payload in \
-    deploy.sh \
-    docker-compose.prod.yml \
-    ekowayhardware.Caddyfile \
-    SHA256SUMS \
-    images/backend.tar.gz \
-    images/frontend.tar.gz \
-    backup.sh \
-    restore.sh \
-    backup.env.example \
-    online-shopping-backup.service \
-    online-shopping-backup.timer; do
-    if [[ ! -f "$dir/$payload" ]]; then
-      log "release payload is missing $payload"
-      missing=1
-    fi
-  done
+  if [[ ! -f "$dir/release-components.txt" ]]; then
+    log "release payload is missing release-components.txt"
+    missing=1
+  else
+    while IFS=$'\t' read -r _src payload || [[ -n "$payload" ]]; do
+      [[ -n "$payload" ]] || continue
+      if [[ ! -f "$dir/$payload" ]]; then
+        log "release payload is missing $payload"
+        missing=1
+      fi
+    done < "$dir/release-components.txt"
+  fi
+  [[ -f "$dir/SHA256SUMS" ]] || { log "release payload is missing SHA256SUMS"; missing=1; }
+  [[ -f "$dir/images/backend.tar.gz" ]] || { log "release payload is missing images/backend.tar.gz"; missing=1; }
+  [[ -f "$dir/images/frontend.tar.gz" ]] || { log "release payload is missing images/frontend.tar.gz"; missing=1; }
   [[ -d "$dir/initdb" ]] || { log "release payload is missing initdb/"; missing=1; }
   if (( missing != 0 )); then
-    die "release bundle is missing required backup components; refusing to deploy"
+    die "release bundle is missing required components; refusing to deploy"
   fi
 }
 

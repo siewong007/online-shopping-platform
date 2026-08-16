@@ -33,7 +33,41 @@ WORK="$(mktemp -d "${TMPDIR:-/tmp}/restore-proof-neg.XXXXXX")"
 chmod 0700 "$WORK"
 PASS=0
 FAIL=0
-trap 'set +e; docker rm -f "$TARGET_CONTAINER" >/dev/null 2>&1; rm -rf "$WORK"' EXIT
+
+assert_non_production_target() {
+  local target="$1"
+  if [[ "$target" == "online-shopping-db" ]]; then
+    echo "ERROR: target container name '$target' is the canonical production container; refusing to run" >&2
+    exit 1
+  fi
+  local target_id prod_id
+  target_id=$(docker inspect --format '{{.Id}}' "$target" 2>/dev/null | tr -d ' \r\n' || true)
+  prod_id=$(docker inspect --format '{{.Id}}' online-shopping-db 2>/dev/null | tr -d ' \r\n' || true)
+  if [[ -n "$target_id" && -n "$prod_id" && "$target_id" == "$prod_id" ]]; then
+    echo "ERROR: target container '$target' resolves to the production container ID; refusing to run" >&2
+    exit 1
+  fi
+}
+
+# shellcheck disable=SC2317,SC2329
+cleanup() {
+  set +e
+  if [[ -n "${TARGET_CONTAINER:-}" && "$TARGET_CONTAINER" != "online-shopping-db" ]]; then
+    local target_id prod_id
+    target_id=$(docker inspect --format '{{.Id}}' "$TARGET_CONTAINER" 2>/dev/null | tr -d ' \r\n' || true)
+    prod_id=$(docker inspect --format '{{.Id}}' online-shopping-db 2>/dev/null | tr -d ' \r\n' || true)
+    if [[ -z "$target_id" || -z "$prod_id" || "$target_id" != "$prod_id" ]]; then
+      docker rm -f "$TARGET_CONTAINER" >/dev/null 2>&1 || true
+    fi
+  fi
+  if [[ -n "${WORK:-}" && -d "$WORK" ]]; then
+    rm -rf -- "$WORK"
+  fi
+}
+trap cleanup EXIT
+
+# Check safety immediately
+assert_non_production_target "$TARGET_CONTAINER"
 
 for tool in docker age age-keygen rclone; do
   command -v "$tool" >/dev/null 2>&1 || { echo "missing required tool: $tool" >&2; exit 1; }
@@ -70,7 +104,10 @@ export BACKUP_LOCK_FILE="$APP_DIR/backup.lock"
 wait_ready() {
   local i=0
   while (( i < 60 )); do
-    if docker exec "$TARGET_CONTAINER" pg_isready -U "$TARGET_USER" -d "$TARGET_DB" >/dev/null 2>&1; then
+    # pg_isready succeeds during the image's temporary initdb server (before the target
+    # database exists), so poll for an actual query on the target database instead.
+    if PGPASSWORD="$TARGET_PASSWORD" docker exec -e PGPASSWORD "$TARGET_CONTAINER" \
+        psql -At -U "$TARGET_USER" -d "$TARGET_DB" -c 'SELECT 1' >/dev/null 2>&1; then
       return 0
     fi
     sleep 1
@@ -80,6 +117,7 @@ wait_ready() {
 }
 
 start_target() {
+  assert_non_production_target "$TARGET_CONTAINER"
   docker rm -f "$TARGET_CONTAINER" >/dev/null 2>&1 || true
   docker run -d --name "$TARGET_CONTAINER" \
     -e "POSTGRES_USER=$TARGET_USER" \
@@ -138,11 +176,13 @@ PGPASSWORD="$TARGET_PASSWORD" bash "$RESTORE_SH" --restore "$ARCHIVE" \
   --container "$TARGET_CONTAINER" --database "$TARGET_DB" --db-user "$TARGET_USER" \
   --identity "$WORK/identity.txt" --destroy-target --target-kind isolated >/dev/null
 
-# Damage: delete rows from orders and mutate a row in products.
-docker exec -e "PGPASSWORD=$TARGET_PASSWORD" "$TARGET_CONTAINER" \
+# Damage: delete rows from orders and mutate a row in products. The delete removes at least one
+# row regardless of source data (positive business data is guaranteed).
+# M3/N-H3: passwords forwarded by NAME only, never in the host argv.
+PGPASSWORD="$TARGET_PASSWORD" docker exec -e PGPASSWORD "$TARGET_CONTAINER" \
   psql -v ON_ERROR_STOP=1 -U "$TARGET_USER" -d "$TARGET_DB" \
-  -c "DELETE FROM public.orders WHERE stock_released_at IS NOT NULL" >/dev/null
-docker exec -e "PGPASSWORD=$TARGET_PASSWORD" "$TARGET_CONTAINER" \
+  -c "DELETE FROM public.orders WHERE id = (SELECT min(id) FROM public.orders)" >/dev/null
+PGPASSWORD="$TARGET_PASSWORD" docker exec -e PGPASSWORD "$TARGET_CONTAINER" \
   psql -v ON_ERROR_STOP=1 -U "$TARGET_USER" -d "$TARGET_DB" \
   -c "UPDATE public.products SET source_item_code = source_item_code || '-damaged' WHERE id = (SELECT min(id) FROM public.products)" >/dev/null
 

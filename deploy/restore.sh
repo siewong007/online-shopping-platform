@@ -20,6 +20,15 @@
 #     --confirm-production "RESTORE online_shopping". "isolated" rejects the production container
 #     name and database name outright.
 #   - A production-named container or database with the wrong/absent --target-kind is rejected.
+#   - Identity is resolved with `docker inspect` BEFORE anything is decrypted (N-H2): the target
+#     must resolve to the actual running container, and a production restore additionally requires
+#     that the resolved container ID IS the production container's ID. An isolated restore refuses
+#     to run if the target resolves (by name, short/full ID, or alias) to production. If docker
+#     cannot resolve the target, the restore refuses to start.
+#
+# Production restores additionally take an encrypted pre-restore safety snapshot of the CURRENT
+# database before decrypting (pg_dump piped through age, no network required), and fail closed if
+# that snapshot cannot be produced and verified. Its location is logged so it can be recovered.
 #
 # Requires a running postgres container (its pg_restore/psql are used) and the age private identity
 # that matches the backup recipient. The private key must live OFF the backup server and OFF the
@@ -35,8 +44,11 @@
 #              --confirm-production "RESTORE online_shopping" [--identity <age-key>]
 #
 # The age private identity may also be provided via RESTORE_AGE_IDENTITY. If the target database
-# requires a password, set PGPASSWORD before invoking; it is passed to the container via -e and
-# never appears in a command-line argument.
+# requires a password, set PGPASSWORD before invoking; it is exported and forwarded to the container
+# with `docker exec -e PGPASSWORD` (env inheritance by name), so the value NEVER appears in the host argv
+# (see N-H3). RESTORE_WORKDIR sets the staging directory (default: TMPDIR or /tmp); for a
+# production restore the safety snapshot goes to RESTORE_SNAPSHOT_DIR (default
+# /opt/online-shopping/backups).
 set -Eeuo pipefail
 umask 077
 
@@ -95,7 +107,13 @@ verify_restore() {
   # This is a schema/readiness check, NOT a full source/target row-count parity test: a disaster
   # restore has no live source. The isolated scripts/restore-proof.sh harness performs the strong
   # row/schema/content parity test against a throwaway target.
-  local readiness
+  local readiness pass_env=()
+  # M3: forward the password to the container by NAME only (`-e PGPASSWORD`); the value is
+  # exported, never placed on the host command line.
+  if [[ -n "${PGPASSWORD:-}" ]]; then
+    export PGPASSWORD
+    pass_env=(-e PGPASSWORD)
+  fi
   readiness='SELECT payments.provider, payments.provider_request_id, orders.stock_released_at,
        orders.stock_reacquired_at, products.source_item_code, products.shipping_class,
        product_reviews.id, shipping_services.code, shipping_service_rates.shipping_class,
@@ -108,15 +126,20 @@ CROSS JOIN shipping_service_rates CROSS JOIN order_shipping_addresses CROSS JOIN
 CROSS JOIN customer_sessions CROSS JOIN admin_sessions CROSS JOIN admin_mfa_factors
 CROSS JOIN customer_mfa_factors
 LEFT JOIN product_reviews ON product_reviews.product_id = products.id LIMIT 0'
-  if ! docker exec -e "PGPASSWORD=${PGPASSWORD:-}" "$CONTAINER" \
+  if ! docker exec "${pass_env[@]}" "$CONTAINER" \
       psql -v ON_ERROR_STOP=1 -U "$DB_USER" -d "$DATABASE" -c "$readiness" >/dev/null 2>&1; then
     fail "restore_verify_failed" "readiness schema check failed after restore"
   fi
   log "readiness schema check passed"
+  # The migration ledger must be present and non-empty after a restore; a missing/empty table is
+  # a failed restore, not a cosmetic log line.
   local ledger
-  ledger=$(docker exec -e "PGPASSWORD=${PGPASSWORD:-}" "$CONTAINER" \
-      psql -At -v ON_ERROR_STOP=1 -U "$DB_USER" -d "$DATABASE" -c "SELECT count(*) FROM app_schema_migrations")
-  log "app_schema_migrations rows after restore: ${ledger:-<table absent>}"
+  ledger=$(docker exec "${pass_env[@]}" "$CONTAINER" \
+      psql -At -v ON_ERROR_STOP=1 -U "$DB_USER" -d "$DATABASE" -c "SELECT count(*) FROM app_schema_migrations" 2>/dev/null | tr -d ' \r' || true)
+  if [[ ! "$ledger" =~ ^[0-9]+$ || "$ledger" -eq 0 ]]; then
+    fail "restore_verify_failed" "migration ledger is absent or empty after restore (got: ${ledger:-<no output>})"
+  fi
+  log "app_schema_migrations rows after restore: $ledger"
 }
 
 # Regexes live in variables: inside `[[ =~ ]]` the unquoted RHS is subject to parameter
@@ -160,11 +183,101 @@ validate_restore_target() {
   fi
 }
 
+# N-H2: resolve a docker container to its canonical 64-char ID (name, short/full ID or alias all collapse
+# to one identity). Returns 1 if the container cannot be resolved.
+docker_resolve_id() {
+  local id
+  id=$(docker inspect --format '{{.Id}}' "$1" 2>/dev/null | tr -d ' \r\n') || return 1
+  [[ -n "$id" ]] || return 1
+  printf '%s\n' "$id"
+}
+
+# N-H2: before ANY decryption or destruction, resolve the target container to its actual docker
+# identity and enforce the production boundary by identity, not just by name.
+resolve_target_identity() {
+  local target_id prod_id
+  target_id=$(docker_resolve_id "$CONTAINER") \
+    || fail "target_resolution_failed" "container '$CONTAINER' could not be resolved by docker (name, short/full ID or alias not found); refusing a destructive restore"
+  [[ -n "$target_id" ]] \
+    || fail "target_resolution_failed" "docker returned no identity for container '$CONTAINER'; refusing a destructive restore"
+  case "$TARGET_KIND" in
+    production)
+      prod_id=$(docker_resolve_id "$PROD_CONTAINER") \
+        || fail "target_resolution_failed" "cannot resolve the production container '$PROD_CONTAINER'; refusing a production restore"
+      [[ "$target_id" == "$prod_id" ]] \
+        || fail "invalid_target" "container '$CONTAINER' resolves to a different container than production (id mismatch); refusing a production restore"
+      ;;
+    isolated)
+      if prod_id=$(docker_resolve_id "$PROD_CONTAINER"); then
+        if [[ "$target_id" == "$prod_id" ]]; then
+          fail "invalid_target" "isolated target '$CONTAINER' resolves to the production container by name, short/full ID or alias; refusing to destroy production"
+        fi
+      fi
+      ;;
+  esac
+  log "target container '$CONTAINER' resolved to docker id ${target_id:0:12}"
+}
+
+# Pre-restore capacity check: the encrypted archive plus headroom must fit in the staging
+# directory BEFORE decrypting (a decrypt must never be the thing that fills the disk).
+check_staging_capacity() {
+  local work_base="${RESTORE_WORKDIR:-${TMPDIR:-/tmp}}"
+  local archive_bytes need avail
+  archive_bytes=$(stat -c %s "$ARCHIVE")
+  need=$(( archive_bytes * 2 + 536870912 ))
+  avail=$(df --output=avail -B1 "$work_base" 2>/dev/null | tail -n 1 | tr -d ' ')
+  if [[ ! "$avail" =~ ^[0-9]+$ || "$avail" -lt "$need" ]]; then
+    fail "insufficient_staging_space" "not enough free space before decrypting (staging $work_base needs >= $need bytes, have ${avail:-unknown}); refusing to start"
+  fi
+}
+
+# Production-only encrypted safety snapshot of the CURRENT database, taken BEFORE decrypting the
+# restore archive. Fail closed: a production restore cannot begin if this snapshot cannot be made
+# and validated. The snapshot is standalone (pg_dump | age) and never touches the network.
+snapshot_production() {
+  local snap_dir="${RESTORE_SNAPSHOT_DIR:-/opt/online-shopping/backups}"
+  install -d -m 0700 "$snap_dir" \
+    || fail "safety_snapshot_failed" "cannot create the safety-snapshot directory $snap_dir"
+  local ts recipient snap tmp pipeline pass_env=()
+  if [[ -n "${PGPASSWORD:-}" ]]; then
+    export PGPASSWORD
+    pass_env=(-e PGPASSWORD)
+  fi
+  ts=$(date -u +%Y%m%dT%H%M%SZ)
+  recipient=$(age-keygen -y "$IDENTITY" 2>/dev/null | tail -n 1) \
+    || fail "safety_snapshot_failed" "cannot derive the age recipient from the identity for the pre-restore safety snapshot"
+  snap="$snap_dir/pre-restore-$ts.dump.age"
+  tmp=$(mktemp "$snap_dir/.pre-restore.XXXXXX")
+  chmod 0600 "$tmp"
+  set +e
+  docker exec "${pass_env[@]}" "$CONTAINER" pg_dump --format=custom --no-owner --no-acl \
+      -U "$DB_USER" "$DATABASE" \
+    | age --encrypt --recipient "$recipient" --output "$tmp"
+  pipeline=("${PIPESTATUS[@]}")
+  set -e
+  if (( pipeline[1] != 0 )); then
+    rm -f -- "$tmp"
+    fail "safety_snapshot_failed" "age encryption of the pre-restore safety snapshot failed (exit ${pipeline[1]})"
+  fi
+  if (( pipeline[0] != 0 )); then
+    rm -f -- "$tmp"
+    fail "safety_snapshot_failed" "pg_dump of the current database failed (exit ${pipeline[0]}); refusing to restore production without a safety snapshot"
+  fi
+  if [[ ! -s "$tmp" ]] || ! head -c 100 "$tmp" | grep -q '^age-encryption.org/v1'; then
+    rm -f -- "$tmp"
+    fail "safety_snapshot_failed" "pre-restore safety snapshot is empty or invalid; refusing to restore production"
+  fi
+  mv -f "$tmp" "$snap"
+  log "encrypted pre-restore safety snapshot written: $snap"
+  log "  (emergency recovery: decrypt with the same identity and pg_restore into a clean database)"
+}
+
 COUNT_CONTAINER=0
 COUNT_DATABASE=0
 COUNT_DB_USER=0
 COUNT_IDENTITY=0
 COUNT_CONFIRM=0
+COUNT_TARGET_KIND=0
 ARCHIVES=0
 
 while (( $# > 0 )); do
@@ -176,7 +289,7 @@ while (( $# > 0 )); do
     --db-user)           COUNT_DB_USER=$((COUNT_DB_USER + 1)); DB_USER="$2"; shift 2 ;;
     --identity)          COUNT_IDENTITY=$((COUNT_IDENTITY + 1)); IDENTITY="$2"; shift 2 ;;
     --destroy-target)    DESTROY_TARGET="yes"; shift ;;
-    --target-kind)       TARGET_KIND="$2"; shift 2 ;;
+    --target-kind)       COUNT_TARGET_KIND=$((COUNT_TARGET_KIND + 1)); TARGET_KIND="$2"; shift 2 ;;
     --confirm-production) COUNT_CONFIRM=$((COUNT_CONFIRM + 1)); CONFIRM_PRODUCTION="$2"; shift 2 ;;
     -h|--help)           usage; exit 0 ;;
     -*)                  log "ERROR unknown option: $1"; usage; exit 2 ;;
@@ -194,8 +307,8 @@ if (( VERIFY != 0 && RESTORE != 0 )); then
   log "ERROR --verify and --restore are mutually exclusive"
   exit 2
 fi
-if (( COUNT_CONTAINER > 1 || COUNT_DATABASE > 1 || COUNT_DB_USER > 1 || COUNT_IDENTITY > 1 || COUNT_CONFIRM > 1 )); then
-  fail "invalid_target" "duplicate value flags are not allowed (each of --container/--database/--db-user/--identity/--confirm-production may be given at most once)"
+if (( COUNT_CONTAINER > 1 || COUNT_DATABASE > 1 || COUNT_DB_USER > 1 || COUNT_IDENTITY > 1 || COUNT_CONFIRM > 1 || COUNT_TARGET_KIND > 1 )); then
+  fail "invalid_target" "duplicate value flags are not allowed (each of --container/--database/--db-user/--identity/--confirm-production/--target-kind may be given at most once)"
 fi
 
 MODE=""
@@ -233,10 +346,24 @@ fi
 command -v age >/dev/null 2>&1 || fail "deps" "age not found"
 command -v docker >/dev/null 2>&1 || fail "deps" "docker not found"
 
-WORK=$(mktemp -d "${TMPDIR:-/tmp}/restore.XXXXXX")
+WORK_BASE="${RESTORE_WORKDIR:-${TMPDIR:-/tmp}}"
+WORK=$(mktemp -d "$WORK_BASE/restore.XXXXXX")
 chmod 0700 "$WORK"
 DUMP="$WORK/restore.dump"
 trap 'rm -rf -- "$WORK"' EXIT
+
+# Capacity BEFORE decrypting: the encrypted archive plus headroom must fit in the staging dir.
+check_staging_capacity
+
+if [[ "$MODE" == "restore" ]]; then
+  # N-H2: the target must resolve to a real container, and never to production under
+  # --target-kind isolated. Runs before any decrypt or destruction.
+  resolve_target_identity
+  # Production safety snapshot of the current database, BEFORE the archive is even decrypted.
+  if [[ "$TARGET_KIND" == "production" ]]; then
+    snapshot_production
+  fi
+fi
 
 log "decrypting $ARCHIVE"
 age --decrypt --identity "$IDENTITY" --output "$DUMP" "$ARCHIVE" || fail "decrypt_failed" "age decryption failed"
@@ -263,7 +390,12 @@ fi
 
 if [[ "$MODE" == "restore" ]]; then
   log "restoring into container=$CONTAINER database=$DATABASE user=$DB_USER (destructive, guarded, single-transaction)"
-  if ! docker exec -i -e "PGPASSWORD=${PGPASSWORD:-}" "$CONTAINER" \
+  pass_env=()
+  if [[ -n "${PGPASSWORD:-}" ]]; then
+    export PGPASSWORD
+    pass_env=(-e PGPASSWORD)
+  fi
+  if ! docker exec -i "${pass_env[@]}" "$CONTAINER" \
       pg_restore --no-owner --no-acl --clean --if-exists --single-transaction --exit-on-error \
         -U "$DB_USER" -d "$DATABASE" < "$DUMP"; then
     fail "restore_failed" "pg_restore reported a failure; the --single-transaction restore rolled back, leaving the target unchanged"
