@@ -163,7 +163,9 @@ chmod 0644 "$SANDBOX/etc/systemd/system/fixture-bad.service" "$SANDBOX/etc/syste
 set +e
 FIXTURE_OUT="$(systemd-analyze verify --root="$SANDBOX" fixture-bad.service 2>&1)"
 set -e
-if grep -Eq "Unknown key.*'OnFailure'.*section \[Service\]" <<<"$FIXTURE_OUT"; then
+# systemd <= 252 words this "Unknown key 'OnFailure' in section [Service], ignoring." while
+# >= 253 says "Unknown key name 'OnFailure' in section 'Service', ignoring." — cover both.
+if grep -Eq "Unknown key( name)? 'OnFailure' in section .?Service" <<<"$FIXTURE_OUT"; then
   PASS=$((PASS + 1)); echo "ok:   fixture OnFailure-under-[Service] is flagged by verify"
 else
   FAIL=$((FAIL + 1)); echo "FAIL: fixture OnFailure-under-[Service] was NOT flagged (verify output: '$FIXTURE_OUT')"
