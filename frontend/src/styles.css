@@ -6683,6 +6683,21 @@ body:has(.support-chat-widget) .notification-region--toasts {
   letter-spacing: -0.03em;
 }
 
+.storefront-shell .pdp-price-note {
+  margin: 8px 0 0;
+  color: var(--worklist-ink-2);
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+
+.storefront-shell a.shop-add-to-cart,
+.storefront-shell a.pdp-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
 .storefront-shell .pdp-stock {
   display: flex;
   align-items: center;

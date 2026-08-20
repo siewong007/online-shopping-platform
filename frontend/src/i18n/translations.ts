@@ -391,6 +391,27 @@ export const translations = {
   },
   "shop.product.from": { en: "From", bm: "Dari", zh: "价格自" },
   "shop.product.add": { en: "Add to Cart", bm: "Tambah ke Troli", zh: "加入购物车" },
+  "shop.purchase.banner": {
+    en: "Pickup only at Salim. Add to cart, then WhatsApp the counter to confirm your pickup. Online card payment is not open yet.",
+    bm: "Ambilan di Salim sahaja. Tambah ke troli, kemudian WhatsApp kaunter untuk sahkan. Bayaran kad dalam talian belum dibuka.",
+    zh: "仅限 Salim 门市自取。加入购物车后请 WhatsApp 门市确认。线上银行卡付款尚未开通。"
+  },
+  "shop.purchase.askPrice": { en: "WhatsApp the counter", bm: "WhatsApp kaunter", zh: "WhatsApp 门市" },
+  "shop.purchase.priceNote": {
+    en: "Price as listed. Collect at Lorong Salim 17. Online card payment is not open yet.",
+    bm: "Harga seperti dipaparkan. Ambil di Lorong Salim 17. Bayaran kad dalam talian belum dibuka.",
+    zh: "价格如图所示。请到 Lorong Salim 17 自取。线上银行卡付款尚未开通。"
+  },
+  "shop.cartd.buyingPaused": {
+    en: "Online card payment is not open yet. Send this pickup list to the counter on WhatsApp.",
+    bm: "Bayaran kad dalam talian belum dibuka. Hantar senarai ambilan ini ke kaunter melalui WhatsApp.",
+    zh: "线上银行卡付款尚未开通。请通过 WhatsApp 把门市自取清单发给柜台。"
+  },
+  "shop.cartd.sendWhatsapp": {
+    en: "Send pickup list on WhatsApp",
+    bm: "Hantar senarai ambilan di WhatsApp",
+    zh: "通过 WhatsApp 发送自取清单"
+  },
 
   "shop.services.eyebrow": { en: "More ways to get it done", bm: "Lebih banyak cara siapkan kerja", zh: "更多完成工作的方式" },
   "shop.services.title": {

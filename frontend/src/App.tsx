@@ -234,6 +234,35 @@ import {
 const CART_STORAGE_KEY = "depot-cart";
 const ACCOUNT_EMAIL_STORAGE_KEY = "depot-account-email";
 const DELIVERY_CHECKOUT_ENABLED = import.meta.env.VITE_ENABLE_DELIVERY === "true";
+const PURCHASE_ENABLED = import.meta.env.VITE_ENABLE_PURCHASE !== "false";
+const CARD_PAY_ENABLED = import.meta.env.VITE_ENABLE_CARD_PAY === "true";
+const WA_COUNTER = "https://wa.me/60174056993";
+
+function askPriceHref(productName: string): string {
+  return `${WA_COUNTER}?text=${encodeURIComponent(
+    `Hi Ekoway, I want to confirm today's price and stock for ${productName}.`
+  )}`;
+}
+
+function pickupWhatsAppHref(cart: CartItem[], customerName: string, customerPhone: string, customerEmail: string): string {
+  const lines = cart.map(
+    (item) =>
+      `- ${item.quantity} x ${item.product.name} (${formatWorklistPrice(item.product.price_cents)} each)`
+  );
+  const total = cart.reduce((sum, item) => sum + item.product.price_cents * item.quantity, 0);
+  const message = [
+    "Hi Ekoway, pickup order (Salim):",
+    ...lines,
+    `Total ${formatWorklistPrice(total)}`,
+    `Name: ${customerName}`,
+    `Phone: ${customerPhone}`,
+    customerEmail ? `Email: ${customerEmail}` : "",
+    "I will collect at Lorong Salim 17."
+  ]
+    .filter(Boolean)
+    .join("\n");
+  return `${WA_COUNTER}?text=${encodeURIComponent(message)}`;
+}
 
 function downloadBlob(blob: Blob, filename: string): void {
   const url = window.URL.createObjectURL(blob);
@@ -1847,6 +1876,8 @@ export default function App() {
   }, []);
 
   const addToCart = (product: Product) => {
+    if (!PURCHASE_ENABLED) return;
+
     latestProductsById.current.set(product.id, product);
     const currentProduct = latestProductsById.current.get(product.id) ?? product;
     const stockLimit = Math.max(0, Math.floor(currentProduct.stock_quantity));
@@ -3500,6 +3531,14 @@ function StorefrontView({
               </button>
             </div>
           ) : null}
+          {!PURCHASE_ENABLED ? (
+            <div className="shop-offline-banner worklist-offline-notice" role="status">
+              <span>{t("shop.purchase.banner")}</span>
+              <a className="outline-button" href={WA_COUNTER} rel="noopener" target="_blank">
+                {t("shop.purchase.askPrice")}
+              </a>
+            </div>
+          ) : null}
           <div className="worklist-toolbar">
             <span className="worklist-toolbar__count" aria-live="polite">
               {activeJob
@@ -3682,6 +3721,7 @@ function StorefrontView({
                           >
                             {t("shop.product.view")} <span aria-hidden="true">→</span>
                           </button>
+                          {PURCHASE_ENABLED ? (
                           <button
                             aria-label={`${t("shop.product.add")}: ${product.name}`}
                             className="shop-add-to-cart"
@@ -3691,6 +3731,17 @@ function StorefrontView({
                           >
                             {t("shop.product.add")}
                           </button>
+                          ) : (
+                          <a
+                            aria-label={`${t("shop.purchase.askPrice")}: ${product.name}`}
+                            className="shop-add-to-cart"
+                            href={askPriceHref(product.name)}
+                            rel="noopener"
+                            target="_blank"
+                          >
+                            {t("shop.purchase.askPrice")}
+                          </a>
+                          )}
                         </div>
                       </div>
                     </article>
@@ -3967,12 +4018,19 @@ function ProductDetailView({
           <h1 className="pdp-buy__name" ref={headingRef} tabIndex={-1}>{product.name}</h1>
           <div className="pdp-buy__rule" aria-hidden="true" />
           <div className="pdp-buy__price">{formatWorklistPrice(product.price_cents)}</div>
+          {!PURCHASE_ENABLED ? <p className="pdp-price-note">{t("shop.purchase.priceNote")}</p> : null}
           <div className={`pdp-stock pdp-stock--${stockState}`}><i aria-hidden="true" /><span>{stockLabel}</span></div>
           <div className="pdp-primary-actions" ref={primaryActionsRef}>
-            {quantityControl()}
+            {PURCHASE_ENABLED ? quantityControl() : null}
+            {PURCHASE_ENABLED ? (
             <button className="pdp-add" disabled={stockState === "out"} onClick={addSelectedQuantity} type="button">
               {stockState === "out" ? t("shop.product.stock.out") : t("shop.product.add")}
             </button>
+            ) : (
+            <a className="pdp-add" href={whatsappHref} rel="noopener" target="_blank">
+              {t("shop.purchase.askPrice")}
+            </a>
+            )}
           </div>
           <a
             className={`pdp-whatsapp${stockState === "out" ? " pdp-whatsapp--lead" : ""}`}
@@ -4041,6 +4099,7 @@ function ProductDetailView({
                     >
                       {t("shop.product.view")} <span aria-hidden="true">→</span>
                     </button>
+                    {PURCHASE_ENABLED ? (
                     <button
                       aria-label={`${t("shop.product.add")}: ${item.name}`}
                       className="shop-add-to-cart"
@@ -4048,6 +4107,15 @@ function ProductDetailView({
                       onClick={() => onAddToCart(item)}
                       type="button"
                     >{t("shop.product.add")}</button>
+                    ) : (
+                    <a
+                      aria-label={`${t("shop.purchase.askPrice")}: ${item.name}`}
+                      className="shop-add-to-cart"
+                      href={askPriceHref(item.name)}
+                      rel="noopener"
+                      target="_blank"
+                    >{t("shop.purchase.askPrice")}</a>
+                    )}
                   </div>
                 </div>
               </article>
@@ -4062,10 +4130,16 @@ function ProductDetailView({
             <dt>{formatWorklistPrice(product.price_cents)}</dt>
             <dd className={`pdp-stock pdp-stock--${stockState}`}><i aria-hidden="true" />{stockLabel}</dd>
           </dl>
-          {quantityControl(true)}
+          {PURCHASE_ENABLED ? quantityControl(true) : null}
+          {PURCHASE_ENABLED ? (
           <button className="pdp-add" disabled={stockState === "out"} onClick={addSelectedQuantity} type="button">
             {stockState === "out" ? t("shop.product.stock.out") : t("shop.product.add")}
           </button>
+          ) : (
+          <a className="pdp-add" href={whatsappHref} rel="noopener" target="_blank">
+            {t("shop.purchase.askPrice")}
+          </a>
+          )}
         </div>
       ) : null}
     </main>
@@ -5180,12 +5254,27 @@ function CartDrawer({
     setFeedback(null);
     setIsSubmitting(true);
 
+    if (!PURCHASE_ENABLED) {
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!CARD_PAY_ENABLED) {
+      window.open(
+        pickupWhatsAppHref(cart, form.customer_name, form.customer_phone, form.customer_email),
+        "_blank",
+        "noopener"
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const checkout = await onCheckout({
         customer_name: form.customer_name,
         customer_email: form.customer_email,
         customer_phone: form.customer_phone,
-        fulfillment_method: form.fulfillment_method,
+        fulfillment_method: DELIVERY_CHECKOUT_ENABLED ? form.fulfillment_method : "pickup",
         items: cart.map((item) => ({ product_id: item.product.id, quantity: item.quantity })),
         promotion_id: selectedPromotionId ?? undefined,
         voucher_code: voucherCode.trim() || undefined,
@@ -5412,6 +5501,7 @@ function CartDrawer({
             </section>
             <footer className="cart-drawer-foot">
               {renderTotals()}
+              {PURCHASE_ENABLED ? (
               <button
                 className="solid-button"
                 disabled={isQuoting}
@@ -5419,6 +5509,14 @@ function CartDrawer({
               >
                 Proceed to Checkout
               </button>
+              ) : (
+              <>
+                <p className="cart-feedback" role="status">{t("shop.cartd.buyingPaused")}</p>
+                <a className="solid-button" href={WA_COUNTER} rel="noopener" target="_blank">
+                  {t("shop.cartd.sendWhatsapp")}
+                </a>
+              </>
+              )}
             </footer>
           </>
         ) : (
@@ -5602,6 +5700,11 @@ function CartDrawer({
               </p>
             ) : null}
             {renderTotals()}
+            {!CARD_PAY_ENABLED ? (
+              <p className="cart-feedback" role="status">
+                {t("shop.cartd.buyingPaused")}
+              </p>
+            ) : null}
             <div className="cart-checkout-actions">
               <button type="button" className="outline-button" onClick={() => setStage("cart")}>
                 Back to cart
@@ -5613,7 +5716,11 @@ function CartDrawer({
                   isSubmitting || isQuoting || (isDelivery && (!addressReady || !form.shipping_service_code))
                 }
               >
-                {isSubmitting ? "Placing order..." : "Place Order"}
+                {CARD_PAY_ENABLED
+                  ? isSubmitting
+                    ? "Placing order..."
+                    : "Place Order"
+                  : t("shop.cartd.sendWhatsapp")}
               </button>
             </div>
           </form>

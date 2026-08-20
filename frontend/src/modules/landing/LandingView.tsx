@@ -56,7 +56,7 @@ function charSpans(text: string): ReactNode[] {
 }
 
 const catRows = [
-  { num: "/01", name: "cat.01.name", sub: "cat.01.sub", img: "/ekoway/slots/cat-power-tools.png", topic: "Power%20Tools" },
+  { num: "/01", name: "cat.01.name", sub: "cat.01.sub", img: "/ekoway/categories/power-tools-v1.jpg", topic: "Power%20Tools" },
   { num: "/02", name: "cat.02.name", sub: "cat.02.sub", img: "/ekoway/categories/paint-v1.jpg", topic: "Paint" },
   { num: "/03", name: "cat.03.name", sub: "cat.03.sub", img: "/ekoway/categories/building-v1.jpg", topic: "Building%20Materials" },
   { num: "/04", name: "cat.04.name", sub: "cat.04.sub", img: "/ekoway/categories/bathroom-v1.jpg", topic: "Bathroom%20Accessories" },
@@ -65,7 +65,7 @@ const catRows = [
 ] as const;
 
 const dealCards = [
-  { img: "/ekoway/slots/feat-power.png", brand: "BOSCH · DONGCHENG · STANLEY", title: "month.1.title", body: "month.1.body", topic: "Power%20Tools" },
+  { img: "/ekoway/img/power-tools.jpg", brand: "BOSCH · DONGCHENG · STANLEY", title: "month.1.title", body: "month.1.body", topic: "Power%20Tools" },
   { img: "/ekoway/img/paints.jpg", brand: "Nippon Paint · Smart Paint", title: "month.2.title", body: "month.2.body", topic: "Paints" },
   { img: "/ekoway/img/home-appliances.jpg", brand: "Panasonic · Midea · KDK", title: "month.3.title", body: "month.3.body", topic: "Home%20Appliances" },
   { img: "/ekoway/img/bathroom-plumbing.jpg", brand: "Saniware · Cabana · Inspire", title: "month.4.title", body: "month.4.body", topic: "Bathroom%20and%20Plumbing" }
