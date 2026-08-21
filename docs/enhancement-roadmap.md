@@ -14,13 +14,14 @@ Status snapshot for the current tree:
 | Membership tiers | Shipped | `0017_membership_tiers.sql`, customer membership endpoints |
 | E-invoice readiness | Shipped on feature branch | `0018_invoice_einvoice_fields.sql`, billing validation, export-state tracking |
 | CI pipeline | Shipped | `.github/workflows/ci.yml` |
-| Mobile hardening | Active next work | `docs/mobile-styling-plan.md` |
+| Mobile hardening | Shipped | `7a0fd8b` + per-feature responsive rules; verified 2026-08-22 — zero horizontal overflow at 320/375/480px (landing, storefront, legal, admin login) and 375/768px (all authenticated admin tabs) |
+| Admin login throttling | Shipped | `0037_admin_login_throttles.sql`, `backend/src/client_ip.rs`, auth service caps |
 | AutoCount export | Shipped on feature branch | `/api/admin/invoices/autocount-export`, invoice CSV download UI |
 
 Current recommended PR themes:
 
 1. Bring docs and onboarding in line with the shipped architecture.
-2. Finish mobile usability across storefront, landing, admin navigation, tables, and modals.
+2. Replace the generic AutoCount CSV with the user's exact import template once supplied.
 3. Replace the generic AutoCount CSV with the user's exact import template once supplied.
 4. Add reconciliation/read-back after the accountant confirms the import workflow.
 5. Extend customer self-service and admin-scale filtering after the accounting path is usable.
