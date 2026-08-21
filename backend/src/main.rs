@@ -33,6 +33,8 @@ async fn main() -> anyhow::Result<()> {
     // of becoming a runtime rejection nobody investigates. An unset setting is `disabled`.
     let payment_activation_mode = PaymentActivationMode::from_environment()
         .context("PAYMENT_ACTIVATION_MODE must be `disabled`, `controlled` or `public`")?;
+    let emailer = online_shopping_api::emailer::Emailer::from_environment()
+        .context("transactional email configuration is invalid")?;
 
     let pool = PgPoolOptions::new()
         .max_connections(10)
@@ -50,8 +52,12 @@ async fn main() -> anyhow::Result<()> {
         mode = payment_activation_mode.as_str(),
         "payment activation gate resolved"
     );
+    tracing::info!(
+        enabled = emailer.is_enabled(),
+        "transactional email resolved"
+    );
     let app = routes::build_router(
-        AppState::with_payment_activation_mode(pool, payment_activation_mode),
+        AppState::with_payment_activation_mode(pool, payment_activation_mode).with_emailer(emailer),
         frontend_origin,
     );
 

@@ -12,6 +12,14 @@ base64 = "0.22"
 chacha20poly1305 = "0.10"
 dotenvy = "0.15"
 hmac = "0.12"
+lettre = { version = "0.11", default-features = false, features = [
+    "builder",
+    "ring",
+    "rustls-native-certs",
+    "smtp-transport",
+    "tokio1",
+    "tokio1-rustls",
+] }
 rand = "0.8"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 serde = { version = "1", features = ["derive"] }

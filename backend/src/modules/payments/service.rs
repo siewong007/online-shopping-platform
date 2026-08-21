@@ -1,7 +1,10 @@
 use anyhow::Result;
 use sqlx::PgPool;
 
-use crate::modules::{audit, auth::model::AdminIdentity};
+use crate::{
+    emailer::Emailer,
+    modules::{audit, auth::model::AdminIdentity},
+};
 
 use super::{
     activation::PaymentInitiationApproval,
@@ -22,6 +25,7 @@ pub async fn reconcile_gateway_payment(
     pool: &PgPool,
     identity: &AdminIdentity,
     payment_id: i32,
+    emailer: Option<&Emailer>,
 ) -> Result<GatewayReconciliationResult> {
     let payment = crate::db::fetch_gateway_payment(pool, payment_id).await?;
     let gateway = gateway::configured_gateway_for_provider(&payment.provider)?;
@@ -35,6 +39,14 @@ pub async fn reconcile_gateway_payment(
         &result.status,
     )
     .await;
+    // A reconciliation can be the first confirmation that a payment was actually captured
+    // (for example after webhook outages), so it owes the shopper the same receipt email.
+    if result.changed
+        && result.status == "Captured"
+        && let Some(emailer) = emailer
+    {
+        emailer.spawn_payment_captured(pool.clone(), payment.order_id);
+    }
     Ok(result)
 }
 
@@ -43,6 +55,7 @@ pub async fn refund_gateway_payment(
     identity: &AdminIdentity,
     payment_id: i32,
     input: &RefundPaymentInput,
+    emailer: Option<&Emailer>,
 ) -> Result<GatewayRefundResult> {
     let payment = crate::db::fetch_gateway_payment(pool, payment_id).await?;
     let gateway = gateway::configured_gateway_for_provider(&payment.provider)?;
@@ -66,6 +79,11 @@ pub async fn refund_gateway_payment(
         &format!("{} {} cents", result.status, result.amount_cents),
     )
     .await;
+    if result.status == "Succeeded"
+        && let Some(emailer) = emailer
+    {
+        emailer.spawn_refund_notice(pool.clone(), payment.order_id, result.amount_cents);
+    }
     Ok(result)
 }
 
@@ -133,13 +151,21 @@ pub async fn start_gateway_checkout(
     input: &crate::models::CreateOrderInput,
     customer_account_id: Option<i32>,
     _approval: &PaymentInitiationApproval,
+    emailer: Option<&Emailer>,
 ) -> Result<PaymentCheckout> {
     let order =
         crate::modules::orders::service::create_order(pool, "customer", input, customer_account_id)
             .await?;
 
     match gateway.start_checkout(pool, order.clone()).await {
-        Ok(checkout) => Ok(checkout),
+        // The durable checkout (and its payment ledger) now exists, so the confirmation email
+        // can no longer describe an order that is about to be cleaned up.
+        Ok(checkout) => {
+            if let Some(emailer) = emailer {
+                emailer.spawn_order_confirmation(pool.clone(), &checkout.order);
+            }
+            Ok(checkout)
+        }
         Err(error) => {
             // Delete only when the adapter failed before creating its durable payment ledger.
             // Once that row exists, the provider may already have accepted a request even if its

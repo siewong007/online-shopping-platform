@@ -687,7 +687,7 @@ mod tests {
                 .expect("valid authorization");
         let grant_id = approval.grant_id().expect("grant id");
         let checkout =
-            service::start_gateway_checkout(&pool, gateway.as_ref(), &input, None, &approval)
+            service::start_gateway_checkout(&pool, gateway.as_ref(), &input, None, &approval, None)
                 .await
                 .expect("checkout proceeds once admitted");
         record_authorized_checkout(&pool, &approval, checkout.order.id).await;

@@ -268,6 +268,15 @@ pub enum GatewayEventOutcome {
     Duplicate,
 }
 
+/// `GatewayEventOutcome` plus the one signal the customer-email hook needs: the order whose
+/// payment THIS event transitioned to Captured. `None` for duplicates and non-capture events,
+/// so exactly-once receipt sending falls out of the webhook's own idempotency.
+#[derive(Debug, Clone)]
+pub struct VerifiedGatewayEventOutcome {
+    pub event: GatewayEventOutcome,
+    pub newly_captured_order_id: Option<i32>,
+}
+
 #[derive(Debug, Clone)]
 pub struct GatewayPaymentRecord {
     pub payment_id: i32,
@@ -464,7 +473,9 @@ pub async fn apply_gateway_payment_event(
     status: GatewayPaymentStatus,
     transaction_id: &str,
     message: &str,
-) -> Result<()> {
+) -> Result<Option<i32>> {
+    // Some(order id) when this call transitioned the payment to Captured — the exactly-once
+    // receipt-email signal for the senangPay path.
     let idempotency_key = gateway_idempotency_key(provider, provider_order_id)?;
     let mut tx = pool.begin().await?;
 
@@ -481,9 +492,11 @@ pub async fn apply_gateway_payment_event(
     .await?
     .ok_or_else(|| anyhow::anyhow!("Unknown payment gateway order reference."))?;
 
+    let mut captured_now = false;
     match status {
         GatewayPaymentStatus::Captured => {
             if current_status != "Captured" {
+                captured_now = true;
                 sqlx::query(
                     r#"
                     UPDATE payments
@@ -544,7 +557,7 @@ pub async fn apply_gateway_payment_event(
     }
 
     tx.commit().await?;
-    Ok(())
+    Ok(captured_now.then_some(order_id))
 }
 
 /// Applies one already-authenticated provider event. Every provider identifier and all monetary
@@ -552,7 +565,7 @@ pub async fn apply_gateway_payment_event(
 pub async fn apply_verified_gateway_payment_event(
     pool: &PgPool,
     event: &VerifiedGatewayPaymentEvent<'_>,
-) -> Result<GatewayEventOutcome> {
+) -> Result<VerifiedGatewayEventOutcome> {
     let provider = event.provider.trim().to_ascii_lowercase();
     let currency = normalize_gateway_currency(event.currency)?;
     if event.event_key.trim().is_empty() || event.event_key.len() > 256 {
@@ -627,9 +640,13 @@ pub async fn apply_verified_gateway_payment_event(
         > 0;
     if duplicate {
         tx.commit().await?;
-        return Ok(GatewayEventOutcome::Duplicate);
+        return Ok(VerifiedGatewayEventOutcome {
+            event: GatewayEventOutcome::Duplicate,
+            newly_captured_order_id: None,
+        });
     }
 
+    let mut captured_now = false;
     let mut outcome = "ignored-terminal";
     match event.status {
         GatewayPaymentStatus::Captured => {
@@ -662,6 +679,7 @@ pub async fn apply_verified_gateway_payment_event(
                 .execute(&mut *tx)
                 .await?;
                 outcome = "captured";
+                captured_now = true;
             }
         }
         GatewayPaymentStatus::Failed => {
@@ -721,7 +739,10 @@ pub async fn apply_verified_gateway_payment_event(
     .await?;
 
     tx.commit().await?;
-    Ok(GatewayEventOutcome::Applied)
+    Ok(VerifiedGatewayEventOutcome {
+        event: GatewayEventOutcome::Applied,
+        newly_captured_order_id: captured_now.then_some(order_id),
+    })
 }
 
 pub async fn fetch_gateway_payment(pool: &PgPool, payment_id: i32) -> Result<GatewayPaymentRecord> {

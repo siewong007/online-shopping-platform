@@ -266,7 +266,7 @@ pub async fn process_webhook(
     event_type: &str,
     event_object: &str,
     raw_body: &[u8],
-) -> Result<db::GatewayEventOutcome> {
+) -> Result<db::VerifiedGatewayEventOutcome> {
     config.verify_webhook_signature(raw_body, signature)?;
     if event_object.trim() != "payment_request" {
         bail!("Unsupported HitPay webhook object.");
@@ -960,7 +960,7 @@ mod tests {
         config: &HitPayConfig,
         payload: &[u8],
         event_type: &str,
-    ) -> Result<db::GatewayEventOutcome> {
+    ) -> Result<db::VerifiedGatewayEventOutcome> {
         process_webhook(
             pool,
             config,
@@ -1271,18 +1271,20 @@ mod tests {
             "MYR",
             None,
         );
-        assert_eq!(
+        assert!(matches!(
             send_event(&pool, &config, &payload, "completed")
                 .await
-                .unwrap(),
+                .unwrap()
+                .event,
             db::GatewayEventOutcome::Applied
-        );
-        assert_eq!(
+        ));
+        assert!(matches!(
             send_event(&pool, &config, &payload, "completed")
                 .await
-                .unwrap(),
+                .unwrap()
+                .event,
             db::GatewayEventOutcome::Duplicate
-        );
+        ));
         let count = sqlx::query_scalar::<_, i64>(
             "SELECT COUNT(*) FROM payment_gateway_events WHERE payment_id = $1",
         )

@@ -162,7 +162,7 @@ pub async fn process_callback(
     pool: &PgPool,
     config: &SenangPayConfig,
     callback: &SenangPayCallback,
-) -> Result<()> {
+) -> Result<Option<i32>> {
     config.verify_callback(callback)?;
     let provider_order_id = callback.order_id.trim();
     let _ = parse_provider_order_id(provider_order_id)?;

@@ -61,7 +61,14 @@ pub async fn admin_create_order(
 
     service::create_order(&state.pool, &identity.username, &input, None)
         .await
-        .map(|order| (StatusCode::CREATED, Json(order)))
+        .map(|order| {
+            // Fire-and-forget: a confirmation email that cannot be sent must never fail the
+            // order it confirms.
+            state
+                .emailer
+                .spawn_order_confirmation(state.pool.clone(), &order);
+            (StatusCode::CREATED, Json(order))
+        })
         .map_err(error::map_admin_error)
 }
 
@@ -163,7 +170,12 @@ pub async fn checkout(
     let customer_account_id = identity.map(|identity| identity.customer_account_id);
     service::create_order(&state.pool, "customer", &input, customer_account_id)
         .await
-        .map(|order| (StatusCode::CREATED, Json(order)))
+        .map(|order| {
+            state
+                .emailer
+                .spawn_order_confirmation(state.pool.clone(), &order);
+            (StatusCode::CREATED, Json(order))
+        })
         .map_err(error::map_admin_error)
 }
 

@@ -80,7 +80,14 @@ pub async fn hitpay_webhook(
         &body,
     )
     .await
-    .map(|_| "OK")
+    .map(|outcome| {
+        if let Some(order_id) = outcome.newly_captured_order_id {
+            state
+                .emailer
+                .spawn_payment_captured(state.pool.clone(), order_id);
+        }
+        "OK"
+    })
     .map_err(|webhook_error| {
         tracing::warn!(%webhook_error, "HitPay webhook rejected");
         (
@@ -108,6 +115,7 @@ pub async fn checkout_with_gateway(
         &input,
         customer_account_id,
         &approval,
+        Some(&state.emailer),
     )
     .await
     .map_err(error::map_admin_error)?;
@@ -159,7 +167,14 @@ pub async fn senangpay_callback(
 
     super::senangpay::process_callback(&state.pool, &config, &callback)
         .await
-        .map(|()| "OK")
+        .map(|newly_captured_order_id| {
+            if let Some(order_id) = newly_captured_order_id {
+                state
+                    .emailer
+                    .spawn_payment_captured(state.pool.clone(), order_id);
+            }
+            "OK"
+        })
         .map_err(error::map_admin_error)
 }
 
@@ -256,7 +271,7 @@ pub async fn admin_reconcile_payment(
         "payment",
     )
     .await?;
-    service::reconcile_gateway_payment(&state.pool, &identity, payment_id)
+    service::reconcile_gateway_payment(&state.pool, &identity, payment_id, Some(&state.emailer))
         .await
         .map(Json)
         .map_err(error::map_admin_error)
@@ -276,8 +291,14 @@ pub async fn admin_refund_payment(
         "payment",
     )
     .await?;
-    service::refund_gateway_payment(&state.pool, &identity, payment_id, &input)
-        .await
-        .map(Json)
-        .map_err(error::map_admin_error)
+    service::refund_gateway_payment(
+        &state.pool,
+        &identity,
+        payment_id,
+        &input,
+        Some(&state.emailer),
+    )
+    .await
+    .map(Json)
+    .map_err(error::map_admin_error)
 }
