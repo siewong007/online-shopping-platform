@@ -45,8 +45,6 @@ services:
       POSTGRES_DB: online_shopping
     volumes:
       - postgres_data:/var/lib/postgresql
-      # Applied by the official image only while postgres_data is empty.
-      - /opt/online-shopping/initdb:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U shop_admin -d online_shopping"]
       interval: 10s
@@ -74,9 +72,19 @@ services:
     environment:
       APP_HOST: "0.0.0.0"
       APP_PORT: "4000"
+      APP_ENV: "production"
       DATABASE_URL: "postgres://shop_admin:${POSTGRES_PASSWORD}@postgres:5432/online_shopping"
       ADMIN_SEED_PASSWORD: "${ADMIN_SEED_PASSWORD:?ADMIN_SEED_PASSWORD is required}"
       FRONTEND_ORIGIN: "https://ekowayhardware.com"
+      # HitPay production capability is intentionally disabled until PAYMENT_PRIMARY_PROVIDER
+      # is explicitly set to hitpay and a separate production credential pair is added to the
+      # root-owned secrets.env file. Blank values preserve the current provider behavior.
+      PAYMENT_PRIMARY_PROVIDER: "${PAYMENT_PRIMARY_PROVIDER:-}"
+      HITPAY_MODE: "${HITPAY_MODE:-sandbox}"
+      HITPAY_PRODUCTION_API_KEY: "${HITPAY_PRODUCTION_API_KEY:-}"
+      HITPAY_PRODUCTION_WEBHOOK_SALT: "${HITPAY_PRODUCTION_WEBHOOK_SALT:-}"
+      HITPAY_PRODUCTION_API_URL: "https://api.hit-pay.com"
+      HITPAY_REDIRECT_URL: "https://ekowayhardware.com/shop?payment_return=hitpay"
       RUST_LOG: warn
     depends_on:
       postgres:

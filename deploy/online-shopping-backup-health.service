@@ -1,0 +1,10 @@
+[Unit]
+Description=Check the online-shopping encrypted backup health (backup-status.json)
+After=network.target
+# N4: on any non-zero exit, systemd starts the failure notifier (persistent marker + CRITICAL
+# journal entry + optional BACKUP_NOTIFY_HOOK, see notify-backup-failure.sh).
+OnFailure=online-shopping-backup-notify.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/online-shopping/check-backup-health.sh

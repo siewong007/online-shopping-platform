@@ -6,7 +6,7 @@ use crate::db::{
 use crate::models::*;
 use anyhow::{Result, anyhow, bail};
 use sqlx::{PgConnection, PgPool};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 const FULFILLMENT_METHODS: &[&str] = &["pickup", "delivery"];
 const FULFILLMENT_STATUSES: &[&str] = &[
@@ -425,7 +425,7 @@ pub async fn create_order(
     input: &CreateOrderInput,
     customer_account_id: Option<i32>,
 ) -> Result<Order> {
-    let (customer_name, customer_email) = validate_order_input(input)?;
+    let (customer_name, customer_email, customer_phone) = validate_order_input(input)?;
     let fulfillment_method = normalize_fulfillment_method(input.fulfillment_method.as_deref())?;
     let tax_rate_bps = fetch_setting_int(pool, "sales.default_tax_rate_bps", 0).await?;
 
@@ -473,13 +473,14 @@ pub async fn create_order(
     let (order_id, fulfillment_status, fulfillment_method, created_at) =
         sqlx::query_as::<_, (i32, String, String, String)>(
             r#"
-        INSERT INTO orders (customer_name, customer_email, subtotal_cents, fulfillment_method, customer_account_id)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO orders (customer_name, customer_email, customer_phone, subtotal_cents, fulfillment_method, customer_account_id)
+        VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING id, fulfillment_status, fulfillment_method, created_at::text
         "#,
         )
         .bind(customer_name)
         .bind(customer_email)
+        .bind(customer_phone)
         .bind(subtotal_cents)
         .bind(&fulfillment_method)
         .bind(customer_account_id)
@@ -573,6 +574,7 @@ pub async fn create_order(
         id: order_id,
         customer_name: customer_name.to_string(),
         customer_email: customer_email.to_string(),
+        customer_phone: customer_phone.to_string(),
         subtotal_cents,
         discount_cents,
         tax_cents,
@@ -596,6 +598,7 @@ pub async fn fetch_orders(pool: &PgPool, limit: i64, before: Option<i32>) -> Res
                     i32,
                     String,
                     String,
+                    String,
                     i32,
                     i32,
                     i32,
@@ -611,6 +614,7 @@ pub async fn fetch_orders(pool: &PgPool, limit: i64, before: Option<i32>) -> Res
                     orders.id,
                     orders.customer_name,
                     orders.customer_email,
+                    orders.customer_phone,
                     orders.subtotal_cents,
                     COALESCE(meta.discount_cents, 0) AS discount_cents,
                     COALESCE(meta.tax_cents, 0) AS tax_cents,
@@ -638,6 +642,7 @@ pub async fn fetch_orders(pool: &PgPool, limit: i64, before: Option<i32>) -> Res
                     i32,
                     String,
                     String,
+                    String,
                     i32,
                     i32,
                     i32,
@@ -653,6 +658,7 @@ pub async fn fetch_orders(pool: &PgPool, limit: i64, before: Option<i32>) -> Res
                     orders.id,
                     orders.customer_name,
                     orders.customer_email,
+                    orders.customer_phone,
                     orders.subtotal_cents,
                     COALESCE(meta.discount_cents, 0) AS discount_cents,
                     COALESCE(meta.tax_cents, 0) AS tax_cents,
@@ -710,6 +716,7 @@ pub async fn fetch_orders(pool: &PgPool, limit: i64, before: Option<i32>) -> Res
                 id,
                 customer_name,
                 customer_email,
+                customer_phone,
                 subtotal_cents,
                 discount_cents,
                 tax_cents,
@@ -722,6 +729,7 @@ pub async fn fetch_orders(pool: &PgPool, limit: i64, before: Option<i32>) -> Res
                 id,
                 customer_name,
                 customer_email,
+                customer_phone,
                 subtotal_cents,
                 discount_cents,
                 tax_cents,
@@ -829,9 +837,14 @@ async fn fetch_fulfillment_history_for_order(
         .unwrap_or_default())
 }
 
-fn validate_order_input(input: &CreateOrderInput) -> Result<(&str, &str)> {
+fn validate_order_input(input: &CreateOrderInput) -> Result<(&str, &str, &str)> {
     let customer_name = input.customer_name.trim();
     let customer_email = input.customer_email.trim();
+    let customer_phone = input
+        .customer_phone
+        .as_deref()
+        .map(str::trim)
+        .unwrap_or_default();
 
     if customer_name.is_empty() || customer_email.is_empty() {
         bail!("Customer name and email are required.");
@@ -843,7 +856,7 @@ fn validate_order_input(input: &CreateOrderInput) -> Result<(&str, &str)> {
 
     validate_order_items(&input.items)?;
 
-    Ok((customer_name, customer_email))
+    Ok((customer_name, customer_email, customer_phone))
 }
 
 fn validate_order_items(items: &[CreateOrderItemInput]) -> Result<()> {
@@ -943,8 +956,140 @@ async fn resolve_order_line_items(
     Ok((subtotal_cents, line_items))
 }
 
+/// Returns every unit an order is currently holding back to `products`.
+///
+/// Callers are responsible for ensuring this runs at most once per order — `orders`
+/// `stock_released_at` is the marker that makes that checkable.
+async fn restock_order_items(conn: &mut PgConnection, order_id: i32) -> Result<()> {
+    let held = sqlx::query_as::<_, (i32, i64)>(
+        r#"
+        SELECT product_id, SUM(quantity)
+        FROM order_items
+        WHERE order_id = $1
+        GROUP BY product_id
+        ORDER BY product_id
+        "#,
+    )
+    .bind(order_id)
+    .fetch_all(&mut *conn)
+    .await?;
+
+    for (product_id, quantity) in held {
+        let quantity = i32::try_from(quantity).map_err(|_| {
+            anyhow!("Order {order_id} holds too many units of product {product_id} to restock.")
+        })?;
+
+        sqlx::query(
+            r#"
+            UPDATE products
+            SET stock_quantity = stock_quantity + $1
+            WHERE id = $2
+            "#,
+        )
+        .bind(quantity)
+        .bind(product_id)
+        .execute(&mut *conn)
+        .await?;
+    }
+
+    Ok(())
+}
+
+/// Applies the stock difference between an order's current line items and the set replacing
+/// them. Editing an order rewrites `order_items` wholesale, so without this the units taken at
+/// checkout are never adjusted and stock drifts on every edit.
+///
+/// Increases reuse the same conditional `UPDATE` as checkout, so an edit can never oversell;
+/// decreases return the units. Deltas are applied in product-id order (hence `BTreeMap`) so
+/// concurrent edits touching the same products always take row locks in the same order.
+///
+/// Must be called before the caller deletes the existing `order_items` rows.
+async fn reconcile_stock_for_edit(
+    conn: &mut PgConnection,
+    order_id: i32,
+    next_items: &[OrderItem],
+) -> Result<()> {
+    let previous = sqlx::query_as::<_, (i32, i64)>(
+        r#"
+        SELECT product_id, SUM(quantity)
+        FROM order_items
+        WHERE order_id = $1
+        GROUP BY product_id
+        "#,
+    )
+    .bind(order_id)
+    .fetch_all(&mut *conn)
+    .await?;
+
+    let mut deltas: BTreeMap<i32, i64> = BTreeMap::new();
+    for (product_id, quantity) in previous {
+        *deltas.entry(product_id).or_default() -= quantity;
+    }
+    for item in next_items {
+        *deltas.entry(item.product_id).or_default() += i64::from(item.quantity);
+    }
+
+    for (product_id, delta) in deltas {
+        if delta == 0 {
+            continue;
+        }
+
+        let magnitude = i32::try_from(delta.abs())
+            .map_err(|_| anyhow!("Order quantity change for product {product_id} is too large."))?;
+
+        if delta > 0 {
+            let taken = sqlx::query_scalar::<_, String>(
+                r#"
+                UPDATE products
+                SET stock_quantity = stock_quantity - $1
+                WHERE id = $2 AND stock_quantity >= $1
+                RETURNING name
+                "#,
+            )
+            .bind(magnitude)
+            .bind(product_id)
+            .fetch_optional(&mut *conn)
+            .await?;
+
+            if taken.is_none() {
+                let existing = sqlx::query_as::<_, (String, i32)>(
+                    r#"
+                    SELECT name, stock_quantity
+                    FROM products
+                    WHERE id = $1
+                    "#,
+                )
+                .bind(product_id)
+                .fetch_optional(&mut *conn)
+                .await?;
+
+                match existing {
+                    Some((name, stock_quantity)) => {
+                        bail!("{name} has only {stock_quantity} left in stock.");
+                    }
+                    None => bail!("Product {product_id} does not exist."),
+                }
+            }
+        } else {
+            sqlx::query(
+                r#"
+                UPDATE products
+                SET stock_quantity = stock_quantity + $1
+                WHERE id = $2
+                "#,
+            )
+            .bind(magnitude)
+            .bind(product_id)
+            .execute(&mut *conn)
+            .await?;
+        }
+    }
+
+    Ok(())
+}
+
 pub async fn update_order(pool: &PgPool, order_id: i32, input: &CreateOrderInput) -> Result<Order> {
-    let (customer_name, customer_email) = validate_order_input(input)?;
+    let (customer_name, customer_email, customer_phone) = validate_order_input(input)?;
     if input.promotion_id.is_some()
         || normalized_voucher_code(input.voucher_code.as_deref()).is_some()
     {
@@ -981,22 +1126,28 @@ pub async fn update_order(pool: &PgPool, order_id: i32, input: &CreateOrderInput
         bail!("Order {order_id} is {current_status} and can no longer be edited.");
     }
 
+    // Priced without decrementing: the stock difference against the order's existing lines is
+    // settled by reconcile_stock_for_edit below, which must run before they are deleted.
     let (subtotal_cents, line_items) =
         resolve_order_line_items(&mut tx, &input.items, DecrementStock::No).await?;
+
+    reconcile_stock_for_edit(&mut tx, order_id, &line_items).await?;
 
     let order_state = sqlx::query_as::<_, (String, String)>(
         r#"
         UPDATE orders
         SET customer_name = $1,
             customer_email = $2,
-            subtotal_cents = $3,
-            fulfillment_method = COALESCE($4, fulfillment_method)
-        WHERE id = $5
+            customer_phone = $3,
+            subtotal_cents = $4,
+            fulfillment_method = COALESCE($5, fulfillment_method)
+        WHERE id = $6
         RETURNING fulfillment_status, fulfillment_method
         "#,
     )
     .bind(customer_name)
     .bind(customer_email)
+    .bind(customer_phone)
     .bind(subtotal_cents)
     .bind(fulfillment_method.as_deref())
     .bind(order_id)
@@ -1102,21 +1253,95 @@ pub async fn update_order(pool: &PgPool, order_id: i32, input: &CreateOrderInput
 }
 
 pub async fn delete_order(pool: &PgPool, order_id: i32) -> Result<()> {
-    let result = sqlx::query(
+    let mut tx = pool.begin().await?;
+
+    // `stock_released_at` guards against restocking twice when the abandoned-order sweep has
+    // already returned this order's units.
+    let already_released = sqlx::query_scalar::<_, bool>(
+        r#"
+        SELECT stock_released_at IS NOT NULL
+        FROM orders
+        WHERE id = $1
+        FOR UPDATE
+        "#,
+    )
+    .bind(order_id)
+    .fetch_optional(&mut *tx)
+    .await?;
+
+    let Some(already_released) = already_released else {
+        bail!("Order {order_id} does not exist.");
+    };
+
+    if !already_released {
+        restock_order_items(&mut tx, order_id).await?;
+    }
+
+    sqlx::query(
         r#"
         DELETE FROM orders
         WHERE id = $1
         "#,
     )
     .bind(order_id)
-    .execute(pool)
+    .execute(&mut *tx)
     .await?;
 
-    if result.rows_affected() == 0 {
-        bail!("Order {order_id} does not exist.");
-    }
+    tx.commit().await?;
 
     Ok(())
+}
+
+/// Releases stock held by orders that were never paid for and have gone stale, so an abandoned
+/// checkout cannot hold inventory forever. Returns the number of orders released.
+///
+/// Controlled by `inventory.unpaid_release_minutes`; the seeded and in-code default is 60
+/// minutes. Setting it to `0` disables release. Only orders still sitting at the `received`
+/// fulfillment stage are eligible, so an order staff have already started working is never
+/// swept out from under them.
+pub async fn release_abandoned_order_stock(pool: &PgPool) -> Result<usize> {
+    let minutes = fetch_setting_int(pool, "inventory.unpaid_release_minutes", 60).await?;
+    if minutes <= 0 {
+        return Ok(0);
+    }
+
+    let mut tx = pool.begin().await?;
+
+    let stale = sqlx::query_scalar::<_, i32>(
+        r#"
+        SELECT orders.id
+        FROM orders
+        JOIN order_sales_meta ON order_sales_meta.order_id = orders.id
+        WHERE orders.stock_released_at IS NULL
+          AND orders.fulfillment_status = 'received'
+          AND order_sales_meta.payment_status = 'unpaid'
+          AND orders.created_at < now() - (INTERVAL '1 minute' * $1::double precision)
+        ORDER BY orders.id
+        FOR UPDATE OF orders SKIP LOCKED
+        "#,
+    )
+    .bind(minutes)
+    .fetch_all(&mut *tx)
+    .await?;
+
+    for order_id in &stale {
+        restock_order_items(&mut tx, *order_id).await?;
+
+        sqlx::query(
+            r#"
+            UPDATE orders
+            SET stock_released_at = now()
+            WHERE id = $1
+            "#,
+        )
+        .bind(order_id)
+        .execute(&mut *tx)
+        .await?;
+    }
+
+    tx.commit().await?;
+
+    Ok(stale.len())
 }
 
 pub async fn fetch_order_by_id(pool: &PgPool, order_id: i32) -> Result<Option<Order>> {
@@ -1124,6 +1349,7 @@ pub async fn fetch_order_by_id(pool: &PgPool, order_id: i32) -> Result<Option<Or
         _,
         (
             i32,
+            String,
             String,
             String,
             i32,
@@ -1141,6 +1367,7 @@ pub async fn fetch_order_by_id(pool: &PgPool, order_id: i32) -> Result<Option<Or
             orders.id,
             orders.customer_name,
             orders.customer_email,
+            orders.customer_phone,
             orders.subtotal_cents,
             COALESCE(meta.discount_cents, 0) AS discount_cents,
             COALESCE(meta.tax_cents, 0) AS tax_cents,
@@ -1162,6 +1389,7 @@ pub async fn fetch_order_by_id(pool: &PgPool, order_id: i32) -> Result<Option<Or
         id,
         customer_name,
         customer_email,
+        customer_phone,
         subtotal_cents,
         discount_cents,
         tax_cents,
@@ -1191,6 +1419,7 @@ pub async fn fetch_order_by_id(pool: &PgPool, order_id: i32) -> Result<Option<Or
         id,
         customer_name,
         customer_email,
+        customer_phone,
         subtotal_cents,
         discount_cents,
         tax_cents,
@@ -1316,6 +1545,7 @@ mod order_tests {
         CreateOrderInput {
             customer_name: customer_name.to_string(),
             customer_email: customer_email.to_string(),
+            customer_phone: None,
             fulfillment_method: None,
             items: vec![CreateOrderItemInput {
                 product_id: 1,
@@ -1332,7 +1562,7 @@ mod order_tests {
     fn validate_order_input_accepts_trimmed_customer_details() {
         let input = order_input("  Falcon Builders  ", "  ap@falconbuilders.com  ");
 
-        let (customer_name, customer_email) = validate_order_input(&input).unwrap();
+        let (customer_name, customer_email, _phone) = validate_order_input(&input).unwrap();
 
         assert_eq!(customer_name, "Falcon Builders");
         assert_eq!(customer_email, "ap@falconbuilders.com");

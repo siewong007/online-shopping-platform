@@ -13,30 +13,30 @@ export const translations = {
 
   /* ---- landing hero ---- */
   "hero.sub": {
-    en: "From Bosch power tools to Nippon Paint and everyday essentials — genuine brands in Salim, near Farley, Sibu since 2017.",
-    bm: "Dari alatan kuasa Bosch hingga cat Nippon Paint dan keperluan harian — jenama terpercaya di Salim, berhampiran Farley, Sibu sejak 2017.",
-    zh: "从 Bosch 电动工具到立邦漆与日常用品 — 自 2017 年起，正品品牌尽在诗巫 Salim 区，毗邻 Farley。"
+    en: "Tools, building supplies and everyday hardware from our store in Salim, Sibu.",
+    bm: "Alatan, bahan binaan dan perkakasan harian dari kedai kami di Salim, Sibu.",
+    zh: "工具、建筑用品与日常五金，来自诗巫 Salim 门市。"
   },
   "hero.cta": { en: "WhatsApp us", bm: "WhatsApp kami", zh: "WhatsApp 我们" },
   "hero.browse": { en: "Browse categories", bm: "Lihat kategori", zh: "浏览分类" },
 
   /* ---- landing ticker ---- */
-  "tick.1": { en: "Genuine brands · full warranty", bm: "Jenama terpercaya · waranti penuh", zh: "正品品牌 · 完整保修" },
+  "tick.1": { en: "Tools · materials · everyday hardware", bm: "Alatan · bahan · perkakasan harian", zh: "工具 · 材料 · 日常五金" },
   "tick.2": { en: "New arrivals in store", bm: "Stok baharu di kedai", zh: "新货到店" },
   "tick.3": { en: "WhatsApp 017-405 6993", bm: "WhatsApp 017-405 6993", zh: "WhatsApp 017-405 6993" },
   "tick.4": {
-    en: "Open Mon–Sat 8am–6pm · Sun 9am–2pm",
-    bm: "Buka Isn–Sab 8pg–6ptg · Ahd 9pg–2ptg",
-    zh: "营业 周一至周六 8am–6pm · 周日 9am–2pm"
+    en: "Call or WhatsApp to confirm today's hours",
+    bm: "Telefon atau WhatsApp untuk sahkan waktu hari ini",
+    zh: "请致电或 WhatsApp 确认当天营业时间"
   },
 
   /* ---- landing about ---- */
-  "about.label": { en: "Serving Sibu since 2017", bm: "Berkhidmat di Sibu sejak 2017", zh: "自 2017 年服务诗巫" },
+  "about.label": { en: "Your Sibu hardware store", bm: "Kedai perkakasan anda di Sibu", zh: "您的诗巫五金店" },
   "about.head.1": { en: "We are Ekoway Hardware, ", bm: "Kami Ekoway Hardware, ", zh: "我们是 Ekoway Hardware，" },
   "about.head.serif": {
-    en: "永光五金 — Sibu’s hardware counter since 2017.",
-    bm: "永光五金 — kedai perkakasan Sibu sejak 2017.",
-    zh: "永光五金 — 自 2017 年起服务诗巫的五金店。"
+    en: "永光五金 — hardware supplies in Sibu.",
+    bm: "永光五金 — bekalan perkakasan di Sibu.",
+    zh: "永光五金 — 诗巫五金用品。"
   },
   "about.head.2": {
     en: " Power tools to building materials, for DIY and contractors alike.",
@@ -44,9 +44,9 @@ export const translations = {
     zh: " 从电动工具到建筑材料，为 DIY 爱好者与承包商而备。"
   },
   "about.body": {
-    en: "Ekoway Hardware has served Sibu since 2017 — 永光五金 — from our store in Salim, near Farley Commercial Centre. We stock everything from power tools to building materials for DIY customers and contractors, with trusted brands and straightforward service. Visit us or message us on WhatsApp — we’re happy to help.",
-    bm: "Ekoway Hardware telah berkhidmat di Sibu sejak 2017 — 永光五金 — dari kedai kami di Salim, berhampiran Farley Commercial Centre. Kami menyediakan semua keperluan dari alatan kuasa hingga bahan binaan untuk pelanggan DIY dan kontraktor, dengan jenama terpercaya dan servis yang mudah. Kunjungi kami atau WhatsApp kami — kami sedia membantu.",
-    zh: "Ekoway Hardware 自 2017 年起服务诗巫 — 永光五金 — 门市位于 Salim 区，毗邻 Farley 商业中心。我们备有从电动工具到建筑材料的各类商品，服务 DIY 顾客与承包商，提供正品品牌与实在的服务。欢迎到店或通过 WhatsApp 联系我们 — 我们乐意效劳。"
+    en: "Ekoway Hardware — 永光五金 — operates from Lorong Salim 17 in Sibu. Browse tools, fittings and building supplies for home projects and trade work, or message us on WhatsApp if you need help finding the right item.",
+    bm: "Ekoway Hardware — 永光五金 — beroperasi di Lorong Salim 17, Sibu. Lihat alatan, kelengkapan dan bahan binaan untuk projek rumah serta kerja perdagangan, atau WhatsApp kami jika anda perlukan bantuan.",
+    zh: "Ekoway Hardware — 永光五金 — 位于诗巫 Lorong Salim 17。这里提供家居工程与专业工作所需的工具、配件和建筑用品；如需选购协助，欢迎 WhatsApp 联系我们。"
   },
 
   /* ---- landing categories ---- */
@@ -108,15 +108,15 @@ export const translations = {
     zh: "应对认真工作的门市级库存。"
   },
   "why.head2": {
-    en: "Genuine brands. Honest service. Real advice.",
-    bm: "Jenama terpercaya. Servis jujur. Nasihat sebenar.",
-    zh: "正品品牌。诚实服务。实用建议。"
+    en: "Clear information. Practical help. Local pickup.",
+    bm: "Maklumat jelas. Bantuan praktikal. Ambil di kedai.",
+    zh: "资料清楚。实用协助。门市自取。"
   },
   "why.cap": { en: "Your projects, supplied.", bm: "Projek anda, dibekalkan.", zh: "供应您的每个项目。" },
-  "why.1.title": { en: "Genuine brands.", bm: "Jenama terpercaya.", zh: "正品品牌。" },
-  "why.1.a": { en: "Sourced from authorised distributors", bm: "Dari pengedar yang sah", zh: "来自授权经销商" },
-  "why.1.b": { en: "Genuine stock — no greys, no fakes", bm: "Stok tulen — bukan tiruan", zh: "正品库存 — 绝无水货或假货" },
-  "why.1.c": { en: "18 trusted brands on the shelves", bm: "18 jenama terpercaya di rak", zh: "货架上 18 个信赖品牌" },
+  "why.1.title": { en: "Useful product details.", bm: "Butiran produk berguna.", zh: "实用产品资料。" },
+  "why.1.a": { en: "Product details taken from our stock records", bm: "Butiran produk daripada rekod stok kami", zh: "产品资料来自我们的库存记录" },
+  "why.1.b": { en: "Ask our team about the item before buying", bm: "Tanya pasukan kami tentang barangan sebelum membeli", zh: "购买前可向我们的团队查询产品" },
+  "why.1.c": { en: "Practical ranges for home and trade work", bm: "Pilihan praktikal untuk kerja rumah dan perdagangan", zh: "适合家居与专业工作的实用选择" },
   "why.1.d": {
     en: "Bosch · DONGCHENG · Nippon Paint · Panasonic",
     bm: "Bosch · DONGCHENG · Nippon Paint · Panasonic",
@@ -124,8 +124,8 @@ export const translations = {
   },
   "why.1.learn": { en: "See the brands", bm: "Lihat jenama", zh: "查看品牌" },
   "why.2.title": { en: "Fair, honest pricing.", bm: "Harga yang jujur.", zh: "公道诚实的价格。" },
-  "why.2.a": { en: "Ask us about price matching", bm: "Tanya kami tentang padanan harga", zh: "欢迎询问价格匹配" },
-  "why.2.b": { en: "Genuine brands at counter prices", bm: "Jenama tulen pada harga kaunter", zh: "正品品牌门市价" },
+  "why.2.a": { en: "Prices shown clearly in Malaysian Ringgit", bm: "Harga dipaparkan dengan jelas dalam Ringgit Malaysia", zh: "价格以马来西亚令吉清楚显示" },
+  "why.2.b": { en: "The checkout total is shown before payment", bm: "Jumlah bayaran dipaparkan sebelum pembayaran", zh: "付款前会显示结账总额" },
   "why.2.c": { en: "Tell us your budget — we’ll help", bm: "Beritahu bajet anda — kami bantu", zh: "告诉我们您的预算 — 我们帮您" },
   "why.2.learn": { en: "Ask us", bm: "Tanya kami", zh: "咨询我们" },
   "why.3.title": { en: "Advice that’s useful.", bm: "Nasihat yang berguna.", zh: "实用的建议。" },
@@ -152,16 +152,16 @@ export const translations = {
   /* ---- landing proof ---- */
   "sec.proof.title": { en: "Word around Sibu", bm: "Kata orang Sibu", zh: "诗巫口碑" },
   "proof.quote": {
-    en: "“One of Sibu’s most complete hardware stores.”",
-    bm: "“Antara kedai perkakasan paling lengkap di Sibu.”",
-    zh: "“诗巫货品最齐全的五金店之一。”"
+    en: "Browse online, ask on WhatsApp, or visit our Sibu store.",
+    bm: "Lihat dalam talian, tanya di WhatsApp, atau kunjungi kedai kami di Sibu.",
+    zh: "可在线浏览、WhatsApp 咨询，或到访诗巫门市。"
   },
-  "proof.attr": { en: "— Sibu shopping guide", bm: "— Panduan beli-belah Sibu", zh: "— 诗巫购物指南" },
+  "proof.attr": { en: "— Ekoway Hardware", bm: "— Ekoway Hardware", zh: "— Ekoway Hardware" },
   "proof.fb.k": { en: "On Facebook", bm: "Di Facebook", zh: "Facebook 上" },
   "proof.fb.v": {
-    en: "4,000+ followers — follow @ekowayhardware",
-    bm: "4,000+ pengikut — ikuti @ekowayhardware",
-    zh: "4,000+ 粉丝 — 关注 @ekowayhardware"
+    en: "Follow @ekowayhardware",
+    bm: "Ikuti @ekowayhardware",
+    zh: "关注 @ekowayhardware"
   },
   "proof.g.k": { en: "On the map", bm: "Di peta", zh: "地图上" },
   "proof.g.v": { en: "Find us on Google Maps", bm: "Cari kami di Google Maps", zh: "在 Google 地图找到我们" },
@@ -208,10 +208,10 @@ export const translations = {
   "sec.contact.title": { en: "Visit Us", bm: "Lawati Kami", zh: "到店参观" },
   "contact.addr.k": { en: "Address", bm: "Alamat", zh: "地址" },
   "contact.hours.k": { en: "Hours", bm: "Waktu", zh: "营业时间" },
-  "contact.hours.wk": { en: "Mon – Sat", bm: "Isnin – Sabtu", zh: "周一至周六" },
-  "contact.hours.wkt": { en: "8:00 AM – 6:00 PM", bm: "8:00 pagi – 6:00 petang", zh: "上午 8:00 – 傍晚 6:00" },
-  "contact.hours.sun": { en: "Sunday", bm: "Ahad", zh: "周日" },
-  "contact.hours.sunt": { en: "9:00 AM – 2:00 PM", bm: "9:00 pagi – 2:00 petang", zh: "上午 9:00 – 下午 2:00" },
+  "contact.hours.wk": { en: "Current hours", bm: "Waktu semasa", zh: "当前营业时间" },
+  "contact.hours.wkt": { en: "Please call to confirm", bm: "Sila telefon untuk sahkan", zh: "请致电确认" },
+  "contact.hours.sun": { en: "Before travelling", bm: "Sebelum datang", zh: "到访之前" },
+  "contact.hours.sunt": { en: "Call or WhatsApp us", bm: "Telefon atau WhatsApp kami", zh: "请致电或 WhatsApp" },
   "contact.wa": { en: "WhatsApp us", bm: "WhatsApp kami", zh: "WhatsApp 我们" },
   "contact.call": { en: "Call 084-253883", bm: "Telefon 084-253883", zh: "致电 084-253883" },
   "contact.email": { en: "Email us", bm: "E-mel kami", zh: "电邮我们" },
@@ -219,9 +219,9 @@ export const translations = {
 
   /* ---- landing footer ---- */
   "foot.tag.1": {
-    en: "Ekoway Hardware · 永光五金 · Est. 2017",
-    bm: "Ekoway Hardware · 永光五金 · Sejak 2017",
-    zh: "Ekoway Hardware · 永光五金 · 始于 2017"
+    en: "Ekoway Hardware · 永光五金 · Sibu",
+    bm: "Ekoway Hardware · 永光五金 · Sibu",
+    zh: "Ekoway Hardware · 永光五金 · 诗巫"
   },
   "foot.tag.2": { en: "Sibu’s hardware counter.", bm: "Kedai perkakasan Sibu.", zh: "诗巫的五金店。" },
   "foot.shop": { en: "Shop", bm: "Produk", zh: "商品" },
@@ -237,16 +237,16 @@ export const translations = {
 
   /* ---- storefront chrome ---- */
   "shop.strip.before": {
-    en: "Genuine brands at counter prices — shop online or WhatsApp ",
-    bm: "Jenama tulen pada harga kaunter — beli online atau WhatsApp ",
-    zh: "正品品牌门市价 — 在线购买或 WhatsApp "
+    en: "Hardware supplies in Sibu — shop online or WhatsApp ",
+    bm: "Bekalan perkakasan di Sibu — beli dalam talian atau WhatsApp ",
+    zh: "诗巫五金用品 — 在线购买或 WhatsApp "
   },
   "shop.strip.after": { en: ".", bm: ".", zh: "。" },
   "shop.strip.cta": { en: "Open Ops Console", bm: "Buka Konsol Operasi", zh: "打开运营控制台" },
   "shop.eyebrow": {
-    en: "Sibu’s hardware counter since 2017",
-    bm: "Kedai perkakasan Sibu sejak 2017",
-    zh: "自 2017 年服务诗巫的五金店"
+    en: "Hardware supplies in Sibu",
+    bm: "Bekalan perkakasan di Sibu",
+    zh: "诗巫五金用品"
   },
   "shop.brand": { en: "Ekoway Hardware", bm: "Ekoway Hardware", zh: "Ekoway Hardware" },
   "shop.tagline": {
@@ -264,8 +264,12 @@ export const translations = {
     bm: "Cari alatan kuasa, cat, paip dan banyak lagi",
     zh: "搜索电动工具、油漆、水管配件等"
   },
+  "shop.search.action": { en: "Search", bm: "Cari", zh: "搜索" },
   "shop.account": { en: "My Account", bm: "Akaun Saya", zh: "我的账户" },
+  "shop.account.short": { en: "Account", bm: "Akaun", zh: "账户" },
   "shop.cart": { en: "Cart", bm: "Troli", zh: "购物车" },
+  "shop.dept.all.short": { en: "All departments", bm: "Semua jabatan", zh: "所有部门" },
+  "shop.whatsapp": { en: "WhatsApp the store", bm: "WhatsApp kedai", zh: "WhatsApp 联系门店" },
   "shop.nav.admin": { en: "Admin", bm: "Admin", zh: "管理" },
   "shop.nav.home": { en: "Home", bm: "Utama", zh: "首页" },
   "shop.loading": { en: "Loading the Ekoway storefront...", bm: "Memuatkan kedai Ekoway...", zh: "正在加载 Ekoway 商店..." },
@@ -276,27 +280,27 @@ export const translations = {
     zh: "在线下单，Salim 门市自取"
   },
   "shop.hero.title": {
-    en: "Genuine-brand tools, paint and home essentials at counter prices.",
-    bm: "Alatan jenama tulen, cat dan keperluan rumah pada harga kaunter.",
-    zh: "正品工具、油漆与家居必需品，一律门市价。"
+    en: "Tools, paint and everyday hardware for pickup in Sibu.",
+    bm: "Alatan, cat dan perkakasan harian untuk diambil di Sibu.",
+    zh: "工具、油漆与日常五金，可在诗巫门市自取。"
   },
   "shop.hero.body": {
-    en: "Browse the shelves online — power tools to building materials — then pick up at the store or arrange delivery around Sibu.",
-    bm: "Lihat rak kami secara online — alatan kuasa hingga bahan binaan — kemudian ambil di kedai atau atur penghantaran sekitar Sibu.",
-    zh: "在线浏览货架 — 从电动工具到建筑材料 — 到店自取或安排诗巫周边送货。"
+    en: "Browse online — from power tools to building materials — and collect a confirmed order from our Salim store.",
+    bm: "Lihat dalam talian — daripada alatan kuasa hingga bahan binaan — dan ambil pesanan yang disahkan di kedai Salim kami.",
+    zh: "在线浏览从电动工具到建筑材料的商品，并在 Salim 门市领取已确认的订单。"
   },
   "shop.hero.cta1": { en: "Shop deals", bm: "Lihat tawaran", zh: "查看优惠" },
   "shop.hero.cta2": { en: "Explore services", bm: "Lihat perkhidmatan", zh: "了解服务" },
-  "shop.hero.m1.v": { en: "Since 2017", bm: "Sejak 2017", zh: "始于 2017" },
+  "shop.hero.m1.v": { en: "Salim", bm: "Salim", zh: "Salim" },
   "shop.hero.m1.k": {
-    en: "serving Sibu’s DIY and contractors",
-    bm: "berkhidmat untuk DIY dan kontraktor Sibu",
-    zh: "服务诗巫的 DIY 与承包商"
+    en: "pickup location in Sibu",
+    bm: "lokasi pengambilan di Sibu",
+    zh: "诗巫自取地点"
   },
-  "shop.hero.m2.v": { en: "18+", bm: "18+", zh: "18+" },
-  "shop.hero.m2.k": { en: "trusted brands on the shelves", bm: "jenama terpercaya di rak", zh: "货架上的信赖品牌" },
-  "shop.hero.m3.v": { en: "10,000+", bm: "10,000+", zh: "10,000+" },
-  "shop.hero.m3.k": { en: "product types under one roof", bm: "jenis produk di bawah satu bumbung", zh: "同一屋檐下的产品种类" },
+  "shop.hero.m2.v": { en: "WhatsApp", bm: "WhatsApp", zh: "WhatsApp" },
+  "shop.hero.m2.k": { en: "help choosing an item", bm: "bantuan memilih barangan", zh: "协助选择商品" },
+  "shop.hero.m3.v": { en: "Live stock", bm: "Stok langsung", zh: "实时库存" },
+  "shop.hero.m3.k": { en: "checked again at checkout", bm: "disemak semula semasa pembayaran", zh: "结账时再次检查" },
 
   "shop.panel2.eyebrow": { en: "This month’s picks", bm: "Pilihan bulan ini", zh: "本月推荐" },
   "shop.panel2.title": { en: "Deals stacked for real projects.", bm: "Tawaran untuk projek sebenar.", zh: "为真实项目准备的优惠。" },
@@ -387,6 +391,27 @@ export const translations = {
   },
   "shop.product.from": { en: "From", bm: "Dari", zh: "价格自" },
   "shop.product.add": { en: "Add to Cart", bm: "Tambah ke Troli", zh: "加入购物车" },
+  "shop.purchase.banner": {
+    en: "Pickup only at Salim. Add to cart, then WhatsApp the counter to confirm your pickup. Online card payment is not open yet.",
+    bm: "Ambilan di Salim sahaja. Tambah ke troli, kemudian WhatsApp kaunter untuk sahkan. Bayaran kad dalam talian belum dibuka.",
+    zh: "仅限 Salim 门市自取。加入购物车后请 WhatsApp 门市确认。线上银行卡付款尚未开通。"
+  },
+  "shop.purchase.askPrice": { en: "WhatsApp the counter", bm: "WhatsApp kaunter", zh: "WhatsApp 门市" },
+  "shop.purchase.priceNote": {
+    en: "Price as listed. Collect at Lorong Salim 17. Online card payment is not open yet.",
+    bm: "Harga seperti dipaparkan. Ambil di Lorong Salim 17. Bayaran kad dalam talian belum dibuka.",
+    zh: "价格如图所示。请到 Lorong Salim 17 自取。线上银行卡付款尚未开通。"
+  },
+  "shop.cartd.buyingPaused": {
+    en: "Online card payment is not open yet. Send this pickup list to the counter on WhatsApp.",
+    bm: "Bayaran kad dalam talian belum dibuka. Hantar senarai ambilan ini ke kaunter melalui WhatsApp.",
+    zh: "线上银行卡付款尚未开通。请通过 WhatsApp 把门市自取清单发给柜台。"
+  },
+  "shop.cartd.sendWhatsapp": {
+    en: "Send pickup list on WhatsApp",
+    bm: "Hantar senarai ambilan di WhatsApp",
+    zh: "通过 WhatsApp 发送自取清单"
+  },
 
   "shop.services.eyebrow": { en: "More ways to get it done", bm: "Lebih banyak cara siapkan kerja", zh: "更多完成工作的方式" },
   "shop.services.title": {
@@ -524,19 +549,91 @@ export const translations = {
   "shop.filters.priceOver": { en: "{n}+", bm: "{n}+", zh: "{n} 以上" },
   "shop.filters.clearAll": { en: "Clear all", bm: "Kosongkan semua", zh: "清除全部" },
   "shop.filters.toggle": { en: "Filters", bm: "Penapis", zh: "筛选" },
+  "shop.filters.close": { en: "Close filters", bm: "Tutup penapis", zh: "关闭筛选" },
 
   /* ---- shop: toolbar ---- */
   "shop.toolbar.results": { en: "{n} results", bm: "{n} hasil", zh: "{n} 件商品" },
+  "shop.toolbar.resultsFiltered": {
+    en: "{visible} of {total} results",
+    bm: "{visible} daripada {total} hasil",
+    zh: "{total} 件中的 {visible} 件"
+  },
   "shop.toolbar.sort": { en: "Sort", bm: "Susun", zh: "排序" },
   "shop.toolbar.view.grid": { en: "Grid view", bm: "Paparan grid", zh: "网格视图" },
   "shop.toolbar.view.list": { en: "List view", bm: "Paparan senarai", zh: "列表视图" },
 
+  /* ---- shop: 3a worklist job lens ---- */
+  "shop.jobs.workingOn": { en: "Working\non", bm: "Sedang\ndibuat", zh: "正在\n进行" },
+  "shop.jobs.resolvesTo": { en: "Resolves to", bm: "Merangkumi", zh: "包含" },
+  "shop.jobs.summary": {
+    en: "{departments} departments · {products} products",
+    bm: "{departments} jabatan · {products} produk",
+    zh: "{departments} 个部门 · {products} 件商品"
+  },
+  "shop.jobs.resultCount": {
+    en: "{products} products · {job}",
+    bm: "{products} produk · {job}",
+    zh: "{products} 件商品 · {job}"
+  },
+  "shop.jobs.context": { en: "Job context", bm: "Konteks kerja", zh: "项目背景" },
+  "shop.jobs.atmosphere": { en: "category atmosphere", bm: "suasana kategori", zh: "品类氛围" },
+  "shop.jobs.inspirationDisclosure": {
+    en: "Project inspiration — not exact product imagery.",
+    bm: "Inspirasi projek — bukan imej produk sebenar.",
+    zh: "项目灵感展示，并非准确商品图片。"
+  },
+  "shop.jobs.departments": { en: "Departments in this job", bm: "Jabatan dalam kerja ini", zh: "此项目包含的部门" },
+
   /* ---- shop: product card / detail ---- */
+  "shop.product.view": { en: "View product", bm: "Lihat produk", zh: "查看商品" },
   "shop.product.viewDetails": { en: "View details", bm: "Lihat butiran", zh: "查看详情" },
   "shop.product.reviews.none": { en: "No reviews yet", bm: "Belum ada ulasan", zh: "暂无评价" },
   "shop.product.stock.in": { en: "In stock", bm: "Ada stok", zh: "现货充足" },
   "shop.product.stock.low": { en: "Low stock", bm: "Stok terhad", zh: "库存紧张" },
   "shop.product.stock.out": { en: "Out of stock", bm: "Stok habis", zh: "缺货" },
+  "shop.product.stock.inCount": { en: "In stock — {n} avail.", bm: "Ada stok — baki {n}", zh: "现货——剩 {n} 件" },
+  "shop.product.stock.lowCount": { en: "Low stock — {n} left", bm: "Stok terhad — baki {n}", zh: "库存紧张——剩 {n} 件" },
+  "shop.product.stock.outSoon": {
+    en: "Out of stock — check back soon",
+    bm: "Stok habis — sila semak semula",
+    zh: "缺货——请稍后查看"
+  },
+
+  /* ---- shop: dense listing (Trade Counter) ---- */
+  "shop.listing.col.product": { en: "Product", bm: "Produk", zh: "产品" },
+  "shop.listing.col.category": { en: "Category", bm: "Kategori", zh: "分类" },
+  "shop.listing.col.stock": { en: "Stock", bm: "Stok", zh: "库存" },
+  "shop.listing.col.badge": { en: "Badge", bm: "Lencana", zh: "标签" },
+  "shop.listing.col.actions": { en: "Actions", bm: "Tindakan", zh: "操作" },
+  "shop.listing.noPhoto": {
+    en: "Product image is not available yet.",
+    bm: "Gambar produk belum tersedia.",
+    zh: "商品图片暂未提供。"
+  },
+  "shop.listing.loading": { en: "Loading products…", bm: "Memuatkan produk…", zh: "正在加载商品…" },
+  "shop.listing.empty.title": {
+    en: "No products match right now",
+    bm: "Tiada produk yang sepadan buat masa ini",
+    zh: "暂无符合条件的商品"
+  },
+  "shop.listing.empty.searchBody": {
+    en: 'No products match "{query}." Try a different term, or browse by department below.',
+    bm: 'Tiada produk sepadan dengan "{query}." Cuba istilah lain, atau layari mengikut jabatan di bawah.',
+    zh: '没有商品与"{query}"匹配。请尝试其他关键词，或在下方按部门浏览。'
+  },
+  "shop.listing.empty.filterBody": {
+    en: "No products match the current filters.",
+    bm: "Tiada produk sepadan dengan penapis semasa.",
+    zh: "没有商品符合目前的筛选条件。"
+  },
+  "shop.listing.empty.clearSearch": { en: "Clear search", bm: "Kosongkan carian", zh: "清除搜索" },
+  "shop.listing.empty.browseAll": { en: "Browse all departments", bm: "Lihat semua jabatan", zh: "浏览所有部门" },
+  "shop.offline.banner": {
+    en: "Showing recently saved catalogue data — live prices and stock may be a little out of date.",
+    bm: "Memaparkan data katalog yang disimpan baru-baru ini — harga dan stok mungkin sedikit lapuk.",
+    zh: "正在显示近期保存的目录数据——实时价格和库存可能略有延迟。"
+  },
+  "shop.offline.reload": { en: "Reload", bm: "Muat semula", zh: "重新加载" },
   "shop.detail.back": { en: "Back to shop", bm: "Kembali ke kedai", zh: "返回商店" },
   "shop.detail.reviews": { en: "Reviews", bm: "Ulasan", zh: "评价" },
   "shop.detail.writeReview": { en: "Write a review", bm: "Tulis ulasan", zh: "写评价" },
@@ -565,23 +662,155 @@ export const translations = {
     zh: "暂无评价 — 快来分享您的第一条评价吧。"
   },
   "shop.detail.notFound": { en: "Product not found.", bm: "Produk tidak dijumpai.", zh: "找不到该商品。" },
+  "shop.detail.backProducts": { en: "Back to products", bm: "Kembali ke produk", zh: "返回商品" },
+  "shop.detail.allDepartment": {
+    en: "All {department}",
+    bm: "Semua {department}",
+    zh: "全部{department}"
+  },
+  "shop.detail.breadcrumb": { en: "Breadcrumb", bm: "Laluan navigasi", zh: "面包屑导航" },
+  "shop.detail.stillWorkingOn": {
+    en: "Still working on:",
+    bm: "Masih mengusahakan:",
+    zh: "仍在进行："
+  },
+  "shop.detail.productCount": { en: "{n} products", bm: "{n} produk", zh: "{n} 件商品" },
+  "shop.detail.purchase": { en: "Purchase", bm: "Pembelian", zh: "购买" },
+  "shop.detail.quantity": { en: "Quantity", bm: "Kuantiti", zh: "数量" },
+  "shop.detail.decreaseQuantity": {
+    en: "Decrease quantity",
+    bm: "Kurangkan kuantiti",
+    zh: "减少数量"
+  },
+  "shop.detail.increaseQuantity": {
+    en: "Increase quantity",
+    bm: "Tambah kuantiti",
+    zh: "增加数量"
+  },
+  "shop.detail.askWhatsapp": {
+    en: "Ask about this product on WhatsApp",
+    bm: "Tanya tentang produk ini di WhatsApp",
+    zh: "通过 WhatsApp 咨询此商品"
+  },
+  "shop.detail.whatsappMessage": {
+    en: "Hello Ekoway, I have a question about {product}.",
+    bm: "Hai Ekoway, saya ingin bertanya tentang {product}.",
+    zh: "您好 Ekoway，我想咨询 {product}。"
+  },
+  "shop.detail.savedCatalogue": { en: "SAVED CATALOGUE", bm: "KATALOG DISIMPAN", zh: "已保存目录" },
+  "shop.detail.savedCatalogueBody": {
+    en: "Showing saved product information because the live catalogue could not be reached. Price and availability may not be current.",
+    bm: "Maklumat produk yang disimpan dipaparkan kerana katalog langsung tidak dapat dicapai. Harga dan ketersediaan mungkin bukan yang terkini.",
+    zh: "由于无法连接实时目录，正在显示已保存的商品信息。价格和库存状态可能不是最新的。"
+  },
+  "shop.detail.verifiedInformation": {
+    en: "VERIFIED INFORMATION",
+    bm: "MAKLUMAT DISAHKAN",
+    zh: "已核实信息"
+  },
+  "shop.detail.department": { en: "Department", bm: "Jabatan", zh: "部门" },
+  "shop.detail.price": { en: "Price", bm: "Harga", zh: "价格" },
+  "shop.detail.availability": { en: "Availability", bm: "Ketersediaan", zh: "库存状态" },
+  "shop.detail.verifiedNote": {
+    en: "Only information confirmed by Ekoway is shown.",
+    bm: "Hanya maklumat yang disahkan oleh Ekoway dipaparkan.",
+    zh: "仅显示经 Ekoway 确认的信息。"
+  },
+  "shop.detail.moreIn": {
+    en: "More in {department}",
+    bm: "Lagi dalam {department}",
+    zh: "更多{department}商品"
+  },
+  "shop.detail.departmentProductCount": {
+    en: "{n} products in this department",
+    bm: "{n} produk dalam jabatan ini",
+    zh: "此部门共有 {n} 件商品"
+  },
+  "shop.detail.notFoundTitle": {
+    en: "This product is not available.",
+    bm: "Produk ini tidak tersedia.",
+    zh: "此商品目前不可用。"
+  },
+  "shop.detail.notFoundBody": {
+    en: "It may have been removed from the catalogue, or the link may be out of date.",
+    bm: "Produk ini mungkin telah dikeluarkan daripada katalog, atau pautannya mungkin sudah lapuk.",
+    zh: "该商品可能已从目录中移除，或此链接已经失效。"
+  },
+  "shop.detail.errorTitle": {
+    en: "We could not load this product.",
+    bm: "Kami tidak dapat memuatkan produk ini.",
+    zh: "无法加载此商品。"
+  },
+  "shop.detail.errorBody": {
+    en: "Please return to the catalogue and try again.",
+    bm: "Sila kembali ke katalog dan cuba lagi.",
+    zh: "请返回商品目录后重试。"
+  },
+  "shop.detail.retry": { en: "Try again", bm: "Cuba lagi", zh: "重试" },
+  "shop.detail.askStore": {
+    en: "Ask the store on WhatsApp",
+    bm: "Tanya kedai di WhatsApp",
+    zh: "通过 WhatsApp 咨询门店"
+  },
 
   /* ---- shop: footer ---- */
   "shop.footer.about": {
-    en: "永光五金 · Salim, Sibu, Sarawak. Sibu's hardware counter since 2017 — genuine brands, counter prices, and real advice.",
-    bm: "永光五金 · Salim, Sibu, Sarawak. Kedai perkakasan Sibu sejak 2017 — jenama tulen, harga kedai, dan nasihat sebenar.",
-    zh: "永光五金 · 砂拉越诗巫沙林。自 2017 年起服务诗巫的五金柜台 — 正品品牌、柜台价格、真诚建议。"
+    en: "永光五金 · Salim, Sibu, Sarawak. Browse hardware supplies online and collect confirmed orders from our store.",
+    bm: "永光五金 · Salim, Sibu, Sarawak. Lihat bekalan perkakasan dalam talian dan ambil pesanan yang disahkan di kedai kami.",
+    zh: "永光五金 · 砂拉越诗巫 Salim。在线浏览五金用品，并到门市领取已确认的订单。"
   },
   "shop.footer.shop": { en: "Shop", bm: "Beli-belah", zh: "商店" },
   "shop.footer.services": { en: "Services", bm: "Perkhidmatan", zh: "服务" },
   "shop.footer.contact": { en: "Contact", bm: "Hubungi", zh: "联系我们" },
-  "shop.footer.hours": { en: "Mon–Sat · 8am–6pm", bm: "Isnin–Sabtu · 8pg–6ptg", zh: "周一至周六 · 8am–6pm" },
+  "shop.footer.hours": { en: "Call to confirm current hours", bm: "Telefon untuk sahkan waktu semasa", zh: "请致电确认营业时间" },
   "shop.footer.copy": {
-    en: "© 2017–2026 Ekoway Hardware Sdn Bhd",
-    bm: "© 2017–2026 Ekoway Hardware Sdn Bhd",
-    zh: "© 2017–2026 Ekoway Hardware Sdn Bhd"
+    en: "© 2026 Ekoway Hardware Sdn Bhd",
+    bm: "© 2026 Ekoway Hardware Sdn Bhd",
+    zh: "© 2026 Ekoway Hardware Sdn Bhd"
   },
-  "shop.wa.chat": { en: "Chat on WhatsApp", bm: "Sembang di WhatsApp", zh: "WhatsApp 咨询" }
+  "shop.wa.chat": { en: "Chat on WhatsApp", bm: "Sembang di WhatsApp", zh: "WhatsApp 咨询" },
+
+  /* ---- shop: cart and checkout ---- */
+  "shop.checkout.promotion": { en: "Promotion", bm: "Promosi", zh: "促销" },
+  "shop.checkout.voucherCode": { en: "Voucher code", bm: "Kod baucar", zh: "优惠码" },
+  "shop.checkout.fullName": { en: "Full name", bm: "Nama penuh", zh: "姓名" },
+  "shop.checkout.email": { en: "Email", bm: "E-mel", zh: "电子邮件" },
+  "shop.checkout.fulfillment": { en: "Fulfillment", bm: "Cara terima", zh: "取货方式" },
+  "shop.checkout.pickup": { en: "Pickup", bm: "Ambil sendiri", zh: "到店自取" },
+  "shop.checkout.delivery": { en: "Delivery", bm: "Penghantaran", zh: "送货" },
+  "shop.checkout.deliveryNote": {
+    en: "Delivery is available across Sarawak.",
+    bm: "Penghantaran tersedia di seluruh Sarawak.",
+    zh: "砂拉越全境提供送货服务。"
+  },
+  "shop.checkout.recipientName": { en: "Recipient name", bm: "Nama penerima", zh: "收件人姓名" },
+  "shop.checkout.phone": { en: "Phone", bm: "Telefon", zh: "联系电话" },
+  "shop.checkout.address1": { en: "Address line 1", bm: "Alamat baris 1", zh: "地址第一行" },
+  "shop.checkout.address2": {
+    en: "Address line 2 (optional)",
+    bm: "Alamat baris 2 (pilihan)",
+    zh: "地址第二行（选填）"
+  },
+  "shop.checkout.city": { en: "City", bm: "Bandar", zh: "城市" },
+  "shop.checkout.state": { en: "State", bm: "Negeri", zh: "州属" },
+  "shop.checkout.postalCode": { en: "Postal code", bm: "Poskod", zh: "邮编" },
+  "shop.checkout.deliveryService": { en: "Delivery service", bm: "Perkhidmatan penghantaran", zh: "配送方式" },
+
+  /* ---- shop: footer policy links ---- */
+  "shop.footer.legal": { en: "Policies", bm: "Polisi", zh: "条款政策" },
+  "shop.footer.link.privacy": { en: "Privacy Notice", bm: "Notis Privasi", zh: "隐私声明" },
+  "shop.footer.link.terms": { en: "Terms & Conditions", bm: "Terma & Syarat", zh: "条款与细则" },
+  "shop.footer.link.returns": { en: "Returns & Refunds", bm: "Pemulangan & Bayaran Balik", zh: "退换与退款" },
+  "shop.footer.link.delivery": { en: "Delivery & Collection", bm: "Penghantaran & Ambilan", zh: "配送与自取" },
+  "shop.footer.link.contact": { en: "Contact us", bm: "Hubungi kami", zh: "联系我们" },
+
+  /* ---- shop: catalogue paging ---- */
+  "shop.listing.loadMore": { en: "Load more products", bm: "Muatkan lagi produk", zh: "加载更多商品" },
+  "shop.listing.shownOfTotal": {
+    en: "Showing {shown} of {total} products",
+    bm: "Memaparkan {shown} daripada {total} produk",
+    zh: "已显示 {total} 件中的 {shown} 件"
+  }
 } as const satisfies Record<string, Entry>;
 
 export type TranslationKey = keyof typeof translations;

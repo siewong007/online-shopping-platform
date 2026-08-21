@@ -1,6 +1,7 @@
 use axum::{
     Router,
-    http::{HeaderValue, Method, header::AUTHORIZATION, header::CONTENT_TYPE},
+    extract::DefaultBodyLimit,
+    http::{HeaderName, HeaderValue, Method, header::AUTHORIZATION, header::CONTENT_TYPE},
     routing::{delete, get, post, put},
 };
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
@@ -18,7 +19,14 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
     let cors = CorsLayer::new()
         .allow_origin(frontend_origin)
         .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
-        .allow_headers([CONTENT_TYPE, AUTHORIZATION]);
+        // Allowing the activation header only lets an operator present a secret they were
+        // separately issued; it grants nothing on its own, and preflighting it is what makes a
+        // controlled-mode UAT executable through the real storefront rather than a side channel.
+        .allow_headers([
+            CONTENT_TYPE,
+            AUTHORIZATION,
+            HeaderName::from_static(payments::activation::ACTIVATION_HEADER),
+        ]);
 
     Router::new()
         .route("/api/health", get(health::controller::health))
@@ -236,11 +244,43 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
             put(catalog::controller::update_product_stock),
         )
         .route(
-            "/api/admin/inventory/supplier-sync",
-            post(catalog::controller::supplier_sync),
+            "/api/admin/catalogue/import",
+            // The full AutoCount export is ~1 MB of CSV, over Axum's 2 MB default once the
+            // catalogue grows; give this one route its own ceiling.
+            post(catalog::controller::import_catalogue)
+                .layer(DefaultBodyLimit::max(16 * 1024 * 1024)),
+        )
+        .route(
+            "/api/admin/payments/activation-grants",
+            post(payments::controller::admin_create_activation_grant),
+        )
+        .route(
+            "/api/admin/payments/{payment_id}/reconcile",
+            post(payments::controller::admin_reconcile_payment),
+        )
+        .route(
+            "/api/admin/payments/{payment_id}/refund",
+            post(payments::controller::admin_refund_payment),
+        )
+        .route(
+            "/api/admin/catalogue/images/import",
+            post(catalog::controller::import_product_image_manifest)
+                .layer(DefaultBodyLimit::max(16 * 1024 * 1024)),
         )
         .route("/api/checkout", post(orders::controller::checkout))
+        .route(
+            "/api/checkout/payment",
+            post(payments::controller::checkout_with_gateway),
+        )
         .route("/api/checkout/quote", post(orders::controller::quote))
+        .route(
+            "/api/payments/senangpay/callback",
+            post(payments::controller::senangpay_callback),
+        )
+        .route(
+            "/api/payments/hitpay/webhook",
+            post(payments::controller::hitpay_webhook),
+        )
         .route(
             "/api/account/register",
             post(customer_auth::controller::register),

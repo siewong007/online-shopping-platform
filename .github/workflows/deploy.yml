@@ -104,6 +104,7 @@ jobs:
             --platform linux/amd64 \
             --pull \
             --build-arg VITE_API_URL= \
+            --build-arg VITE_ENABLE_DELIVERY=false \
             --label "org.opencontainers.image.revision=$DEPLOY_SHA" \
             --tag "online-shopping-frontend:$DEPLOY_SHA" \
             --file frontend/Dockerfile \
@@ -125,9 +126,18 @@ jobs:
           docker save "online-shopping-backend:$DEPLOY_SHA" | gzip -1 > "$bundle_dir/images/backend.tar.gz"
           docker save "online-shopping-frontend:$DEPLOY_SHA" | gzip -1 > "$bundle_dir/images/frontend.tar.gz"
 
-          cp deploy/deploy.sh "$bundle_dir/deploy.sh"
-          cp deploy/docker-compose.prod.yml "$bundle_dir/docker-compose.prod.yml"
           cp backend/migrations/*.sql "$bundle_dir/initdb/"
+          cp deploy/release-components.txt "$bundle_dir/release-components.txt"
+
+          # Single source of truth: copy and verify every component in release-components.txt
+          # (`|| [[ -n "$src" ]]`: the manifest's final line has no trailing newline, so a plain
+          # `while read` would silently drop the LAST component).
+          while IFS=$'\t' read -r src target || [[ -n "$src" ]]; do
+            [[ -n "$src" && -n "$target" ]] || continue
+            cp "$src" "$bundle_dir/$target"
+            test -s "$bundle_dir/$target" \
+              || { echo "Release bundle is missing required component: $target (source: $src)" >&2; exit 1; }
+          done < deploy/release-components.txt
 
           (
             cd "$bundle_dir"

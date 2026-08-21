@@ -68,7 +68,7 @@ function validateSettingValue(setting: SystemSetting, value: string): string | n
     }
     case "general.currency_code":
       if (!/^[A-Z]{3}$/.test(value)) {
-        return "Currency code must be three uppercase letters (e.g. USD).";
+        return "Currency code must be three uppercase letters (e.g. MYR).";
       }
       return null;
     default:

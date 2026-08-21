@@ -11,14 +11,15 @@ import type {
   Order,
   Payment,
   PermissionsPayload,
-  ProductRestockResult,
   SalesRecord,
   SalesSummaryPayload,
   StorefrontPayload,
   SystemSetting
 } from "../types";
 
-export const fallbackStorefront: StorefrontPayload = {
+const demoStorefront: StorefrontPayload = {
+  total_products: 8,
+  category_counts: [],
   categories: [
     { slug: "all", name: "Shop All Departments", teaser: "Browse the homepage the way Ekoway customers expect to shop it." },
     { slug: "tools", name: "Tools", teaser: "Cordless systems, combo kits and garage-ready essentials." },
@@ -190,9 +191,27 @@ export const fallbackStorefront: StorefrontPayload = {
   ]
 };
 
+// A customer must never see or attempt to buy demonstration merchandise when the API is
+// unavailable. Keep the old fixtures only for the explicitly labelled admin demo surfaces.
+export const fallbackStorefront: StorefrontPayload = {
+  total_products: 0,
+  category_counts: [],
+  categories: [
+    {
+      slug: "all",
+      name: "Shop All Departments",
+      teaser: "Products are temporarily unavailable. Please try again shortly."
+    }
+  ],
+  products: [],
+  promotions: [],
+  services: [],
+  pro_stats: []
+};
+
 export const fallbackCatalog: AdminCatalogPayload = {
-  categories: fallbackStorefront.categories,
-  products: fallbackStorefront.products
+  categories: demoStorefront.categories,
+  products: demoStorefront.products
 };
 
 export const fallbackAdminDashboard: AdminDashboardPayload = {
@@ -589,7 +608,7 @@ export const fallbackInvoices: Invoice[] = [
 export const fallbackSystemSettings: SystemSetting[] = [
   {
     key: "general.company_name",
-    value: "Project Depot",
+    value: "EKOWAY HARDWARE SDN. BHD.",
     value_type: "string",
     category: "general",
     description: "Company name shown on invoices and storefront branding.",
@@ -597,7 +616,7 @@ export const fallbackSystemSettings: SystemSetting[] = [
   },
   {
     key: "general.company_address",
-    value: "2455 Paces Ferry Road, Atlanta, GA 30339",
+    value: "No. 43-44, Ground Floor, Lorong Salim 17, Jalan Salim, 96000 Sibu, Sarawak",
     value_type: "string",
     category: "general",
     description: "Company mailing address shown on invoices.",
@@ -605,7 +624,7 @@ export const fallbackSystemSettings: SystemSetting[] = [
   },
   {
     key: "general.currency_code",
-    value: "USD",
+    value: "MYR",
     value_type: "string",
     category: "general",
     description: "ISO currency code used across sales and invoicing.",
@@ -613,10 +632,10 @@ export const fallbackSystemSettings: SystemSetting[] = [
   },
   {
     key: "sales.default_tax_rate_bps",
-    value: "725",
+    value: "0",
     value_type: "int",
     category: "sales",
-    description: "Default sales tax rate in basis points (725 = 7.25%).",
+    description: "Default tax rate in basis points. Kept at 0 until Ekoway's SST treatment is confirmed.",
     updated_at: "2026-06-29 08:00:00+00"
   },
   {
@@ -815,5 +834,3 @@ export const fallbackAdminUsers: AdminUser[] = [
     updated_at: "2026-07-02 14:00:00+00"
   }
 ];
-
-export const fallbackSupplierSync: ProductRestockResult[] = [];

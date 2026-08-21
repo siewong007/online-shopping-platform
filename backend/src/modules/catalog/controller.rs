@@ -1,6 +1,6 @@
 use axum::{
     Json,
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
 };
 
@@ -15,7 +15,10 @@ use super::{
         CreateCategoryInput, CreateProductInput, UpdateCategoryInput, UpdateProductInput,
         UpdateProductStockInput,
     },
-    model::{AdminCatalogPayload, Category, Product, ProductRestockResult},
+    model::{
+        AdminCatalogPayload, CatalogueImportReport, Category, Product, ProductImageImportQuery,
+        ProductImageImportReport,
+    },
     service,
 };
 
@@ -181,21 +184,47 @@ pub async fn update_product_stock(
         .map_err(error::map_admin_error)
 }
 
-pub async fn supplier_sync(
+/// Accepts the AutoCount catalogue export as a raw CSV body. Sent as text rather than a
+/// multipart upload so no new extractor feature is needed for a single-file endpoint.
+pub async fn import_catalogue(
     State(state): State<AppState>,
     identity: AdminIdentity,
-) -> Result<Json<Vec<ProductRestockResult>>, error::HttpError> {
+    body: String,
+) -> Result<Json<CatalogueImportReport>, error::HttpError> {
     permissions::service::ensure_permission(
         &state.pool,
         &identity,
-        permissions::model::ADMIN_OVERVIEW_PAGE,
-        permissions::model::PermissionAction::Update,
-        "inventory",
+        permissions::model::ADMIN_CATALOG_PAGE,
+        permissions::model::PermissionAction::Create,
+        "catalog",
     )
     .await?;
 
-    service::run_supplier_sync(&state.pool)
+    service::import_catalogue(&state.pool, &identity, &body)
         .await
         .map(Json)
-        .map_err(|error| error::map_admin_query_error("supplier sync failed", error))
+        .map_err(error::map_admin_error)
+}
+
+/// Validates or applies the reviewed product-image manifest. Pending rows are ignored;
+/// approved rows require recorded commercial-use rights and an A/B identity match.
+pub async fn import_product_image_manifest(
+    State(state): State<AppState>,
+    identity: AdminIdentity,
+    Query(query): Query<ProductImageImportQuery>,
+    body: String,
+) -> Result<Json<ProductImageImportReport>, error::HttpError> {
+    permissions::service::ensure_permission(
+        &state.pool,
+        &identity,
+        permissions::model::ADMIN_CATALOG_PAGE,
+        permissions::model::PermissionAction::Update,
+        "catalog",
+    )
+    .await?;
+
+    service::import_product_image_manifest(&state.pool, &identity, &body, query.dry_run)
+        .await
+        .map(Json)
+        .map_err(error::map_admin_error)
 }

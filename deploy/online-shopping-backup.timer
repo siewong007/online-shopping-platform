@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily encrypted off-server backup timer for the online-shopping PostgreSQL database
+Requires=online-shopping-backup.service
+
+[Timer]
+# Daily at 02:30 UTC. Persistent=true runs a missed job soon after boot or wake.
+OnCalendar=*-*-* 02:30:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

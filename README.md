@@ -125,7 +125,7 @@ bun run dev
 
 | Area | Representative endpoints |
 | ---- | ------------------------ |
-| Health/storefront | `GET /api/health`, `GET /api/storefront`, `POST /api/checkout` |
+| Health/storefront | `GET /api/health`, `GET /api/storefront`, `POST /api/checkout/payment` (secure gateway checkout) |
 | Customer account | `POST /api/account/register`, `POST /api/account/login`, `GET /api/account/me`, `GET /api/customer-portal/me/membership` |
 | Admin auth/RBAC | `POST /api/admin/login`, `GET /api/admin/me`, `GET /api/admin/users`, `GET /api/admin/permissions` |
 | Operations | `GET /api/admin/dashboard`, `GET /api/admin/orders`, `GET /api/admin/payments`, `GET /api/admin/sales`, `GET /api/admin/invoices` |

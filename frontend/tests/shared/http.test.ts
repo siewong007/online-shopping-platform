@@ -26,7 +26,7 @@ describe("shared HTTP errors", () => {
 
     expect(error).toBeInstanceOf(ApiError);
     expect(error).toMatchObject({ code: "NETWORK_ERROR", isNetworkError: true, operation: "/api/orders" });
-    expect(error.message).toBe("Check your internet connection and try again.");
+    expect(error.message).toBe("The service could not be reached. Check that it is running, then try again.");
     expect(error.message).not.toContain("internal");
     expect(error.technicalMessage).toContain("internal");
   });

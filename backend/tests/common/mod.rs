@@ -6,14 +6,20 @@ use axum::{
     http::{HeaderValue, Method, Request, StatusCode, header::AUTHORIZATION, header::CONTENT_TYPE},
 };
 use http_body_util::BodyExt;
-use online_shopping_api::{app_state::AppState, db, routes, security::hash_password};
+use online_shopping_api::{
+    app_state::AppState, db, modules::payments::activation::PaymentActivationMode, routes,
+    security::hash_password,
+};
 use serde_json::{Value, json};
 use sqlx::PgPool;
 use tower::ServiceExt;
 
 pub fn app(pool: PgPool) -> Router {
+    // General integration tests exercise normal app behavior including the legacy checkout route,
+    // which only runs in `public` mode. Mode-specific behavior is tested explicitly via
+    // `with_payment_activation_mode` in the payment activation suites.
     routes::build_router(
-        AppState::new(pool),
+        AppState::with_payment_activation_mode(pool, PaymentActivationMode::Public),
         HeaderValue::from_static("http://localhost:5173"),
     )
 }
@@ -93,5 +99,44 @@ pub async fn request(
     let text = String::from_utf8(bytes.to_vec()).expect("response should be utf-8");
     let value = serde_json::from_str(&text).unwrap_or(Value::String(text));
 
+    (status, value)
+}
+
+pub async fn request_text(
+    app: Router,
+    method: Method,
+    path: &str,
+    token: Option<&str>,
+    content_type: &'static str,
+    body: &str,
+) -> (StatusCode, Value) {
+    let mut builder = Request::builder()
+        .method(method)
+        .uri(path)
+        .header(CONTENT_TYPE, content_type);
+    if let Some(token) = token {
+        builder = builder.header(AUTHORIZATION, format!("Bearer {token}"));
+    }
+
+    let response = app
+        .oneshot(
+            builder
+                .body(Body::from(body.to_string()))
+                .expect("request should build"),
+        )
+        .await
+        .expect("router request should complete");
+    let status = response.status();
+    let bytes = response
+        .into_body()
+        .collect()
+        .await
+        .expect("response body should collect")
+        .to_bytes();
+    if bytes.is_empty() {
+        return (status, Value::Null);
+    }
+    let text = String::from_utf8(bytes.to_vec()).expect("response should be utf-8");
+    let value = serde_json::from_str(&text).unwrap_or(Value::String(text));
     (status, value)
 }

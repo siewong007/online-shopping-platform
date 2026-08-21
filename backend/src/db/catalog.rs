@@ -2,7 +2,7 @@ use crate::models::*;
 use anyhow::{Result, anyhow, bail};
 use sqlx::PgPool;
 
-fn validate_image_url(image_url: &str) -> Result<()> {
+pub(crate) fn validate_product_image_url(image_url: &str) -> Result<()> {
     let lower = image_url.to_ascii_lowercase();
     let supported_local_image = [
         "data:image/png;base64,",
@@ -14,10 +14,20 @@ fn validate_image_url(image_url: &str) -> Result<()> {
     .iter()
     .any(|prefix| lower.starts_with(prefix));
 
+    let supported_first_party_path = lower.starts_with("/product-images/")
+        && !image_url.contains("..")
+        && !image_url.contains('\\')
+        && !image_url.contains('?')
+        && !image_url.contains('#')
+        && [".png", ".jpg", ".jpeg", ".webp", ".gif"]
+            .iter()
+            .any(|extension| lower.ends_with(extension));
+
     if !image_url.is_empty()
         && !lower.starts_with("http://")
         && !lower.starts_with("https://")
         && !supported_local_image
+        && !supported_first_party_path
     {
         bail!("Product image must be an uploaded PNG, JPEG, WebP, GIF, or a valid http/https URL.");
     }
@@ -211,7 +221,7 @@ pub async fn create_product(pool: &PgPool, input: &CreateProductInput) -> Result
     .await?;
 
     let image_url = input.image_url.as_deref().unwrap_or("").trim();
-    validate_image_url(image_url)?;
+    validate_product_image_url(image_url)?;
 
     sqlx::query_as::<_, Product>(
         r#"
@@ -275,7 +285,7 @@ pub async fn update_product(
     }
 
     let image_url = input.image_url.as_deref().unwrap_or("").trim();
-    validate_image_url(image_url)?;
+    validate_product_image_url(image_url)?;
 
     sqlx::query_as::<_, Product>(
         r#"
@@ -371,50 +381,4 @@ pub async fn update_product_stock(
     .fetch_optional(pool)
     .await?
     .ok_or_else(|| anyhow!("Product not found."))
-}
-
-pub async fn supplier_sync(pool: &PgPool) -> Result<Vec<ProductRestockResult>> {
-    let low_stock_products = sqlx::query_as::<_, Product>(
-        r#"
-        SELECT products.id, products.name, products.category_slug, products.price_cents, products.badge,
-               products.description, products.tone, products.featured, products.stock_quantity,
-               products.low_stock_threshold, products.image_url,
-               review_stats.avg_rating, COALESCE(review_stats.review_count, 0) AS review_count
-        FROM products
-        LEFT JOIN (
-            SELECT product_id, AVG(rating)::float8 AS avg_rating, COUNT(*)::bigint AS review_count
-            FROM product_reviews GROUP BY product_id
-        ) review_stats ON review_stats.product_id = products.id
-        WHERE stock_quantity <= low_stock_threshold
-        "#,
-    )
-    .fetch_all(pool)
-    .await?;
-
-    let mut restocked: Vec<ProductRestockResult> = Vec::new();
-    for product in low_stock_products {
-        // Restock to a target level (double the threshold as the target)
-        let target_stock = product.low_stock_threshold * 2;
-        let added = target_stock - product.stock_quantity;
-
-        sqlx::query(
-            r#"
-            UPDATE products
-            SET stock_quantity = $1
-            WHERE id = $2
-            "#,
-        )
-        .bind(target_stock)
-        .bind(product.id)
-        .execute(pool)
-        .await?;
-
-        restocked.push(ProductRestockResult {
-            product_id: product.id,
-            name: product.name,
-            added,
-        });
-    }
-
-    Ok(restocked)
 }

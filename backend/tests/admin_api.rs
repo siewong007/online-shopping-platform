@@ -319,6 +319,58 @@ async fn product_image_url_scheme_is_validated_and_roundtrips(pool: PgPool) {
     assert_eq!(data_status, StatusCode::CREATED, "{data_body}");
     assert_eq!(data_body["image_url"], "data:image/png;base64,aGVsbG8=");
 
+    let mut first_party_path = base_product.clone();
+    first_party_path["image_url"] = json!("/product-images/test-wire-stripper.webp");
+    let (first_party_status, first_party_body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/admin/products",
+        Some(&token),
+        Some(first_party_path),
+    )
+    .await;
+    assert_eq!(
+        first_party_status,
+        StatusCode::CREATED,
+        "{first_party_body}"
+    );
+    assert_eq!(
+        first_party_body["image_url"],
+        "/product-images/test-wire-stripper.webp"
+    );
+
+    let mut unsafe_first_party_path = base_product.clone();
+    unsafe_first_party_path["image_url"] = json!("/product-images/../private.txt");
+    let (unsafe_path_status, unsafe_path_body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/admin/products",
+        Some(&token),
+        Some(unsafe_first_party_path),
+    )
+    .await;
+    assert_eq!(
+        unsafe_path_status,
+        StatusCode::BAD_REQUEST,
+        "{unsafe_path_body}"
+    );
+
+    let mut non_image_first_party_path = base_product.clone();
+    non_image_first_party_path["image_url"] = json!("/product-images/not-an-image.html");
+    let (non_image_path_status, non_image_path_body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/admin/products",
+        Some(&token),
+        Some(non_image_first_party_path),
+    )
+    .await;
+    assert_eq!(
+        non_image_path_status,
+        StatusCode::BAD_REQUEST,
+        "{non_image_path_body}"
+    );
+
     let mut unsupported_data_scheme = base_product.clone();
     unsupported_data_scheme["image_url"] = json!("data:text/html;base64,PHNjcmlwdD4=");
     let (unsupported_data_status, unsupported_data_body) = common::request(
@@ -371,6 +423,86 @@ async fn product_image_url_scheme_is_validated_and_roundtrips(pool: PgPool) {
             .iter()
             .any(|product| product["id"] == product_id && product["image_url"] == "")
     }));
+}
+
+#[sqlx::test]
+async fn product_image_manifest_checks_before_apply_and_records_history(pool: PgPool) {
+    common::create_admin(&pool, "Catalog Specialist", "image-import", "secret123").await;
+    let app = common::app(pool.clone());
+    let token = common::login(app.clone(), "image-import", "secret123").await;
+
+    sqlx::query(
+        r#"
+        INSERT INTO products (
+            name, category_slug, price_cents, badge, description, tone, featured,
+            sort_order, stock_quantity, low_stock_threshold, image_url,
+            source_item_code, source_uom, imported_at
+        )
+        VALUES (
+            'Manifest Product', 'tools', 1999, '', '', 'neutral', TRUE,
+            0, 4, 1, '', 'IMG-001', 'UNIT', now()
+        )
+        "#,
+    )
+    .execute(&pool)
+    .await
+    .expect("imported product should insert");
+
+    let manifest = concat!(
+        "item_code,uom,image_url,source_owner,rights_status,match_confidence,review_status,candidate_page_url\n",
+        "IMG-001,UNIT,/product-images/img-001.webp,Ekoway Hardware,owned,A,approved,\n",
+        "IMG-002,UNIT,,Unknown,pending,,pending,\n"
+    );
+
+    let (check_status, check_body) = common::request_text(
+        app.clone(),
+        Method::POST,
+        "/api/admin/catalogue/images/import?dry_run=true",
+        Some(&token),
+        "text/csv",
+        manifest,
+    )
+    .await;
+    assert_eq!(check_status, StatusCode::OK, "{check_body}");
+    assert_eq!(check_body["dry_run"], true);
+    assert_eq!(check_body["rows_pending"], 1);
+    assert_eq!(check_body["products_matched"], 1);
+    assert_eq!(check_body["products_updated"], 1);
+
+    let image_after_check = sqlx::query_scalar::<_, String>(
+        "SELECT image_url FROM products WHERE source_item_code = 'IMG-001'",
+    )
+    .fetch_one(&pool)
+    .await
+    .expect("product image should load");
+    assert_eq!(image_after_check, "");
+
+    let (apply_status, apply_body) = common::request_text(
+        app,
+        Method::POST,
+        "/api/admin/catalogue/images/import?dry_run=false",
+        Some(&token),
+        "text/csv",
+        manifest,
+    )
+    .await;
+    assert_eq!(apply_status, StatusCode::OK, "{apply_body}");
+    assert_eq!(apply_body["products_updated"], 1);
+
+    let applied = sqlx::query_as::<_, (String, i64, i64)>(
+        r#"
+        SELECT
+            products.image_url,
+            (SELECT COUNT(*) FROM product_image_metadata WHERE product_id = products.id),
+            (SELECT COUNT(*) FROM product_image_history WHERE product_id = products.id)
+        FROM products
+        WHERE products.source_item_code = 'IMG-001'
+        "#,
+    )
+    .fetch_one(&pool)
+    .await
+    .expect("image records should load");
+    assert_eq!(applied, ("/product-images/img-001.webp".to_string(), 1, 1));
 }
 
 #[sqlx::test]
@@ -552,6 +684,13 @@ async fn autocount_export_downloads_csv_and_marks_invoices(pool: PgPool) {
 #[sqlx::test]
 async fn fulfillment_status_flow_writes_history_and_advances_sales(pool: PgPool) {
     common::create_admin(&pool, "Super Admin", "fulfillment-admin", "secret123").await;
+    sqlx::query(
+        "UPDATE system_settings SET value = 'true' WHERE key = 'shipping.standard.enabled'",
+    )
+    .execute(&pool)
+    .await
+    .expect("enable standard delivery for the delivery fulfillment fixture");
+
     let app = common::app(pool.clone());
     let token = common::login(app.clone(), "fulfillment-admin", "secret123").await;
 
@@ -1097,6 +1236,16 @@ async fn admin_shipping_rate_update_changes_checkout_quote(pool: PgPool) {
     let app = common::app(pool);
     let token = common::login(app.clone(), "shipping-settings", "secret123").await;
 
+    let (enable_status, enable_body) = common::request(
+        app.clone(),
+        Method::PUT,
+        "/api/admin/settings/shipping.standard.enabled",
+        Some(&token),
+        Some(json!({ "value": "true" })),
+    )
+    .await;
+    assert_eq!(enable_status, StatusCode::OK, "{enable_body}");
+
     let (update_status, update_body) = common::request(
         app.clone(),
         Method::PUT,
@@ -1398,4 +1547,252 @@ async fn audit_log_failures_do_not_fail_mutations(pool: PgPool) {
     )
     .await;
     assert_eq!(status, StatusCode::CREATED, "{body}");
+}
+
+// ---------------------------------------------------------------------------
+// P0-INV-01: admin "Refresh data" must be read-only. The synthetic supplier
+// replenishment route was removed; the remaining admin catalog GET must not
+// change stock, and the deliberate manual stock-adjustment route must still
+// work and stay audited.
+// ---------------------------------------------------------------------------
+
+#[sqlx::test]
+async fn admin_catalog_refresh_is_read_only_and_idempotent(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "refresh-admin", "secret123").await;
+    let app = common::app(pool.clone());
+    let token = common::login(app.clone(), "refresh-admin", "secret123").await;
+
+    let (status_a, body_a) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/admin/products",
+        Some(&token),
+        Some(json!({
+            "name": "P0-INV-01 Low Stock Product",
+            "category_slug": "tools",
+            "price_cents": 1299,
+            "badge": "Test",
+            "description": "Below its low-stock threshold on purpose.",
+            "tone": "Test",
+            "featured": false,
+            "stock_quantity": 2,
+            "low_stock_threshold": 5
+        })),
+    )
+    .await;
+    assert_eq!(status_a, StatusCode::CREATED, "{body_a}");
+    let product_a = body_a["id"].as_i64().expect("product A id");
+
+    let (status_b, body_b) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/admin/products",
+        Some(&token),
+        Some(json!({
+            "name": "P0-INV-01 Healthy Stock Product",
+            "category_slug": "tools",
+            "price_cents": 1299,
+            "badge": "Test",
+            "description": "Well above its low-stock threshold.",
+            "tone": "Test",
+            "featured": false,
+            "stock_quantity": 20,
+            "low_stock_threshold": 5
+        })),
+    )
+    .await;
+    assert_eq!(status_b, StatusCode::CREATED, "{body_b}");
+    let product_b = body_b["id"].as_i64().expect("product B id");
+
+    let stock_of = |id: i64| {
+        let pool = pool.clone();
+        async move {
+            sqlx::query_scalar::<_, i32>("SELECT stock_quantity FROM products WHERE id = $1")
+                .bind(id)
+                .fetch_one(&pool)
+                .await
+                .expect("read stock")
+        }
+    };
+    let stock_before_a = stock_of(product_a).await;
+    let stock_before_b = stock_of(product_b).await;
+
+    // Repeated refreshes through the exact route the admin "Refresh data" action
+    // now calls (GET /api/admin/catalog) must never change inventory.
+    for _ in 0..3 {
+        let (status, body) = common::request(
+            app.clone(),
+            Method::GET,
+            "/api/admin/catalog",
+            Some(&token),
+            None,
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK, "{body}");
+
+        let products = body["products"].as_array().expect("products array");
+        let product_a_after = products
+            .iter()
+            .find(|product| product["id"] == product_a)
+            .expect("product A visible after refresh");
+        let product_b_after = products
+            .iter()
+            .find(|product| product["id"] == product_b)
+            .expect("product B visible after refresh");
+
+        assert_eq!(
+            product_a_after["stock_quantity"], 2,
+            "low-stock product must not be restocked by refresh"
+        );
+        assert_eq!(
+            product_b_after["stock_quantity"], 20,
+            "in-stock product must not be changed by refresh"
+        );
+    }
+
+    assert_eq!(
+        stock_of(product_a).await,
+        stock_before_a,
+        "refresh must not change product A stock in the database"
+    );
+    assert_eq!(
+        stock_of(product_b).await,
+        stock_before_b,
+        "refresh must not change product B stock in the database"
+    );
+}
+
+#[sqlx::test]
+async fn removed_supplier_sync_route_is_unavailable_and_cannot_mutate_stock(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "sync-route-admin", "secret123").await;
+    let app = common::app(pool.clone());
+    let token = common::login(app.clone(), "sync-route-admin", "secret123").await;
+
+    let (created_status, created_body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/admin/products",
+        Some(&token),
+        Some(json!({
+            "name": "P0-INV-01 Stale Sync Target",
+            "category_slug": "tools",
+            "price_cents": 1299,
+            "badge": "Test",
+            "description": "Would previously have been restocked to 10 by supplier sync.",
+            "tone": "Test",
+            "featured": false,
+            "stock_quantity": 2,
+            "low_stock_threshold": 5
+        })),
+    )
+    .await;
+    assert_eq!(created_status, StatusCode::CREATED, "{created_body}");
+    let product_id = created_body["id"].as_i64().expect("product id");
+
+    // A stale client (or the current frontend before redeploy) calling the old
+    // endpoint must get an intentional 404 - even authenticated - and no mutation.
+    let (authenticated_status, authenticated_body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/admin/inventory/supplier-sync",
+        Some(&token),
+        None,
+    )
+    .await;
+    assert_eq!(
+        authenticated_status,
+        StatusCode::NOT_FOUND,
+        "authenticated call to removed route: {authenticated_body}"
+    );
+
+    let (anonymous_status, _) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/admin/inventory/supplier-sync",
+        None,
+        None,
+    )
+    .await;
+    assert_eq!(anonymous_status, StatusCode::NOT_FOUND);
+
+    let stock = sqlx::query_scalar::<_, i32>("SELECT stock_quantity FROM products WHERE id = $1")
+        .bind(product_id)
+        .fetch_one(&pool)
+        .await
+        .expect("read stock");
+    assert_eq!(
+        stock, 2,
+        "calling the removed supplier-sync route must not mutate inventory"
+    );
+}
+
+#[sqlx::test]
+async fn manual_stock_adjustment_remains_functional_and_audited(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "stock-admin", "secret123").await;
+    let app = common::app(pool.clone());
+    let token = common::login(app.clone(), "stock-admin", "secret123").await;
+
+    let (created_status, created_body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/admin/products",
+        Some(&token),
+        Some(json!({
+            "name": "P0-INV-01 Manual Adjustment Product",
+            "category_slug": "tools",
+            "price_cents": 1299,
+            "badge": "Test",
+            "description": "Used to verify the deliberate stock adjustment route.",
+            "tone": "Test",
+            "featured": false,
+            "stock_quantity": 2,
+            "low_stock_threshold": 5
+        })),
+    )
+    .await;
+    assert_eq!(created_status, StatusCode::CREATED, "{created_body}");
+    let product_id = created_body["id"].as_i64().expect("product id");
+
+    let (update_status, update_body) = common::request(
+        app.clone(),
+        Method::PUT,
+        &format!("/api/admin/products/{product_id}/stock"),
+        Some(&token),
+        Some(json!({
+            "stock_quantity": 7,
+            "low_stock_threshold": 5
+        })),
+    )
+    .await;
+    assert_eq!(update_status, StatusCode::OK, "{update_body}");
+    assert_eq!(
+        update_body["stock_quantity"], 7,
+        "manual adjustment must apply exactly as requested"
+    );
+
+    let stock = sqlx::query_scalar::<_, i32>("SELECT stock_quantity FROM products WHERE id = $1")
+        .bind(product_id)
+        .fetch_one(&pool)
+        .await
+        .expect("read stock");
+    assert_eq!(stock, 7, "database must reflect the manual adjustment");
+
+    let audit_action = sqlx::query_scalar::<_, String>(
+        r#"
+            SELECT action
+            FROM audit_events
+            WHERE entity_type = 'product_stock' AND entity_id = $1
+            ORDER BY id DESC
+            LIMIT 1
+            "#,
+    )
+    .bind(product_id.to_string())
+    .fetch_one(&pool)
+    .await
+    .expect("audit row");
+
+    assert_eq!(
+        audit_action, "update",
+        "manual stock adjustment must remain audited"
+    );
 }

@@ -11,6 +11,7 @@ import type {
   CheckoutQuoteInput,
   CreateOrderInput,
   Order,
+  PaymentCheckout,
   UpdateOrderFulfillmentInput
 } from "../types";
 
@@ -23,6 +24,10 @@ export function fetchOrders(params: AdminListParams = {}): Promise<PagedResponse
 
 export function checkout(input: CreateOrderInput): Promise<Order> {
   return postJson<CreateOrderInput, Order>("/api/checkout", input, "customer");
+}
+
+export function startPaymentCheckout(input: CreateOrderInput): Promise<PaymentCheckout> {
+  return postJson<CreateOrderInput, PaymentCheckout>("/api/checkout/payment", input, "customer");
 }
 
 export function quoteCheckout(input: CheckoutQuoteInput): Promise<CheckoutQuote> {

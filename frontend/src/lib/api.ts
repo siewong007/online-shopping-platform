@@ -26,8 +26,7 @@ export {
   createProduct,
   updateCategory,
   updateProduct,
-  updateProductStock,
-  supplierSync
+  updateProductStock
 } from "../modules/catalog/api/catalogApi";
 export {
   createCustomerPortalProfile,
@@ -52,6 +51,7 @@ export {
 } from "../modules/customer_portal/api/customerPortalApi";
 export {
   checkout,
+  startPaymentCheckout,
   createAdminOrder,
   deleteAdminOrder,
   fetchOrders,

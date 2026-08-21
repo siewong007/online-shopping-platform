@@ -1,5 +1,9 @@
+pub mod activation;
 pub mod controller;
 pub mod dto;
+pub mod gateway;
+pub mod hitpay;
 pub mod model;
 pub mod repository;
+pub mod senangpay;
 pub mod service;

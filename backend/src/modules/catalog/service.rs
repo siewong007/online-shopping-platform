@@ -8,7 +8,9 @@ use super::{
         CreateCategoryInput, CreateProductInput, UpdateCategoryInput, UpdateProductInput,
         UpdateProductStockInput,
     },
-    model::{AdminCatalogPayload, Category, Product, ProductRestockResult},
+    model::{
+        AdminCatalogPayload, CatalogueImportReport, Category, Product, ProductImageImportReport,
+    },
     repository,
 };
 
@@ -133,6 +135,46 @@ pub async fn update_product_stock(
     Ok(product)
 }
 
-pub async fn run_supplier_sync(pool: &PgPool) -> Result<Vec<ProductRestockResult>> {
-    repository::run_supplier_sync(pool).await
+pub async fn import_catalogue(
+    pool: &PgPool,
+    identity: &AdminIdentity,
+    body: &str,
+) -> Result<CatalogueImportReport> {
+    let report = repository::import_catalogue(pool, body).await?;
+    audit::service::record_event(
+        pool,
+        &identity.username,
+        "import",
+        "catalogue",
+        "autocount",
+        &format!(
+            "{} created, {} updated, {} categories",
+            report.products_created, report.products_updated, report.categories_created
+        ),
+    )
+    .await;
+    Ok(report)
+}
+
+pub async fn import_product_image_manifest(
+    pool: &PgPool,
+    identity: &AdminIdentity,
+    body: &str,
+    dry_run: bool,
+) -> Result<ProductImageImportReport> {
+    let report =
+        repository::import_product_image_manifest(pool, body, dry_run, &identity.username).await?;
+    audit::service::record_event(
+        pool,
+        &identity.username,
+        if dry_run { "validate" } else { "import" },
+        "product_images",
+        "manifest",
+        &format!(
+            "{} approved, {} matched, {} updated, dry_run={}",
+            report.approved_rows, report.products_matched, report.products_updated, dry_run
+        ),
+    )
+    .await;
+    Ok(report)
 }

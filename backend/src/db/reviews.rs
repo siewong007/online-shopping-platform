@@ -20,6 +20,8 @@ async fn fetch_product(pool: &PgPool, product_id: i32) -> Result<Option<Product>
             FROM product_reviews GROUP BY product_id
         ) review_stats ON review_stats.product_id = products.id
         WHERE products.id = $1
+          AND products.featured = TRUE
+          AND products.stock_quantity > 0
         "#,
     )
     .bind(product_id)

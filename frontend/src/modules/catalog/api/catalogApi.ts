@@ -1,5 +1,5 @@
 import { fallbackCatalog } from "../../../data/fallback";
-import { deleteJson, fetchJson, postJson, putJson } from "../../../shared/api/http";
+import { deleteJson, fetchJson, postJson, putJson, requestJson } from "../../../shared/api/http";
 import type {
   AdminCatalogPayload,
   Category,
@@ -9,7 +9,8 @@ import type {
   UpdateCategoryInput,
   UpdateProductInput,
   UpdateProductStockInput,
-  ProductRestockResult
+  CatalogueImportReport,
+  ProductImageImportReport
 } from "../types";
 
 export function fetchAdminCatalog(): Promise<AdminCatalogPayload> {
@@ -59,6 +60,26 @@ export function updateProductStock(
   );
 }
 
-export function supplierSync(): Promise<ProductRestockResult[]> {
-  return postJson<undefined, ProductRestockResult[]>("/api/admin/inventory/supplier-sync", undefined);
+/** Sends the AutoCount export as raw CSV; the endpoint parses it server-side. */
+export function importCatalogue(csv: string): Promise<CatalogueImportReport> {
+  return requestJson<CatalogueImportReport>("/api/admin/catalogue/import", {
+    method: "POST",
+    headers: { "Content-Type": "text/csv" },
+    body: csv
+  });
+}
+
+/** Checks or applies approved product-image rows from the internal sourcing manifest. */
+export function importProductImages(
+  csv: string,
+  dryRun: boolean
+): Promise<ProductImageImportReport> {
+  return requestJson<ProductImageImportReport>(
+    `/api/admin/catalogue/images/import?dry_run=${dryRun}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "text/csv" },
+      body: csv
+    }
+  );
 }

@@ -11,8 +11,7 @@ export type {
   StorefrontQueryParams,
   StorefrontSort,
   UpdateProductInput,
-  UpdateProductStockInput,
-  ProductRestockResult
+  UpdateProductStockInput
 } from "./modules/storefront/types";
 
 export type { CreateReviewInput, ProductDetailPayload, ProductReview } from "./modules/reviews/types";
@@ -50,6 +49,7 @@ export type {
   OrderControlProduct,
   OrderFulfillmentHistory,
   OrderItem,
+  PaymentCheckout,
   ShippingAddressInput,
   ShippingOption,
   UpdateOrderFulfillmentInput

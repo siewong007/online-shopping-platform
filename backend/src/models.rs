@@ -95,6 +95,10 @@ pub struct ProStat {
 pub struct StorefrontPayload {
     pub categories: Vec<Category>,
     pub products: Vec<Product>,
+    /// Total matching the current filters, not the length of `products` — the storefront
+    /// pages through a catalogue far larger than one response.
+    pub total_products: i64,
+    pub category_counts: Vec<CategoryCount>,
     pub promotions: Vec<Promotion>,
     pub services: Vec<ServiceItem>,
     pub pro_stats: Vec<ProStat>,
@@ -107,6 +111,16 @@ pub struct StorefrontQuery {
     pub min_price_cents: Option<i32>,
     pub max_price_cents: Option<i32>,
     pub sort: Option<String>,
+    pub limit: Option<i64>,
+    pub offset: Option<i64>,
+    pub in_stock_only: Option<bool>,
+    pub on_sale_only: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct CategoryCount {
+    pub category_slug: String,
+    pub count: i64,
 }
 
 #[derive(Debug, Clone, Serialize, FromRow)]
@@ -174,6 +188,10 @@ pub struct CreateOrderItemInput {
 pub struct CreateOrderInput {
     pub customer_name: String,
     pub customer_email: String,
+    /// Optional so admin-created orders and existing API clients keep working; the
+    /// storefront checkout form asks for it on every order.
+    #[serde(default)]
+    pub customer_phone: Option<String>,
     pub fulfillment_method: Option<String>,
     pub items: Vec<CreateOrderItemInput>,
     #[serde(default)]
@@ -270,6 +288,7 @@ pub struct Order {
     pub id: i32,
     pub customer_name: String,
     pub customer_email: String,
+    pub customer_phone: String,
     pub subtotal_cents: i32,
     pub discount_cents: i32,
     pub tax_cents: i32,
@@ -863,18 +882,6 @@ pub struct UpdateProductStockInput {
     pub low_stock_threshold: i32,
 }
 
-#[derive(Debug, Clone, Deserialize)]
-pub struct SupplierSyncInput {
-    pub supplier: String,
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub struct ProductRestockResult {
-    pub product_id: i32,
-    pub name: String,
-    pub added: i32,
-}
-
 #[derive(Debug, Clone, Serialize, FromRow)]
 pub struct SupportConversation {
     pub id: i32,
@@ -971,4 +978,52 @@ pub struct SupportMessagesPayload {
 pub struct AdminSupportThreadPayload {
     pub conversation: SupportConversation,
     pub messages: Vec<SupportMessage>,
+}
+
+#[derive(Debug, Clone)]
+pub struct CatalogueImportRow {
+    pub item_code: String,
+    pub name: String,
+    pub category: String,
+    pub uom: String,
+    pub stock_quantity: i32,
+    pub price_cents: i32,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CatalogueImportReport {
+    pub rows_read: usize,
+    pub products_created: usize,
+    pub products_updated: usize,
+    pub categories_created: usize,
+    pub problems: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ProductImageManifestRow {
+    pub item_code: String,
+    pub uom: String,
+    pub image_url: String,
+    pub source_owner: String,
+    pub source_page_url: String,
+    pub rights_status: String,
+    pub match_confidence: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct ProductImageImportQuery {
+    #[serde(default)]
+    pub dry_run: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ProductImageImportReport {
+    pub dry_run: bool,
+    pub rows_read: usize,
+    pub rows_pending: usize,
+    pub approved_rows: usize,
+    pub products_matched: usize,
+    pub products_updated: usize,
+    pub products_unchanged: usize,
+    pub problems: Vec<String>,
 }
