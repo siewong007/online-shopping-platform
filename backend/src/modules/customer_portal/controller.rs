@@ -1,4 +1,4 @@
-use std::net::{IpAddr, SocketAddr};
+use std::net::SocketAddr;
 
 use axum::{
     Json,
@@ -8,7 +8,7 @@ use axum::{
 
 use crate::{
     app_state::AppState,
-    error,
+    client_ip, error,
     models::{
         CustomerIdentity, CustomerTransactionsPayload, CustomerTransactionsQuery,
         MembershipBenefitsPayload, MembershipPayload, Paged,
@@ -24,22 +24,6 @@ use super::{
     model::CustomerPortalProfile,
     service,
 };
-
-/// Best-effort client address for the lookup throttle ledger. Behind the Caddy proxy the
-/// rightmost parseable X-Forwarded-For entry is the address Caddy itself observed —
-/// client-supplied entries sit to its left, so scanning from the right defeats spoofing.
-/// Direct (unproxied) access falls back to the socket peer.
-fn lookup_source_ip(headers: &HeaderMap, peer: SocketAddr) -> String {
-    headers
-        .get_all("x-forwarded-for")
-        .iter()
-        .filter_map(|value| value.to_str().ok())
-        .flat_map(|value| value.rsplit(','))
-        .map(str::trim)
-        .find(|entry| entry.parse::<IpAddr>().is_ok())
-        .map(str::to_string)
-        .unwrap_or_else(|| peer.ip().to_string())
-}
 
 pub async fn lookup_customer_portal(
     State(state): State<AppState>,
@@ -70,7 +54,7 @@ pub async fn lookup_customer_portal(
         &state.pool,
         email,
         order_id,
-        &lookup_source_ip(&headers, peer),
+        &client_ip::client_ip(&headers, peer),
     )
     .await
     .map(Json)

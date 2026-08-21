@@ -409,7 +409,13 @@ mod tests {
         let mut builder = axum::http::Request::builder()
             .method("POST")
             .uri(path)
-            .header(axum::http::header::CONTENT_TYPE, "application/json");
+            .header(axum::http::header::CONTENT_TYPE, "application/json")
+            // The login route extracts `ConnectInfo` for client-IP throttling; oneshot
+            // requests must supply the extension the real server injects.
+            .extension(axum::extract::ConnectInfo(std::net::SocketAddr::from((
+                [127, 0, 0, 1],
+                41_042,
+            ))));
         if let Some(token) = token {
             builder = builder.header(axum::http::header::AUTHORIZATION, format!("Bearer {token}"));
         }

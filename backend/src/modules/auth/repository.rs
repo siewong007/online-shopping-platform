@@ -57,3 +57,23 @@ pub async fn authenticate_admin_session(
 pub async fn delete_expired_admin_sessions(pool: &PgPool) -> Result<()> {
     crate::db::delete_expired_admin_sessions(pool).await
 }
+
+pub async fn record_admin_login_failure(
+    pool: &PgPool,
+    username: &str,
+    source_ip: &str,
+) -> Result<()> {
+    crate::db::record_admin_login_failure(pool, username, source_ip).await
+}
+
+pub async fn count_recent_admin_login_failures(
+    pool: &PgPool,
+    username: &str,
+    source_ip: &str,
+) -> Result<(i64, i64)> {
+    crate::db::count_recent_admin_login_failures(pool, username, source_ip).await
+}
+
+pub async fn clear_admin_login_failures(pool: &PgPool, username: &str) -> Result<()> {
+    crate::db::clear_admin_login_failures(pool, username).await
+}

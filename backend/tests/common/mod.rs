@@ -67,6 +67,17 @@ pub async fn request(
     token: Option<&str>,
     body: Option<Value>,
 ) -> (StatusCode, Value) {
+    request_with_headers(app, method, path, token, body, &[]).await
+}
+
+pub async fn request_with_headers(
+    app: Router,
+    method: Method,
+    path: &str,
+    token: Option<&str>,
+    body: Option<Value>,
+    extra_headers: &[(&'static str, String)],
+) -> (StatusCode, Value) {
     // Handlers behind `ConnectInfo` extraction (client-IP throttling) need the extension the
     // real server injects; oneshot requests bypass that make-service layer.
     let mut builder =
@@ -80,6 +91,10 @@ pub async fn request(
 
     if let Some(token) = token {
         builder = builder.header(AUTHORIZATION, format!("Bearer {token}"));
+    }
+
+    for (name, value) in extra_headers {
+        builder = builder.header(*name, value.clone());
     }
 
     let body = if let Some(body) = body {

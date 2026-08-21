@@ -23,6 +23,19 @@ use super::{
 const DEFAULT_ADMIN_USERNAME: &str = "admin";
 const DEFAULT_ADMIN_DISPLAY_NAME: &str = "Admin";
 const MIN_ADMIN_SEED_PASSWORD_LENGTH: usize = 16;
+// Failed sign-ins authenticate with (username, password) guesses, so both identifier sides get
+// a cap per window before the endpoint starts refusing. The username cap doubles as an
+// account-lockout against remote password grinding; the higher IP cap tolerates a shared
+// office NAT where several staff sign in from one address.
+const MAX_ADMIN_LOGIN_FAILURES_PER_USERNAME_15_MINUTES: i64 = 5;
+const MAX_ADMIN_LOGIN_FAILURES_PER_IP_15_MINUTES: i64 = 20;
+
+fn admin_login_rate_limit_error() -> HttpError {
+    (
+        StatusCode::TOO_MANY_REQUESTS,
+        "Too many failed sign-in attempts. Try again later.".to_string(),
+    )
+}
 
 pub async fn ensure_seed_admin(pool: &PgPool) -> Result<()> {
     if repository::count_admin_users(pool).await? > 0 {
@@ -60,7 +73,11 @@ fn validated_seed_password(configured_password: Option<String>) -> Result<String
     Ok(password)
 }
 
-pub async fn login(pool: &PgPool, input: &AdminLoginInput) -> Result<AdminAuthPayload, HttpError> {
+pub async fn login(
+    pool: &PgPool,
+    input: &AdminLoginInput,
+    source_ip: &str,
+) -> Result<AdminAuthPayload, HttpError> {
     let username = input.username.trim();
     let password = input.password.as_str();
 
@@ -71,28 +88,40 @@ pub async fn login(pool: &PgPool, input: &AdminLoginInput) -> Result<AdminAuthPa
         ));
     }
 
-    let Some(admin_user) = repository::fetch_admin_user_by_username(pool, username)
-        .await
-        .map_err(map_auth_lookup_error)?
-    else {
-        return Err((
-            StatusCode::UNAUTHORIZED,
-            "Invalid username or password.".to_string(),
-        ));
-    };
-
-    if !admin_user.is_active {
-        return Err((
-            StatusCode::UNAUTHORIZED,
-            "Invalid username or password.".to_string(),
-        ));
+    let (failures_for_username, failures_from_ip) =
+        repository::count_recent_admin_login_failures(pool, username, source_ip)
+            .await
+            .map_err(map_auth_lookup_error)?;
+    if failures_for_username >= MAX_ADMIN_LOGIN_FAILURES_PER_USERNAME_15_MINUTES
+        || failures_from_ip >= MAX_ADMIN_LOGIN_FAILURES_PER_IP_15_MINUTES
+    {
+        return Err(admin_login_rate_limit_error());
     }
 
-    if !verify_password(password, &admin_user.password_hash) {
-        return Err((
-            StatusCode::UNAUTHORIZED,
-            "Invalid username or password.".to_string(),
-        ));
+    // Unknown usernames, deactivated accounts and wrong passwords are indistinguishable by
+    // design, and each burns one entry of throttle budget.
+    let admin_user = match repository::fetch_admin_user_by_username(pool, username)
+        .await
+        .map_err(map_auth_lookup_error)?
+    {
+        Some(admin_user)
+            if admin_user.is_active && verify_password(password, &admin_user.password_hash) =>
+        {
+            admin_user
+        }
+        _ => {
+            repository::record_admin_login_failure(pool, username, source_ip)
+                .await
+                .map_err(map_auth_lookup_error)?;
+            return Err((
+                StatusCode::UNAUTHORIZED,
+                "Invalid username or password.".to_string(),
+            ));
+        }
+    };
+
+    if let Err(error) = repository::clear_admin_login_failures(pool, username).await {
+        tracing::warn!("failed to clear admin login failures: {error:?}");
     }
 
     if let Err(error) = repository::delete_expired_admin_sessions(pool).await {

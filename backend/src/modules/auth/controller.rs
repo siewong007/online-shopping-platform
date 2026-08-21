@@ -1,10 +1,12 @@
+use std::net::SocketAddr;
+
 use axum::{
     Json,
-    extract::State,
+    extract::{ConnectInfo, State},
     http::{HeaderMap, StatusCode},
 };
 
-use crate::{app_state::AppState, error};
+use crate::{app_state::AppState, client_ip, error};
 
 use super::{
     dto::{AdminAuthPayload, AdminLoginInput, AdminMePayload},
@@ -14,9 +16,13 @@ use super::{
 
 pub async fn login(
     State(state): State<AppState>,
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
+    headers: HeaderMap,
     Json(input): Json<AdminLoginInput>,
 ) -> Result<Json<AdminAuthPayload>, error::HttpError> {
-    service::login(&state.pool, &input).await.map(Json)
+    service::login(&state.pool, &input, &client_ip::client_ip(&headers, peer))
+        .await
+        .map(Json)
 }
 
 pub async fn logout(

@@ -419,6 +419,81 @@ pub async fn delete_expired_admin_sessions(pool: &PgPool) -> Result<()> {
     Ok(())
 }
 
+/// Records one failed sign-in and prunes stale rows, so the throttle ledger stays bounded.
+/// Failures are keyed on the submitted username whether or not it belongs to a real account:
+/// guessing credentials against unknown usernames is exactly what the cap exists to slow down.
+pub async fn record_admin_login_failure(
+    pool: &PgPool,
+    username: &str,
+    source_ip: &str,
+) -> Result<()> {
+    let mut tx = pool.begin().await?;
+    sqlx::query(
+        r#"
+        INSERT INTO admin_login_failures (username, source_ip)
+        VALUES ($1, $2)
+        "#,
+    )
+    .bind(username.trim().to_ascii_lowercase())
+    .bind(source_ip)
+    .execute(&mut *tx)
+    .await?;
+    sqlx::query("DELETE FROM admin_login_failures WHERE attempted_at < now() - interval '1 day'")
+        .execute(&mut *tx)
+        .await?;
+    tx.commit().await?;
+    Ok(())
+}
+
+/// Returns (failures for this username, failures from this source ip) inside the throttle window.
+pub async fn count_recent_admin_login_failures(
+    pool: &PgPool,
+    username: &str,
+    source_ip: &str,
+) -> Result<(i64, i64)> {
+    let by_username = sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT COUNT(*)
+        FROM admin_login_failures
+        WHERE username = $1
+          AND attempted_at > now() - interval '15 minutes'
+        "#,
+    )
+    .bind(username.trim().to_ascii_lowercase())
+    .fetch_one(pool)
+    .await?;
+
+    let by_ip = sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT COUNT(*)
+        FROM admin_login_failures
+        WHERE source_ip = $1
+          AND attempted_at > now() - interval '15 minutes'
+        "#,
+    )
+    .bind(source_ip)
+    .fetch_one(pool)
+    .await?;
+
+    Ok((by_username, by_ip))
+}
+
+/// A successful sign-in proves the credentials are back in honest hands, so the account's
+/// failure debt is forgiven rather than left to age out of the window.
+pub async fn clear_admin_login_failures(pool: &PgPool, username: &str) -> Result<()> {
+    sqlx::query(
+        r#"
+        DELETE FROM admin_login_failures
+        WHERE username = $1
+        "#,
+    )
+    .bind(username.trim().to_ascii_lowercase())
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
 pub async fn acquire_admin_management_lock(tx: &mut Transaction<'_, Postgres>) -> Result<()> {
     sqlx::query("SELECT pg_advisory_xact_lock($1)")
         .bind(ADMIN_MANAGEMENT_LOCK_KEY)

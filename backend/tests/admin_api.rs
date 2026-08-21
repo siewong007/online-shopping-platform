@@ -70,6 +70,101 @@ async fn login_returns_token_bad_password_fails_and_me_reports_role(pool: PgPool
     assert_eq!(me_body["user"]["username"], "auth-admin");
 }
 
+async fn login_attempt_with_ip(
+    app: &Router,
+    username: &str,
+    password: &str,
+    source_ip: &str,
+) -> StatusCode {
+    let (status, _) = common::request_with_headers(
+        app.clone(),
+        Method::POST,
+        "/api/admin/login",
+        None,
+        Some(json!({ "username": username, "password": password })),
+        &[("X-Forwarded-For", source_ip.to_string())],
+    )
+    .await;
+    status
+}
+
+#[sqlx::test]
+async fn admin_login_locks_after_repeated_failures_even_with_correct_password(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "lock-admin", "secret123").await;
+    let app = common::app(pool);
+
+    for _ in 0..5 {
+        let status =
+            login_attempt_with_ip(&app, "lock-admin", "wrong-password", "203.0.113.7").await;
+        assert_eq!(status, StatusCode::UNAUTHORIZED);
+    }
+
+    // The per-username cap follows the account, not the address: a fresh IP is refused too.
+    let locked_status = login_attempt_with_ip(&app, "lock-admin", "secret123", "203.0.113.7").await;
+    assert_eq!(locked_status, StatusCode::TOO_MANY_REQUESTS);
+    let locked_other_ip_status =
+        login_attempt_with_ip(&app, "lock-admin", "secret123", "198.51.100.9").await;
+    assert_eq!(locked_other_ip_status, StatusCode::TOO_MANY_REQUESTS);
+}
+
+#[sqlx::test]
+async fn admin_login_success_forgives_accumulated_failures(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "forgive-admin", "secret123").await;
+    let app = common::app(pool);
+
+    for _ in 0..2 {
+        let status =
+            login_attempt_with_ip(&app, "forgive-admin", "wrong-password", "203.0.113.7").await;
+        assert_eq!(status, StatusCode::UNAUTHORIZED);
+    }
+
+    // Two failures, then an honest sign-in...
+    for _ in 0..2 {
+        let status =
+            login_attempt_with_ip(&app, "forgive-admin", "wrong-password", "203.0.113.7").await;
+        assert_eq!(status, StatusCode::UNAUTHORIZED);
+    }
+    let token = common::login(app.clone(), "forgive-admin", "secret123").await;
+    assert_eq!(token.len(), 64);
+
+    // ...clears the debt: without forgiveness these five attempts would trip the cap on the
+    // fourth (2 + 4 = 6 >= 5 at check time), so the fourth and fifth returning 401 prove it.
+    for _ in 0..5 {
+        let status =
+            login_attempt_with_ip(&app, "forgive-admin", "wrong-password", "203.0.113.7").await;
+        assert_eq!(status, StatusCode::UNAUTHORIZED);
+    }
+
+    // With the budget spent again, even the correct password is refused until the window passes.
+    let locked_status =
+        login_attempt_with_ip(&app, "forgive-admin", "secret123", "198.51.100.9").await;
+    assert_eq!(locked_status, StatusCode::TOO_MANY_REQUESTS);
+}
+
+#[sqlx::test]
+async fn admin_login_per_ip_cap_covers_unknown_username_grinding(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "target-admin", "secret123").await;
+    let app = common::app(pool);
+
+    // Failures against usernames that do not exist draw down the source address's budget.
+    // Twenty distinct ghost usernames are needed because the per-username cap (5) would trip
+    // first on any single repeated name — exactly what makes one-name grinding futile too.
+    for index in 0..20 {
+        let ghost_username = format!("ghost-user-{index}");
+        let status =
+            login_attempt_with_ip(&app, &ghost_username, "wrong-password", "203.0.113.7").await;
+        assert_eq!(status, StatusCode::UNAUTHORIZED);
+    }
+    let blocked_status =
+        login_attempt_with_ip(&app, "target-admin", "secret123", "203.0.113.7").await;
+    assert_eq!(blocked_status, StatusCode::TOO_MANY_REQUESTS);
+
+    // A different address still reaches the credential check.
+    let other_ip_status =
+        login_attempt_with_ip(&app, "target-admin", "secret123", "198.51.100.9").await;
+    assert_eq!(other_ip_status, StatusCode::OK);
+}
+
 #[sqlx::test]
 async fn settings_read_requires_token_and_permission(pool: PgPool) {
     common::create_admin(&pool, "Super Admin", "settings-admin", "secret123").await;
