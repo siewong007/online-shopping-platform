@@ -84,19 +84,36 @@ impl SenangPayConfig {
         output
     }
 
+    /// Length-prefixed ("netstring") encoding. The callback fields are concatenated before
+    /// signing, and free-text fields would otherwise let a holder of one legitimately signed
+    /// tuple re-cut the boundaries so the same signature verifies while `order_id` names a
+    /// different payment. With self-describing lengths, shifting even one character between
+    /// adjacent fields changes the signed bytes.
+    fn canonical_part(value: &str) -> String {
+        format!("{}:{}", value.len(), value)
+    }
+
+    fn signed_payload(parts: &[&str]) -> String {
+        parts
+            .iter()
+            .map(|part| Self::canonical_part(part))
+            .collect::<Vec<_>>()
+            .concat()
+    }
+
     fn verify_callback(&self, callback: &SenangPayCallback) -> Result<()> {
-        let signed = format!(
-            "{}{}{}{}{}",
-            self.secret_key,
-            callback.status_id.trim(),
-            callback.order_id.trim(),
-            callback.transaction_id.trim(),
-            callback.message.trim(),
-        );
         let received = decode_hex(callback.hash.trim())?;
         let mut mac = HmacSha256::new_from_slice(self.secret_key.as_bytes())
             .expect("HMAC accepts keys of every size");
-        mac.update(signed.as_bytes());
+        mac.update(
+            Self::signed_payload(&[
+                callback.status_id.trim(),
+                callback.order_id.trim(),
+                callback.transaction_id.trim(),
+                callback.message.trim(),
+            ])
+            .as_bytes(),
+        );
         mac.verify_slice(&received)
             .map_err(|_| anyhow!("Invalid senangPay callback signature."))
     }
@@ -156,16 +173,42 @@ pub async fn process_callback(
         "2" => db::GatewayPaymentStatus::Pending,
         _ => bail!("Unknown senangPay payment status."),
     };
+    let transaction_id = callback.transaction_id.trim();
+    validate_transaction_fields(status, transaction_id, callback.message.trim())?;
 
     db::apply_gateway_payment_event(
         pool,
         "senangpay",
         provider_order_id,
         status,
-        callback.transaction_id.trim(),
+        transaction_id,
         callback.message.trim(),
     )
     .await
+}
+
+/// Bounds the free-form callback fields before they reach the payments row: the transaction
+/// identifier must look like a gateway reference (and be present when money actually moved),
+/// and the stored message stays a short note rather than unbounded attacker-supplied text.
+fn validate_transaction_fields(
+    status: db::GatewayPaymentStatus,
+    transaction_id: &str,
+    message: &str,
+) -> Result<()> {
+    if transaction_id.len() > 64
+        || !transaction_id
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'-'))
+    {
+        bail!("Invalid senangPay transaction identifier.");
+    }
+    if status == db::GatewayPaymentStatus::Captured && transaction_id.is_empty() {
+        bail!("A senangPay transaction identifier is required to confirm capture.");
+    }
+    if message.len() > 256 {
+        bail!("senangPay callback message is too long.");
+    }
+    Ok(())
 }
 
 impl PaymentGateway for SenangPayConfig {
@@ -209,10 +252,11 @@ fn build_payment_url(
 ) -> Result<String> {
     let detail = format!("Ekoway_Order_{provider_order_id}");
     let amount = format!("{}.{:02}", order.total_cents / 100, order.total_cents % 100);
-    let hash = config.sign(&format!(
-        "{}{}{}{}",
-        config.secret_key, detail, amount, provider_order_id
-    ));
+    let hash = config.sign(&SenangPayConfig::signed_payload(&[
+        detail.as_str(),
+        amount.as_str(),
+        provider_order_id,
+    ]));
 
     let params = [
         ("detail", detail),
@@ -262,6 +306,7 @@ fn decode_hex(input: &str) -> Result<Vec<u8>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::db::GatewayPaymentStatus;
 
     fn test_order() -> Order {
         Order {
@@ -299,7 +344,9 @@ mod tests {
     #[test]
     fn callback_signature_must_match() {
         let config = SenangPayConfig::test_config();
-        let signed = "test-secret1EKW-421234Payment_was_successful";
+        // netstrings: "1" -> 1:1, "EKW-42" -> 6:EKW-42, "1234" -> 4:1234,
+        // "Payment_was_successful" -> 22:Payment_was_successful
+        let signed = "1:16:EKW-424:123422:Payment_was_successful";
         let callback = SenangPayCallback {
             status_id: "1".to_string(),
             order_id: "EKW-42".to_string(),
@@ -314,5 +361,60 @@ mod tests {
         let mut altered = callback;
         altered.message = "Payment_failed".to_string();
         assert!(config.verify_callback(&altered).is_err());
+    }
+
+    /// Regression test for the boundary-recut forgery: under the old separator-free
+    /// concatenation this forged tuple produced byte-identical signed input for order EKW-4
+    /// from a receipt legitimately issued for order EKW-42. Netstring lengths break the shift.
+    #[test]
+    fn recut_boundary_shift_fails_signature() {
+        let config = SenangPayConfig::test_config();
+        // Legitimate receipt the attacker holds for their own order.
+        let legit = SenangPayCallback {
+            status_id: "1".to_string(),
+            order_id: "EKW-42".to_string(),
+            transaction_id: "1234".to_string(),
+            message: "Payment_was_successful".to_string(),
+            hash: String::new(),
+        };
+        let legit_hash = config.sign(&SenangPayConfig::signed_payload(&[
+            legit.status_id.trim(),
+            legit.order_id.trim(),
+            legit.transaction_id.trim(),
+            legit.message.trim(),
+        ]));
+
+        // Same bytes re-cut so order_id names the victim's unpaid order EKW-4.
+        let forged = SenangPayCallback {
+            status_id: "1".to_string(),
+            order_id: "EKW-4".to_string(),
+            transaction_id: "21234".to_string(),
+            message: "Payment_was_successful".to_string(),
+            hash: legit_hash,
+        };
+        assert!(config.verify_callback(&forged).is_err());
+        assert!(parse_provider_order_id("EKW-4").is_ok());
+    }
+
+    #[test]
+    fn captured_events_require_a_wellformed_transaction_id() {
+        let cases = [
+            (GatewayPaymentStatus::Captured, "", false),
+            (GatewayPaymentStatus::Captured, "txn_123.45", true),
+            (GatewayPaymentStatus::Pending, "", true),
+            (GatewayPaymentStatus::Failed, "", true),
+            (GatewayPaymentStatus::Captured, "bad id with spaces", false),
+        ];
+        for (status, transaction_id, ok) in cases {
+            assert_eq!(
+                validate_transaction_fields(status, transaction_id, "note").is_ok(),
+                ok,
+                "transaction_id={transaction_id:?}"
+            );
+        }
+        assert!(
+            validate_transaction_fields(GatewayPaymentStatus::Captured, "txn", &"x".repeat(257))
+                .is_err()
+        );
     }
 }
