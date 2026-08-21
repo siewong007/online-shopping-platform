@@ -25,8 +25,25 @@ pub async fn verify_customer_order_ownership(
 pub async fn lookup_customer_portal(
     pool: &PgPool,
     email: &str,
+    order_id: i32,
 ) -> Result<crate::models::CustomerLookupPayload> {
-    crate::db::lookup_customer_portal(pool, email).await
+    crate::db::lookup_customer_portal(pool, email, order_id).await
+}
+
+pub async fn record_portal_lookup_attempt(
+    pool: &PgPool,
+    email: &str,
+    source_ip: &str,
+) -> Result<()> {
+    crate::db::record_portal_lookup_attempt(pool, email, source_ip).await
+}
+
+pub async fn count_recent_portal_lookup_attempts(
+    pool: &PgPool,
+    email: &str,
+    source_ip: &str,
+) -> Result<(i64, i64)> {
+    crate::db::count_recent_portal_lookup_attempts(pool, email, source_ip).await
 }
 
 pub async fn create_customer_portal_profile(

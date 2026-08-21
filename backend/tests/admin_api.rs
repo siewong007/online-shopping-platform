@@ -1131,7 +1131,7 @@ async fn public_customer_lookup_supports_order_without_profile(pool: PgPool) {
 }
 
 #[sqlx::test]
-async fn public_customer_lookup_caps_orders_at_twenty_newest_first(pool: PgPool) {
+async fn public_customer_lookup_returns_only_the_ownership_proving_order(pool: PgPool) {
     let app = common::app(pool);
     let mut created_order_ids = Vec::new();
 
@@ -1146,30 +1146,17 @@ async fn public_customer_lookup_caps_orders_at_twenty_newest_first(pool: PgPool)
         created_order_ids.push(order_id);
     }
 
-    // Use the oldest order (outside the 20-row display window) to prove that ownership
-    // verification checks all of a customer's orders, not just the ones later returned.
+    // Use the oldest order to prove that ownership verification checks all of a customer's
+    // orders, not just recent ones. The response must then contain exactly the order the
+    // (email, order id) pair proved — never the rest of the email's history.
     let (status, body) =
         lookup_customer(&app, "limit-buyer@example.com", created_order_ids[0], None).await;
     assert_eq!(status, StatusCode::OK, "{body}");
     assert_eq!(body["profile"]["total_orders"], 22);
 
     let orders = body["orders"].as_array().expect("orders array");
-    assert_eq!(orders.len(), 20);
-
-    let returned_ids = orders
-        .iter()
-        .map(|order| order["id"].as_i64().expect("order id"))
-        .collect::<Vec<_>>();
-    let expected_ids = created_order_ids
-        .iter()
-        .rev()
-        .take(20)
-        .copied()
-        .collect::<Vec<_>>();
-
-    assert_eq!(returned_ids, expected_ids);
-    assert!(!returned_ids.contains(&created_order_ids[0]));
-    assert!(!returned_ids.contains(&created_order_ids[1]));
+    assert_eq!(orders.len(), 1);
+    assert_eq!(orders[0]["id"], created_order_ids[0]);
 }
 
 #[sqlx::test]

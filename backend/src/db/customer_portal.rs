@@ -3,6 +3,65 @@ use anyhow::{Result, bail};
 use sqlx::PgPool;
 use std::collections::HashMap;
 
+/// Records one guest lookup attempt and prunes stale rows, so the throttle ledger the
+/// rate limit reads from stays bounded. Attempts are counted whether they succeed or
+/// miss: guessing order ids is exactly the behavior the cap exists to slow down.
+pub async fn record_portal_lookup_attempt(
+    pool: &PgPool,
+    email: &str,
+    source_ip: &str,
+) -> Result<()> {
+    let mut tx = pool.begin().await?;
+    sqlx::query(
+        r#"
+        INSERT INTO portal_lookup_attempts (email, source_ip)
+        VALUES ($1, $2)
+        "#,
+    )
+    .bind(email.trim().to_ascii_lowercase())
+    .bind(source_ip)
+    .execute(&mut *tx)
+    .await?;
+    sqlx::query("DELETE FROM portal_lookup_attempts WHERE attempted_at < now() - interval '1 day'")
+        .execute(&mut *tx)
+        .await?;
+    tx.commit().await?;
+    Ok(())
+}
+
+/// Returns (attempts for this email, attempts from this source ip) inside the throttle window.
+pub async fn count_recent_portal_lookup_attempts(
+    pool: &PgPool,
+    email: &str,
+    source_ip: &str,
+) -> Result<(i64, i64)> {
+    let by_email = sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT COUNT(*)
+        FROM portal_lookup_attempts
+        WHERE email = $1
+          AND attempted_at > now() - interval '10 minutes'
+        "#,
+    )
+    .bind(email.trim().to_ascii_lowercase())
+    .fetch_one(pool)
+    .await?;
+
+    let by_ip = sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT COUNT(*)
+        FROM portal_lookup_attempts
+        WHERE source_ip = $1
+          AND attempted_at > now() - interval '10 minutes'
+        "#,
+    )
+    .bind(source_ip)
+    .fetch_one(pool)
+    .await?;
+
+    Ok((by_email, by_ip))
+}
+
 pub async fn fetch_customer_portal_profiles(
     pool: &PgPool,
     limit: i64,
@@ -84,7 +143,11 @@ pub async fn verify_customer_order_ownership(
     Ok(owns_order)
 }
 
-pub async fn lookup_customer_portal(pool: &PgPool, email: &str) -> Result<CustomerLookupPayload> {
+pub async fn lookup_customer_portal(
+    pool: &PgPool,
+    email: &str,
+    order_id: i32,
+) -> Result<CustomerLookupPayload> {
     let email = email.trim();
     let profile = sqlx::query_as::<_, CustomerLookupProfile>(
         r#"
@@ -104,6 +167,9 @@ pub async fn lookup_customer_portal(pool: &PgPool, email: &str) -> Result<Custom
     .fetch_optional(pool)
     .await?;
 
+    // Only the ownership-proving order is returned. This endpoint is guest-reachable with
+    // knowledge of (email, order id), so handing back the full recent-order history would
+    // let a guessed pair harvest far more than the shopper asked for.
     let order_rows = sqlx::query_as::<_, (i32, i32, String, String)>(
         r#"
         SELECT
@@ -113,11 +179,13 @@ pub async fn lookup_customer_portal(pool: &PgPool, email: &str) -> Result<Custom
             created_at::text AS created_at
         FROM orders
         WHERE lower(customer_email) = lower($1)
+          AND id = $2
         ORDER BY created_at DESC, id DESC
-        LIMIT 20
+        LIMIT 1
         "#,
     )
     .bind(email)
+    .bind(order_id)
     .fetch_all(pool)
     .await?;
 

@@ -23,6 +23,18 @@ const MAX_TRANSACTIONS_LIMIT: i64 = 100;
 const DEFAULT_TRANSACTIONS_LIMIT: i64 = 20;
 const DEFAULT_LIST_LIMIT: i64 = 50;
 const MAX_LIST_LIMIT: i64 = 100;
+// The guest lookup authenticates with (email, order id) knowledge alone, and sequential
+// order ids make the second half guessable. These caps bound how many guesses either
+// identifier's side can contribute per window before the endpoint starts refusing.
+const MAX_PORTAL_LOOKUPS_PER_EMAIL_10_MINUTES: i64 = 5;
+const MAX_PORTAL_LOOKUPS_PER_IP_10_MINUTES: i64 = 30;
+
+fn portal_lookup_rate_limit_error() -> HttpError {
+    (
+        StatusCode::TOO_MANY_REQUESTS,
+        "Too many order lookups. Please try again later.".to_string(),
+    )
+}
 
 pub async fn fetch_customer_portal_profiles(
     pool: &PgPool,
@@ -48,7 +60,26 @@ pub async fn lookup_customer_portal(
     pool: &PgPool,
     email: &str,
     order_id: i32,
+    source_ip: &str,
 ) -> Result<CustomerLookupPayload, HttpError> {
+    let (attempts_for_email, attempts_from_ip) =
+        repository::count_recent_portal_lookup_attempts(pool, email, source_ip)
+            .await
+            .map_err(|error| {
+                map_public_query_error("customer lookup throttle check failed", error)
+            })?;
+    if attempts_for_email >= MAX_PORTAL_LOOKUPS_PER_EMAIL_10_MINUTES
+        || attempts_from_ip >= MAX_PORTAL_LOOKUPS_PER_IP_10_MINUTES
+    {
+        return Err(portal_lookup_rate_limit_error());
+    }
+    // Counted before ownership verification so misses burn the same budget as hits.
+    repository::record_portal_lookup_attempt(pool, email, source_ip)
+        .await
+        .map_err(|error| {
+            map_public_query_error("customer lookup attempt recording failed", error)
+        })?;
+
     let owns_order = repository::verify_customer_order_ownership(pool, email, order_id)
         .await
         .map_err(|error| map_public_query_error("customer lookup ownership check failed", error))?;
@@ -60,7 +91,7 @@ pub async fn lookup_customer_portal(
         ));
     }
 
-    repository::lookup_customer_portal(pool, email)
+    repository::lookup_customer_portal(pool, email, order_id)
         .await
         .map_err(|error| map_public_query_error("customer lookup query failed", error))
 }

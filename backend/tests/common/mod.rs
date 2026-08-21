@@ -67,7 +67,16 @@ pub async fn request(
     token: Option<&str>,
     body: Option<Value>,
 ) -> (StatusCode, Value) {
-    let mut builder = Request::builder().method(method).uri(path);
+    // Handlers behind `ConnectInfo` extraction (client-IP throttling) need the extension the
+    // real server injects; oneshot requests bypass that make-service layer.
+    let mut builder =
+        Request::builder()
+            .method(method)
+            .uri(path)
+            .extension(axum::extract::ConnectInfo(std::net::SocketAddr::from((
+                [127, 0, 0, 1],
+                41_042,
+            ))));
 
     if let Some(token) = token {
         builder = builder.header(AUTHORIZATION, format!("Bearer {token}"));

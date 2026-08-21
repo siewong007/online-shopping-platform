@@ -1,7 +1,9 @@
+use std::net::{IpAddr, SocketAddr};
+
 use axum::{
     Json,
-    extract::{Path, Query, State},
-    http::StatusCode,
+    extract::{ConnectInfo, Path, Query, State},
+    http::{HeaderMap, StatusCode},
 };
 
 use crate::{
@@ -23,8 +25,26 @@ use super::{
     service,
 };
 
+/// Best-effort client address for the lookup throttle ledger. Behind the Caddy proxy the
+/// rightmost parseable X-Forwarded-For entry is the address Caddy itself observed —
+/// client-supplied entries sit to its left, so scanning from the right defeats spoofing.
+/// Direct (unproxied) access falls back to the socket peer.
+fn lookup_source_ip(headers: &HeaderMap, peer: SocketAddr) -> String {
+    headers
+        .get_all("x-forwarded-for")
+        .iter()
+        .filter_map(|value| value.to_str().ok())
+        .flat_map(|value| value.rsplit(','))
+        .map(str::trim)
+        .find(|entry| entry.parse::<IpAddr>().is_ok())
+        .map(str::to_string)
+        .unwrap_or_else(|| peer.ip().to_string())
+}
+
 pub async fn lookup_customer_portal(
     State(state): State<AppState>,
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
+    headers: HeaderMap,
     Query(query): Query<CustomerLookupQuery>,
 ) -> Result<Json<super::dto::CustomerLookupPayload>, error::HttpError> {
     let email = query.email.trim();
@@ -46,9 +66,14 @@ pub async fn lookup_customer_portal(
         ));
     };
 
-    service::lookup_customer_portal(&state.pool, email, order_id)
-        .await
-        .map(Json)
+    service::lookup_customer_portal(
+        &state.pool,
+        email,
+        order_id,
+        &lookup_source_ip(&headers, peer),
+    )
+    .await
+    .map(Json)
 }
 
 pub async fn customer_portal_profiles(

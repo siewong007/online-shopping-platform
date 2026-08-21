@@ -73,9 +73,12 @@ async fn main() -> anyhow::Result<()> {
         .context("failed to determine the API listener address")?;
 
     tracing::info!("Online Shopping API listening on http://{address}");
-    axum::serve(listener, app)
-        .with_graceful_shutdown(shutdown_signal())
-        .await?;
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .with_graceful_shutdown(shutdown_signal())
+    .await?;
 
     Ok(())
 }
