@@ -607,12 +607,13 @@ pub async fn apply_verified_gateway_payment_event(
     if expected_currency != currency {
         bail!("Gateway event currency does not match the payment.");
     }
-    if !existing_payment_id.is_empty()
-        && existing_payment_id != event.provider_payment_id.trim()
-        && !(current_status == "Failed" && event.status == GatewayPaymentStatus::Captured)
-        && !(matches!(current_status.as_str(), "Captured" | "Refunded")
-            && event.status != GatewayPaymentStatus::Captured)
-    {
+    let payment_id_mismatch =
+        !existing_payment_id.is_empty() && existing_payment_id != event.provider_payment_id.trim();
+    let failed_then_captured =
+        current_status == "Failed" && event.status == GatewayPaymentStatus::Captured;
+    let terminal_status_blocked = matches!(current_status.as_str(), "Captured" | "Refunded")
+        && event.status != GatewayPaymentStatus::Captured;
+    if payment_id_mismatch && !failed_then_captured && !terminal_status_blocked {
         bail!("Gateway event payment identifier does not match the payment.");
     }
 
