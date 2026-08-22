@@ -32,6 +32,10 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
         .route("/api/health", get(health::controller::health))
         .route("/api/storefront", get(storefront::controller::storefront))
         .route(
+            "/api/storefront/sitemap.xml",
+            get(storefront::controller::sitemap),
+        )
+        .route(
             "/api/storefront/products/{product_id}",
             get(reviews::controller::product_detail),
         )

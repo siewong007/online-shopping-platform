@@ -179,3 +179,20 @@ pub async fn fetch_storefront(pool: &PgPool, query: &StorefrontQuery) -> Result<
         pro_stats,
     })
 }
+
+/// Ids of every product the storefront currently publishes — the same visibility rule the
+/// catalogue grid applies (featured and in stock), so crawlers only see live product pages.
+pub async fn fetch_published_product_ids(pool: &PgPool) -> Result<Vec<i32>> {
+    let ids = sqlx::query_scalar::<_, i32>(
+        r#"
+        SELECT id
+        FROM products
+        WHERE featured = TRUE AND stock_quantity > 0
+        ORDER BY id
+        "#,
+    )
+    .fetch_all(pool)
+    .await?;
+
+    Ok(ids)
+}

@@ -175,3 +175,39 @@ async fn storefront_excludes_products_without_positive_stock(pool: PgPool) {
     assert_eq!(body["total_products"], 0);
     assert!(body["products"].as_array().unwrap().is_empty());
 }
+
+#[sqlx::test]
+async fn sitemap_lists_only_published_product_pages_and_static_routes(pool: PgPool) {
+    publish_seed_products(&pool).await;
+    // One fixture stays in stock, one is sold out: only the in-stock page may be listed.
+    sqlx::query(
+        "UPDATE products SET stock_quantity = 0 WHERE name = 'Milwaukee M18 9-Tool Combo Kit'",
+    )
+    .execute(&pool)
+    .await
+    .expect("sell out one fixture");
+
+    let app = common::app(pool.clone());
+    let (status, body) =
+        common::request(app, Method::GET, "/api/storefront/sitemap.xml", None, None).await;
+    assert_eq!(status, StatusCode::OK);
+
+    let xml = match &body {
+        serde_json::Value::String(text) => text.clone(),
+        other => panic!("sitemap should arrive as raw XML text, got {other}"),
+    };
+    assert!(
+        xml.contains("<loc>https://ekowayhardware.com/shop</loc>"),
+        "{xml}"
+    );
+    assert!(xml.contains("/shop/products/"), "{xml}");
+    let product_urls = xml.matches("/shop/products/").count();
+    let expected = sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*) FROM products WHERE featured = TRUE AND stock_quantity > 0",
+    )
+    .fetch_one(&pool)
+    .await
+    .expect("count query");
+    assert_eq!(product_urls as i64, expected);
+    assert!(!xml.contains("0</loc>"));
+}
