@@ -16,15 +16,21 @@ Status snapshot for the current tree:
 | CI pipeline | Shipped | `.github/workflows/ci.yml` |
 | Mobile hardening | Shipped | `7a0fd8b` + per-feature responsive rules; verified 2026-08-22 — zero horizontal overflow at 320/375/480px (landing, storefront, legal, admin login) and 375/768px (all authenticated admin tabs) |
 | Admin login throttling | Shipped | `0037_admin_login_throttles.sql`, `backend/src/client_ip.rs`, auth service caps |
+| Admin MFA (TOTP) | Shipped | `0026` schema activated: two-phase login, encrypted factors, recovery codes; TeamPanel setup card |
+| Transactional email | Shipped | SMTP relay (`lettre`): order/payment/refund emails, fire-and-forget with audit trail |
+| Catalogue sitemap | Shipped | `/api/storefront/sitemap.xml` generated from published catalogue |
 | AutoCount export | Shipped on feature branch | `/api/admin/invoices/autocount-export`, invoice CSV download UI |
 
 Current recommended PR themes:
 
-1. Bring docs and onboarding in line with the shipped architecture.
-2. Replace the generic AutoCount CSV with the user's exact import template once supplied.
+1. Ship the controlled production release: migrations through 0037, HitPay business
+   verification, owner-approved catalogue publish — then remove the Caddy checkout guard in
+   that same release.
+2. Point an external uptime watcher at `/api/health` (deployment decision, no code left).
 3. Replace the generic AutoCount CSV with the user's exact import template once supplied.
 4. Add reconciliation/read-back after the accountant confirms the import workflow.
-5. Extend customer self-service and admin-scale filtering after the accounting path is usable.
+5. Owner policy decisions before public launch: SST applicability, opening hours,
+   cancellation cutoff, return window, minimum-margin rule for sub-20%-margin items.
 
 The historical roadmap below is retained as implementation context. Treat shipped sections as
 reference notes rather than active backlog unless a regression or follow-up test is called out.
