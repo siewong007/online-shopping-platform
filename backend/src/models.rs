@@ -683,6 +683,18 @@ pub struct AdminAuthPayload {
     pub permissions: Vec<RolePagePermission>,
 }
 
+/// Untagged so the frontend distinguishes outcomes by shape: a full payload on plain logins,
+/// `mfa_required` plus a short-lived challenge token when an enrolled factor must be verified.
+#[derive(Debug, Clone, Serialize)]
+#[serde(untagged)]
+pub enum AdminLoginResponse {
+    Authenticated(Box<AdminAuthPayload>),
+    MfaRequired {
+        mfa_required: bool,
+        challenge_token: String,
+    },
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct AdminMePayload {
     pub user: AdminUser,

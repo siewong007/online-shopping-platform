@@ -10,7 +10,7 @@ use crate::{
     app_state::AppState,
     modules::{
         admin_users, audit, auth, catalog, customer_auth, customer_portal, dashboard, health,
-        invoices, offers, orders, payments, permissions, reviews, sales, settings, storefront,
+        invoices, mfa, offers, orders, payments, permissions, reviews, sales, settings, storefront,
         support,
     },
 };
@@ -67,7 +67,24 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
             get(customer_portal::controller::transactions),
         )
         .route("/api/admin/login", post(auth::controller::login))
+        .route(
+            "/api/admin/login/verify",
+            post(mfa::controller::login_verify),
+        )
         .route("/api/admin/logout", post(auth::controller::logout))
+        .route(
+            "/api/admin/mfa/enrollment",
+            post(mfa::controller::begin_enrollment),
+        )
+        .route(
+            "/api/admin/mfa/enrollment/verify",
+            post(mfa::controller::confirm_enrollment),
+        )
+        .route(
+            "/api/admin/mfa/disable",
+            post(mfa::controller::disable_factor),
+        )
+        .route("/api/admin/mfa/status", get(mfa::controller::status))
         .route("/api/admin/me", get(auth::controller::me))
         .route(
             "/api/admin/me/password",

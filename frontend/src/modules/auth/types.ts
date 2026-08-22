@@ -27,3 +27,21 @@ export type AdminMePayload = {
   role: Role;
   permissions: RolePagePermission[];
 };
+
+/// Untagged server response: a full payload on plain sign-ins, or an MFA challenge when the
+/// account has an enrolled authenticator.
+export type AdminLoginResponse = AdminAuthPayload | AdminMfaChallenge;
+
+export type AdminMfaChallenge = {
+  mfa_required: true;
+  challenge_token: string;
+};
+
+export type AdminMfaEnrollmentStart = {
+  otpauth_url: string;
+  secret_base32: string;
+};
+
+export type AdminMfaRecoveryCodes = {
+  recovery_codes: string[];
+};

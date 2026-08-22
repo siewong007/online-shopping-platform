@@ -53,6 +53,18 @@ pub fn verify_password_or_dummy(password: &str, password_hash: Option<&str>) -> 
     }
 }
 
+/// Lowercase hex SHA-256 of `bytes` — used wherever a value must be stored hashed but does not
+/// need a password-stretching KDF (challenge tokens, webhook payload fingerprints).
+pub fn sha256_hex(bytes: &[u8]) -> String {
+    use sha2::{Digest, Sha256};
+    let digest = Sha256::digest(bytes);
+    let mut out = String::with_capacity(digest.len() * 2);
+    for byte in digest {
+        write!(out, "{byte:02x}").expect("writing to a string cannot fail");
+    }
+    out
+}
+
 pub fn generate_session_token() -> String {
     let mut bytes = [0_u8; 32];
     OsRng.fill_bytes(&mut bytes);

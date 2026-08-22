@@ -9,7 +9,7 @@ use axum::{
 use crate::{app_state::AppState, client_ip, error};
 
 use super::{
-    dto::{AdminAuthPayload, AdminLoginInput, AdminMePayload},
+    dto::{AdminLoginInput, AdminMePayload},
     model::AdminIdentity,
     service,
 };
@@ -19,7 +19,7 @@ pub async fn login(
     ConnectInfo(peer): ConnectInfo<SocketAddr>,
     headers: HeaderMap,
     Json(input): Json<AdminLoginInput>,
-) -> Result<Json<AdminAuthPayload>, error::HttpError> {
+) -> Result<Json<crate::models::AdminLoginResponse>, error::HttpError> {
     service::login(&state.pool, &input, &client_ip::client_ip(&headers, peer))
         .await
         .map(Json)

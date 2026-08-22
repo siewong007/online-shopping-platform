@@ -1,7 +1,12 @@
 export {
   fetchMe,
   login,
-  logout
+  logout,
+  requestMfaStatus,
+  startMfaEnrollment,
+  confirmMfaEnrollment,
+  disableMfa,
+  verifyLogin
 } from "../modules/auth/api/authApi";
 export {
   changeOwnPassword,

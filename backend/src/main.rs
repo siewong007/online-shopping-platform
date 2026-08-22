@@ -35,6 +35,8 @@ async fn main() -> anyhow::Result<()> {
         .context("PAYMENT_ACTIVATION_MODE must be `disabled`, `controlled` or `public`")?;
     let emailer = online_shopping_api::emailer::Emailer::from_environment()
         .context("transactional email configuration is invalid")?;
+    let mfa = online_shopping_api::modules::mfa::service::MfaConfig::from_environment()
+        .context("MFA_ENCRYPTION_KEY is invalid")?;
 
     let pool = PgPoolOptions::new()
         .max_connections(10)
@@ -56,8 +58,14 @@ async fn main() -> anyhow::Result<()> {
         enabled = emailer.is_enabled(),
         "transactional email resolved"
     );
+    tracing::info!(
+        enabled = mfa.is_enabled(),
+        "admin multi-factor authentication resolved"
+    );
     let app = routes::build_router(
-        AppState::with_payment_activation_mode(pool, payment_activation_mode).with_emailer(emailer),
+        AppState::with_payment_activation_mode(pool, payment_activation_mode)
+            .with_emailer(emailer)
+            .with_mfa(mfa),
         frontend_origin,
     );
 

@@ -9,6 +9,7 @@ use sqlx::PgPool;
 
 use crate::{
     app_state::AppState,
+    db,
     error::HttpError,
     modules::audit,
     security::{generate_session_token, hash_password, verify_password},
@@ -77,7 +78,7 @@ pub async fn login(
     pool: &PgPool,
     input: &AdminLoginInput,
     source_ip: &str,
-) -> Result<AdminAuthPayload, HttpError> {
+) -> Result<crate::models::AdminLoginResponse, HttpError> {
     let username = input.username.trim();
     let password = input.password.as_str();
 
@@ -124,6 +125,23 @@ pub async fn login(
         tracing::warn!("failed to clear admin login failures: {error:?}");
     }
 
+    // An enrolled factor turns the rest of login into a second step: no session exists until
+    // the authenticator code is verified by the MFA module's complete_login.
+    if db::fetch_active_admin_factor(pool, admin_user.id)
+        .await
+        .map_err(map_auth_lookup_error)?
+        .is_some()
+    {
+        let challenge_token =
+            crate::modules::mfa::service::create_login_challenge(pool, admin_user.id)
+                .await
+                .map_err(map_auth_lookup_error)?;
+        return Ok(crate::models::AdminLoginResponse::MfaRequired {
+            mfa_required: true,
+            challenge_token,
+        });
+    }
+
     if let Err(error) = repository::delete_expired_admin_sessions(pool).await {
         tracing::warn!("failed to purge expired admin sessions: {error:?}");
     }
@@ -138,7 +156,9 @@ pub async fn login(
 
     audit::service::record_event(pool, &username, "login", "admin_user", &username, "").await;
 
-    Ok(payload)
+    Ok(crate::models::AdminLoginResponse::Authenticated(Box::new(
+        payload,
+    )))
 }
 
 pub async fn logout(
@@ -246,7 +266,7 @@ fn public_admin_user(admin_user: &AdminUserCredentials) -> AdminUser {
     }
 }
 
-async fn build_auth_payload(
+pub async fn build_auth_payload(
     pool: &PgPool,
     admin_user: AdminUserCredentials,
     token: String,

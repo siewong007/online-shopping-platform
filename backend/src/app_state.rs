@@ -1,12 +1,16 @@
 use sqlx::PgPool;
 
-use crate::{emailer::Emailer, modules::payments::activation::PaymentActivationMode};
+use crate::{
+    emailer::Emailer,
+    modules::{mfa::service::MfaConfig, payments::activation::PaymentActivationMode},
+};
 
 #[derive(Clone)]
 pub struct AppState {
     pub pool: PgPool,
     pub payment_activation_mode: PaymentActivationMode,
     pub emailer: Emailer,
+    pub mfa: MfaConfig,
 }
 
 impl AppState {
@@ -18,6 +22,7 @@ impl AppState {
             pool,
             payment_activation_mode: PaymentActivationMode::Disabled,
             emailer: Emailer::disabled(),
+            mfa: MfaConfig::disabled(),
         }
     }
 
@@ -29,11 +34,17 @@ impl AppState {
             pool,
             payment_activation_mode,
             emailer: Emailer::disabled(),
+            mfa: MfaConfig::disabled(),
         }
     }
 
     pub fn with_emailer(mut self, emailer: Emailer) -> Self {
         self.emailer = emailer;
+        self
+    }
+
+    pub fn with_mfa(mut self, mfa: MfaConfig) -> Self {
+        self.mfa = mfa;
         self
     }
 }

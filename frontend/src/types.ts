@@ -18,7 +18,16 @@ export type { CreateReviewInput, ProductDetailPayload, ProductReview } from "./m
 
 export type { AdminCatalogPayload, UpdateCategoryInput } from "./modules/catalog/types";
 
-export type { AdminAuthPayload, AdminLoginInput, AdminMePayload, AdminUser } from "./modules/auth/types";
+export type {
+  AdminAuthPayload,
+  AdminLoginInput,
+  AdminLoginResponse,
+  AdminMePayload,
+  AdminMfaChallenge,
+  AdminMfaEnrollmentStart,
+  AdminMfaRecoveryCodes,
+  AdminUser
+} from "./modules/auth/types";
 
 export type {
   AdminResetPasswordInput,

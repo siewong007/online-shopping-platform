@@ -7,9 +7,14 @@ use axum::{
 };
 use http_body_util::BodyExt;
 use online_shopping_api::{
-    app_state::AppState, db, modules::payments::activation::PaymentActivationMode, routes,
+    app_state::AppState,
+    db,
+    modules::{mfa::service::MfaConfig, payments::activation::PaymentActivationMode},
+    routes,
     security::hash_password,
 };
+
+pub const TEST_MFA_KEY: [u8; 32] = [42_u8; 32];
 use serde_json::{Value, json};
 use sqlx::PgPool;
 use tower::ServiceExt;
@@ -20,6 +25,15 @@ pub fn app(pool: PgPool) -> Router {
     // `with_payment_activation_mode` in the payment activation suites.
     routes::build_router(
         AppState::with_payment_activation_mode(pool, PaymentActivationMode::Public),
+        HeaderValue::from_static("http://localhost:5173"),
+    )
+}
+
+/// App state with multi-factor authentication enabled under a deterministic test key.
+pub fn app_with_mfa(pool: PgPool) -> Router {
+    routes::build_router(
+        AppState::with_payment_activation_mode(pool, PaymentActivationMode::Public)
+            .with_mfa(MfaConfig::from_raw_key(TEST_MFA_KEY)),
         HeaderValue::from_static("http://localhost:5173"),
     )
 }

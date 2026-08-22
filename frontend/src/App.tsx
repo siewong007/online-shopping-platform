@@ -50,6 +50,7 @@ import {
   fetchCustomerMe,
   fetchSystemSettings,
   login as loginRequest,
+  verifyLogin,
   loginCustomer,
   logoutCustomer,
   logoutCustomerOtherSessions,
@@ -168,6 +169,7 @@ import type {
   AdminCatalogPayload,
   AdminDashboardPayload,
   AdminLoginInput,
+  AdminLoginResponse,
   AdminMePayload,
   AdminResetPasswordInput,
   AdminUser,
@@ -344,7 +346,12 @@ function reconcileCartStock(cart: CartItem[], products: Product[]): CartItem[] {
   return changed ? nextCart : cart;
 }
 
-type AdminAuthState = "checking" | "unauthenticated" | "authenticated" | "demo";
+type AdminAuthState =
+  | "checking"
+  | "unauthenticated"
+  | "mfa-challenge"
+  | "authenticated"
+  | "demo";
 type AdminTab =
   | "overview"
   | "team-log"
@@ -1354,6 +1361,7 @@ export default function App() {
   const [customerAccountEmail, setCustomerAccountEmail] = useState(readStoredAccountEmail);
   const [permissions, setPermissions] = useState<PermissionsPayload | null>(null);
   const [activeRoleId, setActiveRoleId] = useState<number | null>(null);
+  const [adminMfaChallengeToken, setAdminMfaChallengeToken] = useState<string | null>(null);
   const [adminAuth, setAdminAuth] = useState<AdminAuthState>(() =>
     getAuthToken() ? "checking" : "unauthenticated"
   );
@@ -1843,8 +1851,23 @@ export default function App() {
     }
   };
 
-  const handleAdminLogin = async (input: AdminLoginInput): Promise<AdminAuthPayload> => {
-    const payload = await loginRequest(input);
+  const handleAdminLogin = async (input: AdminLoginInput): Promise<AdminLoginResponse> => {
+    const response = await loginRequest(input);
+    if ("mfa_required" in response) {
+      setAdminMfaChallengeToken(response.challenge_token);
+      setAdminAuth("mfa-challenge");
+      return response;
+    }
+    setAdminMfaChallengeToken(null);
+    await loadAdminData(response);
+    setAdminAuth("authenticated");
+    return response;
+  };
+
+  const handleAdminMfaVerify = async (input: { code?: string; recovery_code?: string }) => {
+    if (!adminMfaChallengeToken) throw new Error("The sign-in session expired. Sign in again.");
+    const payload = await verifyLogin({ challenge_token: adminMfaChallengeToken, ...input });
+    setAdminMfaChallengeToken(null);
     await loadAdminData(payload);
     setAdminAuth("authenticated");
     return payload;
@@ -2892,11 +2915,13 @@ export default function App() {
             isSuppressed={isCartOpen || isAccountOpen || view === "store" || view === "product"}
           />
         </div>
-      ) : adminAuth === "unauthenticated" ? (
+      ) : adminAuth === "unauthenticated" || adminAuth === "mfa-challenge" ? (
         <Suspense fallback={<main className="loading-shell">Loading admin console...</main>}>
           <AdminLoginScreen
+            challengeToken={adminAuth === "mfa-challenge" ? adminMfaChallengeToken : null}
             onBackToStore={() => openView("store")}
             onLogin={handleAdminLogin}
+            onVerify={handleAdminMfaVerify}
           />
         </Suspense>
       ) : adminAuth === "checking" || !dashboard || !adminCatalog ? (

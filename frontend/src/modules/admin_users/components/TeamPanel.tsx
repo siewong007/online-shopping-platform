@@ -1,5 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import {
+  confirmMfaEnrollment,
+  disableMfa,
+  requestMfaStatus,
+  startMfaEnrollment
+} from "../../auth/api/authApi";
+import type { AdminMfaEnrollmentStart } from "../../auth/types";
 import type { Role } from "../../permissions/types";
 import { ManagementTable } from "../../../shared/components/ManagementTable";
 import { RecordForm, type RecordFormField, RecordModal } from "../../../shared/components/RecordModal";
@@ -114,6 +121,155 @@ const resetPasswordFields: RecordFormField<ResetPasswordFormState>[] = [
     minLength: 8
   }
 ];
+
+
+type MfaCardProps = { onChanged: () => void };
+
+/// Self-contained "my account security" card: enrollment, recovery codes and disable all act on
+/// the signed-in identity server-side, so the card needs no user selection or extra props.
+function MfaCard({ onChanged }: MfaCardProps) {
+  const { notify, notifyError } = useNotifications();
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [enrollment, setEnrollment] = useState<AdminMfaEnrollmentStart | null>(null);
+  const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
+  const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
+  const [isBusy, setIsBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const status = await requestMfaStatus();
+        if (!cancelled) setEnabled(status.enabled);
+      } catch (error) {
+        if (!cancelled) notifyError(error as Error, { operation: "mfa-status", scope: "team-mfa" });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleStartEnrollment = async () => {
+    setIsBusy(true);
+    try {
+      setEnrollment(await startMfaEnrollment());
+    } catch (error) {
+      notifyError(error, { operation: "mfa-enroll", scope: "team-mfa" });
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
+  const handleConfirm = async () => {
+    if (!code.trim()) return;
+    setIsBusy(true);
+    try {
+      const result = await confirmMfaEnrollment(code.trim());
+      setEnrollment(null);
+      setRecoveryCodes(result.recovery_codes);
+      setEnabled(true);
+      setCode("");
+      notify({ severity: "success", title: "Authenticator enabled", message: "Save your recovery codes somewhere safe.", scope: "team-mfa" });
+      onChanged();
+    } catch (error) {
+      notifyError(error, { operation: "mfa-confirm", scope: "team-mfa" });
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
+  const handleDisable = async () => {
+    setIsBusy(true);
+    try {
+      await disableMfa(password, code.trim());
+      setEnabled(false);
+      setPassword("");
+      setCode("");
+      notify({ severity: "success", title: "Authenticator disabled", message: "Sign-ins now need only the password.", scope: "team-mfa" });
+      onChanged();
+    } catch (error) {
+      notifyError(error, { operation: "mfa-disable", scope: "team-mfa" });
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
+  return (
+    <section className="dashboard-card team-mfa-card">
+      <p className="eyebrow">My sign-in security</p>
+      <h4>Two-factor authentication</h4>
+      {enabled === null ? (
+        <p>Checking authenticator status...</p>
+      ) : recoveryCodes ? (
+        <>
+          <p className="catalog-feedback warning">
+            Save these single-use recovery codes now — they are shown only once.
+          </p>
+          <ul className="team-mfa-codes">
+            {recoveryCodes.map((item) => (
+              <li key={item}>
+                <code>{item}</code>
+              </li>
+            ))}
+          </ul>
+          <button className="outline-button" onClick={() => setRecoveryCodes(null)} type="button">
+            I saved my recovery codes
+          </button>
+        </>
+      ) : enrollment ? (
+        <>
+          <ol className="team-mfa-steps">
+            <li>Add the account in your authenticator app using this secret:</li>
+          </ol>
+          <p className="team-mfa-secret">
+            <code>{enrollment.secret_base32}</code>
+          </p>
+          <label className="admin-field">
+            Enter the six-digit code to confirm
+            <input
+              inputMode="numeric"
+              onChange={(event) => setCode(event.target.value)}
+              value={code}
+            />
+          </label>
+          <div className="form-actions">
+            <button className="solid-button" disabled={isBusy} onClick={() => void handleConfirm()} type="button">
+              Confirm and enable
+            </button>
+          </div>
+        </>
+      ) : enabled ? (
+        <>
+          <p>Your account requires an authenticator code at every sign-in.</p>
+          <label className="admin-field">
+            Current password
+            <input autoComplete="current-password" onChange={(event) => setPassword(event.target.value)} type="password" value={password} />
+          </label>
+          <label className="admin-field">
+            Authenticator code
+            <input inputMode="numeric" onChange={(event) => setCode(event.target.value)} value={code} />
+          </label>
+          <div className="form-actions">
+            <button className="solid-button" disabled={isBusy || !password || !code} onClick={() => void handleDisable()} type="button">
+              Disable two-factor authentication
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <p>Add an authenticator app so sign-ins need a rotating six-digit code.</p>
+          <div className="form-actions">
+            <button className="solid-button" disabled={isBusy} onClick={() => void handleStartEnrollment()} type="button">
+              Set up authenticator
+            </button>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
 
 export function TeamPanel({
   canCreate,
@@ -346,6 +502,8 @@ export function TeamPanel({
           {canCreate || canUpdate ? "Writable" : "Read only"}
         </span>
       </div>
+
+      <MfaCard onChanged={() => undefined} />
 
       <div className="record-toolbar">
         <button className="solid-button" disabled={!canCreate} onClick={openCreate} type="button">
