@@ -1,46 +1,31 @@
 # Handoff state — Ekoway product image loop
 
-Consolidated 2026-08-23 15:29 local from all nine chat folders.
+Consolidated 2026-08-23 15:58 local from all nine chat folders.
 `loop-ledger.csv` is the single resume point. Per-chat folders are kept as raw evidence.
 
 ## Ledger
 
 | state | before | after |
 |---|---:|---:|
-| `verified_pass` | 164 | 418 |
-| `exhausted` | 252 | 1061 |
-| `candidate` | 0 | 27 |
-| `open` | 7355 | 6265 |
+| `verified_pass` | 418 | 419 |
+| `exhausted` | 1061 | 1061 |
+| `candidate` | 27 | 83 |
+| `open` | 6265 | 6208 |
 | **total** | 7771 | 7771 |
 
-Terminal: **1479 / 7771**  ·  still open: **6292**
+Terminal: **1480 / 7771**  ·  still open: **6291**
 
 ## Promotions applied by this merge
 
-- chat-02 -> candidate: 3
-- chat-02 -> exhausted: 267
-- chat-02 -> verified_pass: 1
-- chat-04 -> candidate: 3
-- chat-04 -> exhausted: 487
-- chat-04 -> verified_pass: 25
-- chat-05 -> candidate: 22
-- chat-05 -> verified_pass: 71
-- chat-06 -> verified_pass: 14
-- chat-07 -> verified_pass: 13
-- chat-08 -> verified_pass: 63
-- chat-09 -> exhausted: 55
-- chat-09 -> verified_pass: 67
+- chat-03 -> candidate: 55
+- chat-06 -> candidate: 1
+- chat-07 -> verified_pass: 1
 
 ## Evidence backfilled (state unchanged)
 
-- chat-01 shards: 323
-- chat-02: 238
-- chat-04: 1376
-- chat-05: 1619
-- chat-06: 2319
-- chat-07: 1293
-- chat-08: 2119
-- chat-09: 1834
+- chat-03: 5152
+- chat-06: 83
+- chat-07: 129
 
 ## Conflicts
 

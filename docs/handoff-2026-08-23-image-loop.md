@@ -9,17 +9,18 @@ single-chat run of 9.6 hours before that.
 
 | state | rows | meaning |
 |---|---:|---|
-| `verified_pass` | **418** | bar + blind verify + gate green |
-| `exhausted` | **1,061** | all tiers logged, no official image exists — owner action recorded |
-| `candidate` | 27 | researched, awaiting verify or gate |
-| `open` | 6,265 | not yet terminal |
+| `verified_pass` | **419** | bar + blind verify + gate green |
+| `exhausted` | **1,062** | all tiers logged, no official image exists — owner action recorded |
+| `candidate` | 98 | researched, awaiting verify or gate |
+| `open` | 6,192 | not yet terminal |
 | **total** | **7,771** | |
 
-**Terminal: 1,479 / 7,771 = 19%.**
+**Terminal: 1,481 / 7,771 = 19%.** The 98 `candidate` rows are the cheapest next win — they are
+already researched and only need a verify plus a gate run.
 
-Of the 418 passes, **287 are genuinely new images found by research** (145 `search` + 139 `reopen`
-+ 3 `duplicate_listing`); the other 131 are `skip_pass` rows that already had a usable image and
-were re-confirmed by live-check.
+Of the 419 passes, **288 are genuinely new images found by research** (145 `search` + 140 `reopen`
++ 3 `duplicate_listing`); the other 131 are `skip_pass` rows that already had a usable
+image and were re-confirmed by live-check.
 
 ## The resume point
 
@@ -80,21 +81,32 @@ It refuses to run if `claims/` is non-empty, so clear that directory only when s
    `CHAT 01 PRIOR-WORK PUBLISHED`, then start the workers with
    `docs/ai-prompts/opencode-chat-worker.md` plus their assignment line.
 
-## Known issues to fix before the next fleet
+## Data repairs already applied
 
-- **`tiers_tried` notation is inconsistent across chats** — `1`, `2`, `1|2`, `2|1`, `T1,T5`,
-  `T1,T2,T5` all appear. Normalise to one format during the next consolidation or tier escalation
-  will misread what a row has already consumed.
-- **14 rows have keys no chat could match to the master ledger** (listed in `HANDOFF-STATE.md`).
-  Six are `SWI-T/…` SET rows from chat 02; eight are `TOO-COM-IRO-BUL-*` rows from chat 04 where the
-  `uom` column reads `10MM` for every size, which looks like a column shift in that chat's own file.
-  Re-derive those 14 from the worklist.
-- **`chat-03/results/research-r022.json` is truncated** and was skipped by the consolidation.
-- **Chats 01 and 03 never produced a `chat-NN-ledger.csv`** — their work was harvested from raw
-  shard CSVs and result JSONs as evidence only, so some of their rows may still read `open` when
-  research had in fact been done. Worth a targeted re-harvest.
+`loop-state/repair-ledger.py` ran after the chats were stopped; `REPAIR-REPORT.md` has the detail.
+
+- **`tiers_tried` normalised on 491 rows.** Four notations were in use — `1|2`, `2;3`, `T1,T5` and
+  `T1(blocked),T5` — and tier escalation would have misread every one but the first. All rows are now
+  canonical sorted `1|2|4`. Re-running the script is harmless.
+- **8 of the 14 mis-keyed rows recovered.** Chat 04 had shifted a column and written the size into
+  `uom` for eight `TOO-COM-IRO-BUL-*` rows, and let a backslash escape into `TIE-CAB-BLA-100MM-4"`.
+  Re-keyed against the worklist; one promoted to `exhausted`, seven were already at or above their
+  chat state.
+- **15 chat-01 candidates recovered.** Chat 01 never wrote a `chat-NN-ledger.csv`, so its research sat
+  in raw `shard-*.csv` files. Its `candidate` rows that were still `open` are now `candidate`.
+
+## Still outstanding
+
+- **6 rows exist in chat 02's ledger but not in the catalogue at all** — `SWI-T/BOX-PP100-923A`,
+  `SWI-T/BOX-PP100-740B`, and four `SWI-T/SOC-FLE-TC-*`. No `item_code` prefix match in
+  `remaining-all-worklist.csv` under any UOM. Either chat 02 invented them or they came from a source
+  outside the worklist; they are excluded from the ledger and need an owner decision.
+- **`chat-03/results/research-r022.json` is truncated** and was skipped. Chat 03 flushed a
+  `chat-03-ledger.csv` on shutdown which covers most of the same rows, so the loss is likely small.
 - **`red:schema` still fails rows whose evidence is sound** but whose query log is empty. The
-  coordinator prompt asks for an `amber:log_incomplete` path instead; it was not implemented.
+  coordinator prompt asks for an `amber:log_incomplete` path instead; it was never implemented.
+- **The 98 `candidate` rows were never gated** — no network was available in the session that stopped
+  the fleet. Run `gate.py` over them first thing on the new machine.
 
 ## Why throughput was what it was
 

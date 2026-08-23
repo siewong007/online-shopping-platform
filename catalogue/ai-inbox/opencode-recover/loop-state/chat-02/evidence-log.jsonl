@@ -4,3 +4,4 @@
 {"_t": 1787469771.042638, "rec": {"5771": {"page_status": 200, "page_final_url": "https://truflo.com.my/product/bib-tap-hose-g503b", "text_len": 2343}}}
 {"_t": 1787470443.8086157, "rec": {"2795": {"page_status": 404, "page_final_url": "https://www.stguchi.com.my/my/en/products/door-viewer/sgac-dv3776"}}}
 {"_t": 1787470539.2105656, "rec": {"2795": {"page_status": 200, "page_final_url": "https://www.stguchi.com.my/my/en/products/door-fitting-accessories/door-viewer/sgac-dv3776", "text_len": 173}}}
+{"_t": 1787470565.953864, "rec": {"2795": {"fetched_round": 3, "image_status": 200, "image_final_url": "https://gw-assets.assaabloy.com/is/image/assaabloy/SGAC-DV3776%20-%2001", "image_content_type": "image/webp", "image_bytes_len": 24192, "image_sha256": "ada4032d52c4d8ff0540983e9e2ffcbd0d681cf567034f7211bc14f93076eb47", "px_w": 1280, "px_h": 1280}}}

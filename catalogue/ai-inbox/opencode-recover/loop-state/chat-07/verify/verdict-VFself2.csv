@@ -1,0 +1,4 @@
+source_position,verifier_verdict,model_exact,finish_exact,long_edge_px,content_type,image_bytes,image_sha256,justification
+999,fail,yes,no,1024,image/jpeg,177404,f1dd7a96305dc8b4,self-verify(chat07 orchestrator): cimawholesale listing is Cielo GenIII 199Y/F 12W/18W ROUND+SQUARE family PDP - all gallery imgs share one alt covering both shapes; target DL-L-199-CIE(1).jpg cannot be isolated to the round 18W 840 variant => not-this-SKU-alone
+721,pass,yes,yes,510,image/jpeg,36581,5a7e9f50fee24620,self-verify(chat07 orchestrator): buteline.com/my official equal-elbows page quotes 20mm x 20mm; dedicated asset 10907 depicts single PE equal elbow render; 510px long edge = low_res band pass
+869,fail,no,no,510,image/jpeg,26749,4f429c3e47d99c07,self-verify(chat07 orchestrator): asset 10922 shared with pos 919 (different size SKU) - same-bytes collision across keys => family-hero pattern, fail

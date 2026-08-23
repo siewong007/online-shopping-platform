@@ -35,3 +35,6 @@ catalogue/ai-inbox/**/*.png
 catalogue/ai-inbox/**/*.webp
 catalogue/ai-inbox/**/*.gif
 catalogue/ai-inbox/**/*.html
+
+# Ledger safety copies -- git history already is the backup
+catalogue/ai-inbox/**/loop-ledger.backup-*.csv

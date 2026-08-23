@@ -33,6 +33,7 @@ MODEL_FIXES = {
     "79": "YTT100Z1",
     "200": "MS 172",
     "209": "MS 162",
+    "721": "20mm x 20mm",
 }
 
 def load_assign():

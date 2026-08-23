@@ -9,7 +9,7 @@ source_position,item_code,uom,display_name,state,tiers_tried,last_red
 7189,AIR-CHU-E-111-3,PCS,Dual Tire Chuck With Metal Gauge (0-160 Psi),open,1,
 5721,IND-CAS-NYL-75MM,SET,3 IN White Nylon Caster Wheel,open,1,
 7584,TAP-SKC-UNC-12MM,SET,Skc Hand Tap Unc 1/2,open,1,
-7615,X-BOS-2608-579-507,PCS,Ceramic Expert Drill Bit 7 X 90MM,open,1,red:model_absent
+7615,X-BOS-2608-579-507,PCS,Ceramic Expert Drill Bit 7 X 90MM,open,1,red:verifier_missing_or_fail
 5099,HHD-CIS-HIGH,SET,Weser Plastic High Level Cristern,open,1,
 7295,"AER-RO-JOI-4""+2""",PCS,Aerico 4 + 2 Ro Joint,open,1,
 7334,SHH-ROD-S2904150,PCS,Santec 2696-562(165) (5'6'') Hornycorn Trans Solid Rod,open,1,
@@ -279,38 +279,37 @@ source_position,item_code,uom,display_name,state,tiers_tried,last_red
 639,ELE-TUB-LED-CAS-1200MM,PCS,4FT T8 LED Empty Casing,open,2,
 985,ADH-TAP-MAS-36MM,PCS,Glotool Masking Tape 36MM X 15 Yd,open,2,
 876,ELE-CAB-SPEAKER-COSTA-30/0.18MMX2C-MTR,MTR,Fajar Speaker Wire Pink,open,,
-721,FIT-BUT-ELB-20X20MM,PCS,Buteline PE Elbow 20X20MM,open,,red:model_absent
 974,ADH-TAP-MAS-48MM,PCS,Glotool Masking Tape 48MM X 15 Yd,open,2,
 999,CIMA-DL-L/199Y/RND/18W/SEN/840,SET,Ceilo Iii 199Y 18W L/dl (rnd/ 840 Cool Day Light),open,2,red:verifier_missing_or_fail
 742,FIT-BUT-TEE-EQU-25X25X25MM,PCS,Buteline PE Equal Tee,open,,red:model_absent
 736,BOS-PLUG-WS7F,PCS,Bosch Plug WS7F,open,,
 905,SWI-PLU-AER-13A,PCS,Taicon 13A Plugtop (white) SIRIM,open,2,
 490,"FIT-BUT-ELB-FEM-SWI-25MMX1/2""",PCS,Buteline 25MMX1/2 PE Elbow Female Swivel,open,,red:model_absent
-799,FIT-BUT-TEE-25X25X20MM,PCS,Buteline PE Tee 25X25X20MM,open,,
+799,FIT-BUT-TEE-25X25X20MM,PCS,Buteline PE Tee 25X25X20MM,open,,red:model_absent
 734,TOO-NIE-GRE-NIP-9077,PCS,Nietz Grease Nipple Of (straight),open,,
-869,FIT-BUT-STR-COU-25MMX20MM,PCS,Buteline PE Straight Inline Coupling 25MMX20MM,open,,
-919,FIT-BUT-STR-20X20MM,PCS,Buteline PE Straight,open,,
-855,BAT-ENE-HD-D2PCS,PCK,Eveready HD D 2 Pc,open,,
+869,FIT-BUT-STR-COU-25MMX20MM,PCS,Buteline PE Straight Inline Coupling 25MMX20MM,open,,red:shared_image/hash_collision
+919,FIT-BUT-STR-20X20MM,PCS,Buteline PE Straight,open,,red:model_absent
+855,BAT-ENE-HD-D2PCS,PCK,Eveready HD D 2 Pc,open,,red:model_absent
 406,BUL-FFL-60W-E27-FROST,PCS,Taicon Standard Bulb E27 Frosted 60W,open,,
-582,"FIT-BUT-STR-FEM-SWI-25MMX1/2""",PCS,Buteline 25MMX1/2 PE Straight Female Swivel,open,,
+582,"FIT-BUT-STR-FEM-SWI-25MMX1/2""",PCS,Buteline 25MMX1/2 PE Straight Female Swivel,open,,red:model_absent
 519,ADH-TAP-WIR-6.5YD-RED-ROLL,ROLL,Glotool Wire Tape - Red (10PCS/ROLL),open,,
 879,ADH-TAP-CLO-BLA,PCS,Glotool Cloth Tape 48 MM X 7 Yd - Black,open,,
 880,ADH-TAP-CLO-GRE,PCS,Glotool Cloth Tape 48 MM X 7 Yd - Green,open,,
 915,ADH-TAP-CLO-YEL,PCS,Glotool Cloth Tape 48 MM X 7 Yd - Yellow,open,,
 447,BUL-FFL-25W-E27-FROST,PCS,Taicon Standard Bulb E27 Forsted 25W,open,,
-540,HOL-TUB-T8-G13,PCK,Taicon T8 G13 LED Single Tube Holder Only (2PCS/PCK),open,,
-720,"FAN-BLA-LWD-12""",PCS,Taicon Fan Blade 12 (0055),open,,
-684,ELE-D/L-MGM-MQTL1119-RD,PCS,"Mgm 6""/RD LED Panel Light (sr) MQTL1119-Y/15W 15W/6500K",open,,
+540,HOL-TUB-T8-G13,PCK,Taicon T8 G13 LED Single Tube Holder Only (2PCS/PCK),open,2,
+720,"FAN-BLA-LWD-12""",PCS,Taicon Fan Blade 12 (0055),open,2,
+684,ELE-D/L-MGM-MQTL1119-RD,PCS,"Mgm 6""/RD LED Panel Light (sr) MQTL1119-Y/15W 15W/6500K",open,2,
 597,"FIT-BUT-ELB-FEM-SWI-25MMX3/4""",PCS,Buteline 25MMX3/4 PE Elbow Female Swivel,open,,
 552,"FIT-BUT-STR-HOS-20MMX1/2""",PCS,Buteline 20MMX1/2 PE Straight Hose Plate,open,,
-962,ADH-TAP-CLO-RED,PCS,Glotool Cloth Tape 48 MM X 7 Yd - Red,open,,
-680,BOS-2608-608-T75,PCK,Velcro Disc 125MM Holes (5PCS/PCK) G500-8,open,,
+962,ADH-TAP-CLO-RED,PCS,Glotool Cloth Tape 48 MM X 7 Yd - Red,open,2,
+680,BOS-2608-608-T75,PCK,Velcro Disc 125MM Holes (5PCS/PCK) G500-8,open,2,
 692,"FIT-BUT-ELB-FEM-SWI-1/2""BSPTX20",PCS,"Buteline 1/2""BSPTX20 PE Elbow Female Swivel",open,,
-922,ADH-TAP-WAR50,ROLL,Glotool Warning Tape 50MM X 50M,open,,
-966,IND-CEM-GREY-20KG,BAG,Topfit Adhesive Cement Grey,open,,
-587,ADH-TAP-WIR-6.5YD-BLK-ROLL,ROLL,Glotool Wire Tape - Black (10PCS/ROLL),open,,
+922,ADH-TAP-WAR50,ROLL,Glotool Warning Tape 50MM X 50M,open,2,
+966,IND-CEM-GREY-20KG,BAG,Topfit Adhesive Cement Grey,open,2,
+587,ADH-TAP-WIR-6.5YD-BLK-ROLL,ROLL,Glotool Wire Tape - Black (10PCS/ROLL),open,2,
 754,"FIT-BUT-STR-FEM-SWI-20MMX1/2""",PCS,Buteline 20MMX1/2 PE Straight Female Swivel,open,,
-577,PAI-SPR-SAM-81,PCS,Samurai Spray Paint Metalic Black,open,,
+577,PAI-SPR-SAM-81,PCS,Samurai Spray Paint Metalic Black,open,3,
 665,"FIT-BUT-STR-FEM-SWI-25MMX3/4""",PCS,Buteline 25MMX3/4 PE Straight Female Swivel,open,,
 807,SWI-ADA-MUL-941N-3W,PCS,Taicon Multi 3WAY Adaptor With Neon 941N,open,,
 882,ELE-D/L-PHI-E27-6.5W,PCS,Philips Essential Stick E27 6.5W LED Bulb,open,,
@@ -340,10 +339,10 @@ source_position,item_code,uom,display_name,state,tiers_tried,last_red
 996,HOS-GAR-MARK-X-DB-13MTR,ROLL,Mark-x Gar UV Net Hose 4PLY Dark,open,,
 395,NIP-ECO-B,CAN,1L 811-9907 Black B,open,,
 902,ELE-D/L-MGM-MQTL1119-RD-3000K,PCS,"Mgm 6""/RD LED Panel Light (sr) MQTL1119-Y/15W 15W/3000K",open,,
-672,PAI-SPR-SAM-058,PCS,Samurai Spray Paint Fluorescent Blue,open,,
+672,PAI-SPR-SAM-058,PCS,Samurai Spray Paint Fluorescent Blue,open,,red:model_absent
 984,TOO-NIE-PLU-COU-30SH,PCS,Nietz Quick Coupler Socket 30SH,open,,
 888,SAF-SPE-GT460,PAIR,Glotool Safety Eyewear Clear,open,,
-678,PAI-SPR-SAM-056,PCS,Samurai Spray Paint Fluorescent Yellow,open,,
+678,PAI-SPR-SAM-056,PCS,Samurai Spray Paint Fluorescent Yellow,open,,red:model_absent
 1042,BOS-2608-585-889,PCS,Hss-g Cobal Bit 6.0MM (SET),open,,
 907,BOS-2608-595-068,PCS,Hss-g Metal Bit 6.5MM,open,,
 913,SAF-SPE-GT470,PAIR,Glotool Safety Eyewear Black,open,,
@@ -362,7 +361,7 @@ source_position,item_code,uom,display_name,state,tiers_tried,last_red
 514,NIP-MAT-15245-7L,CAN,7L Super Matex 15245 Maxtwhite,open,,
 615,NIP-UND-9000-1L,CAN,1L Nippon 9000 Undercoat White,open,,
 613,NIP-QGL-1L-A,TIN,1L Nippon Q-glo Accent Base,open,,
-781,PAI-SPR-SAM-Y017,PCS,Samurai Spray Paint Candy Green,open,,
+781,PAI-SPR-SAM-Y017,PCS,Samurai Spray Paint Candy Green,open,,red:http
 881,BOS-2608-585-888,PCS,Hss-g Cobal Bit 5.5MM,open,,
 945,BOS-2608-608-T73,PCK,Velcro Disc 125MM Holes (5PCS/PCK) G320-8,open,,
 414,"HOS-FLE-GLO-24""",PCS,Glotool Flexible Tube F1/2 X F12 X 24,open,,
