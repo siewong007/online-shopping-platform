@@ -1,0 +1,13 @@
+source_position,item_code,uom,display_name,category,detected_brand,detected_model,action,start_tier,tried,prior_decision,prior_page,prior_image,prior_reason,ledger_state
+6124,LOC-TRI-264,PCS,264 Tricycle Pad Lock,Locks & Security,,,search,1,,,,,,open
+7703,COC-BAL-L602,PCS,Vovo Brass Ball Cock 1/2,Plumbing,,,search,1,,,,,,open
+7047,DOR-INS-KIT-26095(5),SET,Br 4009 5PCS Lockset Installation Kit,Doors & Hardware,,,search,1,,,,,,open
+7553,PAI-GAL-606S,PCS,6 Gallon Pail,Housewares,,,search,1,,,,,,open
+7250,BLI-HSS-HOL-SAW-26MM,PCS,Navato Hole Saw Cutter 26MM,Power Tool Accessories,,,search,1,,,,,,open
+7571,TOO-FIL-SENSUI-SNF001-B,PCS,8 Sensui Metal Flat File,Hand Tools,,,search,1,,,,,,open
+6145,IND-SCO-WOO-501,PCS,501 Wooden Handle Shovel Head (PCS),Doors & Hardware,,,duplicate_listing,1,,,,,,open
+5267,IND-SCO-WOO-503,PCS,503 Wooden Handle Shovel Head,Doors & Hardware,,,search,1,,,,,,open
+7554,"SHH-CAGE-2RING-12""-2",PCS,"2 Ring Cages 12 (210/5 X 12"")",Fishing & Tackle,,,search,1,,,,,,open
+6540,TOO-COM-GD29,PCS,Gd Combination Wrench 29MM,Hand Tools,,,search,1,,,,,,open
+7552,PAI-GAL-4G-9400,PCS,9400 4G Pail,Housewares,,,search,1,,,,,,open
+7557,WEL-LON-BAC-CAP,PCS,Long Back Cap,Welding,,,search,1,,,,,,open

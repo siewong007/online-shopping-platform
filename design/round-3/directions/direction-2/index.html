@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ekoway Round 3 — The Fold</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#products">Skip to products</a>
+    <header class="fold-header">
+      <a class="brand" href="#products" aria-label="Ekoway storefront">
+        <img src="/frontend/public/ekoway/ekoway-logo.jpeg" alt="Ekoway Hardware" />
+        <span><strong>Ekoway</strong><small>Hardware · Sibu</small></span>
+      </a>
+      <nav class="primary-nav" aria-label="Primary navigation">
+        <a href="#products" aria-current="page">Shop</a>
+        <a href="#services">Services</a>
+        <a href="#trade">Trade desk</a>
+      </nav>
+      <label class="search-shell">
+        <span>Search</span>
+        <input id="searchInput" type="search" placeholder="Search tools, materials and home essentials" />
+      </label>
+      <div class="utilities" aria-label="Store utilities">
+        <button type="button">Account</button>
+        <button class="cart-button" type="button">Cart · 0</button>
+      </div>
+    </header>
+
+    <section class="discovery-bar" aria-label="Product discovery controls">
+      <div class="direction-mark"><span>Round 3 · Direction 2</span><strong>The Fold</strong></div>
+      <label class="department-select">
+        <span>Department</span>
+        <select id="categorySelect" aria-label="Product category"></select>
+      </label>
+      <details class="filter-menu">
+        <summary>Filter</summary>
+        <label><input id="lowStockOnly" type="checkbox" /> Low stock only</label>
+      </details>
+      <label class="sort-control">
+        <span>Sort</span>
+        <select id="sortSelect">
+          <option value="featured">Featured</option>
+          <option value="price_asc">Price: Low–High</option>
+          <option value="price_desc">Price: High–Low</option>
+          <option value="name" selected>Name</option>
+        </select>
+      </label>
+      <p id="resultCount" aria-live="polite"></p>
+    </section>
+
+    <main>
+      <section class="fold-intro" aria-labelledby="pageTitle">
+        <p>Open one. Keep the rest in view.</p>
+        <h1 id="pageTitle">Good choices reveal themselves.</h1>
+      </section>
+      <section class="fold-stack" id="products" aria-label="Product folds"></section>
+    </main>
+
+    <template id="foldTemplate">
+      <article class="product-fold" tabindex="0">
+        <div class="fold-closed">
+          <div class="closed-title">
+            <span class="category-name"></span>
+            <h2><a class="product-name" href="#"></a></h2>
+          </div>
+          <span class="compact-image-status">Image unavailable</span>
+          <div class="compact-facts"><strong class="price"></strong><span class="stock"></span></div>
+          <div class="compact-actions">
+            <a class="open-product" href="#">Open product</a>
+            <button class="add-button" type="button">Add to Cart</button>
+          </div>
+        </div>
+        <div class="fold-open">
+          <div class="sample-envelope" aria-label="Exact product image unavailable">
+            <span class="sample-kicker">Ekoway material study</span>
+            <strong>Category atmosphere</strong>
+            <span class="image-status">Exact product image unavailable</span>
+          </div>
+          <div class="open-copy">
+            <span class="category-name"></span>
+            <h2><a class="product-name" href="#"></a></h2>
+            <p>Real product facts, held clearly while imagery is unavailable.</p>
+            <div class="open-decision">
+              <div><strong class="price"></strong><span class="stock"></span></div>
+              <div class="open-actions">
+                <a class="open-product" href="#">Open product ↗</a>
+                <button class="add-button" type="button">Add to Cart</button>
+              </div>
+            </div>
+          </div>
+          <span class="fold-hint">Focus another product to open its fold</span>
+        </div>
+      </article>
+    </template>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

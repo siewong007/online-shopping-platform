@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ekoway Round 2 — Technical Atelier</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#products">Skip to products</a>
+    <div class="concept-label"><span>Round 2 · Direction B</span><strong>Technical Atelier</strong></div>
+    <header class="site-header">
+      <a class="brand" href="#" aria-label="Ekoway home">
+        <img src="/frontend/public/ekoway/ekoway-logo.jpeg" alt="Ekoway Hardware" />
+        <span><strong>EKOWAY</strong><small>Hardware systems · Sibu</small></span>
+      </a>
+      <label class="search">
+        <span>SEARCH / STOCK / SPEC</span>
+        <input id="search" type="search" placeholder="What are you building today?" />
+      </label>
+      <div class="utilities"><button type="button">Account</button><button type="button" class="cart">Cart</button></div>
+    </header>
+
+    <nav class="counter-rail" aria-label="Product categories">
+      <div class="rail-title"><span>COUNTER RAIL</span><strong>01—09</strong></div>
+      <div class="rail-track" id="category-rail"></div>
+    </nav>
+
+    <main id="products">
+      <div class="collection-heading">
+        <div><span class="eyebrow">LIVE SHELF / SALIM</span><h1>Equipment with nothing hidden.</h1></div>
+        <div class="count"><strong id="result-count">0</strong><span>products ready to compare</span></div>
+      </div>
+      <section class="atelier-list" id="product-grid" aria-live="polite"></section>
+    </main>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
+

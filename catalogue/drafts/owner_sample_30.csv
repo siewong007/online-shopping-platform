@@ -1,0 +1,31 @@
+kind,item_code,uom,display_name,category,category_proposed,reason
+other-move,PRE-STO-KHI-SPC6,SET,Khind Pressure Cooker 6L - SPC6,Other,Home Appliances,matched /\b(fan|heater|joven|khind)\b/
+other-move,BRU-CUP-GDB-75M1015,PCS,Glotool C/brush (b) 75M10*1.5,Other,Paint & Sundries,matched /\b(paint|primer|thinner|nippon|roller|brush)\b/
+other-move,BRU-HAN-GLO-462091,PCS,Glotool 462091-3008 H/brush - Brass,Other,Paint & Sundries,matched /\b(paint|primer|thinner|nippon|roller|brush)\b/
+other-move,MF-PO-30-SOL-FAN,PCS,Solar Fan MF-PO-30,Other,Home Appliances,matched /\b(fan|heater|joven|khind)\b/
+other-move,"BRU-CUP-3""-MR.MARK",PCS,Mr. Mark M10 X 1.5 Cup Brush,Other,Paint & Sundries,matched /\b(paint|primer|thinner|nippon|roller|brush)\b/
+other-move,REF-DELINEATOR-50M,SET,Picasaf PVC Delineator Reflective-red,Other,Plumbing,matched /\b(pipe|valve|tap|faucet|pvc|elbow|tee)\b/
+other-move,POL-HAR-NYL-JM-666A,PCS,"Harvesting Palm Oil Clip 1-1/2""(38MM) PVC - Green",Other,Plumbing,matched /\b(pipe|valve|tap|faucet|pvc|elbow|tee)\b/
+other-move,REM-FAN-CEI-SI11,PCS,Remote Fan - SI11,Other,Home Appliances,matched /\b(fan|heater|joven|khind)\b/
+other-move,SOC-PVC-BOX-6MM,PCS,PVC 2WAY Box 3/4,Other,Plumbing,matched /\b(pipe|valve|tap|faucet|pvc|elbow|tee)\b/
+other-move,AER-HOT-WAT-TAP,PCS,Aerico Hot Water Tap,Other,Plumbing,matched /\b(pipe|valve|tap|faucet|pvc|elbow|tee)\b/
+other-move,HEA-SPA-FAUCET-L661,PCS,L661 Faucet Spare Head,Other,Plumbing,matched /\b(pipe|valve|tap|faucet|pvc|elbow|tee)\b/
+other-move,"BRU-CUP-TWI-3""",PCS,3 Twist Cup Brush,Other,Paint & Sundries,matched /\b(paint|primer|thinner|nippon|roller|brush)\b/
+other-move,SOC-6MM-3WAY,PCS,PVC 3/4 3WAY Box,Other,Plumbing,matched /\b(pipe|valve|tap|faucet|pvc|elbow|tee)\b/
+other-move,BEAD-COR-2.5MTR,PCS,Karyon Brand PVC Corner Bead 2.5 MTR,Other,Plumbing,matched /\b(pipe|valve|tap|faucet|pvc|elbow|tee)\b/
+other-move,MAS-COT-CHM,PCS,Cotton Head Mask,Other,Safety & Workwear,matched /\b(glove|helmet|boot|mask|safety)\b/
+other-keep,DL5-WAT-FIL-0942-GRY,UNIT,DL5 Dalqua 9''X42 Water Filt Sys-fiber Tank Gry,Other,Other,no conservative keyword match
+other-keep,TOR-ENE-LED-2D,PCK,Eveready 2D Brilliant (GPHH25),Other,Other,no conservative keyword match
+other-keep,TOR-ENE-LED-2AA,PCK,Eveready 2AA Brilliant,Other,Other,no conservative keyword match
+other-keep,PAD-STA-SS30-5140231-49,PCS,Pad Type Stanley SS30,Other,Other,no conservative keyword match
+other-keep,FOL-TAB-CN YX-Z122-3X,PCS,4FT. Folding Table (wooden Slats),Other,Other,no conservative keyword match
+other-keep,SD-L/203Y/24W/CIE/DL-6500K,SET,Cielo Iv 203Y 24W L/surface D/light (round),Other,Other,no conservative keyword match
+other-keep,FOL-TAB-CN YX-Z182D,PCS,6FT Folding Table,Other,Other,no conservative keyword match
+other-keep,FOL-TAB-CNYX-Z122-3X,PCS,4FT Folding Table,Other,Other,no conservative keyword match
+other-keep,FOL-TAB-CNYX-Z152,PCS,5FT Folding Table (wooden Slats),Other,Other,no conservative keyword match
+other-keep,GUIDE BAR-MS230,PCS,18 Stihl Guide BAR,Other,Other,no conservative keyword match
+other-keep,GUIDE BAR-MS180,PCS,16 Stihl Guide BAR,Other,Other,no conservative keyword match
+other-keep,GUIDE BAR-MS170,PCS,14 Stihl Guide BAR,Other,Other,no conservative keyword match
+other-keep,DIS-DIA-DIA-100MM,PCS,Glotool Cutting Blade 100MM,Other,Other,no conservative keyword match
+other-keep,FRE-MID-MD-RC207FZB01,PCS,Midea Chest FREEZER-142L MD-RC207FZB01,Other,Other,no conservative keyword match
+other-keep,MKX-2021-BRUS-3IN1,SET,Mark-x Brushless 3 IN 1 Combination Set,Other,Other,no conservative keyword match

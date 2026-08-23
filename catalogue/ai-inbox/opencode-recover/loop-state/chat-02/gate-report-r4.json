@@ -1,0 +1,30 @@
+{
+ "round": 4,
+ "rows_total": 227,
+ "states": {
+  "exhausted": 203,
+  "candidate": 17,
+  "open": 7
+ },
+ "reds_by_code": {
+  "red:schema": 1,
+  "red:model_absent": 2
+ },
+ "reds": [
+  {
+   "key": "ELE-PVC-CAS-2\"X3\"|LGTH#4309",
+   "code": "red:schema",
+   "detail": "empty query log"
+  },
+  {
+   "key": "BIB-G503B|PCS#1035",
+   "code": "red:model_absent",
+   "detail": "['34B', 'G503B']"
+  },
+  {
+   "key": "SPRA-BOSNY-B136-400CC|CAN#3508",
+   "code": "red:model_absent",
+   "detail": "['B13640CC', 'TOKENS:B136|40CC', 'BOSNYB136400CC']"
+  }
+ ]
+}

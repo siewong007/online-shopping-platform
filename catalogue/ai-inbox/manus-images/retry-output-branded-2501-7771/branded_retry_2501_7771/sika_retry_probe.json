@@ -1,0 +1,62 @@
+{
+  "https://mys.sika.com/en/construction/tile-setting/tile-adhesives/sikaceram-88.html": {
+    "status": 200,
+    "images": [
+      {
+        "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIwIiBoZWlnaHQ9IjAiPjwvc3ZnPg==",
+        "alt": "Logo"
+      },
+      {
+        "src": "https://sika.scene7.com/is/content/sika/Sika_ClaimU_pos_rgb",
+        "alt": "Logo"
+      },
+      {
+        "src": "https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=160&hei=138&fit=crop%2C1",
+        "alt": "Logo"
+      },
+      {
+        "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIwIiBoZWlnaHQ9IjAiPjwvc3ZnPg==",
+        "alt": "Logo"
+      },
+      {
+        "src": "https://sika.scene7.com/is/image/sikacs/my-SikaCeram-88-25kg-01536099:1-1?wid=480&hei=480&fit=crop%2C1",
+        "alt": "SikaCeram\u00ae-88"
+      },
+      {
+        "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNDY3IiBoZWlnaHQ9IjM2MSI+PC9zdmc+",
+        "alt": ""
+      }
+    ],
+    "dam_urls": []
+  },
+  "https://mys.sika.com/en/home-improvement/waterproofing/sikagard-703-groutseal.html": {
+    "status": 200,
+    "images": [
+      {
+        "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIwIiBoZWlnaHQ9IjAiPjwvc3ZnPg==",
+        "alt": "Logo"
+      },
+      {
+        "src": "https://sika.scene7.com/is/content/sika/Sika_ClaimU_pos_rgb",
+        "alt": "Logo"
+      },
+      {
+        "src": "https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=160&hei=138&fit=crop%2C1",
+        "alt": "Logo"
+      },
+      {
+        "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIwIiBoZWlnaHQ9IjAiPjwvc3ZnPg==",
+        "alt": "Logo"
+      },
+      {
+        "src": "https://sika.scene7.com/is/image/sikacs/my-02-en-MY-Sikagard-703-GroutSeal-1x1-00557701:1-1?wid=480&hei=480&fit=crop%2C1",
+        "alt": "Sikagard\u00ae-703 GroutSeal"
+      },
+      {
+        "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNDY3IiBoZWlnaHQ9IjM2MSI+PC9zdmc+",
+        "alt": ""
+      }
+    ],
+    "dam_urls": []
+  }
+}

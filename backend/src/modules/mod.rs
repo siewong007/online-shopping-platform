@@ -6,6 +6,7 @@ pub mod customer_auth;
 pub mod customer_portal;
 pub mod dashboard;
 pub mod health;
+pub mod integrations;
 pub mod invoices;
 pub mod offers;
 pub mod orders;

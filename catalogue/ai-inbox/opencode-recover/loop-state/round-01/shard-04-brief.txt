@@ -1,0 +1,101 @@
+source_position|item_code|uom|display_name|category|detected_brand|detected_model
+4360|CAP-02.5UF-415V-CBB61|PCS|Capacitor 415V Blnch Square Black (sh-po)|Electrical||2.5UF
+3282|FAS-SCR-F/H-1 1/2" X 8#|PKT|Sr F/h Self Drilling Screw 1 1/2 X 8 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+3685|FAS-SCR-TAP-CSK-8#2"|PACK|8 X2 Csk Self Tapping Screw-flat Head (10PCS/PCK)|Fasteners & Fixings||10PCS/PCK
+4083|CUT-ELE-ESS410D|PCS|4"X1.0 Gold Elephant Cutting Disc|Abrasives & Cutting||X1.0
+3986|SWI-SOC-ULT-M0813W|PCS|Ultra 13A Flat Pin Swi Soc Neon-wt (M0813W)|Electrical||M0813W
+4156|BRA-S/S-L-65383|PCS|Stainless Steel L Bracket 65383-65X65|Plumbing||65383-65X65
+3226|FAS-SCR-CSK-1 1/2" X 8G|PCK|Sr Csk Tapping Screw 1 1/2 X 8G (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+3309|BNW-BOL-SS304-M12-25MM|PCS|SS 304 Bolt - M12 X 25MM|Fasteners & Fixings||M12
+3814|FAS-SCR-CSK-1" X 6G-PCK|PCK|Sr Csk Tapping Screw 1 X 6G (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+6667|NAI-CON-GAL-1"-PCK|PCK|1 Galvanised Steel Nail (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+3068|BRO-PLA-SB9226|PCS|Colourful Plastic Broom 180G|Housewares||SB9226
+3861|ELE-ADA-MS-PT13|PCS|Morries Travel Adaptor For Uk,hk,sg& M'sia|Electrical||MS-PT13
+2774|DOR-HIN-STE-CLO-5/8"|PCS|Soft Close HINGES-5/8|Doors & Hardware||HINGES-5/8
+2959|TOO-ELE-TESW0183|PCS|W0183 Tester|Power Tools||W0183
+5095|FAS-SCR-P/H-1" X 8#|PCK|Sr P/h Self Drilling Screw 1 X 8 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+3217|WIN-HOO-PIN-8430|PCK|Sr Pleak Hook 8430 (10PCS/PCK)|Doors & Hardware||10PCS/PCK
+4019|WOO-SQU-08'|PCS|Mrtx List 8 (S4S)|Building Materials||S4S
+3834|FAS-SCR-F/H-3/4" X 8#|PCK|Sr F/h Self Drilling Screw 3/4 X 8 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+6193|FAS-SCR-TAP-CSK-8#3/8"-PCK|PCK|8 X3/8 Csk Self Tapping Screw-flat Head (20PCS/PCK)|Fasteners & Fixings||X3/8
+3370|FAS-SCR-DRY-BLA-6#1-1/2"BOX|BOX|Hunter/bk - Drywall Screw 6|Fasteners & Fixings||6#X1-1/2
+3406|FAS-SCR-DRY-BLA-6#3/4"-BOX|BOX|Hunter/bk - Drywall Screw 6 X3/4|Fasteners & Fixings||X3/4
+2841|GER-PLUG-BPM6A|PCS|Ngk 14 X 9.5 Sparkplug -BPM6A|Other||BPM6A
+4465|WAL-PLU-S/S-80MM|PCS|304 S/steel Wall Plug M10 X 80MM|Fasteners & Fixings||M10
+4149|SHH-SINKER-NO.1/2|PCK|Single Head Sinker No. 1/2 (2PCS/PCK)|Fishing & Tackle||2PCS/PCK
+3662|FAS-SCR-TAP-CSK-6#3"|PACK|6 X3"CSK Self Tapping Screw-flat Head (10PCS/PCK)|Fasteners & Fixings||10PCS/PCK
+3707|FAS-SCR-TAP-CSK-6#1-1/2"|PACK|6 X1-1/2"CSK Self Tap Screw-flat Head (20PCS/PCK)|Fasteners & Fixings||X1-1/2
+6021|FAS-SCR-TAP-CSK-6#1"|PACK|6 X1 Csk Self Tapping Screw-flat Head (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+2746|ELE-D/L-PHL-59466-RD-6500K|SET|59466 Meson 17 1200 150 Round 6500K|Electrical||6500K
+3150|VAL-BAL-VIP-343-12MM|PCS|Full Bore Ball VALVE:PN25 343 1/2|Plumbing||VALVE:PN25
+3731|FAS-SCR-F/H-1" X 8#|PKT|Sr F/h Self Drilling Screw 1 X 8 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+2988|DOR-ROL-GAT-75MM-V70|PCS|V70 V Roller Bolt & Nut 3"X23MM|Fasteners & Fixings||V70
+3385|SWI-SOC-ULT-M021MG|PCS|Ultra 16A 2 GANG 1 Way-matte Grey (M021MG)|Electrical||M021MG
+3942|BAT-ENE-MINI-A27|PCK|Energizer Mini Al A27 BP1|Electrical||A27
+4539|SWI-ADA-TRA-ES288T|PCS|Dlx 308N 13A Travel Adaptor Cw Neon|Electrical||308N
+3492|CEILING-FRAME-35MM|PCS|Steel Keel (b) 35MM X 12FT|Building Materials||12FT
+4340|CUT-KNI-HX338|BOX|Tct A80 N. T Cutter Blade (10PCS/BOX)|Abrasives & Cutting||A80
+5393|FIT-HDPE-ADA-FEM-20MMX3/4"|PCS|HDPE Adaptor Female 20MMX3/4|Plumbing||20MMX3/4
+5478|FIT-UPVC-BEN-ELB-45-32MM|PCS|U-pvc Bend (elbow) 32MM 1-1/4 45-DEG|Plumbing||45-DEG
+2775|ELE-D/L-PHL-59467-SQ-4000K|SET|59467 Meson 17 1200 150 Square 4000K|Electrical||4000K
+3424|FAS-SCR-DRY-WHI-6#2"-BOX|BOX|Hunter/wh - Drywall Screw 6 X2|Fasteners & Fixings||6#X2
+2923|LOC-CZS-L40MM|PCS|Czs 360 Padlock L40MM|Locks & Security||L40MM
+3985|SWI-ADA-MS-PT06|PCS|Morries Travel Adaptor For Japan, Taiwan, Usa, Thai, Phi&viet|Electrical||MS-PT06
+3467|BNW-B&N-RBN-220|PCK|Sr G. I Boit & Nut 1/4 X 2 (5PCS/PCK)|Fasteners & Fixings||5PCS/PCK
+3499|FAS-SCR-DRY-BLA-6#2"BOX|BOX|Hunter/bk - Drywall Screw 6 X2|Fasteners & Fixings||6#X2
+3404|ELE-SOL-TIN100250G|PCS|Vison Soldering Wire|Electrical||0.8X100G
+2728|DOR-HAN-CH608-NA-L|PCS|Na-l Casement Handle|Doors & Hardware||CH608
+2853|ADH-TAP-VIP-2510|PCS|PTFE Thread Seal Tape VIP-2510|Chemicals & Adhesives||VIP-2510
+3587|FAS-RIV-PAT-5/32X3/4-PCK|PCK|Blind Rivet: Jaguar 5/32 X 3/4 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+5293|FIT-UPVC-BEN-ELB-45-50MM|PCS|U-pvc Bend (elbow) 50MM 2 45-DEG|Plumbing||45-DEG
+4538|SUP-ROL-WIN|PCK|Super Airoller (25PCS/PCK)|Other||25PCS/PCK
+2637|SWI-LAM-ADA-3041B22|PCS|B22 Nylon Lamp Adaptor (blk)|Lighting||B22
+6602|BNW-WAS-SPR-9MM|PCK|Bsw Spring Washer 3/8 (8PCS/PCK)|Fasteners & Fixings||8PCS/PCK
+4998|ELE-PVC-CAS-3/4"|LGTH|Kancil 3/4 X 6FT PVC Casing|Electrical||6FT
+4487|SHH-SINKER-HOLE-NO.6|PCK|Hole Sinker No. 6 (1PC/PCK)|Fishing & Tackle||1PC/PCK
+3518|FAS-SCR-DRY-WHI-6#1.1/4"-BOX|BOX|Hunter/wh - Drywall Screw 6 X1-1/4|Fasteners & Fixings||X1-1/4
+4890|CAP-01.2UF-400V-BD|PCS|Capacitor Cpi- Black Square ITALY'/400V Bd 01.2UF|Electrical||01.2UF
+2615|CUT-BLA-M'MAN-F1X4"|PCS|M'man Diamond Blade - F1X4|Abrasives & Cutting||F1X4
+2636|RAI-BOO-KRK-B39M|PAIR|Rainshoes - 39 (6) 6000BLK|Curtains & Blinds||6000BLK
+3589|FAS-SCR-DRY-BLA-6#1"BOX|BOX|Hunter/bk - Drywall Screw 6 X1|Fasteners & Fixings||6#X1
+4122|SWI-SOC-ULT-M0813BW|PCS|Ultra 13A Flat Pin Swi Soc (large Roc)-whi (M0813BW)|Electrical||M0813BW
+3347|IND-CAS-FIX-1.25"|PCS|1.25 DL5 Tpe Fixed Caster|Building Materials||DL5
+4580|HOS-SPA-NOZ-C882|PCS|C882 Quick Coupling Nozzle 3/4|Power Tool Accessories||C882
+3303|TOO-ELE-TES-PEN-K1304|PCS|Kakc Test Pen|Power Tools||K1304
+5227|DRI-BIT-SV003|PCS|2 (+-) Sensui Power Bit X65MM|Power Tool Accessories||X65MM
+6140|FAS-SHE-EYE-RING-4#|PCK|4 Sheep Eye Ring (10PCS/PCK)|Fasteners & Fixings||10PCS/PCK
+4228|HOS-CON-19-25MM-1''|PCS|Power Hose Joint 1|Outdoor & Garden||19-25MM
+6252|FIT-HDPE-NIP-1"X1"|PCS|HDPE Nipple 1 X 1|Plumbing||L/P1.20
+2803|SWI-SOC-NNE-9498|PCS|NNE 9498 Metalclad Switch Socket 2GANG 13A|Electrical||2GANG
+3517|ELE-T5-3'-CIELO-D/L|PCS|Cielo T5 LED Fitting 3FT 14W|Plumbing||3FT
+3228|IND-CAS-FIX-1.5"|PCS|1.5 DL5 Tpe Fixed Caster|Building Materials||DL5
+2794|DOR-HAN-CF350-NA-L|PCS|Na-l Cresent Fastener|Doors & Hardware||CF350
+4786|CAP-01.8UF-400V|EA|Capacitor Cpi- Black Square ITALY'/400V Bd 01.8UF|Electrical||01.8UF
+2917|DOR-STO-TRANSP-38MM|PCS|Transparent Door Stopper|Doors & Hardware||25X38MM
+5275|SWI-ADA-TRA-13A|PCS|Eurosafe 13A Travel Adaptor|Electrical||ES-277TA-2
+4081|CUT-DIS-MARK-12300-P036|PCS|Mr. Mark P36 Master Fibre Disc - Blk|Abrasives & Cutting||P36
+4362|CUT-DIS-W2451-100|PCS|4 Cutting Wheel|Abrasives & Cutting||W2451
+3062|SWI-SOC-NNE-9499|PCS|NNE 9499 Metalclad Switch Socket 1GANG 13A|Electrical||1GANG
+3210|SWI-BUT-HOI-15A-250V|PCS|Hoist Push Button Switch 15A 250V|Lifting & Rigging||THS-21
+3495|ELE-ADA-3WAY-MS-BS03L|PCS|Morries 13A 3WAY Adaptor With Fuse & Neon|Electrical||3WAY
+3932|SWI-SOC-ELE-E011B|PCS|Elegance 16A 1 GANG 1 Way-black (E011B)|Electrical||E011B
+3577|VAL-ANG-CVL-CA9001|PCS|Cavallo SS Angle Valve|Plumbing||CA9001
+2769|PAI-ROL-SET-CRI-424|SET|4"X20 Cristin Tiger Stripe Roller Set|Paint & Sundries||X20
+4154|BAT-ENE-MIN-A23|PCK|Energizer Mini Al A23 8P1|Electrical||A23
+3410|PLA-BAG-W500-0812|PACK|8 X 12 X Tbag|Packaging||WHITE/500G
+3516|ELE-CAB-PVC-4.00MM-GRE-MTR|MTR|Ktk PVC Cable Green 100M -mtr|Electrical||4.0MM2
+3789|PEN-TES-BLM452|PCS|Blimax Test PEN-BLM452|Housewares||PEN-BLM452
+4304|CUT-GRI-MJ021-100|PCS|Qs Grinding Wheel 4|Abrasives & Cutting||MJ-021
+3234|SWI-PLK-NEO-1380N|PCS|Plk 20A Neon Heater Switch|Electrical||1380N
+3314|ELE-D/L-MGM-MQTL2048-3000K|PCS|Mgm 2 1/2 7W Eye Ball Ww|Electrical||MQTL2048
+2974|LOC-CZS-L50MM|PCS|Czs 360 Padlock L50MM|Locks & Security||L50MM
+4604|BRA-L-SSS-90X90MM|PCS|S/steel L Bracket|Plumbing||90X90MM
+4176|SHH-LINE-WHI-NO.15|PCS|(bs)long White M. L No. 15|Fishing & Tackle||NO.15
+3732|FAS-SCR-P/H-1 1/4" X 8#|PCK|Sr P/h Self Drilling Screw 1 1/4 X 8 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+4159|CUT-ELE-EMC420|PCS|4"X2.0 Gold Elephant Cutting Disc|Abrasives & Cutting||X2.0
+7100|FAS-SCR-DRY-BLA-6#3/4"|PCK|Hunter/bk - Drywall Screw 6 X3/4 (20PCS/PCK)|Fasteners & Fixings||X3/4
+4655|ELE-LRD-MOT-3357|BOX|Overload 3357|Electrical||37-50A
+2930|ELE-D/L-PHL-59466-RD-4000K|SET|59466 Meson 17 1200 150 Round 4000K|Electrical||4000K
+3705|FAS-BOL-EXP-TRAC140-M10X110X60|PCS|M10 X 110 X 60 Brain Hook Expansion Bolt|Fasteners & Fixings||M10
+2875|PAI-ROL-SET-CRI-416|SET|4"X15 Cristin Tiger Stripe Roller Set|Paint & Sundries||X15
+4858|BRA-S/S-L-50383|PCS|Stainless Steel L Bracket 50383-50X50|Plumbing||50383-50X50

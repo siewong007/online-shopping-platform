@@ -1,0 +1,158 @@
+[
+ {
+  "batch": 1,
+  "file": "r1\\in\\batch-01.csv",
+  "rows": 30,
+  "ordinals": "6713-6742"
+ },
+ {
+  "batch": 2,
+  "file": "r1\\in\\batch-02.csv",
+  "rows": 30,
+  "ordinals": "6743-6772"
+ },
+ {
+  "batch": 3,
+  "file": "r1\\in\\batch-03.csv",
+  "rows": 30,
+  "ordinals": "6773-6802"
+ },
+ {
+  "batch": 4,
+  "file": "r1\\in\\batch-04.csv",
+  "rows": 30,
+  "ordinals": "6803-6832"
+ },
+ {
+  "batch": 5,
+  "file": "r1\\in\\batch-05.csv",
+  "rows": 30,
+  "ordinals": "6833-6862"
+ },
+ {
+  "batch": 6,
+  "file": "r1\\in\\batch-06.csv",
+  "rows": 30,
+  "ordinals": "6863-6892"
+ },
+ {
+  "batch": 7,
+  "file": "r1\\in\\batch-07.csv",
+  "rows": 30,
+  "ordinals": "6893-6922"
+ },
+ {
+  "batch": 8,
+  "file": "r1\\in\\batch-08.csv",
+  "rows": 30,
+  "ordinals": "6923-6952"
+ },
+ {
+  "batch": 9,
+  "file": "r1\\in\\batch-09.csv",
+  "rows": 30,
+  "ordinals": "6953-6982"
+ },
+ {
+  "batch": 10,
+  "file": "r1\\in\\batch-10.csv",
+  "rows": 30,
+  "ordinals": "6983-7012"
+ },
+ {
+  "batch": 11,
+  "file": "r1\\in\\batch-11.csv",
+  "rows": 30,
+  "ordinals": "7013-7042"
+ },
+ {
+  "batch": 12,
+  "file": "r1\\in\\batch-12.csv",
+  "rows": 30,
+  "ordinals": "7043-7072"
+ },
+ {
+  "batch": 13,
+  "file": "r1\\in\\batch-13.csv",
+  "rows": 30,
+  "ordinals": "7073-7102"
+ },
+ {
+  "batch": 14,
+  "file": "r1\\in\\batch-14.csv",
+  "rows": 30,
+  "ordinals": "7103-7132"
+ },
+ {
+  "batch": 15,
+  "file": "r1\\in\\batch-15.csv",
+  "rows": 30,
+  "ordinals": "7133-7162"
+ },
+ {
+  "batch": 16,
+  "file": "r1\\in\\batch-16.csv",
+  "rows": 30,
+  "ordinals": "7163-7193"
+ },
+ {
+  "batch": 17,
+  "file": "r1\\in\\batch-17.csv",
+  "rows": 30,
+  "ordinals": "7194-7223"
+ },
+ {
+  "batch": 18,
+  "file": "r1\\in\\batch-18.csv",
+  "rows": 30,
+  "ordinals": "7224-7253"
+ },
+ {
+  "batch": 19,
+  "file": "r1\\in\\batch-19.csv",
+  "rows": 30,
+  "ordinals": "7254-7283"
+ },
+ {
+  "batch": 20,
+  "file": "r1\\in\\batch-20.csv",
+  "rows": 30,
+  "ordinals": "7284-7313"
+ },
+ {
+  "batch": 21,
+  "file": "r1\\in\\batch-21.csv",
+  "rows": 30,
+  "ordinals": "7314-7343"
+ },
+ {
+  "batch": 22,
+  "file": "r1\\in\\batch-22.csv",
+  "rows": 30,
+  "ordinals": "7344-7373"
+ },
+ {
+  "batch": 23,
+  "file": "r1\\in\\batch-23.csv",
+  "rows": 30,
+  "ordinals": "7374-7403"
+ },
+ {
+  "batch": 24,
+  "file": "r1\\in\\batch-24.csv",
+  "rows": 30,
+  "ordinals": "7404-7433"
+ },
+ {
+  "batch": 25,
+  "file": "r1\\in\\batch-25.csv",
+  "rows": 30,
+  "ordinals": "7434-7466"
+ },
+ {
+  "batch": 26,
+  "file": "r1\\in\\batch-26.csv",
+  "rows": 18,
+  "ordinals": "7467-7484"
+ }
+]

@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "base_master": "/home/ubuntu/work/full_catalogue_image_pass/full_catalogue_campaign_master.csv",
+  "overlay_master": "/home/ubuntu/work/full_catalogue_image_pass/full_catalogue_campaign_master_after_branded_retry.csv",
+  "rows": 7771,
+  "verified_candidate": 161,
+  "pending": 7610,
+  "rejected": 0,
+  "retry_rows": 2838,
+  "retry_candidates": 10,
+  "combined_evidence_rows": 21,
+  "locked_master_modified": false,
+  "rights_status": "needs_permission for all rows"
+}

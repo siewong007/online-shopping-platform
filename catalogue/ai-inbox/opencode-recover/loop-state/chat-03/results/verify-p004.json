@@ -1,0 +1,37 @@
+[
+  {
+    "source_position": "3458",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Page is the HB Safety Equipment product page headed 'NEUKING NK86' with spec (PU/PU outsole, S1-P), matching item_code tail NK86; the asset is a distinct gallery photo (Neuking143) showing a black slip-on safety boot, matching 'Black'. Size 08 itself is not visually verifiable, but the listing is this exact model/colour."
+  },
+  {
+    "source_position": "3459",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Same genuine NEUKING NK86 product page (H1 'NEUKING NK86'); the asset (gallery image Neuking144) is a top-down shot of a black Neuking safety shoe with 'NEUKING' printed in the sock, matching 'NK86 Black'. Size 10 is not visually distinguishable, but colour and model match."
+  },
+  {
+    "source_position": "3824",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Cabana official detail page is headed 'CB501A', breadcrumb under Bathroom Accessories > Shelf, described as 'Corner Glass Shelf L250xW230xH40mm'; the asset is the page's own main product image showing a quarter-round glass corner shelf with chrome rail and clips. No colour variant named and image plausibly depicts exactly this article."
+  },
+  {
+    "source_position": "3837",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Leeden Hercules page is titled 'EVERSAFE ABC POWDER FIRE EXTINGUISHER 9KG' (Brand: Eversafe, spec table Model EC-9, Capacity 9 kg), matching 'Eversafe Abc ... 9KGS'; the asset is the page's hero image of a red Eversafe extinguisher whose label reads 'ABC POWDER ... 9 KG ... STORED PRESSURE TYPE'."
+  },
+  {
+    "source_position": "3910",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Jayamata estore page is titled 'JM817 Grass Shears 23\"' (RM36.00, high carbon steel blade, TPR grip), matching code tail JM817; the asset is a product gallery photo of the long shears with red-and-black TPR grip handles, matching 'Red/black Handle'."
+  }
+]

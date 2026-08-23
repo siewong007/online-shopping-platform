@@ -1,0 +1,15 @@
+{
+ "3531": {
+  "page_status": 403,
+  "page_final_url": "https://www.saint-gobain.my/products/prima-flex",
+  "image_status": 200,
+  "image_final_url": "https://www.saint-gobain.my/sites/mac3.saint-gobain.my/files/styles/product_gallery/public/2024-03/prima-flex-new-1.jpg.webp?itok=ZaEnH6ra",
+  "image_content_type": "image/webp",
+  "image_bytes_len": 15588,
+  "px_w": 375,
+  "px_h": 375,
+  "image_sha256": "f712901f8bfe1db99ce6588a221048799a369041552c7f1834087e44d4bed471",
+  "asset_file": "",
+  "fetched_round": 1
+ }
+}

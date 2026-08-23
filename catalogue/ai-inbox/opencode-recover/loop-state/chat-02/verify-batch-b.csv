@@ -1,0 +1,4 @@
+source_position,verifier_verdict,finish_exact,model_exact,image_px,image_sha256,image_bytes,justification
+984,fail,no,no,,,,"URL redirects to JLL real-estate homepage; no RJ45 outlet product page, M074W code absent"
+2682,fail,no,no,,,,"Claimed page HTTP 404; site search and categories list greases P-525, P-655 only, no P611"
+2795,fail,no,no,,,,Claimed page HTTP 404; actual SGAC-DV3776 sits at different URL my/en/products/door-viewer/sgac-dv3776

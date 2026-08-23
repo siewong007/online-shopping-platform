@@ -1,0 +1,318 @@
+item_code,catalogue_uom,excel_uom,display_name,catalogue_price_myr,excel_price_1,excel_qty,excel_description,reason
+ELE-FAJAR-FLX-2.5MM-GREY,COIL,MTR,Fajar 2.5MM (50/0.25) X Flexible Cable (grey) (COIL),1749.00,12.90,301.1,FAJAR 2.5MM(50/0.25) X 3CORE FLEXIBLE CABLE (GREY) [EX],uom_mismatch_not_applied
+TAR-SHT-GT2-O/B-6',COIL,MTR,Glotool PE Trap (GT-02) 6'X70YDS,254.00,8.90,353.7,GLOTOOL PE TRAP (GT-02) 6'X70YDS,uom_mismatch_not_applied
+AGR-NET-SUN-GLO-70%,ROLL,MTR,Glotool Sun Shade Netting (70%),96.90,2.90,243.8,GLOTOOL SUN SHADE NETTING (70%),uom_mismatch_not_applied
+"PIP-HDPE-25MM-3/4""",ROLL,MTR,"HDPE Pipe 25MM (3/4"") PN12.5(MS-1058)",244.00,3.20,1028.5,"HDPE PIPE 25MM(3/4"") PN12.5(MS-1058)    [EX]",uom_mismatch_not_applied
+IND-WIR-MES-1212-20GX100,ROLL,FTS,Wire Mesh 1/2/ X 1/2 X 3 X 20G X 100,194.00,2.90,315.5,WIRE MESH 1/2/ X 1/2 X 3' X 20G X 100'    [EX],uom_mismatch_not_applied
+NAI-COM-65MM-20KG,BOX,PCK,2 1/2 Wire Nail,114.00,3.20,1099,"2 1/2"" WIRE NAIL     [EX]",uom_mismatch_not_applied
+NAI-COM-50MM-20KG,BOX,PCK,2 Wire Nail,114.00,3.20,693.6,"2"" WIRE NAIL     [EX]",uom_mismatch_not_applied
+GLO-WEL-GT900/BLU,DOZ,PAIR,Welding Glove - 900GT/BLUE,189.00,15.90,3,WELDING GLOVE - 900GT/BLUE,uom_mismatch_not_applied
+GLO-WEL-GT900/RED,DOZ,PAIR,Welding Glove - 900GT/RED,189.00,15.90,20,WELDING GLOVE - 900GT/RED,uom_mismatch_not_applied
+GLO-COT-700-ZS70,DOZ,PAIR,Cotton Glove ZS70,13.20,1.20,202,COTTON GLOVE ZS70,uom_mismatch_not_applied
+IND-SCO-SMR-S501TY,DOZ,PCS,Samurai King Steel Shovel S501TY,169.00,16.90,37,SAMURAI KING S501TY STEEL SHOVEL,uom_mismatch_not_applied
+IND-SCO-SMR-S503TY,DOZ,PCS,Samurai King Steel Shovel S503TY (DOZ),169.00,16.90,49,SAMURAI KING S503TY STEEL SHOVEL,uom_mismatch_not_applied
+GLO-WEL-SUP-500SPG,DOZ,PAIR,Welding Glove - 500SP/GREEN,129.00,9.90,9,WELDING GLOVE - 500SP/GREEN,uom_mismatch_not_applied
+GLO-COT-104-WHI,DOZ,PAIR,Cotton Glove B104,10.60,1.20,215,COTTON GLOVE B104,uom_mismatch_not_applied
+GLO-SEM-GT891/RED,DOZ,PAIR,Semi Leather Gloves - 800 Sn/red,94.90,8.50,11,SEMI LEATHER GLOVES - 800 SN/RED,uom_mismatch_not_applied
+IND-SCO-SMR-S512TY,DOZ,PCS,Samurai King Steel Shovel S512TY (DOZ),169.00,16.90,31,SAMURAI KING S512TY STEEL SHOVEL,uom_mismatch_not_applied
+GLO-SEM-GT891/YEL,DOZ,PAIR,Semi Leather Gloves - 800 Sn/yellow,94.90,8.50,16,SEMI LEATHER GLOVES - 800 SN/YELLOW,uom_mismatch_not_applied
+BOS-2608-585-880,SET,PCS,Hss-g Cobal Bit 4.0MM,62.90,6.60,8,HSS-G COBAL BIT 4.0MM,uom_mismatch_not_applied
+BOS-2608-585-889,SET,PCS,Hss-g Cobal Bit 6.0MM (SET),109.00,11.50,26,HSS-G COBAL BIT 6.0MM,uom_mismatch_not_applied
+BOS-2608-585-874,SET,PCS,Hss-g Cobal Bit 2.0MM,47.90,4.30,13,HSS-G COBAL BIT 2.0MM,uom_mismatch_not_applied
+BOS-2608-585-876,SET,PCS,Hss-g Cobal Bit 3.0MM,47.90,4.60,18,HSS-G COBAL BIT 3.0MM,uom_mismatch_not_applied
+BOS-2608-595-056,SET,PCS,Hss-g Metal Bit 3.2MM,47.90,4.50,19,HSS-G METAL BIT 3.2MM,uom_mismatch_not_applied
+BOS-2608-595-058,SET,PCS,Hss-g Metal Bit 3.5MM,47.90,4.70,0,HSS-G METAL BIT 3.5MM,uom_mismatch_not_applied
+AGR-NET-SUN-GLO-50%,ROLL,MTR,Glotool Sun Shade Netting (50%),82.90,2.40,538,GLOTOOL SUN SHADE NETTING (50%),uom_mismatch_not_applied
+GLO-COT-GRY-1220,DOZ,PAIR,Polyester Grip Cotton Glove Grey,43.90,3.40,45,POLYESTER GRIP COTTON GLOVE GREY,uom_mismatch_not_applied
+BOS-2608-595-055,SET,PCS,Hss-g Metal Bit 3.0MM,36.90,3.40,1,HSS-G METAL BIT 3.0MM,uom_mismatch_not_applied
+BOS-2608-595-066,SET,PCS,Hss-g Metal Bit 6.0MM (SET),67.90,6.60,21,HSS-G METAL BIT 6.0MM,uom_mismatch_not_applied
+GLO-COT-BLK-1220,DOZ,PAIR,Polyester Grip Cotton Glove Black,47.90,3.60,38,POLYESTER GRIP COTTON GLOVE BLACK,uom_mismatch_not_applied
+BOS-2608-585-875,SET,PCS,Hss-g Cobal Bit 2.5MM (SET),47.90,4.40,16,HSS-G COBAL BIT 2.5MM,uom_mismatch_not_applied
+BOS-2608-595-059,SET,PCS,Hss-g Metal Bit 4.0MM (SET),47.90,4.90,10,HSS-G METAL BIT 4.0MM,uom_mismatch_not_applied
+BOS-2608-595-052,SET,PCS,Hss-g Metal Bit 2.2MM,36.90,3.20,7,HSS-G METAL BIT 2.2MM,uom_mismatch_not_applied
+BOS-2608-595-053,SET,PCS,Hss-g Metal Bit 2.5MM (SET),36.90,3.30,13,HSS-G METAL BIT 2.5MM,uom_mismatch_not_applied
+PAI-SPR-PMT-004,DOZ,CAN,Paint Master Spray Paint - No. 4 Matt Black,66.90,6.50,124,PAINT MASTER SPRAY PAINT - NO.4 MATT BLACK     [EX],uom_mismatch_not_applied
+HOS-GAR-TF125,ROLL,MTR,"Cavallo Twist Free Garden Hose 1/2""X 50M",209.00,5.60,138.5,"CAVALLO TF125 TWIST FREE GARDEN HOSE 1/2""x 50M",uom_mismatch_not_applied
+PAI-SPR-PMT-040,DOZ,CAN,Paint Master Spray Paint - No. 40 White,66.90,6.50,125,PAINT MASTER SPRAY PAINT - NO.40 WHITE     [EX],uom_mismatch_not_applied
+ACE-HAM-ANC-1/4X1 1/4,BOX,PCK,Ace Hammer Drive Anchor 630 1/4 X1 1/4 (10PCS/PCK) (BOX),89.90,5.40,138,ACE HAMMER DRIVE ANCHOR 630 1/4' X1 1/4' (10PCS/PCK),uom_mismatch_not_applied
+"HOS-GAR-CAV-5/8""X50M",ROLL,MTR,"Cavallo Garden Hose 5/8""X50M - Yellow",169.00,4.20,121.5,"CAVALLO GARDEN HOSE 5/8""X50M - YELLOW",uom_mismatch_not_applied
+PAI-SPR-PMT-039,DOZ,CAN,Paint Master Spray Paint - No. 39 Black,66.90,6.50,89,PAINT MASTER SPRAY PAINT - NO.39 BLACK     [EX],uom_mismatch_not_applied
+GLO-LAT-300SP,DOZ,PAIR,Latex Work Glove - 300 Sp,47.90,3.80,2,LATEX WORK GLOVE - 300 SP,uom_mismatch_not_applied
+LOC-SAN-PB26438MM,DOZ,PCS,Sanlock Pb Pad 38MM,88.90,7.50,2,SANLOCK PB PAD LOCK-264 38MM,uom_mismatch_not_applied
+FAS-ANC-PJA-0975,BOX,PCS,Glotool P. J. Anchor 3/8 X 3,87.90,1.30,252,GLOTOOL P.J. ANCHOR 3/8 X 3,uom_mismatch_not_applied
+IND-TRO-BRI-225,DOZ,PCS,Glotool Bricklaying Trowel (2-2) 5,46.90,3.90,7,"GLOTOOL  BRICKLAYING TROWEL (2-2) 5""",uom_mismatch_not_applied
+PAI-SPR-PMT-006,DOZ,CAN,Paint Master Spray Paint - No. 6 Orange Red,66.90,6.50,67,PAINT MASTER SPRAY PAINT - NO.6 ORANGE RED     [EX],uom_mismatch_not_applied
+WEL-ELE-KOB-RB26-2.6MM,BOX,PCK,Kobelco Welding Electrode RB26 X 2.6MM,274.00,61.50,1,KOBELCO WELDING ELECTRODE RB26 X 2.6MM     [EX],uom_mismatch_not_applied
+TAR-SHT-TP800-GRE/BLK,COIL,MTR,Canvas Olive Gre/blk 6'X60YARDS,419.00,11.90,74.2,TP800 CANVAS OLIVE GRE/BLK 6'X60YARDS,uom_mismatch_not_applied
+TOW-CAR-MIN-AR-4030,DOZ,PCS,Absorbent Rag,79.90,5.90,20,40X30CM ABSORBENT RAG,uom_mismatch_not_applied
+WEL-ELE-J38.12-2.5MM,BOX,PCK,Welding Electrode X 2.5MM (BOX),134.00,15.90,19,WELDING ELECTRODE J38.12 X 2.5MM    [EX],uom_mismatch_not_applied
+FLO-PVC-31612,ROLL,MTR,PVC Flooring No. K35004,164.00,9.50,39,PVC FLOORING NO. K35004,uom_mismatch_not_applied
+WEL-ELE-KOB-RB26-3.2MM,BOX,PCK,Kobelco Welding Electrode RB26 X 3.2MM,264.00,57.90,0,KOBELCO WELDING ELECTRODE RB26 X 3.2MM     [EX],uom_mismatch_not_applied
+WEL-ELE-KOB-RB26-4.0MM,BOX,PCK,Kobelco Welding Electrode RB26 X 4.0MM,264.00,58.50,2,KOBELCO WELDING ELECTRODE RB26 X 4.0MM     [EX],uom_mismatch_not_applied
+LOC-SAN-PB26550MM,DOZ,PCS,Sanlock Pb Pad 50MM,124.00,10.50,12,SANLOCK PB PAD LOCK-265 50MM,uom_mismatch_not_applied
+HOS-NET-MIK-25MM,COIL,MTR,Mikasa Net Hose - 25MM X 50M,149.00,4.20,99.5,MIKASA NET HOSE - 25MM X 50M    [EX],uom_mismatch_not_applied
+IND-TRO-BRI-236,DOZ,PCS,Glotool Bricklaying Trowel (2-3) 6,47.90,3.90,21,"GLOTOOL BRICKLAYING TROWEL (2-3) 6""",uom_mismatch_not_applied
+FAS-ANC-PJA-0866,BOX,PCS,Glotool P. J. Anchor 5/16 X 2-5/8,64.90,0.80,62,GLOTOOL P.J. ANCHOR 5/16 X 2-5/8,uom_mismatch_not_applied
+LOC-SAN-PB26332MM,DOZ,PCS,Sanlock Pb Pad 32MM,72.90,6.20,14,SANLOCK PB PAD LOCK-263 32MM,uom_mismatch_not_applied
+"TOO-DRV-BLI-IMP-4""(+)",DOZ,PCS,"Blimax Impact Screw DRIVER-4""X6MM (+)",74.90,7.10,0,"BLIMAX IMPACT SCREW DRIVER-4""X6MM(+)",uom_mismatch_not_applied
+FLO-PVC-NO-11118,ROLL,MTR,PVC Flooring No. K11118,164.00,9.50,41,PVC FLOORING NO.K11118,uom_mismatch_not_applied
+TOO-FIL-BCC-4.8200MM,CARD,PCS,Bahco Chain Saw File 168-8-4.8-3P 3/161IN (CARD),20.90,6.40,31,BAHCO CHAIN SAW FILE 168-8-4.8-3P 3/161IN,uom_mismatch_not_applied
+"ACE-HAM-ANC-1/4' X 1 1/2""",BOX,PCK,Ace Hammer Drive Anchor 640 1/4 X 1 1/2 (10PCS/PCK) (BOX),99.90,5.90,95,"ACE HAMMER DRIVE ANCHOR 640 1/4' X 1 1/2"" (10PCS/PCK)",uom_mismatch_not_applied
+ADH-ELE-3G,DOZ,PCS,X'traseal Super Glue (economy PACK)3GX12 (DOZ),18.50,1.70,286,X'TRASEAL SUPER GLUE (ECONOMY PACK)3GX12,uom_mismatch_not_applied
+SHH-BLK-HOSE-9MMX2MM-S-9MTR/PCKT,MTR,FTS,Black Hose (9MMX2MM),49.90,13.90,24,BLACK HOSE (9MMX2MM)(S),uom_mismatch_not_applied
+GLO-RUB-ELE-BLA,DOZ,PAIR,Elephant Rubber Hand Gloves,56.90,4.50,14,ELEPHANT RUBBER HAND GLOVES,uom_mismatch_not_applied
+LOC-SAN-PB26225MM,DOZ,PCS,Sanlock Pb Pad 25MM,63.90,4.50,20,SANLOCK PB PAD LOCK-262 25MM,uom_mismatch_not_applied
+IND-TRO-BRI-235,DOZ,PCS,Glotool Bricklaying Trowel (2-3) 5,49.90,3.80,20,"GLOTOOL BRICKLAYING TROWEL (2-3) 5""",uom_mismatch_not_applied
+GLO-HAN-PVC-DOTS,DOZ,PAIR,Cotton Glove W/side PVC Dots (DOZ),23.90,1.90,53,COTTON GLOVE W/SIDE PVC DOTS,uom_mismatch_not_applied
+IND-SCO-METAL-S501MH,DOZ,PCS,Scoop Metal Handle S501MH,179.00,16.20,7,SCOOP METAL HANDLE S501MH,uom_mismatch_not_applied
+MAT-GRASS-CN-PGM-2MX25M-FTS,ROLL,FTS,2M X 25M Plastic Grass Mat Cn,1039.00,15.90,127,2M X 25M PLASTIC GRASS MAT CN PGM-2MX25M,uom_mismatch_not_applied
+PAI-SPR-PMT-022,DOZ,CAN,Paint Master Spray Paint - No. 22 Medium Grey,66.90,6.50,31,PAINT MASTER SPRAY PAINT - NO.22 MEDIUM GREY     [EX],uom_mismatch_not_applied
+PAI-SPR-PMT-036,DOZ,CAN,Paint Master Spray Paint - No. 36 Silver,66.90,6.50,7,PAINT MASTER SPRAY PAINT - NO.36 SILVER     [EX],uom_mismatch_not_applied
+IND-WIR-PVC-MEGA-15X15,ROLL,MTR,1 X 24M (15MM) Mega Net Square Mesh (green),149.00,8.00,190.7,1 X 24M (15MM) MEGA NET SQUARE MESH (GREEN),uom_mismatch_not_applied
+IND-WIR-PVC-MEGA-6X6,ROLL,MTR,1 X 24M (6MM) Mega Net Square Mesh (green),149.00,8.00,231.3,1 X 24M (6MM) MEGA NET SQUARE MESH (GREEN),uom_mismatch_not_applied
+IND-WIR-PVC-MEGA-BLA-15X15,ROLL,MTR,1 X 24M (15MM) Mega Net Square Mesh (silver),149.00,8.00,83.9,1 X 24M (15MM) MEGA NET SQUARE MESH (SILVER),uom_mismatch_not_applied
+ROP-PE-06MM,KG,MTR,6MM P. E Rope,19.40,0.50,1672.74,6MM P.E ROPE,uom_mismatch_not_applied
+FLO-PVC-NO.100-10,ROLL,MTR,PVC Flooring No. 100-10,169.00,9.50,9,PVC FLOORING NO.100-10,uom_mismatch_not_applied
+FLO-PVC-NO.483-13,ROLL,MTR,PVC Flooring No. 524-08,169.00,9.50,20.5,PVC FLOORING NO.524-08,uom_mismatch_not_applied
+FLO-PVC-25208,ROLL,MTR,PVC Flooring No. K35808,164.00,9.50,0,PVC FLOORING NO.K35808,uom_mismatch_not_applied
+FLO-PVC-501-16,ROLL,MTR,PVC Flooring No. K35602,164.00,9.50,60.5,PVC FLOORING NO. K35602,uom_mismatch_not_applied
+FLO-PVC-D15903,ROLL,MTR,PVC Flooring No. K28505,164.00,9.50,70.5,PVC FLOORING NO. K28505,uom_mismatch_not_applied
+FLO-PVC-K27711,ROLL,MTR,PVC Flooring No. K33605,164.00,9.50,50,PVC FLOORING NO. K33605,uom_mismatch_not_applied
+FLO-PVC-NO-7512,ROLL,MTR,PVC Flooring No. K20101,164.00,9.50,100,PVC FLOORING NO. K20101,uom_mismatch_not_applied
+FLO-PVC-NO-K10305,ROLL,MTR,PVC Flooring No. K35301,164.00,9.50,103,PVC FLOORING NO. K35301,uom_mismatch_not_applied
+FLO-PVC-NO-K11114,ROLL,MTR,PVC Flooring No. K11114,164.00,9.50,116,PVC FLOORING NO. K11114,uom_mismatch_not_applied
+WEL-ELE-J38.12-3.2MM,BOX,PCK,Welding Electrode X 3.2MM (BOX),129.00,29.80,5,WELDING ELECTRODE J38.12 X 3.2MM    [EX],uom_mismatch_not_applied
+SHH-YEL-HOSE-10MMX2MM,MTR,FTS,Yellow Hose (10MMX2MM),18.50,4.90,18.3,YELLOW HOSE (10MMX2MM),uom_mismatch_not_applied
+HEA-SPA-FAUCET-SH332,CARD,PCS,Faucet Spare Handle,134.00,6.50,9,SH332 FAUCET SPARE HANDLE,uom_mismatch_not_applied
+PAI-SPR-PMT-021,DOZ,CAN,Paint Master Spray Paint - No. 21 Medium Blue,66.90,6.50,24,PAINT MASTER SPRAY PAINT - NO.21 MEDIUM BLUE     [EX],uom_mismatch_not_applied
+HOS-SPA-SAT-ST300,CARD,PCS,Saturn Heavy Duty Spare Cartridge,259.00,8.90,21,SATURN ST300 HEAVY DUTY SPARE CARTRIDGE,uom_mismatch_not_applied
+IND-FOIL-SML-BUBLE-ELISE,ROLL,MTR,Elise Small Bubblem Foil,184.00,11.90,61.25,ELISE# SMALL BUBBLEM FOIL 1.2MX30M   [EX],uom_mismatch_not_applied
+FAS-ANC-PJA-0650,BOX,PCS,Glotool P. J. Anchor 1/4 X 2,87.90,0.60,138,GLOTOOL P.J. ANCHOR 1/4 X 2,uom_mismatch_not_applied
+FLO-PVC-NO-K24708,ROLL,MTR,PVC Flooring No. K35810,164.00,9.50,0,PVC FLOORING NO. K35810,uom_mismatch_not_applied
+TOO-FIL-BCC-4.5200MM,CARD,PCS,Bahco Chain Saw File 168-8-4.5-3P 11/641IN (CARD),20.90,6.40,24,BAHCO CHAIN SAW FILE 168-8-4.5-3P 11/641IN,uom_mismatch_not_applied
+HOS-CLE-00630,COIL,MTR,6MM X 30M Clear Hose,21.90,1.30,562.8,6MM X 30M CLEAR HOSE,uom_mismatch_not_applied
+PAI-SPR-PMT-023,DOZ,CAN,Paint Master Spray Paint - No. 23 Scarlet,66.90,6.50,10,PAINT MASTER SPRAY PAINT - NO.23 SCARLET     [EX],uom_mismatch_not_applied
+PAI-SPR-PMT-031,DOZ,CAN,Paint Master Spray Paint - No. 31 Deep Yellow,66.90,6.50,24,PAINT MASTER SPRAY PAINT - NO.31 DEEP YELLOW     [EX],uom_mismatch_not_applied
+PAI-SPR-PMT-327,DOZ,CAN,Paint Master Spray Paint - No. 327 Deep Voilet,66.90,6.50,21,PAINT MASTER SPRAY PAINT - NO.327 DEEP VOILET     [EX],uom_mismatch_not_applied
+TOW-CON-MIN66A52,PACK,PCS,13 X30 Cotton Face Towel (37G) -min (PACK),52.90,4.30,36,"13"" X30"" COTTON FACE TOWEL (37G) -MIN 66A52",uom_mismatch_not_applied
+ROP-PE-08MM,KG,MTR,8MM P. E Rope,19.40,1.00,1219.005,8MM P.E ROPE,uom_mismatch_not_applied
+HOS-SPA-TAP-C333,CARD,PCS,C333 Spare Cartridge (for Cross Handle),179.00,6.50,24,C333 SPARE CARTRIDGE (FOR CROSS HANDLE),uom_mismatch_not_applied
+IND-SCO-METAL-S503MH,DOZ,PCS,Scoop Metal Handle S503MH,179.00,16.20,8,SCOOP METAL HANDLE S503MH,uom_mismatch_not_applied
+ROP-PP-08MM,KG,MTR,8MM P. P Rope,19.40,1.20,1114.395,8MM P.P ROPE,uom_mismatch_not_applied
+FLO-PVC-NO.490-12,ROLL,MTR,PVC Flooring No. 359-03,169.00,9.50,8,PVC FLOORING NO.359-03,uom_mismatch_not_applied
+PAI-BRU-680-075MM,DOZ,PCS,Paint Brush 680 X 75MM,49.90,5.20,66,PAINT BRUSH 680 X 75MM,uom_mismatch_not_applied
+ROP-PP-06MM,KG,MTR,6MM P. P Rope,19.40,0.70,967.88,6MM P.P ROPE,uom_mismatch_not_applied
+FLO-PVC-477-12,ROLL,MTR,PVC Flooring No. 105-03,164.00,9.50,0,PVC FLOORING NO.105-03,uom_mismatch_not_applied
+FLO-PVC-NO-K21314,ROLL,MTR,PVC Flooring No. K15201,164.00,9.50,0,PVC FLOORING NO. K15201,uom_mismatch_not_applied
+FLO-PVC-NO-YP 25709,ROLL,MTR,PVC Flooring No. K31210,164.00,9.50,0,PVC FLOORING NO. K31210,uom_mismatch_not_applied
+FLO-PVC-NO.K28605,ROLL,MTR,PVC Flooring No. K28605,164.00,9.50,0,PVC FLOORING NO. K28605,uom_mismatch_not_applied
+PAI-BRU-680-050MM,DOZ,PCS,Paint Brush 680 X 50MM,27.90,2.90,50,PAINT BRUSH 680 X 50MM,uom_mismatch_not_applied
+IND-WIR-MES-2512-18GX100,ROLL,FTS,Wire Mesh 1 X 1/2 X3 X18G,219.00,3.40,372,WIRE MESH 1 X 1/2 X3' X18G    [EX],uom_mismatch_not_applied
+HOS-NET-MIK-19MM,COIL,MTR,Mikasa Net Hose - 19MM X 50M,124.00,3.10,98,MIKASA NET HOSE - 19MM X 50M    [EX],uom_mismatch_not_applied
+IND-WIR-MES-1212-18GX100,ROLL,FTS,Wire Mesh 1/2/ X 1/2 X 3 X 18G,284.00,4.80,175.5,WIRE MESH 1/2/ X 1/2 X 3' X 18G    [EX],uom_mismatch_not_applied
+PAI-SPR-PMT-015,DOZ,CAN,Paint Master Spray Paint - No. 15 Sky Blue (DOZ),66.90,6.50,26,PAINT MASTER SPRAY PAINT - NO.15 SKY BLUE     [EX],uom_mismatch_not_applied
+PAI-SPR-PMT-190,DOZ,CAN,Paint Master Spray Paint - No. 190 Lacquer,66.90,6.50,14,PAINT MASTER SPRAY PAINT - NO.190 LACQUER     [EX],uom_mismatch_not_applied
+FLO-PVC-KJ-TH121-2,ROLL,MTR,Zirafah PVC Flooring H117-12,119.00,9.50,0,ZIRAFAH PVC FLOORING H117-12,uom_mismatch_not_applied
+FLO-PVC-NO-H198-1,ROLL,MTR,Zirafah PVC Flooring H065-6,119.00,9.50,0,ZIRAFAH PVC FLOORING H065-6,uom_mismatch_not_applied
+FLO-PVC-NO-279-02,ROLL,MTR,PVC Flooring No. 521-05,169.00,9.50,20.5,PVC FLOORING NO.521-05,uom_mismatch_not_applied
+FLO-PVC-NO.9607,ROLL,MTR,PVC Flooring No. 522-02,169.00,9.50,21.5,PVC FLOORING NO.522-02,uom_mismatch_not_applied
+PAI-BRU-680-038MM,DOZ,PCS,Paint Brush 680 X 38MM,20.00,1.80,50,PAINT BRUSH 680 X 38MM,uom_mismatch_not_applied
+PAI-TIG-250ML-RED,DOZ,TIN,250ML Ocean Gloss (red),119.00,10.90,6,250ML 'OCEAN' GLOSS PAINT-725 (RED),uom_mismatch_not_applied
+FLO-PVC- NO.483-01,ROLL,MTR,PVC Flooring No. K35707,164.00,9.50,0,PVC FLOORING NO. K35707,uom_mismatch_not_applied
+FLO-PVC-300-11,ROLL,MTR,PVC Flooring No. K36004,164.00,9.50,0,PVC FLOORING NO.K36004,uom_mismatch_not_applied
+FLO-PVC-469-02,ROLL,MTR,PVC Flooring No. 470-21,164.00,9.50,0,PVC FLOORING NO.470-21,uom_mismatch_not_applied
+FLO-PVC-482-14,ROLL,MTR,PVC Flooring No. 090-30,164.00,9.50,0,PVC FLOORING NO.090-30,uom_mismatch_not_applied
+FLO-PVC-NO-K21114,ROLL,MTR,PVC Flooring No. K20901,164.00,9.50,0,PVC FLOORING NO. K20901,uom_mismatch_not_applied
+FLO-PVC-NO-K23706,ROLL,MTR,PVC Flooring No. K11116,164.00,9.50,1,PVC FLOORING NO. K11116,uom_mismatch_not_applied
+HOS-NET-MIK-32MM,COIL,MTR,Mikasa Net Hose - 32MM X 40M,194.00,6.20,39,MIKASA NET HOSE - 32MM x 40M    [EX],uom_mismatch_not_applied
+PAI-BRU-633-100MM,DOZ,PCS,Paint Brush 633 X 100MM,38.90,3.90,29,PAINT BRUSH 633 X 100MM,uom_mismatch_not_applied
+PAI-BRU-680-025MM,DOZ,PCS,Paint Brush 680 X 25MM,18.60,1.60,56,PAINT BRUSH 680 X 25MM,uom_mismatch_not_applied
+FLO-PVC-27y082-06-25MTR,ROLL,MTR,Wangsaga Floor Mat Linoleum 27Y465-16,259.00,14.90,25,WANGSAGA FLOOR MAT LINOLEUM 27y465-16,uom_mismatch_not_applied
+FLO-PVC-27y279-14-25MTR,ROLL,MTR,Wangsaga Floor Mat Linoleum 27Y496-10,259.00,14.90,25,WANGSAGA FLOOR MAT LINOLEUM 27y496-10,uom_mismatch_not_applied
+FLO-PVC-27y384-02-25MTR,ROLL,MTR,Wangsaga Floor Mat Linoleum 27Y 396-17,259.00,14.90,7,"""WANGSAGA"" FLOOR MAT LINOLEUM 27y 396-17",uom_mismatch_not_applied
+FLO-PVC-27y399-03-25MTR,ROLL,MTR,Wangsaga Floor Mat Linoleum 27Y 042-10,259.00,14.90,1,'WANGSAGA'' FLOOR MAT LINOLEUM 27y 042-10,uom_mismatch_not_applied
+FLO-PVC-27y410-11-25MTR,ROLL,MTR,Wangsaga Floor Mat Linoleum 27Y 404-04,259.00,14.90,25,WANGSAGA FLOOR MAT LINOLEUM 27Y 404-04,uom_mismatch_not_applied
+FLO-PVC-27y465-01-25MTR,ROLL,MTR,Wangsaga Floor Mat Linoleum 27Y 311-04,259.00,14.90,1,''WANGSAGA'' FLOOR MAT LINOLEUM 27y 311-04,uom_mismatch_not_applied
+ROO-FEL-1MX10M,ROLLS,MTR,1M X 10M Roofling Felt,64.90,9.90,45,30LBS 1M X 10M ROOFLING FELT,uom_mismatch_not_applied
+HOS-CLE-01230,COIL,MTR,13MM X 30M Clear Hose,49.90,2.50,86.8,13MM X 30M CLEAR HOSE,uom_mismatch_not_applied
+PAI-BRU-633-050MM,DOZ,PCS,Paint Brush 633 X 50MM,19.00,1.90,25,PAINT BRUSH 633 X 50MM,uom_mismatch_not_applied
+FLO-PVC-H030-4,ROLL,MTR,Zirafah PVC Flooring H020-7,119.00,9.50,0,ZIRAFAH PVC FLOORING H020-7,uom_mismatch_not_applied
+FLO-PVC-NO-H015-4,ROLL,MTR,Zirafah PVC Flooring H162-7,119.00,9.50,0,ZIRAFAH PVC FLOORING H162-7,uom_mismatch_not_applied
+CAB-BAT-120AMPX100FTS,COIL,FTS,Battery Cable X,619.00,7.50,92,BATTERY CABLE 120AMP X 100FTS,uom_mismatch_not_applied
+IND-WIR-MES-2525-18GX100,ROLL,FTS,Wire Mesh 1 X 1 X3 X18G X100,204.00,2.80,281,WIRE MESH 1 X 1 X3' X18G X100'    [EX],uom_mismatch_not_applied
+TOO-FIL-BCC-4.0200MM,CARD,PCS,Bahco Chain Saw File 168-8-4.0-3P 5/321IN,20.90,6.40,8,BAHCO CHAIN SAW FILE 168-8-4.0-3P 5/321IN,uom_mismatch_not_applied
+DOR-H&S-BS115MM,DOZ,PCS,Rb Hasp & STAPLE-115MM,45.90,3.40,20,RB HASP & STAPLE-115MM,uom_mismatch_not_applied
+"FAS-SCR-TAP-PAN-8#3/4""",BOX,PCK,8 X3/4 Ph Self Tapping Screw-pan Head (20PCS/PCK) (BOX),89.90,2.20,85,"8#X3/4"" PH SELF TAPPING SCREW-PAN HEAD(20PCS/PCK)",uom_mismatch_not_applied
+PAI-SPR-PMT-013,DOZ,CAN,Paint Master Spray Paint - No. 13 Fresh Green (DOZ),66.90,6.50,17,PAINT MASTER SPRAY PAINT - NO.13 FRESH GREEN     [EX],uom_mismatch_not_applied
+PAI-SPR-PMT-025,DOZ,CAN,Paint Master Spray Paint - No. 25 Medium Yellow,66.90,6.50,12,PAINT MASTER SPRAY PAINT - NO.25 MEDIUM YELLOW     [EX],uom_mismatch_not_applied
+PAI-SPR-PMT-027,DOZ,CAN,Paint Master Spray Paint - No. 27 Leaf Green,66.90,6.50,5,PAINT MASTER SPRAY PAINT - NO.27 LEAF GREEN     [EX],uom_mismatch_not_applied
+PAI-SPR-PMT-041,DOZ,CAN,Paint Master Spray Paint - No. 41 Art Yellow,66.90,6.50,10,PAINT MASTER SPRAY PAINT - NO.41 ART YELLOW     [EX],uom_mismatch_not_applied
+PAI-SPR-PMT-C671,DOZ,CAN,Paint Master Spray Paint - No. C671 Eng. Orange Yel,66.90,6.50,2,PAINT MASTER SPRAY PAINT - NO.C671 ENG.ORANGE YEL   [EX],uom_mismatch_not_applied
+PAI-SPR-PMT-C672,DOZ,CAN,Paint Master Spray Paint - No. C672 Eng. Orange Red,66.90,6.50,5,PAINT MASTER SPRAY PAINT - NO.C672 ENG.ORANGE RED [EX],uom_mismatch_not_applied
+PAI-BRU-633-025MM,DOZ,PCS,Paint Brush 633 X 25MM,12.40,1.30,47,PAINT BRUSH 633 X 25MM,uom_mismatch_not_applied
+PAI-BRU-680-065MM,DOZ,PCS,Paint Brush 680 X 65MM,36.90,3.90,0,PAINT BRUSH 680 X 65MM,uom_mismatch_not_applied
+DOR-H&S-BS065MM,DOZ,PCS,Rb Hasp & STAPLE-65MM,19.40,1.90,9,RB HASP & STAPLE-65MM,uom_mismatch_not_applied
+HOS-GAS-ORA50,ROLL,MTR,Glogas Gas Hose Orange Red,129.00,3.50,82,GLOGAS GAS HOSE ORANGE RED,uom_mismatch_not_applied
+ROP-PE-04MM,KG,MTR,4MM P. E Rope,20.90,0.40,1231.6,4MM P.E ROPE,uom_mismatch_not_applied
+ROP-PP-04MM,KG,MTR,4MM P. P Rope,20.90,0.50,576.65,4MM P.P ROPE,uom_mismatch_not_applied
+HOS-SPA-DIS-C337-N,CARD,PKT,C337 Cartridge Spare Disc,57.90,2.30,17,C337 CARTRIDGE SPARE DISC,uom_mismatch_not_applied
+IND-SCP-FR9788-1-1/2,DOZ,PCS,1-1/2 Faris W Handle Finishing Scraper,57.90,5.30,9,"FR9788 1-1/2"" FARIS W HANDLE FINISHING SCRAPER",uom_mismatch_not_applied
+TAR-ROL-TAR-B/W/DB-MTR,ROLL,MTR,70 X 6 X 50 Yard B/w/db Tarpaulin,89.90,2.40,426.2,70# X 6' X 50 YARD B/W/DB TARPAULIN,uom_mismatch_not_applied
+FLO-PVC-484-09,ROLL,MTR,PVC Flooring No. 338-02,164.00,9.50,0,PVC FLOORING NO.338-02,uom_mismatch_not_applied
+BAT-TOS-AA,BOX,PCK,Toshiba Battery Aa (4PCS/PCK),48.90,3.50,65,TOSHIBA BATTERY AA (4PCS/PCK),uom_mismatch_not_applied
+DOR-LAT-B4SS,DOZ,PCS,Leon S/steel Door LATCH-4,53.90,3.90,7,"LEON S/STEEL DOOR LATCH-4""",uom_mismatch_not_applied
+PAI-BRU-633-038MM,DOZ,PCS,Paint Brush 633 X 38MM,15.10,1.40,30,PAINT BRUSH 633 X 38MM,uom_mismatch_not_applied
+DOR-BOL-RAI-100M,DOZ,PCS,Rb Pad BOLT-4,26.90,2.10,105,"RB PAD BOLT-4""",uom_mismatch_not_applied
+IND-NET-FIB-4'X25M-FTS,ROLL,FTS,Fiberglass Netting 4,149.00,2.60,266.7,FIBERGLASS NETTING 4',uom_mismatch_not_applied
+"PAI-ROL-REF-PM4""",PCK,PCS,Paint Master Paint Roller Refill 4,15.20,1.60,215,"PAINT MASTER PAINT ROLLER REFILL 4""",uom_mismatch_not_applied
+DOR-LAT-B3SS,DOZ,PCS,Leon S/steel Door LATCH-3,43.90,3.40,0,"LEON S/STEEL DOOR LATCH-3""",uom_mismatch_not_applied
+ROP-WIR-GAL-4.0MM,COIL,MTR,Galv Wire Rope-cnn 4.0MMX6X7,129.00,1.10,101.5,GALV WIRE ROPE-CNN 4.0MMX6X7,uom_mismatch_not_applied
+FAS-BOL-EXP-1075,BOX,PCS,Sh Expansion Bolt M10 X 75,119.00,2.40,137,SH EXPANSION BOLT M10 X 75,uom_mismatch_not_applied
+DOR-H&S-BS135MM,DOZ,PCS,Rb Hasp & STAPLE-135MM,54.90,3.70,17,RB HASP & STAPLE-135MM,uom_mismatch_not_applied
+PAI-BRU-086-65MM,DOZ,PCS,086 Cs Nylon Paint Brush 2-1/2,32.90,3.20,86,"086 CS NYLON PAINT BRUSH 2-1/2""",uom_mismatch_not_applied
+DOR-H&S-BS085MM,DOZ,PCS,Rb Hasp & STAPLE-85MM,26.90,2.50,12,RB HASP & STAPLE-85MM,uom_mismatch_not_applied
+HOS-CLE-00830,COIL,MTR,8MM X 30M Clear Hose (COIL),27.90,1.30,671,8MM X 30M CLEAR HOSE,uom_mismatch_not_applied
+TAR-SHT-450#-B.GREEN,COIL,MTR,Canvas 450 (b. Green) 6 X 45M,629.00,23.90,45.3,CANVAS 450# (B.GREEN) 6' X 45M,uom_mismatch_not_applied
+PAI-BRU-633-065MM,DOZ,PCS,Paint Brush 633 X 65MM,21.90,2.20,20,PAINT BRUSH 633 X 65MM,uom_mismatch_not_applied
+PAI-BRU-WOO-080MM,DOZ,PCS,Gd Wool Brush 80 MM,32.90,2.80,13,GD WOOL BRUSH 80 MM,uom_mismatch_not_applied
+FLO-PVC-NO.24903,ROLL,MTR,PVC Flooring No. 528-20,169.00,9.50,2,PVC FLOORING NO. 528-20,uom_mismatch_not_applied
+CHA-PVC-BEL-R6MM,ROLL,MTR,Bellea PVC (red) (ROLL),52.90,3.70,57.5,BELLEA PVC CHAIN-6MM(RED),uom_mismatch_not_applied
+CHA-PVC-BEL-Y6MM,ROLL,MTR,Bellea PVC (yellow),52.90,3.70,27,BELLEA PVC CHAIN-6MM(YELLOW),uom_mismatch_not_applied
+"SEA-GAS-RUB-1/8""",ROLL,KGS,Rubber Insertion Sheet 1/8,284.00,6.80,41.25,RUBBER INSERTION SHEET 1/8,uom_mismatch_not_applied
+FAS-ANC-PJA-12100,BOXES,PCS,Sh P. J. Anchor 1/2 X 4 (BOXES),124.00,2.90,209,SH P.J. ANCHOR 1/2 X 4,uom_mismatch_not_applied
+IND-NET-FIB-5'X25M-FTS,ROLL,FTS,Fiberglass Netting 5,179.00,2.90,220.5,FIBERGLASS NETTING 5',uom_mismatch_not_applied
+DOR-LAT-B2SS,DOZ,PCS,Leon S/steel Door LATCH-2,33.90,2.90,15,"LEON S/STEEL DOOR LATCH-2""",uom_mismatch_not_applied
+PAI-BRU-WOO-060MM,DOZ,PCS,Gd Wool Brush 60 MM,28.90,2.00,17,GD WOOL BRUSH 60 MM,uom_mismatch_not_applied
+DOR-BOL-RAI-150MM,DOZ,PCS,Rb Pad BOLT-6,34.90,2.70,89,"RB PAD BOLT-6""",uom_mismatch_not_applied
+DOR-HIN-BRI-100MM,DOZ,PAIR,Iron Hinges Bright 4,30.90,3.10,28,"IRON HINGES BRIGHT 4""",uom_mismatch_not_applied
+FLO-PVC-NO.26901,ROLL,MTR,PVC Flooring No. 517-03,164.00,9.50,0,PVC FLOORING NO. 517-03,uom_mismatch_not_applied
+PLA-SHE-27KG-36010,ROLLS,KG,36 X 0.10 Pe/ Sheet 27KG,224.00,10.50,91.41,36 X 0.10 PE/ SHEET 27KG     [EX],uom_mismatch_not_applied
+ADH-ALT-110,DOZ,PCS,Alteco Super Glue 110 (twin Pack),61.90,4.50,24,ALTECO SUPER GLUE 110# (TWIN PACK),uom_mismatch_not_applied
+PAI-BRU-086-50MM,DOZ,PCS,086 Cs Nylon Paint Brush 2,23.90,2.50,47,"086 CS NYLON PAINT BRUSH 2""",uom_mismatch_not_applied
+PUM-OIL-PVC-4GAL,DOZ,PCS,4 Gal Korea Oil Pump,99.00,7.50,22,4 GAL KOREA OIL PUMP,uom_mismatch_not_applied
+DOR-HIN-BLK-100MM,DOZ,PAIR,Iron Hinges Black 4 (DOZ),38.90,3.10,35,"IRON HINGES BLACK 4""",uom_mismatch_not_applied
+FAS-ANC-PJA-0980,BOXES,PCS,Sh P. J. Anchor 3/8 X 4-1/2 (BOXES),94.90,1.90,224,SH P.J. ANCHOR 3/8 X 4-1/2,uom_mismatch_not_applied
+"FAS-SCR-TD-HRW 525-1""",BOX,PCK,Sr Wood Spandex Screw 1 - Td-hrw 525 (BOX),94.90,7.50,40,"SR WOOD SPANDEX SCREW 1"" - TD-HRW 525",uom_mismatch_not_applied
+FLO-PVC-NO.25610,ROLL,MTR,PVC Flooring No. 522-06,169.00,9.50,0.5,PVC FLOORING NO. 522-06,uom_mismatch_not_applied
+FLO-PVC-353-13,ROLL,MTR,PVC Flooring No. 514-05,164.00,9.50,0,PVC FLOORING NO. 514-05,uom_mismatch_not_applied
+FLO-PVC-NO-283391-3,ROLL,MTR,PVC Flooring No. 505-11,164.00,9.50,0,PVC FLOORING NO. 505-11,uom_mismatch_not_applied
+GAS-REF-120ML,DOZ,PCS,Vance Gas 120ML,72.90,6.80,11,VANCE GAS 120ML,uom_mismatch_not_applied
+BAT-TOS-AAA,BOX,PCK,Toshiba Battery Aaa (2PCS/PCK),51.90,2.30,11,TOSHIBA BATTERY AAA (2PCS/PCK),uom_mismatch_not_applied
+PAI-BRU-730-25MM,DOZ,PCS,T&t Paint 1,23.90,2.90,0,"T&T PAINT BRUSH-730# 1""",uom_mismatch_not_applied
+"PAI-ROL-REF-CRI-4""",BOX,PCS,4 Cristin Velour Refill,25.90,1.90,70,"4"" CRISTIN VELOUR REFILL",uom_mismatch_not_applied
+HOS-SPR-TOKO-25MX50M,COIL,MTR,Toko Spring Hose - 25MM X 50M,239.00,6.80,38,TOKO SPRING HOSE - 25MM X 50M    [EX],uom_mismatch_not_applied
+PAI-BRU-086-38MM,DOZ,PCS,086 Cs Nylon Paint Brush 1-1/2,18.60,1.80,30,"086 CS NYLON PAINT BRUSH 1-1/2""",uom_mismatch_not_applied
+"PIP-PVC-E-1/2""",LGTH,MTR,1/2 (22MM) Class E X 6M PVC Pipe,19.90,3.80,455.7,"1/2"" (22MM) CLASS E X 6M PVC PIPE    [EX]",uom_mismatch_not_applied
+FLO-PVC-NO.377-04,ROLL,MTR,PVC Flooring No. 510-11,164.00,9.50,0,PVC FLOORING NO. 510-11,uom_mismatch_not_applied
+HOS-AIR-TOK-10MM,COIL,MTR,Toko Yellow Air Hose - 10MM X 100M,224.00,2.90,68,TOKO YELLOW AIR HOSE - 10MM X 100M,uom_mismatch_not_applied
+ROP-WIR-GAL-2.0MM,COIL,MTR,Galv Wire Rope-cnn 2.0MMX6X7,59.90,0.50,145.5,GALV WIRE ROPE-CNN 2.0MMX6X7,uom_mismatch_not_applied
+STR-STA-3.0MM,ROLL,MTR,PP Braided Fibre Rope 3MM,49.90,0.50,341.4,PP BRAIDED FIBRE ROPE 3MM,uom_mismatch_not_applied
+STR-STA-8.0MM,ROLL,MTR,PP Braided Fibre Rope 8MM,49.90,2.10,60,PP BRAIDED FIBRE ROPE 8MM,uom_mismatch_not_applied
+"PIP-UPVC-4""",LTH,MTR,4 (110MM) Ut X 6M Upvc Pipe (LTH),58.90,12.90,195.2,"4"" (110MM) UT X 6M UPVC PIPE    [EX]",uom_mismatch_not_applied
+DOR-HIN-BRI-075MM,DOZ,PAIR,Iron Hinges Bright 3,18.50,1.90,33,"IRON HINGES BRIGHT 3""",uom_mismatch_not_applied
+"ALUM-HOLLOW-2""X1""-3",LGTH,PCS,2 X 1 Alum. Hollow Na (LGTH),114.00,35.90,17,"2"" X 1"" ALUM. HOLLOW NA     [EX]",uom_mismatch_not_applied
+PAI-BRU-086-75MM,DOZ,PCS,086 Cs Nylon Paint Brush 3,39.90,3.90,53,"086 CS NYLON PAINT BRUSH 3""",uom_mismatch_not_applied
+"PIP-PVC-3/4""",LTH,MTR,"3/4""(26MM) Bs X 6M PVC Pipe",16.70,2.80,284.3,"3/4""(26MM) BS X 6M PVC PIPE     [EX]",uom_mismatch_not_applied
+NAI-CLI-777-B,DOZ,PCS,Nail Clipper,48.90,3.00,11,NAIL CLIPPER 777/211A,uom_mismatch_not_applied
+FLO-PVC-NO-436-05,ROLL,MTR,PVC Flooring No. 520-01,169.00,9.50,-0.3,PVC FLOORING NO. 520-01,uom_mismatch_not_applied
+FLO-PVC-NO.24803,ROLL,MTR,PVC Flooring No. 524-10,169.00,9.50,0,PVC FLOORING NO. 524-10,uom_mismatch_not_applied
+FLO-PVC-NO.25106,ROLL,MTR,PVC Flooring No. 486-04,169.00,9.50,0,PVC FLOORING NO. 486-04,uom_mismatch_not_applied
+IND-WIR-MES-2X1X3'X15GX100',ROLL,FTS,Wire Mesh 2 X 1 X 3 X 15G,239.00,3.40,220,WIRE MESH 2 X 1 X 3' X 15G    [EX],uom_mismatch_not_applied
+DOR-HIN-BLA-50MM,DOZ,PAIR,Iron Hinges Black 2,15.00,1.50,31,"IRON HINGES BLACK 2""",uom_mismatch_not_applied
+"PIP-PVC-E-3/4""",LGTH,MTR,3/4 (26MM) Class E X 6M PVC Pipe (LGTH),27.90,4.80,538,"3/4"" (26MM) CLASS E X 6M PVC PIPE    [EX]",uom_mismatch_not_applied
+"PIP-PVC-1/2""",LTH,MTR,"1/2""(22MM) Bs X 6M PVC Pipe (LTH)",13.40,2.20,589,"1/2""(22MM) BS X 6M PVC PIPE    [EX]",uom_mismatch_not_applied
+DOR-HIN-BLA-75MM,DOZ,PAIR,Iron Hinges Black 3 (DOZ),20.90,2.50,35,"IRON HINGES BLACK 3""",uom_mismatch_not_applied
+PAI-BRU-086-25MM,DOZ,PCS,086 Cs Nylon Paint Brush 1,15.40,1.30,52,"086 CS NYLON PAINT BRUSH 1""",uom_mismatch_not_applied
+FAS-SCR-ZPH-DSMHO520,PCK,PCS,Sr Zph Self Drilling Screw (20PCS/PCK) DSM-HO520,2.40,0.08,860,SR ZPH SELF DRILLING SCREW DSM-HO520 (20PCS/PCK),uom_mismatch_not_applied
+IND-SCO-WOO-501,DOZ,PCS,501 Wooden Handle Shovel Head (DOZ),149.00,14.90,15,501 WOODEN HANDLE SHOVEL HEAD,uom_mismatch_not_applied
+IND-SCO-WOO-503,DOZ,PCS,503 Wooden Handle Shovel Head,149.00,14.90,6,503 WOODEN HANDLE SHOVEL HEAD,uom_mismatch_not_applied
+ALUM-ROU-25MM,PCS,MTR,1 Alum. Round Tube X 6M (PCS),52.90,12.90,85,"1"" ALUM. ROUND TUBE X 6M    [EX]",uom_mismatch_not_applied
+IND-NET-ALUM-FTS,ROLL,FTS,Aluminium Netting 4 X 70,139.00,2.30,198,ALUMINIUM NETTING 4 X 70',uom_mismatch_not_applied
+IND-NET-ASTINO,ROLL,FTS,Astino PVC Netting Grey,129.00,2.20,199.8,ASTINO PVC NETTING GREY,uom_mismatch_not_applied
+FIR-LIG-CRI,BOX,PCS,Cricket Lighter 50'S,74.90,1.30,110,CRICKET LIGHTER 50'S,uom_mismatch_not_applied
+IND-NET-FIB-G4FTS,ROLL,FTS,4 Nylon Netting,74.90,1.20,451,4 NYLON NETTING,uom_mismatch_not_applied
+TAP-NOZ-C888,CARD,PCS,"C888 Tap Nozzle 1/2""X1/2",99.90,3.50,25,"C888 TAP NOZZLE 1/2""X1/2""",uom_mismatch_not_applied
+CLI-ELE-CAB-SPR-U18-20MMTC,PCK,PCS,Tc 20MM PVC Spring/u Clip (PCK),16.50,0.00,1705,TC 20MM PVC SPRING/U CLIP,uom_mismatch_not_applied
+"DOR-H&S-LEO-2""",DOZ,PCS,Leon S/steel Hasp & STAPLE-2,48.90,3.70,12,"LEON S/STEEL HASP & STAPLE-2""",uom_mismatch_not_applied
+DOR-HIN-BRI-050MM,DOZ,PAIR,Iron Hinges Bright 2,11.10,1.10,22,"IRON HINGES BRIGHT 2""",uom_mismatch_not_applied
+NAI-COM-38MM- 20KG,BOX,PCK,1 1/2 Wire Nail,124.00,3.90,243,"1 1/2"" WIRE NAIL    [EX]",uom_mismatch_not_applied
+FAS-SCR-ZPH-DSMHO516,PCK,PCS,Sr Zph Self Drilling Screw (20PCS/PCK) DSM-HO516,1.80,0.08,-350,SR ZPH SELF DRILLING SCREW DSM-HO516 (20PCS/PCK),uom_mismatch_not_applied
+FLO-PVC-NO.20307,ROLL,MTR,PVC Flooring No. 525-05,169.00,9.50,0,PVC FLOORING NO. 525-05,uom_mismatch_not_applied
+GRA-CUT-LIN-YEL,BAG,PCK,Square Trimer Line-yellow (BAG),59.90,5.50,33,SQUARE TRIMER LINE-YELLOW,uom_mismatch_not_applied
+PAI-TIG-250ML-ALUM,DOZ,TIN,250ML Tiger G. P 203 Aluminium (DOZ),119.00,10.90,15,250ML TIGER G.P 203 ALUMINIUM,uom_mismatch_not_applied
+"DOR-PUL-ALU-6""",DOZ,PCK,6 Door Pull,19.40,2.80,18,"6"" DOOR PULL",uom_mismatch_not_applied
+FLO-PVC-459-13,ROLL,MTR,PVC Flooring No. 520-14,164.00,9.50,0,PVC FLOORING NO. 520-14,uom_mismatch_not_applied
+HOS-GAS-BLA45,ROLL,MTR,Gas Hose - Black 45 M,114.00,3.30,47.5,GAS HOSE - BLACK 45 M,uom_mismatch_not_applied
+"PIP-PVC-3506-2""",LTH,MTR,"2""(60MM) Class 3506 X 6M PVC Pipe",41.90,7.50,71.1,"2""(60MM) CLASS 3506 X 6M PVC PIPE    [EX]",uom_mismatch_not_applied
+DOR-HIN-BRI-065MM,DOZ,PAIR,Iron Hinges Bright 2 1/2,12.70,1.30,22,"IRON HINGES BRIGHT 2 1/2""",uom_mismatch_not_applied
+"DOR-PUL-ALU-5""",DOZ,PCS,5 Door Pull,16.20,2.30,17,"5"" DOOR PULL",uom_mismatch_not_applied
+"DOR-H&S-LEO-4""",DOZ,PCS,Leon S/steel Hasp & STAPLE-4,69.90,6.30,1,"LEON S/STEEL HASP & STAPLE-4""",uom_mismatch_not_applied
+"PIP-PVC-3506-1.1/2""",LTH,MTR,"1 1/2""(48MM) Class 3506 X 6M PVC Pipe",23.90,5.50,143.05,"1 1/2""(48MM) CLASS 3506 X 6M PVC PIPE    [EX]",uom_mismatch_not_applied
+THI-TAR-PIN,DOZ,TIN,Tarpin,124.00,8.90,17,TARPIN   [EX],uom_mismatch_not_applied
+HOS-SPA-WAS-C555,CARD,PCS,C555 Washer & Nut (CARD),63.90,2.70,34,C555 WASHER & NUT,uom_mismatch_not_applied
+LOC-TRI-261,DOZ,PCS,261 Tricycle Pad Lock,79.90,6.60,14,261 TRICYCLE PAD LOCK,uom_mismatch_not_applied
+IND-WIR-MES-PVC-11231,ROLL,FTS,PVC Coated Wire Mesh 1 X 1/2 X 3,164.00,3.20,201,PVC COATED WIRE MESH 1 X 1/2 X 3'  [EX],uom_mismatch_not_applied
+"TOO-FIL-ORE-7/32""",DOZ,PCS,7/32 Oregan Chainsaw File (b),45.90,3.80,31,"7/32"" OREGAN CHAINSAW FILE(B)",uom_mismatch_not_applied
+"PIP-UPVC-2""",LTH,MTR,"2""(50MM) Ut X 6M Upvc Pipe",30.90,6.90,19,"2""(50MM) UT X 6M UPVC PIPE    [EX]",uom_mismatch_not_applied
+IND-WIR-SQU-8#X24GX80',COIL,FTS,Square Wire Mesh 8 X 24G X 80,199.00,4.00,85,SQUARE WIRE MESH 8# X 24G X 80'    [EX],uom_mismatch_not_applied
+LOC-TRI-262,DOZ,PCS,262 Tricycle Pad Lock,104.00,8.50,13,262 TRICYCLE PAD LOCK,uom_mismatch_not_applied
+"DOR-H&S-LEO-3""",DOZ,PCS,Leon S/steel Hasp & STAPLE-3,53.90,4.30,24,"LEON S/STEEL HASP & STAPLE-3""",uom_mismatch_not_applied
+NAI-COM-75MM-20KG,BOX,PCK,3 Wire Nail,114.00,3.20,193,"3"" WIRE NAIL     [EX]",uom_mismatch_not_applied
+LOC-TRI-264,DOZ,PCS,264 Tricycle Pad Lock,194.00,16.50,10,264 TRICYCLE PAD LOCK,uom_mismatch_not_applied
+"PIP-PVC-C-2""",LTH,MTR,"2""(60MM) Class C X 6M PVC Pipe",56.90,10.90,54,"2""(60MM) CLASS C X 6M PVC PIPE    [EX]",uom_mismatch_not_applied
+"DOR-PUL-ALU-3""",DOZ,PCK,3 Door Pull,8.30,1.20,31,"3"" DOOR PULL",uom_mismatch_not_applied
+"DOR-PUL-ALU-4""",DOZ,PCK,4 Door Pull,11.10,1.60,23,"4"" DOOR PULL",uom_mismatch_not_applied
+IND-WIR-MES-2X2X3'X15GX100',ROLL,FTS,Wire Mesh 2 X 2 X 3 X 15G X 100,184.00,3.10,329,WIRE MESH 2 X 2 X 3' X 15G X 100'    [EX],uom_mismatch_not_applied
+IND-WIR-MES-181819-LTH,ROLL,FTS,Wire Mesh 3/4 X 3/4 X 3 X 19G,179.00,3.30,333,WIRE MESH 3/4 X 3/4 X 3' X 19G    [EX],uom_mismatch_not_applied
+ROD-CUR,ROLL,MTR,Curtain Rod 65 Fts,29.90,1.90,131.2,CURTAIN ROD 65 FTS,uom_mismatch_not_applied
+NAI-COM-25MM-20KG,BOX,PCK,1 Wire Nail (BOX),124.00,3.90,225,"1"" WIRE NAIL   [EX]",uom_mismatch_not_applied
+PAI-BRU-633-075MM,DOZ,PCS,Paint Brush 633 X 75MM (DOZ),29.90,2.90,40,PAINT BRUSH 633 X 75MM,uom_mismatch_not_applied
+TAB-PVC-187-15,ROLL,MTR,137CM X 25M Thick 107 Table Cloth - 494-10,149.00,6.90,22,137CM X 25M THICK 107 TABLE CLOTH - 494-10,uom_mismatch_not_applied
+TOO-RUL-STE-250,DOZ,PCS,Steel Angle Square 10,51.90,4.50,6,"STEEL ANGLE SQUARE 10""",uom_mismatch_not_applied
+FAS-BOL-EXP-0650,BOX,PCS,Sh Expansion Bolt M6 X 50,68.90,1.40,211,SH EXPANSION BOLT M6 X 50,uom_mismatch_not_applied
+LOC-TRI-263,DOZ,PCS,263 Tricycle Pad Lock,144.00,12.90,11,263 TRICYCLE PAD LOCK,uom_mismatch_not_applied
+FAS-BOL-EXP-0875,BOX,PCS,Sh Expansion Bolt M8 X 75,99.90,2.00,122,SH EXPANSION BOLT M8 X 75,uom_mismatch_not_applied
+PEN-ALU,BOX,PCS,Slate Pencil,27.90,0.80,108,SLATE PENCIL,uom_mismatch_not_applied
+"TOO-FIL-ORE-3/16""",DOZ,PCS,3/16 Oregan Chainsaw File (b) (DOZ),45.90,3.90,39,"3/16"" OREGAN CHAINSAW FILE(B)",uom_mismatch_not_applied
+PELEKAT-LALAT-CYZ7676,PCK,PCS,Sell Pelekat Lalat,6.60,0.60,159,SELL PELEKAT LALAT,uom_mismatch_not_applied
+IND-WIR-MES-PVC121218,ROLL,FTS,PVC Coated Wire Mesh 1/2 X 1/2 X 3,179.00,3.90,185,PVC COATED WIRE MESH 1/2 X 1/2 X 3'     [EX],uom_mismatch_not_applied
+FAS-BOL-EXP-0865,BOX,PCS,Sh Expansion Bolt M8 X 65,86.90,1.70,101,SH EXPANSION BOLT M8 X 65,uom_mismatch_not_applied
+HOS-SPA-WAS-RUB-C666-N,CARD,PKT,C666 Rubber Washer,31.90,1.30,26,C666 RUBBER WASHER,uom_mismatch_not_applied
+NAI-COM-100MM-20KG,BOX,PCK,4 Wire Nail (BOX),114.00,3.20,236,"4"" WIRE NAIL  [EX]",uom_mismatch_not_applied
+TOO-FIL-SLIM-STA-125MM,DOZ,PCS,5 Slim Tapered File-carded (DOZ),109.00,11.20,27,"5"" SLIM TAPERED FILE-CARDED",uom_mismatch_not_applied
+CHA-ANI-6FT-45,DOZ,PCS,Animal Chain 45 X 6,104.00,9.90,5,ANIMAL CHAIN 45 X 6',uom_mismatch_not_applied
+PVC-STRAPPING-APPLE GREEN,COIL,KGS,PVC Strapping Apple Green (COIL),89.90,12.90,9.4,PVC STRAPPING APPLE GREEN    [EX],uom_mismatch_not_applied
+PVC-STRAPPING-GREEN,COIL,KGS,PVC Strapping Green (COIL),89.90,12.90,9.9,PVC STRAPPING GREEN    [EX],uom_mismatch_not_applied
+PVC-STRAPPING-PIN,COIL,KGS,PVC Strapping Pink-t,89.90,12.90,7.4,PVC STRAPPING PINK-T    [EX],uom_mismatch_not_applied
+CAB-PVC-FLE-CON-20MM,COIL,MTR,"Cable 20MM PVC Flexible Conduit, White 40M",32.90,1.00,183,"CABLE 20MM PVC FLEXIBLE CONDUIT, WHITE 40M    [EX]",uom_mismatch_not_applied
+CLI-ELE-CAB-SPR-U18-20MMTC,PACK,PCS,Tc 20MM PVC Spring/u Clip (PACK),3.40,0.00,1705,TC 20MM PVC SPRING/U CLIP,uom_mismatch_not_applied
+"BRA-SHE-8""x10""",DOZ,PAIR,8 X 10 Shelf Bracket (DOZ),62.90,4.90,21,"8"" X 10"" SHELF BRACKET",uom_mismatch_not_applied
+IND-SCP-WOO75,DOZ,PCS,Gd Scraper 3,20.90,2.20,10,"GD SCRAPER 3""",uom_mismatch_not_applied
+MAR-PEN-BLACK,DOZ,PCS,Sharpie Fine Point P/marker (ls)- Black (DOZ),61.90,4.20,27,SHARPIE FINE POINT P/MARKER (LS)- BLACK,uom_mismatch_not_applied
+"HOI-PUL-SIN-1.1/2""",DOZ,PCS,Single Pulley 1.1/2 (DOZ),57.90,4.90,15,SINGLE PULLEY 1.1/2,uom_mismatch_not_applied
+"FAS-SCR-TD-HRW 675-3""",BOX,PCK,"Sr Wood Spandex Screw 3""- Td-hrw 675",79.90,16.90,5,"SR WOOD SPANDEX SCREW 3""- TD-HRW 675",uom_mismatch_not_applied
+PAI-SPR-ANC-001,DOZ,PCS,400ML Anchor Spray - 1 Clear (DOZ),149.00,11.50,14,400ML ANCHOR SPRAY - 1 CLEAR,uom_mismatch_not_applied
+PAI-SPR-ANC-002,DOZ,PCS,400ML Anchor Spray - 2 White (DOZ),149.00,11.50,12,400ML ANCHOR SPRAY - 2 WHITE,uom_mismatch_not_applied
+PAI-SPR-ANC-004,DOZ,PCS,400ML Anchor Spray - 4 Executive Grey (DOZ),149.00,11.50,13,400ML ANCHOR SPRAY - 4 EXECUTIVE GREY,uom_mismatch_not_applied
+PAI-SPR-ANC-006,DOZ,PCS,400ML Anchor Spray - 6 Royal Ivory (DOZ),149.00,11.50,13,400ML ANCHOR SPRAY - 6 ROYAL IVORY,uom_mismatch_not_applied
+PAI-SPR-ANC-015,DOZ,PCS,400ML Anchor Spray - 15 Vermillion,149.00,11.50,-1,400ML ANCHOR SPRAY - 15 VERMILLION,uom_mismatch_not_applied
+PAI-SPR-ANC-029,DOZ,PCS,400ML Anchor Spray - 29 Flat Black (DOZ),149.00,11.50,25,400ML ANCHOR SPRAY - 29 FLAT BLACK,uom_mismatch_not_applied
+PAI-SPR-ANC-030,DOZ,PCS,400ML Anchor Spray - 30 Black (DOZ),149.00,11.50,13,400ML ANCHOR SPRAY - 30 BLACK,uom_mismatch_not_applied
+PAI-SPR-ANC-803,DOZ,PCS,400ML Anchor Spray - 3 (803) Silver,149.00,11.50,3,400ML ANCHOR SPRAY - 3 (803) SILVER,uom_mismatch_not_applied
+"DOR-BOL-RAI-4""",DOZ,PCS,4 Rainbows Tower Bolt (DOZ),28.90,2.30,80,"4"" RAINBOWS TOWER BOLT",uom_mismatch_not_applied
+FAS-HOO-EYE-16#,GROSS,PCS,16 Hook & Eyes (GROSS),134.00,1.30,178,16# HOOK & EYES,uom_mismatch_not_applied
+CLI-ELE-CAB-SPR-U18-20MMTC,PKG,PCS,Tc 20MM PVC Spring/u Clip (PKG),27.90,0.00,1705,TC 20MM PVC SPRING/U CLIP,uom_mismatch_not_applied
+STR-NYL-MIX,DOZ,PCS,Dozen Nylon String (DOZ),18.70,1.60,79,DOZEN NYLON STRING    [EX],uom_mismatch_not_applied
+FAS-HOO-EYE-3#,GROSS,PCK,3 Hook & Eyes (24 Pcs/pck),16.90,2.20,12,3# HOOK & EYES (24 PCS/PCK),uom_mismatch_not_applied
+"FAS-SCR-TD-HRW 640- 1 1/2""",BOX,PCK,"Sr Wood Spandex Screw 1 1/2""- Td-hrw 640",99.00,9.60,2,"SR WOOD SPANDEX SCREW 1 1/2""- TD-HRW 640",uom_mismatch_not_applied
+CAB-PVC-FLE-CON-25MM,COIL,MTR,"Cable 25MM PVC Flexible Conduit, White 40M (COIL)",43.90,1.30,119,"CABLE 25MM PVC FLEXIBLE CONDUIT, WHITE 40M    [EX]",uom_mismatch_not_applied
+"DOR-BOL-RAI-6""",DOZ,PCS,6 Rainbows Tower Bolt,34.90,2.80,14,"6"" RAINBOWS TOWER BOLT",uom_mismatch_not_applied
+IND-SCP-WOO100,DOZ,PCS,Gd Scraper 4,22.90,2.40,12,"GD SCRAPER 4""",uom_mismatch_not_applied
+FAS-HOO-EYE-10#,GROSS,PCS,10 Hook & Eyes,54.90,0.60,68,10# HOOK & EYES,uom_mismatch_not_applied
+IND-SCP-WOO50,DOZ,PCS,Gd Scraper 2 (DOZ),17.60,1.70,14,"GD SCRAPER 2""",uom_mismatch_not_applied
+IND-SCP-WOO25,DOZ,PCS,Gd Scraper 1 (DOZ),16.70,1.30,16,"GD SCRAPER 1""",uom_mismatch_not_applied
+"DOR-BOL-TOW-BLA-5""",DOZ,PCS,5 Black Tower Bolt,15.20,1.70,28,"5"" BLACK TOWER BOLT",uom_mismatch_not_applied
+"DOR-BOL-TOW-BLA-3""",DOZ,PCS,3 Black Tower Bolt,12.50,1.20,14,"3"" BLACK TOWER BOLT",uom_mismatch_not_applied
+FAS-SHE-EYE-RING-3#,GROSS,PCK,3 Sheep Eye Ring (24 Pcs/pck),16.90,2.60,8,3# SHEEP EYE RING (24 PCS/PCK),uom_mismatch_not_applied
+DOR-TOW-BOL65,DOZ,PCS,2 1/2 Aluminium Tower Bolt,32.90,2.30,11,"2 1/2"" ALUMINIUM TOWER BOLT",uom_mismatch_not_applied
+HOS-TAP-STO-RUB-5114,CARD,PCK,5114 Techplas Tap Stopper Rubber Washer,6.60,0.50,32,5114# TECHPLAS TAP STOPPER RUBBER WASHER,uom_mismatch_not_applied

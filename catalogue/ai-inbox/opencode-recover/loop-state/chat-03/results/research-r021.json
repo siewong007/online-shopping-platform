@@ -1,0 +1,664 @@
+[
+    {
+        "source_position":  "3444",
+        "item_code":  "X-LEO-SUS304-S/S-L333",
+        "tier_used":  1,
+        "queries":  [
+                        "Leon stainless steel L333 tap two way Malaysia",
+                        "Leon tap two way OR 2 way sus304 sink Malaysia"
+                    ],
+        "pages_opened":  [
+
+                         ],
+        "official_product_page":  "",
+        "official_image_url":  "",
+        "model_string_on_page":  "",
+        "finish_match":  "unclear",
+        "size_match":  "not_named",
+        "decision":  "no_candidate",
+        "low_res":  false,
+        "rights_status":  "no_asset",
+        "confidence":  "high",
+        "reason":  "No brand site or authorised dealer PDP found for a Leon-brand SUS304 two-way tap model L333 / TAP-L333. Only unrelated L333 hits surfaced (pleco fish group, Siemens Gamesa steel pipe). Without a verifiable brand owner nothing admissible exists.",
+        "human_action":  "Confirm the real maker or house label behind X-LEO items with purchasing, then search that brand catalogue for L333."
+    },
+    {
+        "source_position":  "5244",
+        "item_code":  "TAP-SKC-M22X2.50",
+        "tier_used":  3,
+        "queries":  [
+                        "SKC hand tap M22 threading tool",
+                        "SKC Thread Tool hand taps metric standard skc-taps.com"
+                    ],
+        "pages_opened":  [
+                             {
+                                 "url":  "http://www.skc-taps.com/english/01/index.html",
+                                 "note":  "200 - official SKC Japan Standard Hand Taps catalog; table includes M22 pitch 2.5; graphics are tiny GIF diagrams"
+                             },
+                             {
+                                 "url":  "https://sonichardware.com.my/categories-listing/category/337-skc-hand-tap",
+                                 "note":  "200 - MY dealer category holds only two family-level products sharing one photo"
+                             }
+                         ],
+        "official_product_page":  "",
+        "official_image_url":  "",
+        "model_string_on_page":  "M22 / 2.5 (in SKC metric coarse table)",
+        "finish_match":  "unclear",
+        "size_match":  "yes",
+        "decision":  "no_candidate",
+        "low_res":  true,
+        "rights_status":  "no_asset",
+        "confidence":  "high",
+        "reason":  "Official SKC Thread Tool site confirms M22x2.5 but its only artwork is 2-3KB diagram GIFs far below the 500px floor. The sole dealer PDP (Sonic Hardware M-series) uses one shared family photo for all sizes, failing the exact-model image bar.",
+        "human_action":  "Request a per-size photo of the M22x2.50 3-pc set from an authorised SKC distributor such as Sonic Hardware Sibu."
+    },
+    {
+        "source_position":  "3498",
+        "item_code":  "FAS-SCR-CSK-1 1/4\" X 8G-BOX",
+        "tier_used":  1,
+        "queries":  [
+                        "countersunk self tapping screw 8G x 1 1/4 1000pcs box Malaysia"
+                    ],
+        "pages_opened":  [
+
+                         ],
+        "official_product_page":  "",
+        "official_image_url":  "",
+        "model_string_on_page":  "",
+        "finish_match":  "unclear",
+        "size_match":  "yes",
+        "decision":  "no_candidate",
+        "low_res":  false,
+        "rights_status":  "no_asset",
+        "confidence":  "high",
+        "reason":  "Unbranded commodity fastener; only marketplace listings and generic fastener-maker category pages surfaced, none presenting this exact box as a branded product page. Clean no-candidate for a generic.",
+        "human_action":  "Photograph the actual box in-store, or identify the supplier brand and use its catalogue sheet."
+    },
+    {
+        "source_position":  "4326",
+        "item_code":  "SHE-CAB-CB476-GM",
+        "tier_used":  1,
+        "queries":  [
+                        "Cabana bathroom accessories Malaysia CB474 shelf",
+                        "site:cabana.com.my CB476"
+                    ],
+        "pages_opened":  [
+                             {
+                                 "url":  "https://www.cabana.com.my/index.php/products/bathroom/bathroom-accessories/shelf/cb476-gm-detail",
+                                 "note":  "200 PDP - H1 CB476-GM; description: Corner Shelf L235xW235xH65mm Gunmetal"
+                             }
+                         ],
+        "official_product_page":  "https://www.cabana.com.my/index.php/products/bathroom/bathroom-accessories/shelf/cb476-gm-detail",
+        "official_image_url":  "https://www.cabana.com.my/images/virtuemart/product/CB476-GM-01.jpg",
+        "model_string_on_page":  "CB476-GM",
+        "finish_match":  "yes",
+        "size_match":  "not_named",
+        "decision":  "candidate",
+        "low_res":  false,
+        "rights_status":  "unknown",
+        "confidence":  "high",
+        "reason":  "Official Cabana (Sorento Sdn Bhd) PDP titled Shelf: CB476-GM describes a Corner Shelf in Gunmetal, matching the row exactly including the GM suffix. Image verified downloadable at 3334x3334 px, model-specific, not a family hero.",
+        "human_action":  ""
+    },
+    {
+        "source_position":  "4375",
+        "item_code":  "SHE-CAB-CB474-GM",
+        "tier_used":  2,
+        "queries":  [
+                        "Cabana bathroom accessories Malaysia CB474 shelf",
+                        "cb474-gm detail direct URL probe",
+                        "cabana.com.my internal keyword search CB474"
+                    ],
+        "pages_opened":  [
+                             {
+                                 "url":  "https://www.cabana.com.my/index.php/sorento/bathroom/bathroom-accessories/shelf/cb474-detail",
+                                 "note":  "200 legacy PDP - title CB474 SHELF only; no finish or size stated; single image CB474-016.jpg"
+                             },
+                             {
+                                 "url":  "https://www.cabana.com.my/index.php/products/bathroom/bathroom-accessories/shelf/cb474-gm-detail",
+                                 "note":  "404 - requested product does not exist"
+                             }
+                         ],
+        "official_product_page":  "",
+        "official_image_url":  "",
+        "model_string_on_page":  "CB474",
+        "finish_match":  "unclear",
+        "size_match":  "unclear",
+        "decision":  "no_candidate",
+        "low_res":  false,
+        "rights_status":  "no_asset",
+        "confidence":  "medium",
+        "reason":  "Official site carries only an unannotated CB474 entry while the GM-specific URL 404s. Dealers confirm CB474 ships in both -BL and -GM finishes (at 65mm height versus the row\u0027s 56mm), so the lone official photo cannot be proven to depict gun metal - a colour-swap risk under the brief.",
+        "human_action":  "Ask Sorento Sdn Bhd / Cabana for a CB474-GM-specific photo, or visually confirm whether images/virtuemart/product/CB474-016.jpg shows the gun metal version."
+    },
+    {
+        "source_position":  "5380",
+        "item_code":  "TAP-CAB-CB1530S-BL",
+        "tier_used":  2,
+        "queries":  [
+                        "cabana CB1530S kitchen tap"
+                    ],
+        "pages_opened":  [
+                             {
+                                 "url":  "https://www.cabana.com.my/index.php/products/kitchen/kitchen-faucet/cb1530ss-bl-1-detail",
+                                 "note":  "200 PDP - H1 CB1530SS-BL; description: PILLAR KITCHEN COLD TAP, Material S/Steel, Finishing Matt Black"
+                             }
+                         ],
+        "official_product_page":  "https://www.cabana.com.my/index.php/products/kitchen/kitchen-faucet/cb1530ss-bl-1-detail",
+        "official_image_url":  "https://www.cabana.com.my/images/virtuemart/product/CB1530SS-BL-02.jpg",
+        "model_string_on_page":  "CB1530SS-BL",
+        "finish_match":  "yes",
+        "size_match":  "not_named",
+        "decision":  "candidate",
+        "low_res":  false,
+        "rights_status":  "unknown",
+        "confidence":  "high",
+        "reason":  "Ekoway code drops one S; Tier-2 normalisation CB1530S to CB1530SS resolves cleanly to the official pillar-mounted stainless steel 304 kitchen cold tap in matt black, matching the row description and BL suffix. Verified model-specific image at 3333x3333 px. Correct official spelling is CB1530SS-BL.",
+        "human_action":  ""
+    },
+    {
+        "source_position":  "2966",
+        "item_code":  "DOR-SET-ATH-120",
+        "tier_used":  1,
+        "queries":  [
+                        "AC Armor handleset ATH-120 Malaysia"
+                    ],
+        "pages_opened":  [
+
+                         ],
+        "official_product_page":  "",
+        "official_image_url":  "",
+        "model_string_on_page":  "",
+        "finish_match":  "unclear",
+        "size_match":  "unclear",
+        "decision":  "no_candidate",
+        "low_res":  false,
+        "rights_status":  "no_asset",
+        "confidence":  "medium",
+        "reason":  "Zero relevant results for AC Armor or ATH-120 handlesets; the brand appears to have no discoverable online footprint and may be spelled differently on stock. Nothing admissible found for this obscure door-hardware brand.",
+        "human_action":  "Read the brand spelling off the physical stock tag and retry, or request a catalogue image from the door-hardware supplier."
+    },
+    {
+        "source_position":  "5276",
+        "item_code":  "TAP-SKC-M22X2.00",
+        "tier_used":  3,
+        "queries":  [
+                        "SKC hand tap M22 threading tool",
+                        "SKC Thread Tool hand taps metric standard skc-taps.com"
+                    ],
+        "pages_opened":  [
+                             {
+                                 "url":  "http://www.skc-taps.com/english/01/index.html",
+                                 "note":  "200 - official SKC catalog; coarse table lists M22 only at pitch 2.5, so 2.00 fine pitch sits in Metric Special with no separate artwork"
+                             },
+                             {
+                                 "url":  "https://sonichardware.com.my/categories-listing/category/337-skc-hand-tap",
+                                 "note":  "200 - dealer M-series product shares one family photo across all sizes"
+                             }
+                         ],
+        "official_product_page":  "",
+        "official_image_url":  "",
+        "model_string_on_page":  "M22 (coarse table only)",
+        "finish_match":  "unclear",
+        "size_match":  "unclear",
+        "decision":  "no_candidate",
+        "low_res":  true,
+        "rights_status":  "no_asset",
+        "confidence":  "high",
+        "reason":  "Same imagery problem as the M22x2.50 sibling: official SKC site offers only tiny diagram GIFs, its coarse table does not cover M22x2.00, and the dealer M-series page uses a single shared family photo. No model-specific admissible image exists.",
+        "human_action":  "Ask an authorised SKC distributor for a photo of the M22x2.00 fine-pitch set, or photograph the packaged set."
+    },
+    {
+        "source_position":  "4264",
+        "item_code":  "INS-FWF04-SC",
+        "tier_used":  1,
+        "queries":  [
+                        "FWF04 toilet seat cover",
+                        "FWF04"
+                    ],
+        "pages_opened":  [
+
+                         ],
+        "official_product_page":  "",
+        "official_image_url":  "",
+        "model_string_on_page":  "",
+        "finish_match":  "unclear",
+        "size_match":  "unclear",
+        "decision":  "no_candidate",
+        "low_res":  false,
+        "rights_status":  "no_asset",
+        "confidence":  "high",
+        "reason":  "FWF04 returns no sanitaryware results anywhere; hits are unrelated (UK pharmacy ODS code, wheat flour grade, apparel SKUs). The seat-and-cover code looks like an internal spare-part reference whose parent brand is unknown.",
+        "human_action":  "Trace which water-closet model FWF04 belongs to (supplier invoice or mould stamp under seat), then pull the image from that brand parts catalogue."
+    },
+    {
+        "source_position":  "4290",
+        "item_code":  "SHH-REEL-HS5000",
+        "tier_used":  2,
+        "queries":  [
+                        "Hytac Hyperstone HS5000 reel",
+                        "Eupro Hytac Hyperstone spinning reel 5000"
+                    ],
+        "pages_opened":  [
+                             {
+                                 "url":  "https://euprointernational.com/spinning-reel/",
+                                 "note":  "200 - official Eupro (Haiyen Sports Fishing) spinning reel catalog page 1 of 4"
+                             },
+                             {
+                                 "url":  "https://euprointernational.com/spinning-reel/page/2/",
+                                 "note":  "200 - page 2, no Hyperstone"
+                             },
+                             {
+                                 "url":  "https://euprointernational.com/spinning-reel/page/3/",
+                                 "note":  "200 - page 3, no Hyperstone"
+                             },
+                             {
+                                 "url":  "https://euprointernational.com/spinning-reel/page/4/",
+                                 "note":  "200 - final page holds only Tiny; Hyperstone absent from all 28 reels"
+                             }
+                         ],
+        "official_product_page":  "",
+        "official_image_url":  "",
+        "model_string_on_page":  "",
+        "finish_match":  "unclear",
+        "size_match":  "yes",
+        "decision":  "no_candidate",
+        "low_res":  false,
+        "rights_status":  "no_asset",
+        "confidence":  "high",
+        "reason":  "Hytac Hyperstone is confirmed as an Eupro International series in sizes 2000-5000 via the maker own posts, but the official euprointernational.com catalog lists 28 spinning reels with no Hyperstone entry at all. Remaining sources (Shopee, Lazada, Facebook) are excluded types.",
+        "human_action":  "Request the Hyperstone 5000 press or catalogue image directly from Eupro International (Tangkak, Johor), or photograph the reel in-store."
+    },
+    {
+        "source_position":  "3578",
+        "item_code":  "X-AMBA-155",
+        "tier_used":  2,
+        "queries":  [
+                        "Aimer recessed paper holder bathroom accessories Malaysia",
+                        "Aimer AMBA recessed paper holder bathroom"
+                    ],
+        "pages_opened":  [
+
+                         ],
+        "official_product_page":  "",
+        "official_image_url":  "",
+        "model_string_on_page":  "",
+        "finish_match":  "unclear",
+        "size_match":  "unclear",
+        "decision":  "no_candidate",
+        "low_res":  false,
+        "rights_status":  "no_asset",
+        "confidence":  "high",
+        "reason":  "Aimer paper holders follow five-digit AMBA codes (AMBA-97307, AMBA-83807, AMBA-85807 etc); no AMBA-155 or any recessed holder matching 155x165x70mm was found, and Aimer has no official brand site - only dealer shops and marketplaces. Model code and dimensions cannot be reconciled.",
+        "human_action":  "Read the full AMBA model code off the box and rerun against dealer catalogues such as intraco.com.my or ewarehouse.my."
+    },
+    {
+        "source_position":  "4329",
+        "item_code":  "SHH-REEL-VT100",
+        "tier_used":  1,
+        "queries":  [
+                        "Pioneer fishing Nuke Pro casting reel",
+                        "NUE-200P OR NUE200P pioneer Malaysia"
+                    ],
+        "pages_opened":  [
+
+                         ],
+        "official_product_page":  "",
+        "official_image_url":  "",
+        "model_string_on_page":  "",
+        "finish_match":  "unclear",
+        "size_match":  "yes",
+        "decision":  "no_candidate",
+        "low_res":  false,
+        "rights_status":  "no_asset",
+        "confidence":  "high",
+        "reason":  "The row (Nuke Pro, 9+1BB, right handle) corresponds to Pioneer NUE-200P per dealer snippets, but Pioneer Tackle official site (pioneertackle.com, Hong Guan Singapore) is CAPTCHA-walled and no authorised Malaysian dealer PDP exists - only Shopee, Lazada, TikTok and South African shops. The item code VT100 matches no Nuke Pro variant.",
+        "human_action":  "Obtain the NUE-200P image via Pioneer Tackle sales channel or an authorised Malaysian tackle dealer own site; correct the item code to NUE-200P."
+    },
+    {
+        "source_position":  "4392",
+        "item_code":  "SHE-CAB-CB504A",
+        "tier_used":  1,
+        "queries":  [
+                        "site:cabana.com.my CB476",
+                        "cabana CB504A direct URL probe"
+                    ],
+        "pages_opened":  [
+                             {
+                                 "url":  "https://www.cabana.com.my/index.php/products/bathroom/bathroom-accessories/shelf/cb504a-detail",
+                                 "note":  "200 PDP - H1 CB504A; description: Corner Glass Shelf"
+                             }
+                         ],
+        "official_product_page":  "https://www.cabana.com.my/index.php/products/bathroom/bathroom-accessories/shelf/cb504a-detail",
+        "official_image_url":  "https://www.cabana.com.my/images/virtuemart/product/CB504A.jpg",
+        "model_string_on_page":  "CB504A",
+        "finish_match":  "unclear",
+        "size_match":  "not_named",
+        "decision":  "candidate",
+        "low_res":  false,
+        "rights_status":  "unknown",
+        "confidence":  "high",
+        "reason":  "Official Cabana PDP with exact H1 model CB504A described as Corner Glass Shelf, matching the row glass shelf description; the row names no finish or size. Image verified at 800x800 px, meeting the minimum and model-specific.",
+        "human_action":  ""
+    },
+    {
+        "source_position":  "5381",
+        "item_code":  "TAP-SKC-M20X1.50",
+        "tier_used":  3,
+        "queries":  [
+                        "SKC hand tap M22 threading tool",
+                        "SKC Thread Tool hand taps metric standard skc-taps.com"
+                    ],
+        "pages_opened":  [
+                             {
+                                 "url":  "http://www.skc-taps.com/english/01/index.html",
+                                 "note":  "200 - official SKC catalog; M20 coarse pitch is 2.5, so M20x1.50 is a special pitch with no dedicated artwork"
+                             },
+                             {
+                                 "url":  "https://sonichardware.com.my/categories-listing/category/337-skc-hand-tap",
+                                 "note":  "200 - dealer M-series family photo only"
+                             }
+                         ],
+        "official_product_page":  "",
+        "official_image_url":  "",
+        "model_string_on_page":  "M20 (coarse table only)",
+        "finish_match":  "unclear",
+        "size_match":  "unclear",
+        "decision":  "no_candidate",
+        "low_res":  true,
+        "rights_status":  "no_asset",
+        "confidence":  "high",
+        "reason":  "Fine-pitch SKC taps have no distinct imagery anywhere: the official site publishes only 2-3KB diagram GIFs and its coarse table omits M20x1.50, while the dealer M-series listing shares one family photo across sizes. Fails the exact-model image requirement.",
+        "human_action":  "Request an M20x1.50 set photo from an authorised SKC dealer or photograph packaged stock."
+    },
+    {
+        "source_position":  "5382",
+        "item_code":  "TAP-SKC-M20X2.00",
+        "tier_used":  3,
+        "queries":  [
+                        "SKC hand tap M22 threading tool",
+                        "SKC Thread Tool hand taps metric standard skc-taps.com"
+                    ],
+        "pages_opened":  [
+                             {
+                                 "url":  "http://www.skc-taps.com/english/01/index.html",
+                                 "note":  "200 - official SKC catalog; M20x2.00 is a fine pitch outside the coarse table, no dedicated artwork"
+                             },
+                             {
+                                 "url":  "https://sonichardware.com.my/categories-listing/category/337-skc-hand-tap",
+                                 "note":  "200 - dealer M-series family photo only"
+                             }
+                         ],
+        "official_product_page":  "",
+        "official_image_url":  "",
+        "model_string_on_page":  "M20 (coarse table only)",
+        "finish_match":  "unclear",
+        "size_match":  "unclear",
+        "decision":  "no_candidate",
+        "low_res":  true,
+        "rights_status":  "no_asset",
+        "confidence":  "high",
+        "reason":  "Identical situation to the other fine-pitch SKC taps: no official or dealer page provides a size-specific usable image and the official artwork is far below the resolution floor.",
+        "human_action":  "Ask an authorised SKC distributor for the M20x2.00 set photo or photograph the boxed set."
+    },
+    {
+        "source_position":  "5444",
+        "item_code":  "TAP-SKC-M20X2.50",
+        "tier_used":  3,
+        "queries":  [
+                        "SKC hand tap M22 threading tool",
+                        "SKC Thread Tool hand taps metric standard skc-taps.com"
+                    ],
+        "pages_opened":  [
+                             {
+                                 "url":  "http://www.skc-taps.com/english/01/index.html",
+                                 "note":  "200 - official SKC catalog; M20 pitch 2.5 IS in the coarse table but artwork remains tiny diagrams"
+                             },
+                             {
+                                 "url":  "https://sonichardware.com.my/categories-listing/category/337-skc-hand-tap",
+                                 "note":  "200 - dealer M-series family photo only"
+                             }
+                         ],
+        "official_product_page":  "",
+        "official_image_url":  "",
+        "model_string_on_page":  "M20 / 2.5 (in SKC metric coarse table)",
+        "finish_match":  "unclear",
+        "size_match":  "yes",
+        "decision":  "no_candidate",
+        "low_res":  true,
+        "rights_status":  "no_asset",
+        "confidence":  "high",
+        "reason":  "Although the official SKC coarse table confirms M20x2.5, available images remain sub-20KB diagrams or a dealer family photo covering all sizes; neither satisfies the exact-model image bar.",
+        "human_action":  "Request a size-specific photo from an authorised SKC distributor or photograph the boxed set."
+    },
+    {
+        "source_position":  "3427",
+        "item_code":  "HOO-CAB-CB8003-5",
+        "tier_used":  1,
+        "queries":  [
+                        "site:cabana.com.my CB476",
+                        "cabana CB8003-5 direct URL probe"
+                    ],
+        "pages_opened":  [
+                             {
+                                 "url":  "https://www.cabana.com.my/index.php/products/bathroom/bathroom-accessories/hook-bar/cb8003-5-detail",
+                                 "note":  "200 PDP - H1 CB8003-5; description: 5 Robe Hook Bar"
+                             }
+                         ],
+        "official_product_page":  "https://www.cabana.com.my/index.php/products/bathroom/bathroom-accessories/hook-bar/cb8003-5-detail",
+        "official_image_url":  "https://www.cabana.com.my/images/virtuemart/product/CB8003-5.jpg",
+        "model_string_on_page":  "CB8003-5",
+        "finish_match":  "unclear",
+        "size_match":  "not_named",
+        "decision":  "candidate",
+        "low_res":  false,
+        "rights_status":  "unknown",
+        "confidence":  "high",
+        "reason":  "Official Cabana PDP with exact H1 CB8003-5 described as 5 Robe Hook Bar matches the row (Cabana 5 Robe Hook). No finish variants of this model are listed, so the single official photo necessarily depicts the model as sold; the row polish note is unverified on page. Image verified at 3334x3334 px.",
+        "human_action":  ""
+    },
+    {
+        "source_position":  "4378",
+        "item_code":  "SHH-ROD-CRF200XH",
+        "tier_used":  1,
+        "queries":  [
+                        "Pioneer Crossfire casting reel baitcaster"
+                    ],
+        "pages_opened":  [
+
+                         ],
+        "official_product_page":  "",
+        "official_image_url":  "",
+        "model_string_on_page":  "",
+        "finish_match":  "unclear",
+        "size_match":  "yes",
+        "decision":  "no_candidate",
+        "low_res":  false,
+        "rights_status":  "no_asset",
+        "confidence":  "high",
+        "reason":  "CRF-200XH right-handle 4+1BB matches the row exactly per multiple overseas dealer PDPs, but Pioneer official site is CAPTCHA-walled and no authorised Malaysian dealer PDP was found; remaining sources are excluded marketplaces. Some listings show an HS suffix variant (CRf-200XH-HS) that would need checking before any asset use.",
+        "human_action":  "Source an image via Pioneer Tackle or an authorised MY dealer; verify whether stock is CRF-200XH or CRF-200XH-HS first."
+    },
+    {
+        "source_position":  "4458",
+        "item_code":  "SHH-ROD-TKKT28032S",
+        "tier_used":  2,
+        "queries":  [
+                        "Torikumu Kotai fishing rod 803 904",
+                        "alpine.my torikumu kotai TK-KT2"
+                    ],
+        "pages_opened":  [
+                             {
+                                 "url":  "http://alpine.my/Featured.html",
+                                 "note":  "200 - official Torikumu series page; Kotai shown only as series 503-903, no TK-KT2 (Kotai II) models or per-size images"
+                             }
+                         ],
+        "official_product_page":  "",
+        "official_image_url":  "",
+        "model_string_on_page":  "",
+        "finish_match":  "unclear",
+        "size_match":  "unclear",
+        "decision":  "no_candidate",
+        "low_res":  false,
+        "rights_status":  "no_asset",
+        "confidence":  "high",
+        "reason":  "TK-KT2-803-2S (8ft Medium, 2pc) is a genuine Kotai II code visible on Shopee/Lazada listings, but the brand site alpine.my only presents the older Kotai series without per-model pages or images. Marketplaces are excluded sources, so nothing admissible exists.",
+        "human_action":  "Request a Kotai II spec sheet and photo from Alpine (brand owner) or photograph the rod in-store."
+    },
+    {
+        "source_position":  "4514",
+        "item_code":  "SHH-ROD-TKKT9042S",
+        "tier_used":  2,
+        "queries":  [
+                        "Torikumu Kotai fishing rod 803 904",
+                        "alpine.my torikumu kotai TK-KT2"
+                    ],
+        "pages_opened":  [
+                             {
+                                 "url":  "http://alpine.my/Featured.html",
+                                 "note":  "200 - official Torikumu series page; only series-level Kotai 503-903 content, no TK-KT2 models"
+                             }
+                         ],
+        "official_product_page":  "",
+        "official_image_url":  "",
+        "model_string_on_page":  "",
+        "finish_match":  "unclear",
+        "size_match":  "unclear",
+        "decision":  "no_candidate",
+        "low_res":  false,
+        "rights_status":  "no_asset",
+        "confidence":  "high",
+        "reason":  "Same as the 8ft sibling: TK-KT2-904-2S (9ft Med-Heavy) is real per marketplace listings but absent from the brand own site, which offers no per-model imagery; admissible sources exhausted.",
+        "human_action":  "Request a Kotai II spec sheet and photo from Alpine or photograph the rod in-store."
+    },
+    {
+        "source_position":  "5647",
+        "item_code":  "VAL-CAB-CSK12A",
+        "tier_used":  2,
+        "queries":  [
+                        "site:cabana.com.my CSK12A OR stop valve CB1530S",
+                        "CSK12A cabana valve",
+                        "cabana.com.my internal keyword search CSK12A"
+                    ],
+        "pages_opened":  [
+                             {
+                                 "url":  "https://www.zhinheng.com.my/showproducts/productid/4215466/cid/622203/cabana-csk12a-stop-valve-12quot/",
+                                 "note":  "200 dealer PDP - SKU CSK12A, Stop Valve 1/2 inch, brass chrome; 1000px CDN image"
+                             },
+                             {
+                                 "url":  "https://www.cabana.com.my/index.php/component/virtuemart/results,1-?search=true\u0026keyword=CSK12A",
+                                 "note":  "0 results - model not present on official Cabana site"
+                             }
+                         ],
+        "official_product_page":  "https://www.zhinheng.com.my/showproducts/productid/4215466/cid/622203/cabana-csk12a-stop-valve-12quot/",
+        "official_image_url":  "https://cdn1.npcdn.net/images/e04dc5717d9403d6484f605f13dc0242_1780106573.webp?md5id=9424aa849c54613a0086d9003cb1e5f7\u0026new_width=1000\u0026new_height=1000\u0026size=max\u0026w=1730524398\u0026from=jpeg\u0026type=9",
+        "model_string_on_page":  "CSK12A",
+        "finish_match":  "unclear",
+        "size_match":  "yes",
+        "decision":  "candidate",
+        "low_res":  false,
+        "rights_status":  "unknown",
+        "confidence":  "medium",
+        "reason":  "Official Cabana site does not list CSK12A (internal search zero hits, csk12a-detail 404s), but Malaysian sanitary dealer Zhin Heng Hardware carries a dedicated CABANA Stop Valve 1/2 inch CSK12A PDP whose SKU text matches exactly and which serves a 1000px product image via CDN. Dealer authorised status is undocumented, hence medium confidence.",
+        "human_action":  ""
+    },
+    {
+        "source_position":  "4383",
+        "item_code":  "WEL-REG-YAM-OXY",
+        "tier_used":  1,
+        "queries":  [
+                        "Yamato welding regulator YR70 oxygen Malaysia"
+                    ],
+        "pages_opened":  [
+                             {
+                                 "url":  "https://sonichardware.com.my/product/product/1281-yamato-regulator-oxygen-yr70",
+                                 "note":  "200 dealer PDP - YAMATO Regulator Oxygen YR70 with full specs; full image only 450x394 px, below the 500px floor"
+                             },
+                             {
+                                 "url":  "https://weldmart.com.my/product/yamato-gas-regulator-yr-70-yr-71/",
+                                 "note":  "reachable once via proxy; names YAMATO YR-70 Oxygen Regulator; image REGULATOR-YAMATO-YR70-YR71.png is a dual-model composite and host later timed out repeatedly"
+                             }
+                         ],
+        "official_product_page":  "",
+        "official_image_url":  "",
+        "model_string_on_page":  "YR-70",
+        "finish_match":  "unclear",
+        "size_match":  "yes",
+        "decision":  "no_candidate",
+        "low_res":  true,
+        "rights_status":  "no_asset",
+        "confidence":  "medium",
+        "reason":  "Model confirmed real and correctly specced (oxygen, G5/8 inlet) on Malaysian dealer pages, but the only clean single-model photo found (Sonic Hardware) is 450x394 px, under the usability floor, while the alternative Weldmart asset is a YR-70/YR-71 composite on a host that now times out. No official Yamato brand site exists.",
+        "human_action":  "Re-fetch Weldmart REGULATOR-YAMATO-YR70-YR71.png when the host recovers and crop the YR-70 side, or obtain a hi-res YR70-only photo from the importer."
+    },
+    {
+        "source_position":  "2789",
+        "item_code":  "TOO-WRE-PIP-W600C",
+        "tier_used":  1,
+        "queries":  [
+                        "W600C pipe wrench heavy duty"
+                    ],
+        "pages_opened":  [
+
+                         ],
+        "official_product_page":  "",
+        "official_image_url":  "",
+        "model_string_on_page":  "",
+        "finish_match":  "unclear",
+        "size_match":  "yes",
+        "decision":  "no_candidate",
+        "low_res":  false,
+        "rights_status":  "no_asset",
+        "confidence":  "high",
+        "reason":  "No pipe wrench branded or modelled W600C found anywhere; the only W600C hits are unrelated (Ryobi circular saw spares). The code looks like a generic OEM size marking for a 600mm heavy pipe wrench.",
+        "human_action":  "Read the maker stamp on the wrench handle and search that manufacturer catalogue for its 600mm model."
+    },
+    {
+        "source_position":  "3266",
+        "item_code":  "GAR-CUT-LIN-YEL-TL01",
+        "tier_used":  1,
+        "queries":  [
+                        "TL01 square trimmer line 3lbs"
+                    ],
+        "pages_opened":  [
+
+                         ],
+        "official_product_page":  "",
+        "official_image_url":  "",
+        "model_string_on_page":  "",
+        "finish_match":  "unclear",
+        "size_match":  "yes",
+        "decision":  "no_candidate",
+        "low_res":  false,
+        "rights_status":  "no_asset",
+        "confidence":  "high",
+        "reason":  "TL01 square trimmer line has no online footprint beyond irrelevant noise; it appears to be a house/OEM code rather than a searchable brand model. Nothing admissible to gate.",
+        "human_action":  "Check the trimmer-line packaging for the actual brand name and match against that brand catalogue, or photograph the roll."
+    },
+    {
+        "source_position":  "5518",
+        "item_code":  "GUN-WUF-F75S",
+        "tier_used":  2,
+        "queries":  [
+                        "Wufu spray gun F-75 Taiwan",
+                        "F-75S wufutools OR wufu spray gun"
+                    ],
+        "pages_opened":  [
+                             {
+                                 "url":  "https://www.wufutools.com/product/list/id/30",
+                                 "note":  "200 - official Wufu air spray guns catalog; F-75S not listed (gravity variant F-75G exists at product detail id 300)"
+                             }
+                         ],
+        "official_product_page":  "",
+        "official_image_url":  "",
+        "model_string_on_page":  "",
+        "finish_match":  "unclear",
+        "size_match":  "yes",
+        "decision":  "no_candidate",
+        "low_res":  false,
+        "rights_status":  "no_asset",
+        "confidence":  "medium",
+        "reason":  "Wufu official site (Zhejiang Refine Wufu Air Tools) lists F-75G but not the suction F-75S; identically coded F-75S guns are also made by other factories such as Rongpeng, so brand ownership of this exact variant cannot be pinned. Remaining sources are Alibaba/Lazada/AliExpress which are excluded.",
+        "human_action":  "Confirm with the supplier the gun sold is genuine WUFU F-75-S and request their official product photo; otherwise reference the official F-75G page only."
+    }
+]

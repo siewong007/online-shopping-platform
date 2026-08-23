@@ -1,0 +1,33 @@
+
+### p:https://www.jllelectrical.com.my/search/keyword/yta60z1/ status=200 bytes=300528
+
+### p:https://www.jllelectrical.com.my/search/keyword/yta70z1/ status=200 bytes=300528
+
+### p:https://www.jllelectrical.com.my/search/keyword/yta65z2/ status=200 bytes=300528
+
+### p:https://www.jllelectrical.com.my/search/keyword/ytp38b1/ status=200 bytes=300528
+
+### p:https://www.jllelectrical.com.my/search/keyword/ytp38z1/ status=200 bytes=300528
+
+### p:https://www.jllelectrical.com.my/search/keyword/ytp45z1/ status=200 bytes=300528
+
+### p:https://www.jllelectrical.com.my/search/keyword/mqtl2048/ status=200 bytes=300542
+
+### p:https://www.jllelectrical.com.my/search/keyword/ytp45z1%203000k/ status=200 bytes=300640
+
+### p:https://www.jllelectrical.com.my/search/keyword/yta70z1%203000k/ status=200 bytes=300640
+
+### p:https://edaran.my/?s=yta60z1 status=200 bytes=50165 hits=0
+
+### p:https://edaran.my/?s=yta70z1 status=200 bytes=50165 hits=0
+
+### p:https://edaran.my/?s=ytp45z1 status=200 bytes=50165 hits=0
+
+### p:https://edaran.my/?s=ytp38z1 status=200 bytes=50165 hits=0
+
+### p:https://edaran.my/?s=ytp38b1 status=200 bytes=50165 hits=0
+
+### p:https://www.mrmarks.com/index.php?ws=showsearch&keyword=12300 status=200 bytes=64712
+
+### mrmark 2160710 cat-links=[]
+### mrmark 2160710 related-ids=['2160706', '2160710', '2160712']

@@ -1,0 +1,41 @@
+### edaran robots status=200
+   <!DOCTYPE html> | <!--[if IE 8]> <html lang="en" class="ie8"> <![endif]--> | <!--[if !IE]><!--> | <html lang="en"> | <!--<![endif]--> | <head> | 	<meta charset="utf-8" /> | 	<title>Edaran</title> | 	<meta content="" 
+### q:sitemap:https://edaran.my/sitemap.xml urls=0 children=0
+### q:sitemap:https://edaran.my/wp-sitemap.xml urls=0 children=0
+### q:sitemap:https://edaran.my/sitemap_index.xml urls=0 children=0
+### edaran total=0 megaman-hits=0
+
+### probe https://www.jllelectrical.com.my/search/keyword/yta60z1/ status=200 bytes=300528 mentions_yta60=True
+
+### probe https://www.jllelectrical.com.my/index.php?ws=search&keyword=yta60z1 status=200 bytes=300318 mentions_yta60=True
+
+### probe https://www.jllelectrical.com.my/searchproduct/yta60z1 status=404 bytes=0 mentions_yta60=False
+
+### q:sitemap:unimech wp children=5 total=710
+  HIT https://unimechengineering.com.my/product/upvc-pipe/
+  HIT https://unimechengineering.com.my/product/upvc-pipe-2/
+
+### p:mrmark 2160710 status=200
+  options=[]
+  npcdn-imgs=5
+  IMG https://cdn1.npcdn.net/image/156084571199cb84b713796168898828c90a9038f9.jpg?md5id=40a115d736494ae0bf5b6b65c715868d&new_width=100&new_height=100&size=max&w=15341
+  IMG https://cdn1.npcdn.net/image/156084571199cb84b713796168898828c90a9038f9.jpg?md5id=40a115d736494ae0bf5b6b65c715868d&new_width=1000&new_height=1000&w=1534135529
+  IMG https://cdn1.npcdn.net/image/156084571199cb84b713796168898828c90a9038f9.jpg?md5id=40a115d736494ae0bf5b6b65c715868d&new_width=1200&new_height=1200&size=max&w=153
+  IMG https://cdn1.npcdn.net/image/20190618_316071.jpg?md5id=40a115d736494ae0bf5b6b65c715868d&new_width=100&new_height=100&sub=1&size=max&w=1534135529
+  IMG https://cdn1.npcdn.net/image/20190618_316071.jpg?md5id=40a115d736494ae0bf5b6b65c715868d&new_width=1200&new_height=1200&sub=1&size=max&w=1534135529
+  mkwel-mentions=['MK-WEL-12300', 'MK-WEL-12300 &#039;MASTER&#039; FIBRE DISC (100mm / 4&quot;)', 'MK-WEL-12300 &#039;MASTER&#039; FIBRE DISC (100mm / 4&quot;)    Mr. Mark', 'MK-WEL-12300 &#039;MASTER&#039; FIBRE DISC (100mm / 4&quot;) Cutting Whe', "MK-WEL-12300 &#039;MASTER&#039; FIBRE DISC (100mm / 4&quot;)', \n\t\t\t\tcont"]
+
+### probe https://www.mrmarks.com/index.php?ws=showsearch&keyword=fibre+disc status=200 bytes=64729 ids=[]
+
+### probe https://www.mrmarks.com/index.php?ws=search&keyword=fibre status=200 bytes=43101 ids=[]
+
+### sonic robots status=200
+   sitemap=
+
+### live https://mybigwarehouse.com.my/ status=-1 final=https://mybigwarehouse.com.my/ bytes=0
+
+### live https://esales.com.my/ status=401 final=https://esales.com.my/ bytes=0
+
+### live https://samajaya.onesyncapp.com/ status=-1 final=https://samajaya.onesyncapp.com/ bytes=0
+
+### live https://edaran.my/ status=200 final=https://edaran.my/ bytes=50165

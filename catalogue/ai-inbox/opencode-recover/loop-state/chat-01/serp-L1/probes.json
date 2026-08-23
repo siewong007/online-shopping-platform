@@ -1,0 +1,131 @@
+{
+ "627": {
+  "pdp": "https://deka.my/x-one-46/",
+  "status": 200,
+  "og_title": ""
+ },
+ "632": {
+  "pdp": "https://deka.my/koni-54/",
+  "status": 200,
+  "og_title": ""
+ },
+ "772": {
+  "pdp": "https://deka.my/koni-54/",
+  "status": 200,
+  "og_title": ""
+ },
+ "640": {
+  "pdp": "https://deka.my/concept-mini/",
+  "status": 200,
+  "og_title": ""
+ },
+ "469": {
+  "search_url": "https://khind.com.my/search/suggest.json?q=GC6010&resources[type]=product",
+  "status": 0,
+  "items": [],
+  "err": "html-429;suggest:<HTTPError 429: 'Too Many Requests'>"
+ },
+ "446": {
+  "search_url": "https://khind.com.my/search/suggest.json?q=VC68P&resources[type]=product",
+  "status": 0,
+  "items": [],
+  "err": "html-429;suggest:<HTTPError 429: 'Too Many Requests'>"
+ },
+ "578": {
+  "search_url": "https://khind.com.my/search/suggest.json?q=SPC6&resources[type]=product",
+  "status": 0,
+  "items": [],
+  "err": "html-429;suggest:<HTTPError 429: 'Too Many Requests'>"
+ },
+ "440": {
+  "search_url": "https://khind.com.my/search/suggest.json?q=VC8020MS&resources[type]=product",
+  "status": 0,
+  "items": [],
+  "err": "html-429;suggest:<HTTPError 429: 'Too Many Requests'>"
+ },
+ "442": {
+  "search_url": "https://khind.com.my/search/suggest.json?q=HM200&resources[type]=product",
+  "status": 0,
+  "items": [],
+  "err": "html-429;suggest:<HTTPError 429: 'Too Many Requests'>"
+ },
+ "523": {
+  "search_url": "https://khind.com.my/search/suggest.json?q=EI405&resources[type]=product",
+  "status": 0,
+  "items": [],
+  "err": "html-429;suggest:<HTTPError 429: 'Too Many Requests'>"
+ },
+ "647": {
+  "search_url": "https://khind.com.my/search/suggest.json?q=VC8630&resources[type]=product",
+  "status": 0,
+  "items": [],
+  "err": "html-429;suggest:<HTTPError 429: 'Too Many Requests'>"
+ },
+ "477": {
+  "search_url": "https://khind.com.my/search/suggest.json?q=EK502&resources[type]=product",
+  "status": 0,
+  "items": [],
+  "err": "html-429;suggest:<HTTPError 429: 'Too Many Requests'>"
+ },
+ "522": {
+  "search_url": "https://khind.com.my/search/suggest.json?q=MC121&resources[type]=product",
+  "status": 0,
+  "items": [],
+  "err": "html-429;suggest:<HTTPError 429: 'Too Many Requests'>"
+ },
+ "1202": {
+  "pdp": "https://saniware.com/product/sws-304-3977/",
+  "status": 200,
+  "og_title": "Premier Basin Tap Series SWS-304-3977 - Saniware",
+  "og_image": "https://saniware.com/wp-content/uploads/2021/03/SWS-304-3977.jpg",
+  "img_bytes_head": 92048
+ },
+ "1440": {
+  "pdp": "https://saniware.com/product/sw-ss-av-80-2/",
+  "status": 200,
+  "og_title": "Angle Valve SW-SS-AV-80 - Saniware",
+  "og_image": "https://saniware.com/wp-content/uploads/2021/03/SW-SS-AV-80-1.jpg",
+  "img_bytes_head": 65767
+ },
+ "2602": {
+  "pdp": "https://mys.sika.com/en/construction/tile-setting/tile-adhesives/sikaceram-88.html",
+  "error": "<HTTPError 429: 'Too Many Requests'>"
+ },
+ "3630": {
+  "pdp": "https://mys.sika.com/en/home-improvement/waterproofing/sikagard-703-groutseal.html",
+  "status": 200,
+  "og_title": "Sikagard\u00ae-703 GroutSeal"
+ },
+ "826": {
+  "search_url": "https://www.bosch-pt.com.my/my/en/search?searchTerm=GKS+140",
+  "err": "<HTTPError 404: 'The requested content does not exist.'>"
+ },
+ "950": {
+  "search_url": "https://www.bosch-pt.com.my/my/en/search?searchTerm=GDC+140",
+  "err": "<HTTPError 404: 'The requested content does not exist.'>"
+ },
+ "821": {
+  "search_url": "https://www.bosch-pt.com.my/my/en/search?searchTerm=GKS+235+Turbo",
+  "err": "<HTTPError 404: 'The requested content does not exist.'>"
+ },
+ "810": {
+  "search_url": "https://www.bosch-pt.com.my/my/en/search?searchTerm=GAS+15+PS",
+  "err": "<HTTPError 404: 'The requested content does not exist.'>"
+ },
+ "856": {
+  "search_url": "https://www.bosch-pt.com.my/my/en/search?searchTerm=GRW+140",
+  "err": "<HTTPError 404: 'The requested content does not exist.'>"
+ },
+ "986": {
+  "search_url": "https://www.bosch-pt.com.my/my/en/search?searchTerm=GST+90+BE",
+  "err": "<HTTPError 404: 'The requested content does not exist.'>"
+ },
+ "991": {
+  "search_url": "https://www.bosch-pt.com.my/my/en/search?searchTerm=GO+Gen+3",
+  "err": "<HTTPError 404: 'The requested content does not exist.'>"
+ },
+ "2557": {
+  "search_url": "https://www.bosch-pt.com.my/my/en/search?searchTerm=2608521043",
+  "err": "<HTTPError 404: 'The requested content does not exist.'>"
+ }
+}

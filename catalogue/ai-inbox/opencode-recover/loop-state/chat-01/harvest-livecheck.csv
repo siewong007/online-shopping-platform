@@ -1,0 +1,71 @@
+source_position,item_code,uom,pdp_url,image_url,decision,reason
+185,ELE-D/L-MEG-YTA60Z1-10W-4000K,PCS,,,pending,harvest: no sitemap slug match (95 urls scanned)
+154,ELE-D/L-MEG-YTP38B1-10W-4000K,PCS,,,pending,harvest: no sitemap slug match (95 urls scanned)
+186,ELE-D/L-MEG-YTA70Z1-15W-4000K,PCS,,,pending,harvest: no sitemap slug match (95 urls scanned)
+201,ELE-D/L-MEG-YTA70Z1-15W-3000K,PCS,,,pending,harvest: no sitemap slug match (95 urls scanned)
+232,ELE-D/L-MEG-YTP38Z1-10W-4000K,PCS,,,pending,harvest: no sitemap slug match (95 urls scanned)
+251,FAN-CEI-DEKA-CX156BK12,UNIT,,,pending,harvest: no sitemap slug match (2 urls scanned)
+155,FAN-CEI-DEKA-CF5DC56MB,UNIT,,,pending,harvest: no sitemap slug match (2 urls scanned)
+93,FAN-CEI-DEKA-CF66DC66MB12,UNIT,,,pending,harvest: no sitemap slug match (2 urls scanned)
+627,FAN-CEI-DEKA-CX146BK12,UNIT,,,pending,harvest: no sitemap slug match (2 urls scanned)
+632,FAN-CEI-DEKA-CDKN54MG12,UNIT,,,pending,harvest: no sitemap slug match (2 urls scanned)
+640,FAN-CEI-DEKA-CCM34MG12,UNIT,,,pending,harvest: no sitemap slug match (2 urls scanned)
+772,FAN-CEI-DEKA-CDKN54OAK12,UNIT,,,pending,harvest: no sitemap slug match (2 urls scanned)
+7,JOV-WAT-HEA-SA8E,PCS,,,pending,harvest: no sitemap slug match (281 urls scanned)
+94,JOV-WAT-FIL-JP200,PCS,https://www.joven-electric.com/my/products/water-purifier/indoor-water-purifier/jp200-series.html,https://www.joven-electric.com/media/wysiwyg/cat-1.jpg,candidate,harvest: sitemap slug match p:https://www.joven-electric.com/my/products/water-purifier/indoor-water-purifier/jp200-series.html status=200 og/img=https://www.joven-electric.com/media/wysiwyg/cat-1.jpg
+247,"HOS-FLE-GLO-60""",PCS,,,pending,harvest: no domain map for brand 'none'
+268,X-STA-PRE-WAS-K4,UNIT,,,pending,harvest: no domain map for brand 'none'
+250,CHA-SAW-STIHL-MS230,UNIT,,,pending,harvest: no domain map for brand 'none'
+213,STI-BRU-CUT-FR3001,UNIT,,,pending,harvest: no domain map for brand 'none'
+2533,NUM-PUNC-50730080,SET,,,pending,harvest: no domain map for brand 'none'
+24,SHO-SOR-SRTSA830,PCS,,,pending,harvest: no sitemap slug match (0 urls scanned)
+34,SIN-SOR-SRTKS2429-BL,PCS,,,pending,harvest: no sitemap slug match (0 urls scanned)
+25,SHO-SOR-SRTSA860-GM,PCS,,,pending,harvest: no sitemap slug match (0 urls scanned)
+57,TOI-TRP-WC-SRTWC286-SH-S(250MM),PCS,,,pending,harvest: no sitemap slug match (0 urls scanned)
+52,SHO-SOR-SRTWT2634-RG,PCS,,,pending,harvest: no sitemap slug match (0 urls scanned)
+73,SIN-SOR-SRTKS2426-BL,PCS,,,pending,harvest: no sitemap slug match (0 urls scanned)
+96,SHO-SOR-SRTWT9605RG,PCS,,,pending,harvest: no sitemap slug match (0 urls scanned)
+122,SHO-SOR-SRTWT9600HP,PCS,,,pending,harvest: no sitemap slug match (0 urls scanned)
+62,SHO-SOR-SRTSH22614-BL,PCS,,,pending,harvest: no sitemap slug match (0 urls scanned)
+72,SHO-SOR-SRTSH2623-BL,PCS,,,pending,harvest: no sitemap slug match (0 urls scanned)
+60,SHO-SOR-SRTWT2634,PCS,,,pending,harvest: no sitemap slug match (0 urls scanned)
+196,BOS-2608-522-407,PCS,https://www.bosch-diy.com/de/de/p/rollgabelschluessel-150-mm-6-1600a039hn,https://www.bosch-diy.com/images/name-visa-size-2-extra-large-shape-card-png--0d13861856454f58b01656419eef0f8b.png,candidate,harvest: sitemap slug match p:https://www.bosch-diy.com/de/de/p/rollgabelschluessel-150-mm-6-1600a039hn status=200 og/img=https://www.bosch-diy.com/images/name-visa-size-2-extra-large-shape-card-png--0d13861856454f58b01656419eef0f8b.png
+826,BOS-0601-6B3-0L1,UNIT,,,pending,harvest: no sitemap slug match (7443 urls scanned)
+991,BOS-0601-9H2-281,UNIT,,,pending,harvest: no sitemap slug match (7443 urls scanned)
+950,BOS-0601-3A0-0L0,UNIT,,,pending,harvest: no sitemap slug match (7443 urls scanned)
+28,TOI-TRP-WC2300-S,SET,https://saniware.com/product/one-piece-washdown-closet-wc-2300-s250mm/,https://saniware.com/wp-content/uploads/2025/05/WC-2300.jpg,candidate,harvest: sitemap slug match p:https://saniware.com/product/one-piece-washdown-closet-wc-2300-s250mm/ status=200 og/img=https://saniware.com/wp-content/uploads/2025/05/WC-2300.jpg
+55,TOI-TRP-WC-2110A-S,SET,https://saniware.com/product/intelligent-water-closet-with-tank-wc-1008-s250mm/,https://saniware.com/wp-content/uploads/2025/03/WC-1008-2025.jpg,candidate,harvest: sitemap slug match p:https://saniware.com/product/intelligent-water-closet-with-tank-wc-1008-s250mm/ status=200 og/img=https://saniware.com/wp-content/uploads/2025/03/WC-1008-2025.jpg
+46,CAB-SAN-SWBC-SS6411,SET,https://saniware.com/product/swbc-ss6411/,https://saniware.com/wp-content/uploads/2025/04/SWBC-SS6411-1.jpeg,candidate,harvest: sitemap slug match p:https://saniware.com/product/swbc-ss6411/ status=200 og/img=https://saniware.com/wp-content/uploads/2025/04/SWBC-SS6411-1.jpeg
+56,TOI-TRP-WC-2122A-S,SET,https://saniware.com/product/intelligent-water-closet-with-tank-wc-1008-s250mm/,https://saniware.com/wp-content/uploads/2025/03/WC-1008-2025.jpg,candidate,harvest: sitemap slug match p:https://saniware.com/product/intelligent-water-closet-with-tank-wc-1008-s250mm/ status=200 og/img=https://saniware.com/wp-content/uploads/2025/03/WC-1008-2025.jpg
+240,TAP-SAN-SWS-304-3964,PCS,https://saniware.com/product/sws-304-2874/,https://saniware.com/wp-content/uploads/2021/03/sws-304-2874.jpg,candidate,harvest: sitemap slug match p:https://saniware.com/product/sws-304-2874/ status=200 og/img=https://saniware.com/wp-content/uploads/2021/03/sws-304-2874.jpg
+42,CAB-SAN-SWBC-SS6615,SET,https://saniware.com/product/swbc-ss6615/,https://saniware.com/wp-content/uploads/2025/04/SWBC-SS6615-side.jpg,candidate,harvest: sitemap slug match p:https://saniware.com/product/swbc-ss6615/ status=200 og/img=https://saniware.com/wp-content/uploads/2025/04/SWBC-SS6615-side.jpg
+17,TAP-SAN-SWP-B-2521,PCS,https://saniware.com/product/swp-b-2521/,https://saniware.com/wp-content/uploads/2021/10/SWP-B-2521.png,candidate,harvest: sitemap slug match p:https://saniware.com/product/swp-b-2521/ status=200 og/img=https://saniware.com/wp-content/uploads/2021/10/SWP-B-2521.png
+31,TAP-SAN-SWP-B-3213,PCS,https://saniware.com/product/tall-basin-cold-tap-swp-ss-304-3213/,https://saniware.com/wp-content/uploads/2025/05/3213.png,candidate,harvest: sitemap slug match p:https://saniware.com/product/tall-basin-cold-tap-swp-ss-304-3213/ status=200 og/img=https://saniware.com/wp-content/uploads/2025/05/3213.png
+21,TAP-SAN-SWP-B-3023,PCS,https://saniware.com/product/swp-b-3023/,https://saniware.com/wp-content/uploads/2021/10/SWP-B-3023.png,candidate,harvest: sitemap slug match p:https://saniware.com/product/swp-b-3023/ status=200 og/img=https://saniware.com/wp-content/uploads/2021/10/SWP-B-3023.png
+27,TAP-SAN-SWP-SS-304-3940-RG,PCS,https://saniware.com/product/swp-ss-304-gb03230-45-60/,https://saniware.com/wp-content/uploads/2021/03/SWP-SS-304-GB03230-45-60.jpg,candidate,harvest: sitemap slug match p:https://saniware.com/product/swp-ss-304-gb03230-45-60/ status=200 og/img=https://saniware.com/wp-content/uploads/2021/03/SWP-SS-304-GB03230-45-60.jpg
+13,SHO-SAN-SWP-BSP-9003RG,PCS,https://saniware.com/product/3-way-bath-shower-set-swp-bsp-9003rg/,https://saniware.com/wp-content/uploads/2025/05/SWP-BSP-9003RG.jpg,candidate,harvest: sitemap slug match p:https://saniware.com/product/3-way-bath-shower-set-swp-bsp-9003rg/ status=200 og/img=https://saniware.com/wp-content/uploads/2025/05/SWP-BSP-9003RG.jpg
+12,SHO-SAN-SWP-BSP-9003G,PCS,https://saniware.com/product/3-way-bath-shower-set-swp-bsp-9003g/,https://saniware.com/wp-content/uploads/2025/05/SWP-BSP-9003G.jpg,candidate,harvest: sitemap slug match p:https://saniware.com/product/3-way-bath-shower-set-swp-bsp-9003g/ status=200 og/img=https://saniware.com/wp-content/uploads/2025/05/SWP-BSP-9003G.jpg
+36,TAP-SAN-SWP-B-2931,PCS,https://saniware.com/product/basin-pillar-tap-mixer-swp-b-2931/,https://saniware.com/wp-content/uploads/2025/05/SWP-B-2931.png,candidate,harvest: sitemap slug match p:https://saniware.com/product/basin-pillar-tap-mixer-swp-b-2931/ status=200 og/img=https://saniware.com/wp-content/uploads/2025/05/SWP-B-2931.png
+37,TAP-SAN-SWP-B-2930,PCS,https://saniware.com/product/basin-pillar-tap-mixer-swp-b-2930/,https://saniware.com/wp-content/uploads/2025/05/SWP-B-2930.png,candidate,harvest: sitemap slug match p:https://saniware.com/product/basin-pillar-tap-mixer-swp-b-2930/ status=200 og/img=https://saniware.com/wp-content/uploads/2025/05/SWP-B-2930.png
+40,TAP-SAN-SWP-B-2924,PCS,https://saniware.com/product/basin-pillar-tap-mixergold-swp-b-2924/,https://saniware.com/wp-content/uploads/2026/01/SWP-B-2924.jpg,candidate,harvest: sitemap slug match p:https://saniware.com/product/basin-pillar-tap-mixergold-swp-b-2924/ status=200 og/img=https://saniware.com/wp-content/uploads/2026/01/SWP-B-2924.jpg
+41,TAP-SAN-SWP-B-2921,PCS,https://saniware.com/product/swp-b-2921/,https://saniware.com/wp-content/uploads/2021/10/SWP-B-2921.png,candidate,harvest: sitemap slug match p:https://saniware.com/product/swp-b-2921/ status=200 og/img=https://saniware.com/wp-content/uploads/2021/10/SWP-B-2921.png
+91,TAP-SAN-SWP-B-3213-G,PCS,https://saniware.com/product/tall-basin-cold-tap-swp-ss-304-3213-gm/,https://saniware.com/wp-content/uploads/2025/05/3213-GM.png,candidate,harvest: sitemap slug match p:https://saniware.com/product/tall-basin-cold-tap-swp-ss-304-3213-gm/ status=200 og/img=https://saniware.com/wp-content/uploads/2025/05/3213-GM.png
+110,TAP-SAN-SWP-B-3203-RG,PCS,https://saniware.com/product/premier-basin-pillar-cold-tap-swp-ss-304-3203-rg/,https://saniware.com/wp-content/uploads/2025/05/SWP-SS-304-3203-RG.jpg,candidate,harvest: sitemap slug match p:https://saniware.com/product/premier-basin-pillar-cold-tap-swp-ss-304-3203-rg/ status=200 og/img=https://saniware.com/wp-content/uploads/2025/05/SWP-SS-304-3203-RG.jpg
+1202,TAP-SAN-SWS-304-3977,PCS,https://saniware.com/product/sws-304-2874/,https://saniware.com/wp-content/uploads/2021/03/sws-304-2874.jpg,candidate,harvest: sitemap slug match p:https://saniware.com/product/sws-304-2874/ status=200 og/img=https://saniware.com/wp-content/uploads/2021/03/sws-304-2874.jpg
+1440,VAL-SAN-SW-SS-AV-80,PCS,https://saniware.com/product/sw-ss-av-80-2/,https://saniware.com/wp-content/uploads/2021/03/SW-SS-AV-80-1.jpg,candidate,harvest: sitemap slug match p:https://saniware.com/product/sw-ss-av-80-2/ status=200 og/img=https://saniware.com/wp-content/uploads/2021/03/SW-SS-AV-80-1.jpg
+1226,TAP-SAN-SWS-304-3978,PCS,https://saniware.com/product/sws-304-2874/,https://saniware.com/wp-content/uploads/2021/03/sws-304-2874.jpg,candidate,harvest: sitemap slug match p:https://saniware.com/product/sws-304-2874/ status=200 og/img=https://saniware.com/wp-content/uploads/2021/03/sws-304-2874.jpg
+266,STA-HIGH-PRE-WAS-K2,UNIT,,,pending,harvest: no sitemap slug match (0 urls scanned)
+131,STA-GRI-SCG400-SET,UNIT,,,pending,harvest: no sitemap slug match (0 urls scanned)
+267,STA-PRE-WAS-K3-DEL,UNIT,,,pending,harvest: no sitemap slug match (0 urls scanned)
+1017,STA-PRE-WAS-K3,UNIT,,,pending,harvest: no sitemap slug match (0 urls scanned)
+64,FAN-CEI-LED-RCF-MOZIA56-5BL-BT,PCS,,,pending,harvest: no sitemap slug match (25 urls scanned)
+76,FAN-CEI-RCF-MOZIA56-5B-BT,PCS,,,pending,harvest: no sitemap slug match (25 urls scanned)
+22,OVEN-RUB-TAE13-M266,UNIT,,,pending,harvest: no sitemap slug match (25 urls scanned)
+19,RUB-TAE11-M330,UNIT,,,pending,harvest: no sitemap slug match (25 urls scanned)
+43,GAS-STO-RUB-TAE10-M523,UNIT,,,pending,harvest: no sitemap slug match (25 urls scanned)
+67,GAS-STO-RUB-TAE10-E102,UNIT,,,pending,harvest: no sitemap slug match (25 urls scanned)
+86,OVEN-RUB-TAE13-M503,UNIT,,,pending,harvest: no sitemap slug match (25 urls scanned)
+80,RUB-TAE10-M371,UNIT,,,pending,harvest: no sitemap slug match (25 urls scanned)
+85,KHI-HDR-HD515,SET,https://khind.com.my/products/1800w-hair-dryer,http://khind.com.my/cdn/shop/files/hd1800-wh-cover_280521152043.jpg?v=1751809539,candidate,harvest: sitemap slug match p:https://khind.com.my/products/1800w-hair-dryer status=200 og/img=http://khind.com.my/cdn/shop/files/hd1800-wh-cover_280521152043.jpg?v=1751809539
+38,IND-RIC-COO-RC7878,SET,https://khind.com.my/products/5-6l-commercial-rice-cooker-rc565,http://khind.com.my/cdn/shop/files/rc565-wh-cover_190224150612.jpg?v=1751809130,candidate,harvest: sitemap slug match p:https://khind.com.my/products/5-6l-commercial-rice-cooker-rc565 status=200 og/img=http://khind.com.my/cdn/shop/files/rc565-wh-cover_190224150612.jpg?v=1751809130
+621,FAN-PSN-F-M14DZVBKH,PCS,,,pending,harvest: no sitemap slug match (0 urls scanned)

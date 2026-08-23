@@ -1,0 +1,102 @@
+# Isolated HitPay sandbox webhook environment. It has its own database, credentials, container
+# names, loopback port and Docker networks. It never serves the production storefront.
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:19beta1
+    container_name: online-shopping-hitpay-sandbox-db
+    restart: unless-stopped
+    command:
+      - postgres
+      - -c
+      - max_connections=15
+      - -c
+      - shared_buffers=16MB
+      - -c
+      - work_mem=512kB
+      - -c
+      - maintenance_work_mem=8MB
+      - -c
+      - max_parallel_workers=0
+    environment:
+      POSTGRES_USER: hitpay_sandbox
+      POSTGRES_PASSWORD: "${SANDBOX_POSTGRES_PASSWORD:?SANDBOX_POSTGRES_PASSWORD is required}"
+      POSTGRES_DB: hitpay_sandbox
+    volumes:
+      - hitpay_sandbox_postgres_data:/var/lib/postgresql
+      - /opt/online-shopping-hitpay-sandbox/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hitpay_sandbox -d hitpay_sandbox"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    shm_size: 24mb
+    mem_limit: 96m
+    cpus: 0.20
+    pids_limit: 192
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 60s
+    logging: *default-logging
+    networks:
+      - database
+
+  backend:
+    image: "online-shopping-backend:${IMAGE_TAG:?IMAGE_TAG is required}"
+    container_name: online-shopping-hitpay-sandbox-backend
+    restart: unless-stopped
+    init: true
+    ports:
+      - "127.0.0.1:4001:4000"
+    environment:
+      APP_HOST: "0.0.0.0"
+      APP_PORT: "4000"
+      APP_ENV: "production"
+      DATABASE_URL: "postgres://hitpay_sandbox:${SANDBOX_POSTGRES_PASSWORD}@postgres:5432/hitpay_sandbox"
+      ADMIN_SEED_PASSWORD: "${SANDBOX_ADMIN_SEED_PASSWORD:?SANDBOX_ADMIN_SEED_PASSWORD is required}"
+      # CORS origins never include a path. The controlled UAT browser starts from the real
+      # customer-facing storefront at https://ekowayhardware.com/shop.
+      FRONTEND_ORIGIN: "https://ekowayhardware.com"
+      PAYMENT_PRIMARY_PROVIDER: "hitpay"
+      HITPAY_MODE: "sandbox"
+      HITPAY_SANDBOX_API_KEY: "${HITPAY_SANDBOX_API_KEY:?HITPAY_SANDBOX_API_KEY is required}"
+      HITPAY_SANDBOX_WEBHOOK_SALT: "${HITPAY_SANDBOX_WEBHOOK_SALT:?HITPAY_SANDBOX_WEBHOOK_SALT is required}"
+      HITPAY_SANDBOX_API_URL: "https://api.sandbox.hit-pay.com"
+      HITPAY_REDIRECT_URL: "https://ekowayhardware.com/shop?payment_return=hitpay"
+      RUST_LOG: "warn,online_shopping_api::modules::payments=info"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:4000/api/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    mem_limit: 112m
+    cpus: 0.25
+    pids_limit: 192
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 20s
+    logging: *default-logging
+    networks:
+      - app
+      - database
+
+volumes:
+  hitpay_sandbox_postgres_data:
+    driver: local
+
+networks:
+  app:
+    driver: bridge
+  database:
+    internal: true

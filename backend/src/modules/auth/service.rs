@@ -60,14 +60,56 @@ fn validated_seed_password(configured_password: Option<String>) -> Result<String
     Ok(password)
 }
 
-pub async fn login(pool: &PgPool, input: &AdminLoginInput) -> Result<AdminAuthPayload, HttpError> {
+const LOGIN_WINDOW_MINUTES: i32 = 15;
+const MAX_FAILED_LOGINS_PER_USERNAME: i64 = 5;
+const MAX_LOGINS_PER_CLIENT: i64 = 20;
+const INVALID_LOGIN_MESSAGE: &str = "Invalid username or password.";
+const LOGIN_THROTTLED_MESSAGE: &str = "Too many login attempts. Try again in a few minutes.";
+
+pub fn client_key_from_headers(headers: &HeaderMap) -> String {
+    forwarded_client_key(headers).unwrap_or_else(|| "unknown".to_string())
+}
+
+fn forwarded_client_key(headers: &HeaderMap) -> Option<String> {
+    let forwarded = headers
+        .get("x-forwarded-for")
+        .and_then(|value| value.to_str().ok())
+        .and_then(|value| value.split(',').next())
+        .map(str::trim)
+        .filter(|value| !value.is_empty());
+    if forwarded.is_some() {
+        return forwarded.map(str::to_string);
+    }
+    headers
+        .get("x-real-ip")
+        .and_then(|value| value.to_str().ok())
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(str::to_string)
+}
+
+pub async fn login(
+    pool: &PgPool,
+    input: &AdminLoginInput,
+    client_key: &str,
+) -> Result<AdminAuthPayload, HttpError> {
     let username = input.username.trim();
     let password = input.password.as_str();
+    let username_key = username.to_lowercase();
+    let client_key = if client_key.trim().is_empty() {
+        "unknown"
+    } else {
+        client_key.trim()
+    };
 
     if username.is_empty() || password.is_empty() {
+        return Err((StatusCode::UNAUTHORIZED, INVALID_LOGIN_MESSAGE.to_string()));
+    }
+
+    if login_is_throttled(pool, &username_key, client_key).await? {
         return Err((
-            StatusCode::UNAUTHORIZED,
-            "Invalid username or password.".to_string(),
+            StatusCode::TOO_MANY_REQUESTS,
+            LOGIN_THROTTLED_MESSAGE.to_string(),
         ));
     }
 
@@ -75,24 +117,18 @@ pub async fn login(pool: &PgPool, input: &AdminLoginInput) -> Result<AdminAuthPa
         .await
         .map_err(map_auth_lookup_error)?
     else {
-        return Err((
-            StatusCode::UNAUTHORIZED,
-            "Invalid username or password.".to_string(),
-        ));
+        record_login_attempt(pool, &username_key, client_key, false).await;
+        return Err((StatusCode::UNAUTHORIZED, INVALID_LOGIN_MESSAGE.to_string()));
     };
 
     if !admin_user.is_active {
-        return Err((
-            StatusCode::UNAUTHORIZED,
-            "Invalid username or password.".to_string(),
-        ));
+        record_login_attempt(pool, &username_key, client_key, false).await;
+        return Err((StatusCode::UNAUTHORIZED, INVALID_LOGIN_MESSAGE.to_string()));
     }
 
     if !verify_password(password, &admin_user.password_hash) {
-        return Err((
-            StatusCode::UNAUTHORIZED,
-            "Invalid username or password.".to_string(),
-        ));
+        record_login_attempt(pool, &username_key, client_key, false).await;
+        return Err((StatusCode::UNAUTHORIZED, INVALID_LOGIN_MESSAGE.to_string()));
     }
 
     if let Err(error) = repository::delete_expired_admin_sessions(pool).await {
@@ -103,6 +139,7 @@ pub async fn login(pool: &PgPool, input: &AdminLoginInput) -> Result<AdminAuthPa
     repository::insert_admin_session(pool, admin_user.id, &token)
         .await
         .map_err(map_auth_lookup_error)?;
+    record_login_attempt(pool, &username_key, client_key, true).await;
 
     let username = admin_user.username.clone();
     let payload = build_auth_payload(pool, admin_user, token).await?;
@@ -110,6 +147,35 @@ pub async fn login(pool: &PgPool, input: &AdminLoginInput) -> Result<AdminAuthPa
     audit::service::record_event(pool, &username, "login", "admin_user", &username, "").await;
 
     Ok(payload)
+}
+
+async fn login_is_throttled(
+    pool: &PgPool,
+    username_key: &str,
+    client_key: &str,
+) -> Result<bool, HttpError> {
+    let failed =
+        repository::count_recent_failed_admin_logins(pool, username_key, LOGIN_WINDOW_MINUTES)
+            .await
+            .map_err(map_auth_lookup_error)?;
+    let from_client =
+        repository::count_recent_admin_logins_for_client(pool, client_key, LOGIN_WINDOW_MINUTES)
+            .await
+            .map_err(map_auth_lookup_error)?;
+    Ok(failed >= MAX_FAILED_LOGINS_PER_USERNAME || from_client >= MAX_LOGINS_PER_CLIENT)
+}
+
+async fn record_login_attempt(
+    pool: &PgPool,
+    username_key: &str,
+    client_key: &str,
+    succeeded: bool,
+) {
+    if let Err(error) =
+        repository::record_admin_login_attempt(pool, username_key, client_key, succeeded).await
+    {
+        tracing::warn!("failed to record admin login attempt: {error:?}");
+    }
 }
 
 pub async fn logout(

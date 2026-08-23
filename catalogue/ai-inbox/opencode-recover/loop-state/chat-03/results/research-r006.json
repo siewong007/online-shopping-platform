@@ -1,0 +1,592 @@
+[
+  {
+    "source_position": "3379",
+    "item_code": "LOC-ENT-EPO-H041/SC",
+    "tier_used": 2,
+    "queries": [
+      "\"H041\" EPO entrance lock set (DDG)",
+      "\"EPO\" \"entrance lock\" set Malaysia hardware (DDG - no results)",
+      "\"i-weld\" style general probes blocked (Bing RSS junk, Google gbv=1 sorry-page, Yandex/DDG captcha)",
+      "domain probe: epo lock brands not identifiable from code"
+    ],
+    "pages_opened": [
+      {"url": "https://html.duckduckgo.com/html/?q=%22H041%22+EPO+entrance+lock+set", "note": "200 SERP but only irrelevant aviation H041 parts"},
+      {"url": "https://html.duckduckgo.com/html/?q=%22EPO%22+%22entrance+lock%22+set+Malaysia+hardware", "note": "200 SERP, zero results"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "No page anywhere shows an entrance lock set modelled H041/SC under brand EPO; the two SERPs returned aviation parts or nothing, after which all general engines (Exa MCP 429 for the whole sitting, DuckDuckGo captcha, Bing/Google/Yandex bot walls) became unusable. No EPO lockset brand site could be identified to probe directly. A clean no-candidate is recorded rather than forcing a sibling lockset (e.g. KJ's Armor ALM series) onto the row.",
+    "human_action": "Check the physical carton / supplier price list for the true brand mark (\"EPO\" may be an OCR garble of another lockset brand); retry web search when the search API recovers."
+  },
+  {
+    "source_position": "3356",
+    "item_code": "SCA-CAM-EI02HS-3KG",
+    "tier_used": 1,
+    "queries": [
+      "\"EI-02HS\" Camry digital weighing scale (DDG)"
+    ],
+    "pages_opened": [
+      {"url": "https://www.camry.cn/product/camry-digital-weighing-scale-commercial-scale-model-ei-02hs.html", "note": "200 official Zhongshan Camry PDP"}
+    ],
+    "official_product_page": "https://www.camry.cn/product/camry-digital-weighing-scale-commercial-scale-model-ei-02hs.html",
+    "official_image_url": "https://imgusa.senssun.com/1/source/2025-10-15-3e5b7332-7979-4c4a-97bf-69dee1326246.jpg",
+    "model_string_on_page": "EI-02HS",
+    "finish_match": "yes",
+    "size_match": "yes",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "unknown",
+    "confidence": "high",
+    "reason": "Official global OEM site (Zhongshan Camry Electronic) PDP titled 'CAMRY Digital Weighing Scale & Commercial Scale Model EI-02HS' with EI-02HS in breadcrumb, heading and spec block (brand CAMRY, capacity 2kg/3kg/6kg, platform 15.5x15.5cm), matching the row's EI-02HS/3KG. Main gallery image taken from the page's own CDN (senssun CDN); pixel dimensions could not be measured because the CDN stalled during verification, but it is the full-size hero asset, not a resized thumb. Row names no colour/finish, so no finish conflict exists.",
+    "human_action": ""
+  },
+  {
+    "source_position": "2645",
+    "item_code": "DC-DSM09-100S",
+    "tier_used": 1,
+    "queries": [
+      "\"DSM09-100S\" angle grinder Dongcheng (DDG)"
+    ],
+    "pages_opened": [
+      {"url": "https://www.dongchengmalaysia.com/product/dsm09-100s/", "note": "200 authorised MY distributor PDP, DSM09-100S, RM117"},
+      {"url": "https://www.dongchengtool.com/product/detail/1646295135499", "note": "200 official global OEM PDP 'DSM09-100S(4\")'"}
+    ],
+    "official_product_page": "https://www.dongchengtool.com/product/detail/1646295135499",
+    "official_image_url": "https://dongcheng.obs.ap-southeast-1.myhuaweicloud.com/cms/2024/10/26/1732600360640/DSM09-100S.jpg",
+    "model_string_on_page": "DSM09-100S(4\")",
+    "finish_match": "yes",
+    "size_match": "yes",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "unknown",
+    "confidence": "high",
+    "reason": "Official Dongcheng OEM site PDP quotes DSM09-100S(4\") with 800W / 12000min / wheel dia 100mm exactly matching the row's DC-prefix model; the Malaysian distributor site (dongchengmalaysia.com, GL Bosun) carries the same SKU independently confirming identity. Image is the product photo served by Dongcheng's own HuaweiCloud OBS CMS asset named DSM09-100S.jpg; exact pixels unmeasured (network stall) but it is the PDP's full-size gallery image, not a family banner.",
+    "human_action": ""
+  },
+  {
+    "source_position": "3365",
+    "item_code": "WEL-REG-IW-23CR",
+    "tier_used": 2,
+    "queries": [
+      "\"i-weld\" CO2 regulator Malaysia (websearch MCP - 429)",
+      "\"i-weld\" \"CO2\" regulator (Bing HTML/RSS - junk results)",
+      "site search: theleedenstore.com.my ?s=i-weld",
+      "domain probes: iweld.com.my / iweld.com.sg / iweld.asia"
+    ],
+    "pages_opened": [
+      {"url": "https://theleedenstore.com.my/?s=i-weld&post_type=product", "note": "200 WooCommerce search, 'No products were found'"},
+      {"url": "http://web.archive.org/cdx/search/cdx?url=theleedenstore.com.my&matchType=domain&fl=original&collapse=urlkey&limit=2000", "note": "200 CDX enumeration; only Auweld CGA870 regulator on Leeden store, no i-weld"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "I-WELD appears to be a Malaysian welding-equipment house brand with no findable own-domain site (iweld.com.my/.sg/.asia do not resolve). Leeden (the major MY welding distributor) stocks only its Auweld CGA870 regulator, not i-weld CO2 units. All general search engines were unavailable this sitting (Exa MCP HTTP 429 throughout; DuckDuckGo captcha; Bing serving junk; Google sorry-page), so no dealer page quoting the model string could be located.",
+    "human_action": "Ask the Ekoway supplier which importer supplies the I-WELD CO2 regulator (brand sheet/box photo), then check that importer's catalogue; or retry Exa/DDG search next batch."
+  },
+  {
+    "source_position": "3374",
+    "item_code": "HOS-REL-EAG-3050/DL",
+    "tier_used": 2,
+    "queries": [
+      "\"hose reel trolley\" Eagle 3050 (DDG lite - captcha)",
+      "KJ dealer search ?q=hose reel",
+      "KJ dealer search ?q=eagle"
+    ],
+    "pages_opened": [
+      {"url": "https://www.kiongjounghardware.com/products?q=hose+reel", "note": "200; Eagle EG-2030DL 'HOSE REEL W/WHEEL ONLY' and EG-2030 found"},
+      {"url": "https://www.kiongjounghardware.com/products?q=eagle", "note": "200; Eagle range at KJ = EG-2030 / EG-2030DL / EG366A only, no 3050 code"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Closest real product found is Eagle EG-2030DL ('HOSE REEL W/WHEEL ONLY', stores 50m x 1/2in hose - functionally the trolley variant) at dealer kiongjounghardware.com, but the codes differ textually (EG-2030DL vs the row's 3050/DL) and bar item 1 requires every named fact to match, so it cannot be called THIS exact model. No page showing '3050/DL' or 'EG-3050DL' was obtainable; eagle.com.my is a parked empty index and search engines were down.",
+    "human_action": "Confirm against the source price list whether '3050/DL' is a transcription of Eagle EG-2030DL; if yes, reuse the Kiong Joung EG-2030DL PDP image (kiongjounghardware.com/products/eagle-hose-reel-wwheel-only-eg-2030dl)."
+  },
+  {
+    "source_position": "6458",
+    "item_code": "SOC-SWI-162MCS",
+    "tier_used": 1,
+    "queries": [
+      "socket outlet \"162MCS\" (planned; all engines blocked before execution)",
+      "162 MCS socket outlet Malaysia (blocked)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "'162MCS' does not map to any identifiable socket-outlet brand line (checked against Schneider/MK/Legrand naming conventions mentally; no candidate). Every general search channel failed this sitting (Exa 429 entire session, DuckDuckGo captcha wall after initial queries, Bing RSS ignoring quoted terms, Google/Yandex bot pages), and no brand domain could be derived from the code to probe directly.",
+    "human_action": "Re-run '\"162MCS\" socket outlet' and '\"162 MCS\" switched socket SIRIM' once the search API is restored; identify brand from the physical unit's moulded marking."
+  },
+  {
+    "source_position": "2813",
+    "item_code": "ELE-ELCB-GRW-63A-4P",
+    "tier_used": 2,
+    "queries": [
+      "Grow ELCB 63A 4P (engines blocked)",
+      "domain probe: growele.com",
+      "domain probe: grow-electric.com"
+    ],
+    "pages_opened": [
+      {"url": "https://www.growele.com", "note": "200 but 'GrowEle.com is for sale | HugeDomains' parked page"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "'Grow' ELCB (4P, 63A, 30mA) matches a Chinese/OEM breaker brand line sold via Malaysian electrical dealers, but no official Grow site exists at any probed domain (growele.com is a HugeDomains parking page; grow-electric.com does not resolve) and search engines were unavailable to locate a dealer page quoting the rating string. Ratings themselves (63A/4P/0.3A) are standard and would be verifiable on any genuine PDP.",
+    "human_action": "Retry '\"Grow\" ELCB 63A 4P 30mA' plus Chinese-market name variants when search works; else photograph the breaker's brand label from stock."
+  },
+  {
+    "source_position": "2786",
+    "item_code": "TOO-BRA-STA-991002130",
+    "tier_used": 2,
+    "queries": [
+      "(engine-dependent searches blocked)",
+      "CDX filter: stanleytools.com urls containing 'brace'",
+      "site search: theleedenstore.com.my ?s=bit brace"
+    ],
+    "pages_opened": [
+      {"url": "http://web.archive.org/cdx/search/cdx?url=stanleytools.com&matchType=domain&filter=original:.*brace.*&fl=original&collapse=urlkey&limit=30", "note": "200 CDX; only unrelated FR support article about watch straps/braces"},
+      {"url": "https://theleedenstore.com.my/?s=bit+brace&post_type=product", "note": "200; 'No products were found matching your selection'"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "The bit brace is a legacy Stanley hand tool; stanleytools.com archives contain no bit-brace product page and the Malaysian Stanley dealer store (Leeden) has none either. Code 991002130 looks like a local distributor SKU rather than a Stanley catalogue number, so no official page quoting it could exist. Search engines were down for broader dealer sweeps.",
+    "human_action": "Verify 991002130 against the supplier's Stanley price file; if it maps to a current STMT catalog number, search '\"STMT...\" bit brace' when engines recover, else shoot the physical tool."
+  },
+  {
+    "source_position": "2812",
+    "item_code": "ELE-ELCB-GRW-40A-4P",
+    "tier_used": 2,
+    "queries": [
+      "Grow ELCB 40A 4P (engines blocked)",
+      "domain probe: growele.com (parked)",
+      "same-family research as ELE-ELCB-GRW-63A-4P"
+    ],
+    "pages_opened": [
+      {"url": "https://www.growele.com", "note": "200 HugeDomains parking page, not a brand site"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Same family as the 63A sibling row and judged separately as required: no official Grow-brand or dealer page quoting a 40A/4P/30mA Grow ELCB could be opened because the brand has no live site (growele.com parked) and all search engines were bot-walled or rate-limited this sitting. Different amperage ratings need their own model-specific images anyway.",
+    "human_action": "When search is available, run '\"Grow\" ELCB 40A 4P 30mA' and Chinese-market equivalents; otherwise photograph the unit label."
+  },
+  {
+    "source_position": "3693",
+    "item_code": "SHE-CAB-CB505",
+    "tier_used": 1,
+    "queries": [
+      "direct brand-site fetch: cabana.com.my (CAB=Cabana per brand map)",
+      "Cabana shelf category browse -> CB505 detail"
+    ],
+    "pages_opened": [
+      {"url": "https://www.cabana.com.my", "note": "200 official Cabana site (Sorento Sdn Bhd, Klang)"},
+      {"url": "https://cabana.com.my/index.php/products/bathroom/bathroom-accessories/shelf", "note": "200 category listing showing CB505 card"},
+      {"url": "https://cabana.com.my/index.php/products/bathroom/bathroom-accessories/shelf/cb505-detail", "note": "200 PDP: 'CB505 Corner Glass Shelf L250xW230xH40mm'"},
+      {"url": "https://cabana.com.my/images/virtuemart/product/CB505.jpg", "note": "HEAD/GET 200, 55,629 bytes (full-size VirtueMart original; resized 300x300 copy also exists)"}
+    ],
+    "official_product_page": "https://cabana.com.my/index.php/products/bathroom/bathroom-accessories/shelf/cb505-detail",
+    "official_image_url": "https://cabana.com.my/images/virtuemart/product/CB505.jpg",
+    "model_string_on_page": "CB505",
+    "finish_match": "yes",
+    "size_match": "not_named",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "unknown",
+    "confidence": "high",
+    "reason": "Official Malaysian brand site (cabana.com.my, operated by Cabana owner Sorento Sdn Bhd) has a dedicated PDP titled 'Shelf: CB505' described as 'Corner Glass Shelf L250xW230xH40mm'; model string CB505 appears in title, breadcrumb and product name, exactly matching the row. The chosen URL is the full-size VirtueMart original (the site also serves a resized/CB505_300x300.jpg thumbnail, which was avoided); 55KB JPEG confirms it is not a tiny placeholder though exact pixels were unverifiable due to network stalls. Row states no finish, and the brand photo depicts this model's standard chrome finish.",
+    "human_action": ""
+  },
+  {
+    "source_position": "4497",
+    "item_code": "FAS-SCR-TAP-CSK-8#1 1/2\"-BOX",
+    "tier_used": 1,
+    "queries": [
+      "(unbranded generic fastener; no brand/model token to search)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Unbranded bulk countersunk self-tapping screws (8 x 1-1/2in flat head, 1000pcs/box): there is no brand, model code or manufacturer page to source an 'official' image from, and the brief explicitly treats clean no-candidate as the correct outcome for unbranded generic screws. Any Shopee/marketplace box shot is barred by rule 3.",
+    "human_action": "Shoot an in-house pack photo against a ruler/screw gauge showing head diameter, length and thread count."
+  },
+  {
+    "source_position": "3608",
+    "item_code": "SAF-SHO-SUP-39#",
+    "tier_used": 2,
+    "queries": [
+      "\"SK500\" supersonic safety shoes Malaysia (websearch MCP - 429)",
+      "supersonic safety shoes SK500 (DDG/Bing blocked)",
+      "domain probe: supersonic.com.my"
+    ],
+    "pages_opened": [
+      {"url": "https://www.supersonic.com.my", "note": "DNS failure - domain does not resolve"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Supersonic SK500 safety shoes are a regional import line with no discoverable official or authorised-dealer page: supersonic.com.my does not resolve, and all search engines were unavailable this sitting (Exa MCP 429 throughout, DDG captcha, Bing/Google bot walls). Size EU39 needs a size-specific depiction, so even a shared family image would need per-size verification.",
+    "human_action": "Retry '\"Supersonic\" \"SK500\" safety shoe' next batch; if still absent, photograph the size-39 pair including the tongue size tag and toe cap mark."
+  },
+  {
+    "source_position": "3609",
+    "item_code": "SAF-SHO-SUP-43#",
+    "tier_used": 2,
+    "queries": [
+      "\"SK500\" supersonic safety shoes Malaysia (websearch MCP - 429)",
+      "domain probe: supersonic.com.my (no DNS)",
+      "same-family research as SAF-SHO-SUP-39#"
+    ],
+    "pages_opened": [
+      {"url": "https://www.supersonic.com.my", "note": "DNS failure"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Judged separately from the other SK500 sizes: identical outcome - no official Supersonic footwear site or dealer PDP quoting SK500 could be reached because the brand domain is dead and every search channel was rate-limited or captcha'd during this sitting. No image, hence no per-size verification possible.",
+    "human_action": "Same as sibling rows: re-search 'Supersonic SK500' later or photograph the size-43 pair."
+  },
+  {
+    "source_position": "3610",
+    "item_code": "SAF-SHO-SUP-44#",
+    "tier_used": 2,
+    "queries": [
+      "\"SK500\" supersonic safety shoes Malaysia (websearch MCP - 429)",
+      "domain probe: supersonic.com.my (no DNS)",
+      "same-family research as SAF-SHO-SUP-39#"
+    ],
+    "pages_opened": [
+      {"url": "https://www.supersonic.com.my", "note": "DNS failure"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Size 44 member of the same Supersonic SK500 family; researched separately but with the identical result: brand has no resolvable domain and no reachable dealer page, engines down all sitting.",
+    "human_action": "Re-search 'Supersonic SK500' when engines recover or photograph the size-44 pair."
+  },
+  {
+    "source_position": "3637",
+    "item_code": "SAF-SHO-SUP-42#",
+    "tier_used": 2,
+    "queries": [
+      "\"SK500\" supersonic safety shoes Malaysia (websearch MCP - 429)",
+      "domain probe: supersonic.com.my (no DNS)",
+      "same-family research as SAF-SHO-SUP-39#"
+    ],
+    "pages_opened": [
+      {"url": "https://www.supersonic.com.my", "note": "DNS failure"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Size 42 member of the Supersonic SK500 family, judged separately: no official/dealer source reachable (dead brand domain, all search engines bot-walled or 429 this sitting), so no candidate.",
+    "human_action": "Re-search 'Supersonic SK500' when engines recover or photograph the size-42 pair."
+  },
+  {
+    "source_position": "4934",
+    "item_code": "ELE-LED-SOL-YB-L10532-28W",
+    "tier_used": 2,
+    "queries": [
+      "Marviss L10532 solar light (websearch MCP - 429)",
+      "domain probe: marviss.com.my / marviss2u.com",
+      "CDX enumeration: marviss.com domain"
+    ],
+    "pages_opened": [
+      {"url": "https://www.marviss.com.my", "note": "DNS failure"},
+      {"url": "https://www.marviss2u.com", "note": "DNS failure"},
+      {"url": "http://web.archive.org/cdx/search/cdx?url=marviss.com&matchType=domain&fl=original&collapse=urlkey&limit=40", "note": "marviss.com is a Croatian real-estate agency, unrelated brand"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Marviss (Malaysian lighting importer) has no discoverable official website: both plausible .my domains fail DNS and marviss.com belongs to an unrelated foreign company. With search engines down (Exa 429 all sitting; DDG captcha), no authorised-dealer PDP quoting L10532 / 28W solar sensor light could be located. The 28W/L10532 facts remain unverified rather than contradicted.",
+    "human_action": "Retry '\"Marviss\" \"L10532\"' and '\"Marviss\" solar sensor light 28W' when search recovers; alternatively request the Marviss catalogue page from the supplier."
+  },
+  {
+    "source_position": "5054",
+    "item_code": "SIN-TAP-PIL-QXY-PT-7250",
+    "tier_used": 2,
+    "queries": [
+      "QXY-PT-7250 pillar tap (engines blocked)",
+      "domain probe: qxy.cn"
+    ],
+    "pages_opened": [
+      {"url": "http://www.qxy.cn", "note": "connection timeout - host unreachable"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "QXY stainless pillar-tap line (PT-7250-3L, 3L suffix implying lever/flex-pipe variant) has no reachable official site: qxy.cn times out and no Malaysian dealer page could be searched because every general engine was blocked or 429 this sitting. Model string therefore never observed on any page.",
+    "human_action": "Re-run '\"QXY-PT-7250\" tap' and '\"QXY\" pillar sink tap' next batch; check the carton sticker for QXY's importer/distributor details."
+  },
+  {
+    "source_position": "2668",
+    "item_code": "TOO-CUT-BOL-GT36\"",
+    "tier_used": 2,
+    "queries": [
+      "glotool bolt clipper (DDG pre-captcha window missed; engines then blocked)",
+      "KJ dealer search ?q=glotool (0 products)",
+      "domain probe: glotool.com.my (no DNS), glotool.com"
+    ],
+    "pages_opened": [
+      {"url": "https://www.glotool.com/?s=bolt+clipper", "note": "redirects to glotool.co.za (South African firm 'GloTool - Hardware Tools Decor'); search returned nothing - different company from Malaysian Glotool hand-tool brand"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "The Malaysian Glotool bolt/lock cutter brand has no findable official site: glotool.com resolves to an unrelated South African business whose site search returns nothing for bolt clipper, glotool.com.my does not exist, and the Kiong Joung dealer search shows zero Glotool items. Search engines were unavailable for wider dealer sweeps, so no page quoting the 36-inch model could be verified.",
+    "human_action": "Retry '\"Glotool\" bolt clipper 36' when search API returns; Glotool goods are widely listed on marketplaces - extract the importer's name from packaging instead of using marketplace imagery."
+  },
+  {
+    "source_position": "3678",
+    "item_code": "AIR-MAD-GAU-160PSI",
+    "tier_used": 1,
+    "queries": [
+      "mada pressure gauge 160psi tyre inflator (engines blocked)",
+      "reviewed row tokens: display_name truncated ('Mada Pressure'), detected_model GAUGE-160PSI"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "low",
+    "reason": "The row itself is degraded ('Mada Pressure' with model GAUGE-160PSI), suggesting a garbled source line, and no 'Mada' branded tire-pressure-gauge maker could be identified or reached because all search engines were unavailable this sitting. Nothing verifiable exists online within the constraints of this session.",
+    "human_action": "First fix the source record: confirm true brand/model from the physical gauge (dial usually prints brand + PSI range); then search '\"<brand>\" 160PSI tyre pressure gauge'."
+  },
+  {
+    "source_position": "3711",
+    "item_code": "IND-CAN-CANVAS",
+    "tier_used": 1,
+    "queries": [
+      "KJ dealer search ?q=canopy",
+      "KJ dealer search q=eagle/i-weld cross-checks (unrelated)"
+    ],
+    "pages_opened": [
+      {"url": "https://www.kiongjounghardware.com/products?q=canopy", "note": "200; exactly 1 hit: 'KINGSJAW PYRAMID CANOPY TENT 3mtr x 3mtr x 14.5KG (BLUE) KJG021' - full tent, not canvas-only spare"},
+      {"url": "https://kiongjounghardware.com/products/kingsjaw-pyramid-canopy-tent-3mtr-x-3mtr-x-145kg-blue-kjg021", "note": "seen in CDX enumeration of KJ; tent SKU only"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Kingsjaw has no standalone brand site, and the one authorised-style dealer stocking the line (Kiong Joung) lists only the complete pyramid canopy TENT (KJG021, 3x3m blue) - not the 'canvas only' replacement cover this row describes. The tent page would fail bar 4 (accessory-vs-product / not THIS item), so no_candidate despite the 3x3m size matching.",
+    "human_action": "Request the Kingsjaw canvas-only spare-part SKU code/photo from Kingsjaw or Kiong Joung (Alexis Sia +6019-8167099); else photograph the folded canvas with a tape measure showing 3x3m."
+  },
+  {
+    "source_position": "4467",
+    "item_code": "BAT-CHA-ENE-4AAA-700MAH",
+    "tier_used": 2,
+    "queries": [
+      "Ener rechargeable AAA 700mAh (engines blocked)",
+      "senheng.com.my shop search for ENER brand (house-brand hypothesis)",
+      "domain probe: ener.com.my"
+    ],
+    "pages_opened": [
+      {"url": "https://www.senheng.com.my/search?text=ener%20rechargeable%20aaa", "note": "200 shop page; brand filter list contains no ENER brand (only Energea)"},
+      {"url": "https://www.ener.com.my", "note": "DNS failure"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "ENER rechargeable AAA (4-pack, 700mAh) is a Malaysian battery house brand distributed through electrical retailers rather than its own site: ener.com.my does not resolve and Senheng's online store carries no ENER brand. With all general search engines down this sitting, no retailer PDP quoting 'ENER AAA 700mAh' could be located. Pack format (4AAA) matches typical blister cards but nothing was verifiable on-page.",
+    "human_action": "Retry '\"ENER\" rechargeable AAA 700mAh Malaysia' when search works; likely sources are electrical-wholesaler sites (e.g. battery specialists) rather than brand site."
+  },
+  {
+    "source_position": "4237",
+    "item_code": "SHH-REEL-YK6000",
+    "tier_used": 2,
+    "queries": [
+      "Yumoshi YK6000 fishing reel official site (engines blocked)",
+      "domain probe: yumoshi.com / yumoshi.cn"
+    ],
+    "pages_opened": [
+      {"url": "https://www.yumoshi.com", "note": "HTTP 200 but empty 114-byte shell page, no content"},
+      {"url": "https://yumoshi.cn", "note": "DNS failure"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Yumoshi reels are sold almost exclusively through AliExpress/Ali Baba channels, which the brief explicitly bars (rule 3); the nominal yumoshi.com is an empty stub and yumoshi.cn does not resolve, so no official OEM page exists to gate an image. Search engines were down, and marketplace listings quoting YK6000 cannot be used regardless.",
+    "human_action": "If a Yumoshi official-store link outside barred marketplaces emerges later, verify 'YK6000' in its page text; otherwise photograph the reel showing the YK6000 spool engraving."
+  },
+  {
+    "source_position": "3218",
+    "item_code": "X-FAS-SCR-CSK-3/4\" X 8G - BOX",
+    "tier_used": 1,
+    "queries": [
+      "(unbranded/generic fastener; no brand or manufacturer to search)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "House-label countersunk tapping screws 3/4in x 8G (1000pcs/box): no brand or model exists, so there is no official product page concept applicable, and marketplace box shots are disallowed. Clean no-candidate is the correct outcome per the brief for unbranded screws.",
+    "human_action": "Shoot an in-house box/packet photo annotated with size (3/4 x 8G) and count."
+  },
+  {
+    "source_position": "3779",
+    "item_code": "CHA-SAW-IETO-HD1012",
+    "tier_used": 2,
+    "queries": [
+      "ieto chain saw stand HD1012 (engines blocked)",
+      "KJ dealer search ?q=ieto (0 products)",
+      "domain probe: ieto.com.my"
+    ],
+    "pages_opened": [
+      {"url": "https://www.kiongjounghardware.com/products?q=ieto", "note": "200; 0 products found"},
+      {"url": "https://www.ieto.com.my", "note": "DNS failure"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "IETO is a small Malaysian-import hardware line (its HD10xx sink-strainer codes appear at KJ) but has no own site (ieto.com.my dead) and the checked dealer carries zero IETO items online; the HD1012 chain-saw mounting stand specifically appears nowhere reachable, and search engines were unusable all sitting. Category tagging (Rope/Chain) in the row also suggests a mis-filed record worth confirming.",
+    "human_action": "Confirm from the supplier list whether HD1012 is indeed the IETO chainsaw stand bracket; re-search '\"IETO\" \"HD1012\"' when the search API recovers."
+  },
+  {
+    "source_position": "3011",
+    "item_code": "FAS-SCR-CSK-1 1/2\" X 6G - BOX",
+    "tier_used": 1,
+    "queries": [
+      "(unbranded/generic fastener; no brand or manufacturer to search)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Unbranded countersunk tapping screws 1-1/2in x 6G (1000pcs/box), same situation as the sibling screw rows: no manufacturer exists to provide an official page or image, and the brief directs a clean no-candidate for such generics rather than forcing a marketplace substitute.",
+    "human_action": "Shoot an in-house box/packet photo annotated with size (1-1/2 x 6G) and count."
+  }
+]

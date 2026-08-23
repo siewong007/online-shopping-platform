@@ -1,0 +1,26 @@
+source_position,item_code,uom,display_name,category,detected_brand,detected_model,action,start_tier,tried,prior_decision,prior_page,prior_image,prior_reason,ledger_state
+6124,LOC-TRI-264,PCS,264 Tricycle Pad Lock,Locks & Security,,,search,1,,,,,,open
+7703,COC-BAL-L602,PCS,Vovo Brass Ball Cock 1/2,Plumbing,,,search,1,,,,,,open
+7047,DOR-INS-KIT-26095(5),SET,Br 4009 5PCS Lockset Installation Kit,Doors & Hardware,,,search,1,,,,,,open
+7553,PAI-GAL-606S,PCS,6 Gallon Pail,Housewares,,,search,1,,,,,,open
+7250,BLI-HSS-HOL-SAW-26MM,PCS,Navato Hole Saw Cutter 26MM,Power Tool Accessories,,,search,1,,,,,,open
+7571,TOO-FIL-SENSUI-SNF001-B,PCS,8 Sensui Metal Flat File,Hand Tools,,,search,1,,,,,,open
+6145,IND-SCO-WOO-501,PCS,501 Wooden Handle Shovel Head (PCS),Doors & Hardware,,,duplicate_listing,1,,,,,,open
+5267,IND-SCO-WOO-503,PCS,503 Wooden Handle Shovel Head,Doors & Hardware,,,search,1,,,,,,open
+7554,"SHH-CAGE-2RING-12""-2",PCS,"2 Ring Cages 12 (210/5 X 12"")",Fishing & Tackle,,,search,1,,,,,,open
+6540,TOO-COM-GD29,PCS,Gd Combination Wrench 29MM,Hand Tools,,,search,1,,,,,,open
+7552,PAI-GAL-4G-9400,PCS,9400 4G Pail,Housewares,,,search,1,,,,,,open
+7557,WEL-LON-BAC-CAP,PCS,Long Back Cap,Welding,,,search,1,,,,,,open
+6422,LOC-TRI-263,PCS,263 Tricycle Pad Lock,Locks & Security,,,search,1,,,,,,open
+7379,PVC-STRAPPING-APPLE GREEN,KGS,PVC Strapping Apple Green (KGS),Packaging,,,duplicate_listing,1,,,,,,open
+7380,PVC-STRAPPING-GREEN,KGS,PVC Strapping Green (KGS),Packaging,,,duplicate_listing,1,,,,,,open
+6811,PVC-STRAPPING-PIN,KGS,PVC Strapping Pink-t,Packaging,,,search,1,,,,,,open
+7605,TOO-PLI-DIA-K0011,PCS,Standard 9421 6 B/h Diagonal Cutting Plier (tw),Hand Tools,,,search,1,,,,,,open
+7575,IND-CAS-SOF-50MM,SET,2 IN Sofa Type Caster Wheel,Building Materials,,,search,1,,,,,,open
+7329,DRI-BIT-116G,PCS,19MM Hitmax Diamond Core Bit,Power Tool Accessories,,,search,1,,,,,,open
+7602,SHH-FROG-359114,PCS,359114 Santec Combait Poisonfrox Frog 35MM (soft Body),Fishing & Tackle,,,search,1,,,,,,open
+7635,REM-CON-RC/M-AUN787,PCS,Huayu Multi Fan Remote Control,Other,,,search,1,,,,,,open
+7724,GAR-SPR-CR8448CPT,PCS,Adjustable Cone Nozzle,Power Tool Accessories,,,search,1,,,,,,open
+7730,WHE-M'MAN-1169#,SET,M'man Hooded Caster W/screw 1169,Fasteners & Fixings,,,search,1,,,,,,open
+7331,PAI-SPR-ANC-001,PCS,400ML Anchor Spray - 1 Clear (PCS),Fasteners & Fixings,,,duplicate_listing,1,,,,,,open
+7576,PAI-SPR-ANC-002,PCS,400ML Anchor Spray - 2 White (PCS),Fasteners & Fixings,,,duplicate_listing,1,,,,,,open

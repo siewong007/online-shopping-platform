@@ -1,0 +1,101 @@
+source_position|item_code|uom|display_name|category|detected_brand|detected_model
+4034|PLA-BAG-W500-1518|PCK|15 X 18 X Tbag (aa)|Packaging||WHITE/500G
+5389|CAB-LUG-10-8|PCK|Cable Lug 10-8 (10PCS/PCK)|Electrical||10PCS/PCK
+4033|PLA-BAG-W500-1114|PCK|11 X 14 X Tbag (aa)|Packaging||WHITE/500G
+4107|APR-PVC-YEL|PCS|Thin PVC APRON-YELLOW24IN X 36IN0.18MM|Safety & Workwear||APRON-YELLOW24IN
+4210|SHH-HOOK-SC4063|PKT|Surecatch Biru 406 No. 3(20'S)|Fishing & Tackle||NO.3
+5582|CAB-LUG-25-8|PCK|Cable Lug 25-8 (4PCS/PCK)|Electrical||4PCS/PCK
+3513|BNW-B&N-RBN-230|PCK|Sr G. I Boit & Nut 1/4 X 3 (10PCS/PCK)|Fasteners & Fixings||10PCS/PCK
+5569|SWI-SOC-ULT-M011W|PCS|Ultra 16A 1 GANG 1 Way-white (M011W)|Electrical||M011W
+4426|SHH-HOOK-45708-NO.11|PKT|2908 No. 6 Eupro Prawn Hook (15'S)|Fishing & Tackle||NO.6
+5477|FIT-SS225-BUS-3/4"X1/2"-SUS304|PCS|SS Hex Bushing 3/4"X1/2|Plumbing||X1/2
+5802|GUN-GRE-NIP-90 M10X1.0|PCS|S. K 90 Degree Grease Nipple M10 X 1.0|Fasteners & Fixings||M10
+5696|FIT-YG239R-SOC-MXF-1/2"X3/8"-BRA|PCS|Reduced Mxf Brass Socket 1/2"X3/8|Electrical||X3/8
+5882|TOO-DRI-MAG-BSP037-F|PCS|Box Bit Socket|Electrical||13X65MM
+4754|SHH-SWIVEL-SNAP-NO.8|PKT|Nickel Snap Swivel No. 8|Fishing & Tackle||NO.8
+6065|CAB-LUG-01.5-5|PCK|Cable Lug 1.5-5 (10PCS/PCK)|Electrical||10PCS/PCK
+3893|FIT-YG251A-SOC-10MM-BRA|PCS|T Brass Connector 10MM|Plumbing||YG251
+4832|SHH-HOOK-4310N-NO.8|PKT|No. 8 Exori Super Strong Hook (20'S)|Fishing & Tackle||4310N
+3892|FIT-YG251-SOC-08MM-BRA|PCS|Y Brass Connector 8MM|Plumbing||YG251
+4954|CUT-SAW-IND-14J|PCS|Sr India Junior Saw 14J|Abrasives & Cutting||14J
+4358|BNW-B&N-RBN-112|PCK|Sr G. I Boit & Nut 3/16 X 1 1/4 (12PCS/PCK)|Fasteners & Fixings||12PCS/PCK
+6249|CLI-BAT-CLI-0025AMP|SET|L/duty Battery Clip 25AMP|Electrical||25AMP
+6434|BNW-WAS-SPR-16MM|PCK|Bsw Spring Washer 5/8 (8PCS/PCK)|Fasteners & Fixings||8PCS/PCK
+6601|BNW-WAS-SPR-14MM|PCK|Bsw Spring Washer 9/16 (8PCS/PCK)|Fasteners & Fixings||8PCS/PCK
+4818|BNW-B&N-RBN-115|PCK|Sr G. I Boit & Nut 3/16 X 1 1/2 (7PCS/PCK)|Fasteners & Fixings||7PCS/PCK
+3484|TAP-PIL-OTO-966-1|PCS|966-1 OTOSANI'304 S/steel Pillar Swan Tap|Plumbing||304#S/STEEL
+3874|SWI-SOC-ELE-E20AB|PCS|Elegance 20A Double Pole Swi Neon-blk (E20AB)|Electrical||E20AB
+3463|VAL-BAL-VIP-343-25MM|PCS|Full Bore Ball VALVE:PN25 343 1.0|Plumbing||VALVE:PN25
+2910|RAI-BOO-KRK-Y41#|PAIR|Rainshoes - 41 (8) 7000YLW|Curtains & Blinds||7000YLW
+2881|BOS-1/4-12|PCS|Sumo Router Bit 1/4 Shark (each)|Power Tool Accessories|Bosch|
+3055|IND-WHE-TYR-AIR-ST22|PCS|ST22 Air Wheel|Building Materials||ST22
+3938|VAL-BAL-VIP-343-18MM|PCS|Full Bore Ball VALVE:PN25 343 3/4|Plumbing||VALVE:PN25
+3057|LOC-GLO-BRA-GLBBC40|PCS|Glocks Brass Padlock GLBBC40|Locks & Security||GLBBC40
+2929|CUT-PRU-PAS-W815|PCS|W815 By-pass Pruner 200MM|Abrasives & Cutting||W815
+3014|GRE-TOYO-450GM|TIN|Toyo Eaj 8000 Hi-temp Bentonite Grease|Other||450GM
+3030|GRE-TOYO-350GM|TIN|Toyo MP2 Lithium Ep Grease|Other||MP2
+3200|CUT-DEW-DW4785|PCS|Diamond Blade, Dry 4|Abrasives & Cutting||DW4785
+3257|BRA-SHE-S/S-G785-08"|SET|G785 304 H/duty Shelf Bracket 8|Housewares||G785
+3436|RAI-BOO-KRK-B42M9000|PAIR|Korakoh Rain Shoes Blk - 9/42|Curtains & Blinds||M9000
+4434|SWI-SOC-ULT-M08913W|PCS|Ultra 13A Multiple Swi Soc Neon-whi (M08913W)|Electrical||M08913W
+4473|ELE-PVC-CAS-2"X2"|LGTH|Kancil 2 X 2 X6FT PVC Casing|Electrical||X6FT
+3380|RAI-BOO-KRK-B38M|PAIR|Rainshoes - 38 (5) 6000BLK|Curtains & Blinds||6000BLK
+3381|RAI-BOO-KRK-B43M|PAIR|Rainshoes - 43 (10) 6000BLK|Curtains & Blinds||6000BLK
+3377|LOC-COL-TA401|PCS|Colex Single Titanium Coated Padlock TA-401|Locks & Security||TA-401
+3378|LOC-COL-ZA401|PCS|Safety Chrome Plated Padlock ZA-401|Safety & Workwear||ZA-401
+2614|CIS-HAN-METAL-L/L-00531G|PCS|3GL Metal Cho-low Level System Handle|Doors & Hardware||3GL
+3751|CON-LVR-FR3001|PCS|Control Lever Complete (FR3001)|Other||FR3001
+4662|HOS-FIT-PI7-103#|PCS|PI7 Hose FITTING-103|Plumbing||PI7
+3798|TOO-COM-W0305K-13*15MM|PCS|2 Open Wrench (13*15MM)|Hand Tools||13*15MM
+2899|TOO-DRV-STA-PH1-3/16"X4"-9960651630|PCS|Cushion Grip S/dr PHILIPS-3/16"X4"X1PT ( 1X100MM)|Power Tools||PHILIPS-3/16
+3033|HOS-CON-EG-368-CLIPS|PCS|Eagle (EG-368) : Tap Adapter With Clips|Outdoor & Garden||EG-368
+3230|NAI-ROO-SUP-P50MM-1KGS|KG|E. G Roofing Nail - Plain 50MM 1KGS|Fasteners & Fixings||1KGS
+3536|FAS-SCR-TECH-METAL-50MM-PCK|PCK|Techscrew-metal Screw X 50MM (50PCS/PCK)|Fasteners & Fixings||50PCS/PCK
+3537|FAS-SCR-TECH-WOOD-50MM-PCK|PCK|Techscrew-wood Screw X 50MM (50PCS/PCK)|Fasteners & Fixings||50PCS/PCK
+5226|DRI-AUG-2WAY-08MM|PCS|T&t 2WAY Auger BIT-5/16|Power Tool Accessories||2WAY
+4993|VAL-BAL-MIN-ECC12MF|PCS|Ecco PVC Mini Ball VALVE-1/2 Mxf|Plumbing||VALVE-1/2
+5063|BAT-PSN-LIT3V-CR-1632/5BE|PCS|CR-1632/5B Lithium 3V|Electrical||CR-1632/5B
+2721|RIG-SHA-BOW-G209-12MM|PCS|Pin Type Bow Shackle (G209) 12 MM|Lifting & Rigging||G209
+3352|PAI-SPR-PMT-030|CAN|Paint Master Spray Paint - No. 30 Peach Red|Paint & Sundries||NO.30
+3354|PAI-SPR-PMT-142|CAN|Paint Master Spray Paint - No. 142 Anti-rust Brown|Paint & Sundries||NO.142
+5254|ELE-NIG-LIG-262|PCS|ML MX-667(262) 3 Pin Sensor Night Light|Electrical||MX-667
+5520|HOS-NOZ-TWN-ECO-EG2012|PCS|Ecogreen-snap-in Twist Nozzle EG2012/5|Power Tool Accessories||EG2012/5
+3643|BNW-B&N-RBN-225|PCK|Sr G. I Boit & Nut 1/4 X 2 1/2 (10PCS/PCK)|Fasteners & Fixings||10PCS/PCK
+3397|CLI-ELE-CAB-18MM40S|BOX|Cable Clip 18MM/40'S|Electrical||18MM/40
+4327|SHH-HOOK-SC4064|PKT|Surecatch Biru 406 No. 4(20'S)|Fishing & Tackle||NO.4
+4328|SHH-HOOK-SC4065|PKT|Surecatch Biru 406 No. 5(20'S)|Fishing & Tackle||NO.5
+4421|IND-WIR-PVC-BIRD-NET-BLK|MTR|Bird Netting (black)|Rope, Chain & Netting||1MX6X6MM
+4459|SHH-SWIVEL-SNAP-NO.2|PKT|Nickel Snap Swivel No. 2|Fishing & Tackle||NO.2
+4135|FAS-SCR-TECH-METAL-19MM-PCK|PCK|Techscrew-metal Screw X 19MM (50PCS/PCK)|Fasteners & Fixings||50PCS/PCK
+4534|SHH-HOOK-406-NO.5|PKT|Saki Sepit Biru 406 No. 5 (20'S)|Fishing & Tackle||NO.5
+4537|SHH-SWIVEL-SNAP-NO.4|PKT|Nickel Snap Swivel No. 4|Fishing & Tackle||NO.4
+5779|FIT-YG239R-SOC-MXF-1/2"X1/4"-BRA|PCS|Reduced Mxf Brass Socket 1/2"X1/4|Electrical||X1/4
+4549|CUT-ELE-EDM-41200|PCS|4 X 120 Gold Elephant Mop Disc|Housewares||EDM-4120
+4839|SHH-SWIVEL-SNAP-NO.10|PKT|Nickel Snap Swivel No. 10|Fishing & Tackle||NO.10
+5080|SHH-HOOK-12146BN-10|PKT|No. 10 Hytac Hook 20'S|Fishing & Tackle||12146BN
+6196|FIT-YG225-BUSH-1/2"X3/8"-BRA|PCS|Brass Bushing 1/2 X 3/8|Plumbing||YG225
+2760|ELE-HOL-2727HD-E27|PCS|E27 To E27 Lamp Holder|Lighting||E27
+2729|ELE-ADA-EE1427|PCS|E14 To E27 Lamp Adaptor|Lighting||E14
+5214|SHH-SWIVEL-NO.10|PKT|Nickel Swivel No. 10|Fishing & Tackle||NO.10
+5215|SHH-SWIVEL-NO.12|PKT|Nickel Swivel No. 12|Fishing & Tackle||NO.12
+6275|DRI-HSS-TWI-06MM|PCS|Blimax Hss Twist Drill BIT-1/4|Power Tool Accessories||BIT-1/4
+2772|CHA-CAP-ROU-EXT-25MM|PCK|Round External Cap 25MM (4PCS/PCK)|Outdoor & Garden||4PCS/PCK
+6889|FAS-SCR-TAP-CSK-8#5/8"-PCK|PACK|8 X5/8 Csk Self Tapping Screw-flat Head (20PCS/PCK)|Fasteners & Fixings||X5/8
+3009|ELE-CAB-WIR-ML-1.5MM2-RED|ROLL|ML PVC Cable Red 1.5MM2|Electrical||1.5MM2
+2632|IND-CAS-H/DUTY-MCLSC-6"|PCS|6 DL5 H/duty Mcl Swivel Caster|Fishing & Tackle||DL5
+3448|FAS-SCR-DS516HOW-BOX|BOX|10 X 5/8 Lion King Self-drilling Screw|Fasteners & Fixings||DS516HOW
+3958|SWI-SOC-ELE-E08213B|PCS|Elegance 13A 2 GANG Flat Pin Swi Soc Neon-blk (E08213B)|Electrical||E08213B
+2873|LOC-COL-ZK502|SET|Safety Chrome Plated Padlock ZK-502|Safety & Workwear||ZK-502
+4238|SWI-SOC-ELE-E031B|PCS|Elegance 16A 3 GANG 1 Way-black (E031B)|Electrical||E031B
+4053|COC-STO-C018|PCS|Brass Stop Cock - C018 18 MM|Plumbing||C018
+3455|LOC-COL-ZA501|PCS|Safety Chrome Plated Padlock ZA-501|Safety & Workwear||ZA-501
+3332|LOC-GLO-BRA-GLBBC30|PCS|Glocks Brass Padlock GLBBC30|Locks & Security||GLBBC30
+2692|TOO-LEV-SPE-3801X24"|PCS|Speed L/duty Flat Water Level - 3801X24|Power Tools||3801X24
+4449|PAI-SPR-ANC-C018**|PCS|400ML Anchor Spray - C018** Decorative Chrome|Fasteners & Fixings||C018
+4403|WAT-NOZ-ADP-026B|PCS|Gardenu 026B Water Nozzle Adaptor - Brs|Electrical||026B
+3456|RAI-BOO-KRK-B40M|PAIR|Rainshoes - 40 (7) 6000BLK|Curtains & Blinds||6000BLK
+3616|TOO-CLA-F-BLI-8"|PCS|Blimax Quick Release F CLAMP-8|Hand Tools||CLAMP-8
+2691|TOO-LEV-SPE-3801X18"|PCS|Speed L/duty Flat Water Level - 3801X18|Power Tools||3801X18
+2742|X-FLO-MOC-CB6061|PCS|2'X2 Floor Tiles|Power Tools||CB6061
+3568|SAF-COA-CLI-GREEN-08995|PCS|Clip On Elastic Vest-lemon Green|Safety & Workwear||E7361
+2715|GAR-RAK-PALM-12T|PCS|12T Oil Palm Rake|Outdoor & Garden||12T

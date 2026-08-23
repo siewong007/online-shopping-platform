@@ -71,6 +71,48 @@ async fn login_returns_token_bad_password_fails_and_me_reports_role(pool: PgPool
 }
 
 #[sqlx::test]
+async fn admin_login_is_throttled_after_repeated_failures(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "throttle-admin", "secret123").await;
+    let app = common::app(pool);
+
+    for _ in 0..5 {
+        let (status, _) = common::request(
+            app.clone(),
+            Method::POST,
+            "/api/admin/login",
+            None,
+            Some(json!({ "username": "throttle-admin", "password": "wrong" })),
+        )
+        .await;
+        assert_eq!(status, StatusCode::UNAUTHORIZED);
+    }
+
+    let (throttled_status, throttled_body) = common::request(
+        app.clone(),
+        Method::POST,
+        "/api/admin/login",
+        None,
+        Some(json!({ "username": "throttle-admin", "password": "wrong" })),
+    )
+    .await;
+    assert_eq!(
+        throttled_status,
+        StatusCode::TOO_MANY_REQUESTS,
+        "{throttled_body}"
+    );
+
+    let (locked_good_password, _) = common::request(
+        app,
+        Method::POST,
+        "/api/admin/login",
+        None,
+        Some(json!({ "username": "throttle-admin", "password": "secret123" })),
+    )
+    .await;
+    assert_eq!(locked_good_password, StatusCode::TOO_MANY_REQUESTS);
+}
+
+#[sqlx::test]
 async fn settings_read_requires_token_and_permission(pool: PgPool) {
     common::create_admin(&pool, "Super Admin", "settings-admin", "secret123").await;
     common::create_admin(

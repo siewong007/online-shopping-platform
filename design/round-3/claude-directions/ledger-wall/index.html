@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ekoway — Ledger Wall</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#wall">Skip to product wall</a>
+    <div class="utility-strip"><p>EKOWAY HARDWARE / ONLINE CATALOGUE</p><p>Exact price and stock · Clear comparison · Practical project shopping</p></div>
+    <header class="brand-bar">
+      <a class="brand" href="#" aria-label="Ekoway home"><img src="/frontend/public/ekoway/ekoway-logo.jpeg" alt="Ekoway" /></a>
+      <nav aria-label="Primary navigation"><a class="active" href="#wall">Shop</a><a href="#services">Services</a><a href="#trade">Trade desk</a></nav>
+      <form class="search" role="search"><label for="wall-search">Search products</label><input id="wall-search" type="search" placeholder="Search product or aisle" autocomplete="off" /><button type="submit">Find</button></form>
+      <div class="utilities"><a href="#account">Account</a><a href="#cart">Cart <b>0</b></a></div>
+    </header>
+    <nav id="aisle-index" class="aisle-index" aria-label="Product aisles"></nav>
+    <div class="refine-bar" aria-label="Catalogue refinement">
+      <p><b id="result-count">Loading wall…</b><span id="active-summary">All aisles</span></p>
+      <div class="refine-controls">
+        <label class="check"><input id="available-filter" type="checkbox" /> Available stock</label>
+        <label>PRICE BAND <select id="price-band"><option value="all">All prices</option><option value="under-100">Under $100</option><option value="100-400">$100–$400</option><option value="over-400">Over $400</option></select></label>
+        <label>SORT <select id="wall-sort"><option value="featured">Featured</option><option value="price-asc">Price Low–High</option><option value="price-desc">Price High–Low</option><option value="name" selected>Name</option></select></label>
+      </div>
+    </div>
+    <main id="wall" class="wall" aria-live="polite"></main>
+    <p id="empty" class="empty" hidden>No products match this wall.</p>
+    <aside id="compare-bench" class="compare-bench" aria-label="Compare bench">
+      <button id="bench-toggle" type="button" aria-expanded="false"><span>COMPARE BENCH</span><b id="bench-count">0 PINNED</b><i>Open bench ↑</i></button>
+      <div id="bench-items" class="bench-items"></div>
+    </aside>
+    <script src="./app.js"></script>
+  </body>
+</html>

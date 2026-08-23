@@ -1,0 +1,44 @@
+[
+ {
+  "source_position": "7682",
+  "item_code": "TAB-SHE-PVC-Y125A",
+  "uom": "MTR",
+  "display_name": "Y-125A PVC Sheet",
+  "category": "Housewares",
+  "detected_brand": "",
+  "detected_model": "Y-125A",
+  "state_now": "open",
+  "tiers_tried": "",
+  "prior_page": "",
+  "brand_hint": "",
+  "action": ""
+ },
+ {
+  "source_position": "7683",
+  "item_code": "FIT-UPVC-SOC-50MM",
+  "uom": "PCS",
+  "display_name": "U-pvc Socket 50MM 2",
+  "category": "Electrical",
+  "detected_brand": "",
+  "detected_model": "",
+  "state_now": "open",
+  "tiers_tried": "",
+  "prior_page": "",
+  "brand_hint": "",
+  "action": ""
+ },
+ {
+  "source_position": "7706",
+  "item_code": "FIT-UPVC-SOC-32MM",
+  "uom": "PCS",
+  "display_name": "U-pvc Socket 32MM 1-1/4",
+  "category": "Electrical",
+  "detected_brand": "",
+  "detected_model": "",
+  "state_now": "open",
+  "tiers_tried": "",
+  "prior_page": "",
+  "brand_hint": "",
+  "action": ""
+ }
+]

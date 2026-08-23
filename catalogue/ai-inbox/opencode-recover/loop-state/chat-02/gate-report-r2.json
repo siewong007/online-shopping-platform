@@ -1,0 +1,86 @@
+{
+ "round": 2,
+ "rows_total": 150,
+ "states": {
+  "open": 25,
+  "exhausted": 115,
+  "candidate": 10
+ },
+ "reds_by_code": {
+  "red:schema": 4,
+  "red:rights": 1,
+  "red:http": 9
+ },
+ "reds": [
+  {
+   "key": "SWI-MK-2G1W-S4782|PCS#904",
+   "code": "red:schema",
+   "detail": "empty query log"
+  },
+  {
+   "key": "SWI-SOC-ULT-M000MG|PCS#919",
+   "code": "red:schema",
+   "detail": "empty query log"
+  },
+  {
+   "key": "CUT-FLA-TAI-A80100|PCS#921",
+   "code": "red:schema",
+   "detail": "empty query log"
+  },
+  {
+   "key": "DRI-SAW-A68-10MM|PCS#927",
+   "code": "red:schema",
+   "detail": "empty query log"
+  },
+  {
+   "key": "RAI-BOO-KRK-B41M9000|PAIR#3821",
+   "code": "red:rights",
+   "detail": "rights_status='exhausted'"
+  },
+  {
+   "key": "SHE-CAB-CB476-BLK|PCS#964",
+   "code": "red:http",
+   "detail": "page status=None for ?"
+  },
+  {
+   "key": "ELE-D/L-PHL-59467-SQ-6500K|SET#974",
+   "code": "red:http",
+   "detail": "page status=None for ?"
+  },
+  {
+   "key": "SWI-SOC-MK-G2977|EA#980",
+   "code": "red:http",
+   "detail": "page status=None for ?"
+  },
+  {
+   "key": "CUT-DEW-DW4724|PCS#983",
+   "code": "red:http",
+   "detail": "page status=None for ?"
+  },
+  {
+   "key": "SWI-SOC-ULT-M074W|PCS#984",
+   "code": "red:http",
+   "detail": "page status=None for ?"
+  },
+  {
+   "key": "KOYA-GRE-P611-1/2KG|TIN#2682",
+   "code": "red:http",
+   "detail": "page status=None for ?"
+  },
+  {
+   "key": "DOR-VIE-SGD-DV3776SN|PCS#2795",
+   "code": "red:http",
+   "detail": "page status=None for ?"
+  },
+  {
+   "key": "SWI-SOC-ULT-M073MG|PCS#4755",
+   "code": "red:http",
+   "detail": "page status=None for ?"
+  },
+  {
+   "key": "SWI-SOC-ULT-M061MG|PCS#4913",
+   "code": "red:http",
+   "detail": "page status=None for ?"
+  }
+ ]
+}

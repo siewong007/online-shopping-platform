@@ -1,0 +1,8 @@
+CDX cabana.com.my* rows 15
+CDX truflo.com.my* rows 10
+CDX eupro.com.my* rows 0
+CDX eupro.com.sg* rows 0
+CDX eupro.asia* rows 12
+CDX euproeurope.com* rows 0
+DDGLITE raw len 14229
+extlinks 0

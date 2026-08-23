@@ -1,0 +1,8 @@
+{"pos":6255,"verifier_verdict":"pass","model_exact":"yes","finish_exact":"yes","justification":"Official Techplas PCL-1103 page; single white plastic low-level Elegen cistern pictured matching name."}
+{"pos":4731,"verifier_verdict":"pass","model_exact":"yes","finish_exact":"yes","justification":"Bossman BIC1312 keyless chuck + hex adaptor incl retail pack labelled BIC1312 exactly matching page model."}
+{"pos":5921,"verifier_verdict":"fail","model_exact":"no","finish_exact":"yes","justification":"Pictured clamp is REMAX-branded while display name specifies Arrow - not the named product."}
+{"pos":5111,"verifier_verdict":"fail","model_exact":"yes","finish_exact":"yes","justification":"Family/range shot showing all six Aracut chisel sizes instead of single 1in STC002-D."}
+{"pos":6519,"verifier_verdict":"pass","model_exact":"yes","finish_exact":"yes","justification":"Energizer MAX 9V 2-pack blister marked 9V2 matches display name and page."}
+{"pos":2844,"verifier_verdict":"pass","model_exact":"yes","finish_exact":"yes","justification":"Black Elephant-King PP anti-weed mat roll with spec table listing EAW150 = 1m x 50m."}
+{"pos":6656,"verifier_verdict":"fail","model_exact":"no","finish_exact":"yes","justification":"Multi-model family listing; image is a third-party promo not identifiable as keyed 9001-22 variant."}
+{"pos":7359,"verifier_verdict":"void","model_exact":"","finish_exact":"","justification":"Verifier passed type but no 4.5in/120mm designation on page or image; model_exact cannot be yes - escalated to tier2 per disagreement rule."}

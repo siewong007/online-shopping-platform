@@ -1,0 +1,41 @@
+{
+ "4287": {
+  "page_status": 200,
+  "page_final_url": "https://kangaroopaint.com/bituminous-compound/",
+  "image_status": 200,
+  "image_final_url": "https://kangaroopaint.com/wp-content/uploads/2024/04/K-Bituminous-1.5kg-1022x1536-1.jpg",
+  "image_content_type": "image/jpeg",
+  "image_bytes_len": 160138,
+  "px_w": 1022,
+  "px_h": 1536,
+  "image_sha256": "01b0cfc7ec14886da0a1585b5c749a89e1e0005a999155d832f65c4501c179ed",
+  "asset_file": "C:\\Users\\DELL\\OneDrive\\Desktop\\ekoway hardware website\\online-shopping-platform\\catalogue\\ai-inbox\\assets\\4287.jpg",
+  "fetched_round": 1
+ },
+ "6685": {
+  "page_status": 200,
+  "page_final_url": "https://www.wiraplas.com/plastic-putty-scraper",
+  "image_status": 200,
+  "image_final_url": "https://irp.cdn-website.com/b3714c46/dms3rep/multi/opt/H30-1920w.jpg",
+  "image_content_type": "image/jpg",
+  "image_bytes_len": 7838,
+  "px_w": 400,
+  "px_h": 300,
+  "image_sha256": "",
+  "asset_file": "",
+  "fetched_round": 1
+ },
+ "7069": {
+  "page_status": 200,
+  "page_final_url": "https://www.wiraplas.com/plastic-putty-scraper",
+  "image_status": 200,
+  "image_final_url": "https://irp.cdn-website.com/b3714c46/dms3rep/multi/opt/H33-1920w.jpg",
+  "image_content_type": "image/jpg",
+  "image_bytes_len": 8224,
+  "px_w": 400,
+  "px_h": 300,
+  "image_sha256": "",
+  "asset_file": "",
+  "fetched_round": 1
+ }
+}

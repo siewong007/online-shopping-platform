@@ -1,0 +1,44 @@
+[
+  {
+    "source_position": "5999",
+    "verifier_verdict": "fail",
+    "model_exact": "yes",
+    "finish_exact": "no",
+    "justification": "Page is the genuine JLL listing 'reTOUCH ULTRA RIMLESS 3 GANG 1 WAY 16A SWITCHES' and its description quotes 'WHITE : M031W', matching the display_name model. However, the asset is a shared tri-variant family hero banner showing white, texture gold AND matte grey plates together with JLL/ReTouch logos and warranty callout boxes, so it cannot be pinned to the named white (M031W) variant alone."
+  },
+  {
+    "source_position": "6056",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "HSL page is titled 'WYNN'S W0283 MODULAR PLUG CRIMPING TOOL' and description quotes 'Wynns W0283 200mm (8\") Modular Plug Crimping Tool', matching item_code tail W0283 and display_name. Image shows the actual tool with 'WYNN'S W0283 200mm' printed on its body; no colour/finish is named in display_name."
+  },
+  {
+    "source_position": "6131",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Tiam Heng page is titled 'WYNN'S W09 MINI BOLT CUTTER 8\"/200MM' with 'Item #: W09', matching display_name's W09 and 200MM (page notes Sold Out but is otherwise a real product page). Image depicts the green/black W09 mini bolt cutter with Wynn's logo and 'W09 (MINI) BOLT CUTTER' caption; no colour variant is named in display_name."
+  },
+  {
+    "source_position": "6382",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "LKK Hardware page title is 'SAMA AC15S CERAMIC S-TRAP' (RM35, in stock), quoting AC15S as in display_name. The image is the same CDN file used as the page's main product photo and shows an actual beige ceramic S-trap labelled 'CERAMIC S-TRAP'; display_name names no colour/finish."
+  },
+  {
+    "source_position": "6500",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Rowy page 'uPVC Reducing Socket Fitting 50MM - 100MM Grade BBB' lists connection size '3\" X 2\" 82MM X 50MM', matching item_code tail 82X50MM and display_name '3 X 2'. Image is a clean photo of exactly this generic white uPVC reducing socket sold under this listing; no visual contradiction with the named size."
+  },
+  {
+    "source_position": "6870",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Official Fuji Electric page for SC-N2S (新SC・NEO SCシリーズ magnetic contactor) quotes 'SC-N2S' with rated current 50A, matching display_name 'SC-N2S Contertor'; the image is Fuji's own reference photo (/products/magnetic_contactor/sc/scn2s/scn2s.jpg) showing the contactor faceplate marked SC-N2S [50]. No colour/size variant is named beyond the model itself."
+  }
+]

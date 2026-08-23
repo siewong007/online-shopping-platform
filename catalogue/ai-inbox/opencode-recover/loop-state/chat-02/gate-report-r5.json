@@ -1,0 +1,45 @@
+{
+ "round": 5,
+ "rows_total": 240,
+ "states": {
+  "exhausted": 202,
+  "open": 21,
+  "candidate": 17
+ },
+ "reds_by_code": {
+  "red:schema": 3,
+  "red:model_absent": 3
+ },
+ "reds": [
+  {
+   "key": "SWI-SOC-ULT-M000MG|PCS#919",
+   "code": "red:schema",
+   "detail": "empty query log"
+  },
+  {
+   "key": "CUT-FLA-TAI-A80100|PCS#921",
+   "code": "red:schema",
+   "detail": "empty query log"
+  },
+  {
+   "key": "DRI-SAW-A68-10MM|PCS#927",
+   "code": "red:schema",
+   "detail": "empty query log"
+  },
+  {
+   "key": "SHE-CAB-CB476-BLK|PCS#964",
+   "code": "red:model_absent",
+   "detail": "['CB476BLK', 'TOKENS:CB476', 'CABCB476BLK']"
+  },
+  {
+   "key": "BIB-G503B|PCS#1035",
+   "code": "red:model_absent",
+   "detail": "['34B', 'G503B']"
+  },
+  {
+   "key": "SPRA-BOSNY-B136-400CC|CAN#3508",
+   "code": "red:model_absent",
+   "detail": "['B13640CC', 'TOKENS:B136|40CC', 'BOSNYB136400CC']"
+  }
+ ]
+}

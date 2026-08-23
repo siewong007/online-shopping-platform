@@ -85,6 +85,68 @@ pub async fn fetch_admin_user_by_username(
     .map_err(Into::into)
 }
 
+pub async fn count_recent_failed_admin_logins(
+    pool: &PgPool,
+    username_key: &str,
+    window_minutes: i32,
+) -> Result<i64> {
+    sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT COUNT(*)
+        FROM admin_login_attempts
+        WHERE username_key = $1
+          AND succeeded = FALSE
+          AND created_at > now() - ($2::text || ' minutes')::interval
+        "#,
+    )
+    .bind(username_key)
+    .bind(window_minutes.to_string())
+    .fetch_one(pool)
+    .await
+    .map_err(Into::into)
+}
+
+pub async fn count_recent_admin_logins_for_client(
+    pool: &PgPool,
+    client_key: &str,
+    window_minutes: i32,
+) -> Result<i64> {
+    sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT COUNT(*)
+        FROM admin_login_attempts
+        WHERE client_key = $1
+          AND created_at > now() - ($2::text || ' minutes')::interval
+        "#,
+    )
+    .bind(client_key)
+    .bind(window_minutes.to_string())
+    .fetch_one(pool)
+    .await
+    .map_err(Into::into)
+}
+
+pub async fn record_admin_login_attempt(
+    pool: &PgPool,
+    username_key: &str,
+    client_key: &str,
+    succeeded: bool,
+) -> Result<()> {
+    sqlx::query(
+        r#"
+        INSERT INTO admin_login_attempts (username_key, client_key, succeeded)
+        VALUES ($1, $2, $3)
+        "#,
+    )
+    .bind(username_key)
+    .bind(client_key)
+    .bind(succeeded)
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
 pub async fn insert_admin_session(pool: &PgPool, admin_user_id: i32, token: &str) -> Result<()> {
     sqlx::query(
         r#"
@@ -118,6 +180,10 @@ pub async fn authenticate_admin_session(
     pool: &PgPool,
     token: &str,
 ) -> Result<Option<AdminIdentity>> {
+    if let Err(error) = delete_expired_admin_sessions(pool).await {
+        tracing::warn!("failed to purge expired admin sessions: {error:?}");
+    }
+
     sqlx::query_as::<_, AdminIdentity>(
         r#"
         SELECT admin_users.id AS user_id,

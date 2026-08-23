@@ -1,0 +1,13 @@
+{
+ "round": 2,
+ "rows_total": 839,
+ "gated_states": {
+  "open": 835,
+  "candidate": 4,
+  "verified_pass": 0,
+  "exhausted": 0,
+  "exhausted_no_progress": 0
+ },
+ "reds_by_code": {},
+ "reds": []
+}

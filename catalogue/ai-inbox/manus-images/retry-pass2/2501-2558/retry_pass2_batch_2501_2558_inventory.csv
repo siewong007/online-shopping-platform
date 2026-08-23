@@ -1,0 +1,51 @@
+source_position,item_code,uom,display_name,category,detected_brand,detected_model,existing_source_url,existing_image_url,campaign_classification,manufacturer,exact_model,variant_suffix,product_identity,source_url,source_type,source_tier,image_source_url,image_exactness,identity_confidence,image_confidence,research_notes,sibling_elimination,classification_reason,hard_failure,tls_verification_issue,first_pass_status,final_image_status,rights_status_final,evidence_asset_path,evidence_sha256,evidence_bytes,research_state
+2501,LAD-ALU-WEL-D07,UNIT,Alum Welded Ladder - D07,Ladders & Access,,D07,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2502,LAD-EXT-DOU-15X15,UNIT,Double Ext Ladder 15X15FT,Ladders & Access,,15X15FT,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2503,CHE-LUB-HD4D-200ML,TIN,4D Penetrant/lubricant Spray :,Chemicals & Adhesives,,HD420/200ML,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2505,COC-SINK-K505L-WALL,SET,Sink Tap: Lever Type -wall 1/2,Kitchen & Sinks,,K500L,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2506,CUT-DIS-MARK-01600,PCS,Mr. Mark 110MM Wet Cutting Diamond Wheel (1.4X5X20MM),Abrasives & Cutting,,1.4X5X20MM,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2507,DC-S1B-FF03-110X100,SET,Orbital Sander,Power Tools,,DSB03-100,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2508,DOR-KEY-SGEP-S3030/60-SN,PCS,"Sn""st Guchi""single Key & Thumbturn Profile Cyl",Doors & Hardware,,SGEP-S3030/60,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2509,ELE-BUL-THL-15W-E14,PCS,Thl E14 15W Fridge Bulb,Lighting,,E14,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2510,FLO-PVC-NO.100-10,ROLL,PVC Flooring No. 100-10,Flooring,,NO.100-10,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2511,FLO-PVC-NO.483-13,ROLL,PVC Flooring No. 524-08,Flooring,,NO.524-08,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2512,GUM-HAR-3000W,PCS,Silicone Hardex G/p White,Chemicals & Adhesives,,HA-3000W,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2513,GUM-RAT-BOSNY-NO.214,CAN,Bosny 400ML Rat Glue (NO:214) (plastic Can),Chemicals & Adhesives,,NO:214,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2514,LAD-ALU-WEL-D10,UNIT,Alum Welded Ladder - D10,Ladders & Access,,D10,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2516,SWI-T/SOC-MS3233-1.5M3G,PCS,Morries Extension Socket 3G 1.5M W Neon (pink),Electrical,,MS3233-1.5,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2517,TOO-NIE-ALL-KEY-04MM,PCS,Nietz E/long Ball Point Satin Wrch 53252040 4MM,Power Tools,Nietz,,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2518,TOO-SET-W018,SET,W018 18PCS Tool Set,Power Tools,,W018,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2520,TRA-SOC-METAL-125502,PCS,Taicon 2G 70/0076 Metal Trailing Socket 5M (125502),Electrical,Taicon,,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2521,CLI-HOS-ORB-M00,PCS,Orbit Hose Clip No : M00,Outdoor & Garden,,M00,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2523,"FAS-SCR-CSK-1 1/2"" X 8G-BOX",BOX,Sr Csk Tapping Screw 1 1/2 X 8G (1000PCS/BOX),Fasteners & Fixings,,1000PCS/BOX,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2524,FLO-PVC-25208,ROLL,PVC Flooring No. K35808,Flooring,,K35808,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2525,FLO-PVC-501-16,ROLL,PVC Flooring No. K35602,Flooring,,K35602,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2526,FLO-PVC-D15903,ROLL,PVC Flooring No. K28505,Flooring,,K28505,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2527,FLO-PVC-K27711,ROLL,PVC Flooring No. K33605,Flooring,,K33605,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2528,FLO-PVC-NO-7512,ROLL,PVC Flooring No. K20101,Flooring,,K20101,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2529,FLO-PVC-NO-K10305,ROLL,PVC Flooring No. K35301,Flooring,,K35301,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2530,FLO-PVC-NO-K11114,ROLL,PVC Flooring No. K11114,Flooring,,K11114,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2532,MARK-X-STA-MKX-2020,UNIT,Mark-x Angle Grinder Stand,Power Tools,,MKX-2020,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2533,NUM-PUNC-50730080,SET,Nietz 0-9 Number Punches 8MM 50730080,Signage & Numbering,Nietz,,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2534,PEN-T200-GREY,PAIL,Pentens T200 Fleseal GREY-5KG,Housewares,,T200,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2535,PEN-T200-WHI,PAIL,Pentens T200 Fleseal WHITE-5KG,Housewares,,T200,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2536,TOO-COM-W0287N-21MM,PCS,Com Ratchet Wrench 21MM,Hand Tools,,W0287N,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2538,WEL-ELE-J38.12-3.2MM,BOX,Welding Electrode X 3.2MM (BOX),Welding,,J38.12,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2539,X-FLO-MOC-KH19T01,PCS,"8""X8 Homogeneous Tiles",Power Tools,,KH19T01,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2540,ADH-GLU-PE175GM,SET,175GM E P Glue,Chemicals & Adhesives,,175GM,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2542,BOS-0600-8A7-508,PCS,(508) 3 IN 1 Nozzle,Power Tool Accessories,Bosch,,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2543,CHA-CAP-SQU-EXT-25MM,PCK,Square External Cap 25MM (4PCS/PCK),Outdoor & Garden,,4PCS/PCK,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2544,CUT-DIS-MARK-00900,PCS,Mr. Mark 108MM Segmented Diamond Wheel (1.8X8X20MM),Abrasives & Cutting,,1.8X8X20MM,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2545,FAS-SCR-TECH-WOOD-50MM-BOX,BOX,Techscrew-wood Screw X 50MM (250PCS/BOX),Fasteners & Fixings,,250PCS/BOX,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2546,GAR-SPR-16LTR-BB3G,SET,Knapsack Sprayer (BB-3G),Outdoor & Garden,,BB-3G,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2547,HOS-CON-STO-ECO4112,PCS,"Ecogreen- Quick Connector W. Wtr Stop 5/8""-3/4",Outdoor & Garden,,EG4112,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2548,KGR-KIM-1L-9215,TIN,1 Litre KIMTONE-9215,Paint & Sundries,,KIMTONE-9215,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2549,PAI-ROL-REF-CRI-7,PCS,"7""XD6 Cristin Rainbow Refill",Paint & Sundries,,XD6,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2550,PAP-WALL-HAVANA-11866-12,ROLL,Wallpaper Havana 11866-12(10MX53CM),Paint & Sundries,,10MX53CM,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2551,SHH-YEL-HOSE-10MMX2MM,MTR,Yellow Hose (10MMX2MM),Outdoor & Garden,,10MMX2MM,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2552,TOO-WRE-PIP-W450C,PCS,Heavy Pipe Wrench (450MM),Hand Tools,,W450C,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2553,WAL-DOW-YB-A7201S/W/AB,PCS,Outdoor Gate Light YB-A7201S/W/AB,Doors & Hardware,,YB-A7201S/W/AB,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2555,ADH-TAP-SEA-3255,PCS,Calvallo 3255 Yellow Seal Tape,Chemicals & Adhesives,,13X15M,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2556,BAS-AGRI-BASK-V1034,PCS,Rayaco Metal Handle Fruit& Veg Basket 59X37X32CM,Doors & Hardware,,59X37X32CM,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2557,BOS-2608-521-043,PCS,Screwdriver Bit - 2608-521-043,Power Tool Accessories,Bosch,,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING
+2558,GAR-HOE-JM3812,PCS,Jayamata Hoe-d Curve,Outdoor & Garden,,JM-3812,,,PENDING,,,,,,,,,,,,,,,,,PENDING,pending,needs_permission,,,,RETRY_RESEARCHED_PENDING

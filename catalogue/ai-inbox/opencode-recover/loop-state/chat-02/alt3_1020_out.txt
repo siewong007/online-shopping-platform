@@ -1,0 +1,5 @@
+IA-SEARCH k-prix -> 1
+    03_20260423_202604 | 334 ekxzkt mycnz
+CDX eupro* rows 0
+CDX k-prix.co.kr* rows 0
+CDX kprix.co.kr* rows 0

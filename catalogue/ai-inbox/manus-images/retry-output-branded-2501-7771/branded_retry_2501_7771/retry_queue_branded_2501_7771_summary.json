@@ -1,0 +1,22 @@
+{
+  "queue": "retry-queue-branded-2501-7771.csv",
+  "rows": 2838,
+  "verified_candidate": 10,
+  "pending": 2828,
+  "rejected": 0,
+  "rights_status": "needs_permission for all rows",
+  "candidate_positions": [
+    2515,
+    2522,
+    2541,
+    2602,
+    2865,
+    3630,
+    3772,
+    4096,
+    4880,
+    4881
+  ],
+  "preserved_assets": 10,
+  "source_order_preserved": true
+}

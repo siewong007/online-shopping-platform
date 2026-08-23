@@ -1,0 +1,80 @@
+{
+ "3019": {
+  "page_status": 200,
+  "page_final_url": "https://www.pyeproducts.com/product/detail/89/PYE-E-PUTTY-FILLA",
+  "image_status": 200,
+  "image_final_url": "https://pye.sensephone.net/upload/product/89/PYE_E-Putty_Filla.png",
+  "image_content_type": "image/png",
+  "image_bytes_len": 1729046,
+  "px_w": 1700,
+  "px_h": 1500,
+  "image_sha256": "428febdc2408da8cb325a655a15fcbd14bf037b14ef8003be8262dc4e3534d70",
+  "asset_file": "C:\\Users\\DELL\\OneDrive\\Desktop\\ekoway hardware website\\online-shopping-platform\\catalogue\\ai-inbox\\assets\\3019.png",
+  "fetched_round": 1
+ },
+ "5209": {
+  "page_status": 200,
+  "page_final_url": "https://www.pyeproducts.com/product/detail/17/PYE-WOOD-FILLA",
+  "image_status": 200,
+  "image_final_url": "https://pye.sensephone.net/upload/product/17/PYE_Woodfilla.png",
+  "image_content_type": "image/png",
+  "image_bytes_len": 638773,
+  "px_w": 907,
+  "px_h": 800,
+  "image_sha256": "6a136b394e9d2f4ad68d71a0728bcc3d3f155d255cc89310a699456cf3cce499",
+  "asset_file": "C:\\Users\\DELL\\OneDrive\\Desktop\\ekoway hardware website\\online-shopping-platform\\catalogue\\ai-inbox\\assets\\5209.png",
+  "fetched_round": 1
+ },
+ "2997": {
+  "page_status": 200,
+  "page_final_url": "https://www.pyeproducts.com/product/detail/47/PYE-FLEXI-SEAL",
+  "image_status": 200,
+  "image_final_url": "https://pye.sensephone.net/upload/product/47/PYE_Flexi-Seal_new1.png",
+  "image_content_type": "image/png",
+  "image_bytes_len": 1983028,
+  "px_w": 1700,
+  "px_h": 1500,
+  "image_sha256": "f915a0ac67dcb06dc4f3bdc989fe304cbecf630fbe28d3ccfacde31d20503e06",
+  "asset_file": "C:\\Users\\DELL\\OneDrive\\Desktop\\ekoway hardware website\\online-shopping-platform\\catalogue\\ai-inbox\\assets\\2997.png",
+  "fetched_round": 1
+ },
+ "5137": {
+  "page_status": 200,
+  "page_final_url": "https://www.malex.com.my/showproducts/productid/5435491/oxobiodegradable-garbage-bag",
+  "image_status": 0,
+  "image_final_url": "",
+  "image_content_type": "",
+  "image_bytes_len": 0,
+  "px_w": 0,
+  "px_h": 0,
+  "image_sha256": "",
+  "asset_file": "",
+  "fetched_round": 1
+ },
+ "6028": {
+  "page_status": 200,
+  "page_final_url": "https://www.chenghuatgroup.com.my/ourproducts/cid/543063",
+  "image_status": 0,
+  "image_final_url": "",
+  "image_content_type": "",
+  "image_bytes_len": 0,
+  "px_w": 0,
+  "px_h": 0,
+  "image_sha256": "",
+  "asset_file": "",
+  "fetched_round": 1
+ },
+ "3742": {
+  "page_status": 200,
+  "page_final_url": "https://www.rockey.com.my/",
+  "image_status": 0,
+  "image_final_url": "",
+  "image_content_type": "",
+  "image_bytes_len": 0,
+  "px_w": 0,
+  "px_h": 0,
+  "image_sha256": "",
+  "asset_file": "",
+  "fetched_round": 1
+ }
+}

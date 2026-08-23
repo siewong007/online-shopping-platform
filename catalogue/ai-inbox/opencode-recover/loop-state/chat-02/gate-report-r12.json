@@ -1,0 +1,20 @@
+{
+ "round": 12,
+ "rows_total": 300,
+ "states": {
+  "exhausted": 267,
+  "open": 29,
+  "verified_pass": 3,
+  "candidate": 1
+ },
+ "reds_by_code": {
+  "red:model_absent": 1
+ },
+ "reds": [
+  {
+   "key": "SPRA-BOSNY-B136-400CC|CAN#3508",
+   "code": "red:model_absent",
+   "detail": "['B13640CC', 'TOKENS:B136|40CC', 'BOSNYB136400CC']"
+  }
+ ]
+}

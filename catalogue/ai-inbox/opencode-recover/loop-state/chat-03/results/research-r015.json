@@ -1,0 +1,533 @@
+[
+  {
+    "source_position": "3173",
+    "item_code": "TOO-NIE-TAM-T30",
+    "tier_used": 1,
+    "queries": [
+      "Nietz tools Malaysia tamper star wrench \"532830\" OR \"tamper\"",
+      "nietz.com.my internal search: ?s=tamper"
+    ],
+    "pages_opened": [
+      {"url": "https://nietz.com.my/?s=tamper", "note": "200 official-site search; returned NIETZ Extra Long Tamper Tx Star Wrench S2 (Red) PDP"},
+      {"url": "https://nietz.com.my/product/nietz-extra-long-tamper-tx-star-wrench-s2-red/", "note": "200 PDP, og:title matches product name incl. (Red); schema sku \"532-83-0XX\""}
+    ],
+    "official_product_page": "https://nietz.com.my/product/nietz-extra-long-tamper-tx-star-wrench-s2-red/",
+    "official_image_url": "https://nietz.com.my/wp-content/uploads/2024/07/37_53283009-until-53283055-1.png",
+    "model_string_on_page": "NIETZ Extra Long Tamper Tx Star Wrench S2 (Red) / sku 532-83-0XX / image range 53283009-until-53283055",
+    "finish_match": "yes",
+    "size_match": "unclear",
+    "decision": "candidate",
+    "low_res": true,
+    "rights_status": "unknown",
+    "confidence": "medium",
+    "reason": "Official Malaysian brand site (nietz.com.my) has a dedicated PDP titled 'NIETZ Extra Long Tamper Tx Star Wrench S2 (Red)', matching the display_name's brand, red finish and extra-long tamper torx/star wrench description. The page SKU is genericised to 532-83-0XX and the gallery image filename spans model range 53283009-53283055, which contains our 53283030, but the specific T30 size code is not quoted in visible page text. Image is 500x500 PNG (low-res tier).",
+    "human_action": ""
+  },
+  {
+    "source_position": "6500",
+    "item_code": "FIT-UPVC-SOC-82X50MM",
+    "tier_used": 1,
+    "queries": [
+      "UPVC reducing socket 82mm x 50mm 3\"x2\" Malaysia conduit"
+    ],
+    "pages_opened": [
+      {"url": "https://rowy.com.my/store/p130/Upvc-Reducing-Socket-Fitting.html", "note": "200 PDP on Rowy Hardware (Rowy/Bina Plastic house brand) own store; lists Connection Size 3\" X 2\" 82MM X 50MM"}
+    ],
+    "official_product_page": "https://rowy.com.my/store/p130/Upvc-Reducing-Socket-Fitting.html",
+    "official_image_url": "http://rowy.com.my/uploads/1/4/0/4/140415688/s924436913551281680_p130_i2_w768.jpeg?width=640",
+    "model_string_on_page": "uPVC Reducing Socket Fitting ... Connection Size: 3\" X 2\" 82MM X 50MM, Brand: Rowy (Bina Plastic)",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "candidate",
+    "low_res": true,
+    "rights_status": "unknown",
+    "confidence": "medium",
+    "reason": "Rowy Hardware Sdn Bhd's own store page for its uPVC reducing socket explicitly names the connection size 3\" x 2\" = 82mm x 50mm, matching detected_model 82X50MM and display 'U-pvc Socket Reducing 3 X 2'. Page notes white uPVC colour but the row does not name a colour and the photo appears to be a family shot of fittings. Image serves at ~640-768px (low-res tier).",
+    "human_action": ""
+  },
+  {
+    "source_position": "4546",
+    "item_code": "X-SAF-EAR-EM9001",
+    "tier_used": 1,
+    "queries": [
+      "\"Picasaf\" OR \"EM9001\" ear muff NRR21",
+      "nietz.com.my internal search: ?s=ear+muff"
+    ],
+    "pages_opened": [
+      {"url": "https://b2b-uat.sunwaywinstar.com/my/nietz-picasaf-9001-ear-muffle-nrr21-40ctn", "note": "200 Sunway Winstar B2B listing 'NIETZ EAR MUFFLE (NRR21) 9001 PICASAF' but og:image is a default-image placeholder"},
+      {"url": "https://innovestengineering.com/product/picasaf/ear-wear/picasaf-9001-ear-muffle", "note": "200 dealer PDP 'Picasaf 9001 Ear Muffle', og:image present"},
+      {"url": "https://nietz.com.my/?s=ear+muff", "note": "200 official-site search, found nietz-picasaf-ear-muffle PDPs"},
+      {"url": "https://nietz.com.my/product/nietz-picasaf-ear-muffle/", "note": "200 official PDP, schema sku NSEM901, image 31_NSEM901.png, packing 40"}
+    ],
+    "official_product_page": "https://nietz.com.my/product/nietz-picasaf-ear-muffle/",
+    "official_image_url": "https://nietz.com.my/wp-content/uploads/2024/08/31_NSEM901.png",
+    "model_string_on_page": "NSEM901 (schema sku)",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "candidate",
+    "low_res": true,
+    "rights_status": "unknown",
+    "confidence": "medium",
+    "reason": "Picasaf is Nietz's safety line; the official nietz.com.my PDP carries schema SKU NSEM901 and image 31_NSEM901.png, matching item code EM9001. The authorised-distributor listing on Sunway Winstar B2B ('NIETZ EAR MUFFLE (NRR21) 9001 PICASAF', pack 40) cross-confirms the same product including NRR21, which the Nietz PDP itself omits. Colour not stated anywhere; image is 500x500.",
+    "human_action": ""
+  },
+  {
+    "source_position": "4385",
+    "item_code": "COV-HAR-SIC-JM-228",
+    "tier_used": 1,
+    "queries": [
+      "sickle palm oil harvesting \"JM-228\" OR \"PVC handle sickle\" Malaysia"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Only trade-data evidence found (Volza shipment records show 'JM228 OIL PALM SICKLE PVC C...' exported from Malaysia), confirming the model exists, but no manufacturer or authorised distributor product page for JM-series sickles is indexed. Malaysian sickle makers found (SBL Sin Banlee, Palm King/KLS) use their own model codes and do not list JM228.",
+    "human_action": "Identify the JM-series maker via import/export records or ask Ekoway's supplier for the JM-228 brand/catalogue sheet, then check that maker's site (SBL sblsinbanlee.com and klspalmking.com catalogues are the nearest alternatives)."
+  },
+  {
+    "source_position": "3095",
+    "item_code": "FLO-PVC-NO-279-02",
+    "tier_used": 1,
+    "queries": [
+      "\"PVC flooring\" \"K35707\" OR \"K20901\" OR \"521-05\""
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Unbranded imported wood-grain PVC roll flooring sold under bare pattern numbers (No. 521-05). No brand is named in the row and no official/distributor page exists for this number anywhere indexed; only marketplaces and machinery makers appear in searches.",
+    "human_action": "Ask supplier for the actual mill/brand of these numbered PVC rolls, or photograph the product label in-store as an interim asset."
+  },
+  {
+    "source_position": "3096",
+    "item_code": "FLO-PVC-NO.9607",
+    "tier_used": 1,
+    "queries": [
+      "\"PVC flooring\" \"K35707\" OR \"K20901\" OR \"521-05\"",
+      "\"PVC flooring\" \"522-02\" OR \"K36004\" OR \"470-21\" OR \"090-30\" OR \"K11116\""
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Same unbranded generic family: PVC flooring sold only by bare pattern number No. 522-02. Verbatim search returns no brand site or authorised distributor page, just marketplace noise.",
+    "human_action": "Obtain mill/brand from supplier; otherwise shoot an in-house photo."
+  },
+  {
+    "source_position": "3123",
+    "item_code": "FLO-PVC- NO.483-01",
+    "tier_used": 1,
+    "queries": [
+      "\"PVC flooring\" \"K35707\" OR \"K20901\" OR \"521-05\""
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Unbranded generic PVC flooring by pattern number K35707; no official or distributor page exists for this code in any market searched.",
+    "human_action": "Identify the importer's catalogue source; else use an in-house photo."
+  },
+  {
+    "source_position": "3124",
+    "item_code": "FLO-PVC-300-11",
+    "tier_used": 1,
+    "queries": [
+      "\"PVC flooring\" \"522-02\" OR \"K36004\" OR \"470-21\" OR \"090-30\" OR \"K11116\""
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Unbranded generic PVC flooring by pattern number K36004; verbatim searches return nothing but unrelated industrial sites and marketplaces.",
+    "human_action": "Identify the importer's catalogue source; else use an in-house photo."
+  },
+  {
+    "source_position": "3125",
+    "item_code": "FLO-PVC-469-02",
+    "tier_used": 1,
+    "queries": [
+      "\"PVC flooring\" \"522-02\" OR \"K36004\" OR \"470-21\" OR \"090-30\" OR \"K11116\""
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Unbranded generic PVC flooring by pattern number 470-21; no brand site or authorised distributor page exists for this code.",
+    "human_action": "Identify the importer's catalogue source; else use an in-house photo."
+  },
+  {
+    "source_position": "3126",
+    "item_code": "FLO-PVC-482-14",
+    "tier_used": 1,
+    "queries": [
+      "\"PVC flooring\" \"522-02\" OR \"K36004\" OR \"470-21\" OR \"090-30\" OR \"K11116\""
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Unbranded generic PVC flooring by pattern number 090-30; no official source anywhere in searches.",
+    "human_action": "Identify the importer's catalogue source; else use an in-house photo."
+  },
+  {
+    "source_position": "3128",
+    "item_code": "FLO-PVC-NO-K21114",
+    "tier_used": 1,
+    "queries": [
+      "\"PVC flooring\" \"K35707\" OR \"K20901\" OR \"521-05\""
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Unbranded generic PVC flooring by pattern number K20901; searches return no brand or distributor page for this code.",
+    "human_action": "Identify the importer's catalogue source; else use an in-house photo."
+  },
+  {
+    "source_position": "3129",
+    "item_code": "FLO-PVC-NO-K23706",
+    "tier_used": 1,
+    "queries": [
+      "\"PVC flooring\" \"522-02\" OR \"K36004\" OR \"470-21\" OR \"090-30\" OR \"K11116\""
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Unbranded generic PVC flooring by pattern number K11116; no official or distributor page exists for this code.",
+    "human_action": "Identify the importer's catalogue source; else use an in-house photo."
+  },
+  {
+    "source_position": "3425",
+    "item_code": "FLO-PVC-H030-4",
+    "tier_used": 1,
+    "queries": [
+      "\"Zirafah\" PVC flooring Malaysia"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "'Zirafah' (Malay for giraffe) appears to be a print/pattern name on unbranded PVC flooring rolls, not an identifiable manufacturer. Searches return only the Malay Wikipedia entry for giraffe and unrelated flooring retailers; no brand site or H020-7 product page exists.",
+    "human_action": "Confirm with supplier whether 'Zirafah' maps to a specific mill; otherwise photograph the roll label in-store."
+  },
+  {
+    "source_position": "3426",
+    "item_code": "FLO-PVC-NO-H015-4",
+    "tier_used": 1,
+    "queries": [
+      "\"Zirafah\" PVC flooring Malaysia"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Same 'Zirafah' unbranded pattern-name situation; no manufacturer or authorised page exists for H162-7.",
+    "human_action": "Confirm with supplier whether 'Zirafah' maps to a specific mill; otherwise photograph the roll label in-store."
+  },
+  {
+    "source_position": "5707",
+    "item_code": "STO-MOU-W222-25X50",
+    "tier_used": 1,
+    "queries": [
+      "K-Prix mounted point W222 Korea"
+    ],
+    "pages_opened": [
+      {"url": "https://www.grinding.co.kr/product/mounted-point-wheels/?lang=en", "note": "200 via r.jina.ai proxy (direct fetch empty); K-Prix/Jeil official family page - spec table shows Cylinder D16~32 T32 but never mentions shape code W222; single generic product photo"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "no",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "The Korean OEM (grinding.co.kr, K-PRIX) has only a generic Mounted Point Wheels family page whose size table does not include the 25x50 W222 format and never quotes the string W222, so the bar's model-string requirement fails and the sole photo is a family hero. All other W222 mounted-point pages found (MSC, NEFCO, AA Abrasives, Cromindo) are non-Malaysian retailers of other brands (Rex Cut, Norton, United Abrasives), not acceptable sources for a k-prix item.",
+    "human_action": "Request a W222 25x50-specific asset or catalogue page from Jeil Abrasives/K-PRIX (grinding.co.kr inquiry form), or confirm from the K-PRIX PDF catalogue (grinding.co.kr/wp-content/uploads/2021/06/K-PRIX.pdf) which current product code corresponds."
+  },
+  {
+    "source_position": "4769",
+    "item_code": "IND-SCP-FR9788-5",
+    "tier_used": 1,
+    "queries": [
+      "\"Faris\" \"FR9788\" OR finishing scraper w handle Malaysia"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "FARIS Handy Tools model 9788 scraper exists (Shopee/Lazada listings confirm 'FARIS HANDY TOOLS Model: 9788'), but FARIS has no official website and no authorised-distributor product page was found; all sources are Shopee/Lazada marketplaces, which are excluded by the brief.",
+    "human_action": "Contact the Faris handy-tools importer/distributor in Malaysia for an official product sheet and image, since marketplace-only coverage cannot satisfy sourcing rules."
+  },
+  {
+    "source_position": "5134",
+    "item_code": "NAIL-TUFTING-TN-8225-PCK",
+    "tier_used": 1,
+    "queries": [
+      "\"tufting nail\" U clip 25mm upholstery Malaysia"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Unbranded U-clip tufting nails 25mm x 8.5mm are commodity fasteners. Closest branded equivalent found is FIESTO U Clip Tufting Nail TN7216/TN7220/TN7225 sold by dealer Lita Venture, but FIESTO has no official site and its TN72xx codes do not match this row's TN-8225; no acceptable source for the exact item.",
+    "human_action": "If the house stock is actually FIESTO, request the correct TN-code (likely TN7225) asset from Lita Venture/Fiesto; otherwise treat as generic and photograph in-house."
+  },
+  {
+    "source_position": "5835",
+    "item_code": "SHH-SEA-FOA-FLO-SSF05",
+    "tier_used": 1,
+    "queries": [
+      "\"Seahawk\" foam float SSF site:seahawk.com.my OR seahawk fishing tackle official",
+      "Seahawk SSF-05 foam float fishing"
+    ],
+    "pages_opened": [
+      {"url": "https://tce-sports.com/product/ssf-float/", "note": "200 official brand-owner (TCE Sports Sdn Bhd) PDP 'SSF Float'; variant table FC132339-FC132345 with mm lengths; gallery images only SSF Main, SSF-02, SSF-03 (1251x1251 each)"}
+    ],
+    "official_product_page": "https://tce-sports.com/product/ssf-float/",
+    "official_image_url": "",
+    "model_string_on_page": "SSF Float / SKUs FC132339-FC132345 (SSF-02, SSF-03 appear only in image filenames)",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "needs_permission",
+    "confidence": "medium",
+    "reason": "The official Seahawk brand-owner page (TCE Sports) covers the SSF foam float family and offers high-res photos, but only for the generic main image and sibling sizes SSF-02/SSF-03; there is no SSF-05-specific image or text, and the variant table uses internal FC13xxxx codes that do not map visibly to SSF-05. Using the SSF-02 photo would violate the sibling-SKU rule, so no candidate is recorded despite a valid official page.",
+    "human_action": "Email sales@tce-sports.com (or their B2B portal) asking which FC13xxxx variant corresponds to SSF-05 (2'S) and for a dedicated SSF-05 product photo."
+  },
+  {
+    "source_position": "6855",
+    "item_code": "TOO-DRV-2WAY-100MMX6MM",
+    "tier_used": 1,
+    "queries": [
+      "Blimax 2 way screwdriver Malaysia",
+      "\"Blimax\" screwdriver \"2 way\" OR \"two way\" OR \"2way\"",
+      "blimax.com.my internal search: ?s=2 way screwdriver"
+    ],
+    "pages_opened": [
+      {"url": "https://www.blimax.com.my/our-products/hand-tools/", "note": "200 official Blimax Supply Sdn Bhd hand tools category - only Caliper/Digital Torque Adaptor/Torque Screwdriver/Wrench categories listed, no 2-way screwdriver"},
+      {"url": "https://www.blimax.com.my/?s=2+way+screwdriver", "note": "200 site search returned zero results (nav links only)"},
+      {"url": "https://www.focuselectrical.com.my/product/blimax-asd66-6-x-6mm-screwdriver", "note": "search-result only, different product (ASD66 single-end), not opened"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Blimax Supply Sdn Bhd's official site does not list any 2-way screwdriver (site search empty; hand-tool categories exclude it). The only Blimax screwdriver found elsewhere is the ASD66 single-end model at dealer Focus Electrical, which is a different product from the 100mm x 6mm 2-way unit.",
+    "human_action": "Ask Blimax Supply Sdn Bhd directly for the 2-way screwdriver (100x6mm, 'DRIVER-4') product sheet/image, since their web catalogue does not carry it."
+  },
+  {
+    "source_position": "6921",
+    "item_code": "DRI-AUG-2WAY-11MM",
+    "tier_used": 1,
+    "queries": [
+      "\"T&T\" auger bit Malaysia \"7/16\" OR \"11mm\" hand auger"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "T&T auger bits appear only on Shopee marketplace listings ('T&T Auger Drill Bits Wood Carpenter...'); no official T&T brand site or authorised Malaysian distributor product page could be located for a 7/16\" (11mm) auger bit.",
+    "human_action": "Identify the T&T brand owner/importer in Malaysia and request the auger-bit range sheet; marketplace-only coverage cannot be used."
+  },
+  {
+    "source_position": "5875",
+    "item_code": "SHH-HOO-1920SS4/0",
+    "tier_used": 1,
+    "queries": [
+      "Eupro 1920SS fishing hook 4/0",
+      "Eupro official website fishing hook O'Shaughnessy stainless",
+      "eupro \"1920SS\" hook -shopee -lazada"
+    ],
+    "pages_opened": [
+      {"url": "https://eupro.com/index.php?p=hook", "note": "partial render via r.jina.ai (footer only); Google-indexed hook index lists 3829BN/3255BN/3918BN/3988BN/3168BN/7930BN only - no 1920SS"},
+      {"url": "https://tce-sports.com/product/oshaughnessy-1920ss-2x/", "note": "200 TCE Sports PDP 'O'Shaughnessy (1920SS-2X)': model code 1920SS-2X, sizes #1-#10/0, silver; 4/0 shown as 7 pcs/pkt vs row's 6'S; Eupro brand not stated on page"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "yes",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "The official Eupro global site's hook index does not list a 1920SS model (only BN-suffixed hooks). The closest official-brand-owner page (TCE Sports) carries the 1920SS-2X strength variant with a different model suffix, a 7-pc pack at size 4/0 versus the row's 6'S, and no Eupro branding in the page text, so it fails the exact-model and brand-text requirements.",
+    "human_action": "Confirm with eupro.com / J&T Team Eupro (facebook.com/JandTTeameupro) whether plain 1920SS is still catalogued and obtain a size-specific product image; alternatively accept the TCE 1920SS-2X page if the suffix difference is confirmed immaterial."
+  },
+  {
+    "source_position": "5688",
+    "item_code": "CUT-FLA-TAI-A120100",
+    "tier_used": 1,
+    "queries": [
+      "Tailin flap disc A120"
+    ],
+    "pages_opened": [
+      {"url": "https://www.ewarehouse.my/Tailin-Flap-Disc-A120-100mm-x-16mm", "note": "200 Malaysian hardware e-tailer PDP; og:title 'Tailin Flap Disc A120 (100mm x 16mm)', spec A120, 13700 RPM, fibre backing"}
+    ],
+    "official_product_page": "https://www.ewarehouse.my/Tailin-Flap-Disc-A120-100mm-x-16mm",
+    "official_image_url": "https://www.ewarehouse.my/image/cache/catalog/products/2777/tailin-flapdisc%20a601-600x600h.jpg",
+    "model_string_on_page": "Tailin Flap Disc A120 (100mm x 16mm), Spec: A120",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "candidate",
+    "low_res": true,
+    "rights_status": "unknown",
+    "confidence": "low",
+    "reason": "Malaysian distributor eWarehouse has a dedicated PDP whose title and specification quote A120 and 100x16mm, matching item code A120100 (A120 grit, 100mm). Caution: the og:image cache filename ('tailin-flapdisc a601') suggests the photo may be shared across Tailin flap-disc grit variants, and ewarehouse states images are for illustration, so the visible grit label needs human verification. Image is 600x600 (low-res tier). Tailin's own OEM site (tailinsubic.net) has only a Type 27/29 family page plus PDF spec sheet, no per-grit imagery.",
+    "human_action": ""
+  },
+  {
+    "source_position": "3973",
+    "item_code": "CLIP-TIL-PVC-1.5MM",
+    "tier_used": 1,
+    "queries": [
+      "PVC tile leveling clip 1.5mm 2mm Malaysia official"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Unbranded consumable: 1.5mm PVC tile leveling clips sold in ~100-pc packs by many importers with no identifiable brand in the row. All hits are marketplaces or retailer category pages of other brands (e.g. HomePro's TARA DL-D01), none of which can serve as the official page for this unbranded item.",
+    "human_action": "Either adopt a branded equivalent (confirm with buyer, e.g. TARA DL-D01 1.5mm at HomePro MY) or photograph the house-pack in-store."
+  },
+  {
+    "source_position": "3974",
+    "item_code": "CLIP-TIL-PVC-2.0MM",
+    "tier_used": 1,
+    "queries": [
+      "PVC tile leveling clip 1.5mm 2mm Malaysia official"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Same unbranded-generic situation as the 1.5mm clip: no brand named in the row, and no official/distributor page exists for a standalone 2.0mm PVC tile leveling clip product.",
+    "human_action": "Either adopt a branded equivalent after buyer confirmation or photograph the house-pack in-store."
+  },
+  {
+    "source_position": "4651",
+    "item_code": "X-FLO-MOC-36MW24",
+    "tier_used": 1,
+    "queries": [
+      "\"36MW24\" floor tile 12x24"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "The code 36MW24 returns no matches in any market; only generic 12x24 tile assortments from US retailers appear. Without a brand attached to the row, no official product page can be established for this specific tile model.",
+    "human_action": "Check the tile box/crate for the manufacturer print (Malaysian tile mills such as Guocera/White Horse/Niro use different code formats) and re-run once the real brand/model is known."
+  }
+]

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ekoway — Project Stage</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#products">Skip to catalogue</a>
+    <header class="utility-bar">
+      <a class="brand" href="#" aria-label="Ekoway home"><img src="/frontend/public/ekoway/ekoway-logo.jpeg" alt="Ekoway" /></a>
+      <nav aria-label="Primary navigation">
+        <a class="active" href="#products">Catalogue</a><a href="#services">Services</a><a href="#trade">Trade desk</a>
+      </nav>
+      <form class="search" role="search">
+        <label for="stage-search">Search products</label>
+        <input id="stage-search" type="search" placeholder="What are you working on?" autocomplete="off" />
+        <button type="submit" aria-label="Submit search">Search</button>
+      </form>
+      <div class="utilities"><a href="#account">Account</a><a href="#cart">Cart <b>0</b></a></div>
+    </header>
+
+    <main class="stage-layout">
+      <aside class="stage-panel" aria-labelledby="stage-title">
+        <div class="panel-rule"><span>EKOWAY / PROJECT SEQUENCE</span><span id="stage-count">08 PRODUCTS</span></div>
+        <div class="stage-editorial">
+          <p class="stage-overline">Current project stage</p>
+          <p id="stage-number" class="stage-number">00</p>
+          <h1 id="stage-title">Whole project</h1>
+          <p id="stage-advice" class="stage-advice">Start anywhere. Search by product, or choose the point your job has reached.</p>
+        </div>
+        <nav id="stage-nav" class="stage-nav" aria-label="Project stages"></nav>
+        <p class="stage-footnote">A practical sequence from counter-desk experience. Search remains the fastest route when you know the item.</p>
+      </aside>
+
+      <section class="product-plane" aria-label="Products by project stage">
+        <div class="refine-bar">
+          <div class="aisle-filter"><span>FILTER / AISLE</span><div id="aisle-filters" role="group" aria-label="Aisle filters"></div></div>
+          <label class="sort" for="stage-sort"><span>SORT</span><select id="stage-sort"><option value="featured">Featured</option><option value="price-asc">Price Low–High</option><option value="price-desc">Price High–Low</option><option value="name" selected>Name</option></select></label>
+        </div>
+        <div id="products" class="product-list" aria-live="polite"></div>
+        <p id="empty" class="empty" hidden>No products match this project stage.</p>
+      </section>
+    </main>
+    <script src="./app.js"></script>
+  </body>
+</html>

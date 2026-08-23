@@ -265,7 +265,8 @@ section { position: relative; }
   transition: transform 0.5s var(--ease2), filter 0.4s;
 }
 .cat-row:hover .cat-thumb { transform: scale(1.05) rotate(-1.5deg); filter: none; }
-.cat-thumb image-slot { width: 100%; height: 100%; display: block; }
+.cat-thumb image-slot,
+.cat-thumb img { width: 100%; height: 100%; display: block; object-fit: cover; }
 .cat-row .go {
   width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line);
   display: grid; place-items: center; font-size: 17px; color: var(--cream);
@@ -282,9 +283,11 @@ section { position: relative; }
   transition: transform 0.45s var(--ease2), border-color 0.4s, background 0.4s;
 }
 .deal-card:hover { transform: translateY(-7px); border-color: var(--faint); background: var(--card-hi); }
-.deal-card image-slot {
+.deal-card image-slot,
+.deal-card .slot-img {
   width: 100%; height: 168px; display: block; margin-bottom: 16px;
   border-radius: 10px; overflow: hidden; background: #0d0d0d;
+  object-fit: cover;
 }
 .deal-card .dbrand { font-weight: 700; font-size: 10.5px; letter-spacing: 0.2em; color: var(--mute); text-transform: uppercase; }
 .deal-card h4 { font-size: 16px; font-weight: 700; line-height: 1.3; margin: 7px 0 14px; min-height: 42px; }
@@ -332,7 +335,8 @@ section { position: relative; }
 }
 .feat-card.in { opacity: 1; transform: none; }
 .feat-card.media { padding: 0; position: relative; background: #0c0c0c; }
-.feat-card.media image-slot { width: 100%; height: 100%; display: block; }
+.feat-card.media image-slot,
+.feat-card.media .slot-img { width: 100%; height: 100%; display: block; object-fit: cover; position: absolute; inset: 0; }
 .feat-card.media .m-grad {
   position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0) 55%);

@@ -1,0 +1,80 @@
+{
+ "6331": {
+  "page_status": 200,
+  "page_final_url": "https://www.suiumachinery.com.my/showproducts/productid/5947344/",
+  "image_status": 200,
+  "image_final_url": "https://cdn1.npcdn.net/userfiles/24700/file/BOSSMAN_BBU4_4___Fibre_Disc_Back_Up_Pad_02.jpg",
+  "image_content_type": "image/jpeg",
+  "image_bytes_len": 369547,
+  "px_w": 1667,
+  "px_h": 1667,
+  "image_sha256": "0130176d1e0646605da9d461233bbdd9a9fdc220e52d81da437499c2b965b879",
+  "asset_file": "C:\\Users\\DELL\\OneDrive\\Desktop\\ekoway hardware website\\online-shopping-platform\\catalogue\\ai-inbox\\assets\\6331.jpg",
+  "fetched_round": 1
+ },
+ "6451": {
+  "page_status": 200,
+  "page_final_url": "https://www.singer.com.my/all-purpose-oil-ol0080",
+  "image_status": 200,
+  "image_final_url": "https://www.singer.com.my/media/catalog/product/2/0/2023_ecom_sewing_machine_ol0080_oil.jpg",
+  "image_content_type": "image/jpeg",
+  "image_bytes_len": 649208,
+  "px_w": 4167,
+  "px_h": 4168,
+  "image_sha256": "146a5e9ca72d2fb79c724155b458fc8547c4ae84ce98d1307dc94f8b767bbd5b",
+  "asset_file": "C:\\Users\\DELL\\OneDrive\\Desktop\\ekoway hardware website\\online-shopping-platform\\catalogue\\ai-inbox\\assets\\6451.jpg",
+  "fetched_round": 1
+ },
+ "3844": {
+  "page_status": 200,
+  "page_final_url": "https://www.nipponpaint.com.my/product/7-cage-roller-handle-polyester-refill/",
+  "image_status": null,
+  "image_final_url": "",
+  "image_content_type": "",
+  "image_bytes_len": 0,
+  "px_w": 0,
+  "px_h": 0,
+  "image_sha256": "",
+  "asset_file": "",
+  "fetched_round": 1
+ },
+ "3292": {
+  "page_status": 200,
+  "page_final_url": "https://www.nipponpaint.com.my/product/4-polyester-roller-refill/",
+  "image_status": null,
+  "image_final_url": "",
+  "image_content_type": "",
+  "image_bytes_len": 0,
+  "px_w": 0,
+  "px_h": 0,
+  "image_sha256": "",
+  "asset_file": "",
+  "fetched_round": 1
+ },
+ "4772": {
+  "page_status": 200,
+  "page_final_url": "https://www.nipponpaint.com.my/product/7-exterior-roller-refill-21mm/",
+  "image_status": null,
+  "image_final_url": "",
+  "image_content_type": "",
+  "image_bytes_len": 0,
+  "px_w": 0,
+  "px_h": 0,
+  "image_sha256": "",
+  "asset_file": "",
+  "fetched_round": 1
+ },
+ "4203": {
+  "page_status": 200,
+  "page_final_url": "https://www.nipponpaint.com.my/product/synthetic-filament-paint-brush-750/",
+  "image_status": null,
+  "image_final_url": "",
+  "image_content_type": "",
+  "image_bytes_len": 0,
+  "px_w": 0,
+  "px_h": 0,
+  "image_sha256": "",
+  "asset_file": "",
+  "fetched_round": 1
+ }
+}

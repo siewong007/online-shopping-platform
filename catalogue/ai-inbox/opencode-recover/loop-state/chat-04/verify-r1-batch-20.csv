@@ -1,0 +1,3 @@
+source_position,verifier_verdict,finish_exact,model_exact,px,bytes,justification
+3185,fail,no,no,600x600,22631B,"sonichardware asset is a MIKASA braided PVC water hose packshot, not VIP SS304 double grating 6x6; no grating PDP found"
+4633,pass,yes,yes,1000x1006,114774B,rayaco.com.my official PDP productid 2989433 hosts this exact CDN image; packshot labeled RAYACO V8120-2 48L multipurpose bin with handle cover sold as 12-gallon pail

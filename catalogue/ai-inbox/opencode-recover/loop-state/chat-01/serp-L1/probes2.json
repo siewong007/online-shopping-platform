@@ -1,0 +1,120 @@
+{
+ "627": {
+  "pdp": "https://deka.my/x-one-46/",
+  "status": 200,
+  "images_top": [
+   "https://deka.my/wp-content/uploads/2025/07/Deka-Heder-Logo-300x200.png",
+   "https://deka.my/wp-content/uploads/2025/07/Deka-Heder-Logo-1024x683.png",
+   "https://deka.my/wp-content/uploads/2025/07/Deka-Heder-Logo-768x512.png",
+   "https://deka.my/wp-content/uploads/2025/07/Deka-Heder-Logo-600x400.png"
+  ]
+ },
+ "632": {
+  "pdp": "https://deka.my/koni-54/",
+  "status": 200,
+  "images_top": [
+   "https://deka.my/wp-content/uploads/2025/07/KONI-54-MG-Jpg.jpg",
+   "https://deka.my/wp-content/uploads/2025/07/KONI-54-MTW-Jpg.jpg",
+   "https://deka.my/wp-content/uploads/2025/07/KONI-54-OAK-Jpg.jpg",
+   "https://deka.my/wp-content/uploads/2025/07/KONI-54-LW-Jpg.jpg"
+  ]
+ },
+ "772": {
+  "pdp": "https://deka.my/koni-54/",
+  "status": 200,
+  "images_top": [
+   "https://deka.my/wp-content/uploads/2025/07/KONI-54-MG-Jpg.jpg",
+   "https://deka.my/wp-content/uploads/2025/07/KONI-54-MTW-Jpg.jpg",
+   "https://deka.my/wp-content/uploads/2025/07/KONI-54-OAK-Jpg.jpg",
+   "https://deka.my/wp-content/uploads/2025/07/KONI-54-LW-Jpg.jpg"
+  ]
+ },
+ "640": {
+  "pdp": "https://deka.my/concept-mini/",
+  "status": 200,
+  "images_top": [
+   "https://deka.my/wp-content/uploads/2025/07/CONCEPT-MINI-MG-Jpg.jpg",
+   "https://deka.my/wp-content/uploads/2025/07/CONCEPT-MINI-WH-Jpg.jpg",
+   "https://deka.my/wp-content/uploads/2025/06/Icon-KONI-GENO-CONCEPT-DXPRO-F5DCPRO-SCXPRO-OK-scaled.png",
+   "https://deka.my/wp-content/uploads/2025/06/Icon-KONI-GENO-CONCEPT-DXPRO-F5DCPRO-SCXPRO-OK-300x67.png"
+  ]
+ },
+ "2602": {
+  "pdp": "https://mys.sika.com/en/construction/tile-setting/tile-adhesives/sikaceram-88.html",
+  "status": 200,
+  "og_image": null,
+  "scene7": [
+   "https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile",
+   "https://sika.scene7.com/is/image/sika/logo.img",
+   "https://sika.scene7.com/is/image/sika/logo.img${imageProfile}",
+   "https://sika.scene7.com/is/image/sikacs/my-SikaCeram-88-25kg-01536099:1-1"
+  ]
+ },
+ "3630": {
+  "pdp": "https://mys.sika.com/en/home-improvement/waterproofing/sikagard-703-groutseal.html",
+  "status": 200,
+  "og_image": null,
+  "scene7": [
+   "https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile",
+   "https://sika.scene7.com/is/image/sika/logo.img",
+   "https://sika.scene7.com/is/image/sika/logo.img${imageProfile}",
+   "https://sika.scene7.com/is/image/sikacs/my-02-en-MY-Sikagard-703-GroutSeal-1x1-00557701:1-1"
+  ]
+ },
+ "826": {
+  "search_url": "https://www.bosch-pt.com.my/my/en/search?text=GKS+140",
+  "status": 0,
+  "hits_or_slugs": [
+   "<HTTPError 404: 'The requested content does not exist.'>"
+  ]
+ },
+ "950": {
+  "search_url": "https://www.bosch-pt.com.my/my/en/search?text=GDC+140",
+  "status": 0,
+  "hits_or_slugs": [
+   "<HTTPError 404: 'The requested content does not exist.'>"
+  ]
+ },
+ "821": {
+  "search_url": "https://www.bosch-pt.com.my/my/en/search?text=GKS+235+Turbo",
+  "status": 0,
+  "hits_or_slugs": [
+   "<HTTPError 404: 'The requested content does not exist.'>"
+  ]
+ },
+ "810": {
+  "search_url": "https://www.bosch-pt.com.my/my/en/search?text=GAS+15+PS",
+  "status": 0,
+  "hits_or_slugs": [
+   "<HTTPError 404: 'The requested content does not exist.'>"
+  ]
+ },
+ "856": {
+  "search_url": "https://www.bosch-pt.com.my/my/en/search?text=GRW+140",
+  "status": 0,
+  "hits_or_slugs": [
+   "<HTTPError 404: 'The requested content does not exist.'>"
+  ]
+ },
+ "986": {
+  "search_url": "https://www.bosch-pt.com.my/my/en/search?text=GST+90+BE",
+  "status": 0,
+  "hits_or_slugs": [
+   "<HTTPError 404: 'The requested content does not exist.'>"
+  ]
+ },
+ "991": {
+  "search_url": "https://www.bosch-pt.com.my/my/en/search?text=GO+Gen+3",
+  "status": 0,
+  "hits_or_slugs": [
+   "<HTTPError 404: 'The requested content does not exist.'>"
+  ]
+ },
+ "2557": {
+  "search_url": "https://www.bosch-pt.com.my/my/en/search?text=2608521043",
+  "status": 0,
+  "hits_or_slugs": [
+   "<HTTPError 404: 'The requested content does not exist.'>"
+  ]
+ }
+}

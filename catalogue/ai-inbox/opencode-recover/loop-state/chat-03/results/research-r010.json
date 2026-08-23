@@ -1,0 +1,705 @@
+[
+  {
+    "source_position": "3264",
+    "item_code": "FAS-SCR-TAP-CSK-6#2\"-BOX",
+    "tier_used": 2,
+    "queries": [
+      "\"6 X 2\" self tapping screw flat head 500pcs"
+    ],
+    "pages_opened": [
+      {
+        "url": "https://r.jina.ai/https://html.duckduckgo.com/html/?q=%226+X+2%22+self+tapping+screw+flat+head+500pcs",
+        "note": "200 SERP - only unrelated Paulin/Home Depot Canada drywall screw box, no Malaysian brand/OEM page for this generic fastener"
+      }
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Unbranded generic countersunk self-tapping screw sold by weight/box; detected_model is just pack size '500PCS/BOX'. The only exact-size hit was a Paulin drywall-screw box at Home Depot Canada, a different brand and not an acceptable source type. No official or authorised-dealer page exists for this house-label fastener.",
+    "human_action": "Photograph an actual 500pcs box from store stock on white background."
+  },
+  {
+    "source_position": "4286",
+    "item_code": "IND-TRO-SET-KIT3203",
+    "tier_used": 2,
+    "queries": [
+      "\"KIT3203\" planner set",
+      "\"KIT3203\""
+    ],
+    "pages_opened": [
+      {
+        "url": "https://r.jina.ai/https://html.duckduckgo.com/html/?q=%22KIT3203%22",
+        "note": "200 SERP - KIT3203 only matches unrelated items (eBay clutch kit, Nissan brake caliper kit, Nilfisk brush cross-ref); no planer set anywhere"
+      }
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "The model string KIT3203 returns zero relevant results - all hits are automotive clutch/caliper kits and appliance spares, none is a '2 in 1 planner set'. The product appears to be an unbranded/imported power-planer combo set whose internal code never appears on any vendor site. No official page can be gated.",
+    "human_action": "Check the physical carton for a real brand/model label; if it is a rebadged Ingco/Dongcheng-style set, resubmit with that brand."
+  },
+  {
+    "source_position": "5606",
+    "item_code": "DC-6\"-WGZ150060L",
+    "tier_used": 1,
+    "queries": [
+      "\"WGZ150060L\" Dongcheng saw blade",
+      "BOSUN WGZ150060L saw blade"
+    ],
+    "pages_opened": [
+      {
+        "url": "https://www.machinerytools.com.my/index.php?ws=showproducts&products_id=6339692&subcat=Wood-Saw-Blade",
+        "note": "200 PDP - Sui U Machinery & Tools (M) Sdn Bhd, title 'BOSUN WGZ150060L 60 Teeth 6\" TCT Wood Saw Blade', spec text 'Model : WGZ150060L', gallery images present"
+      },
+      {
+        "url": "http://www.bosun.com.cn/theme/en/html/pro_208.html",
+        "note": "SERP-only sighting of Bosun Tools global OEM series page (not opened); confirms Bosun is the blade OEM brand behind WGZ codes"
+      }
+    ],
+    "official_product_page": "https://www.machinerytools.com.my/index.php?ws=showproducts&products_id=6339692&subcat=Wood-Saw-Blade",
+    "official_image_url": "https://cdn1.npcdn.net/image/1768552025b81daa560c590ae178b072fe4febd954.jpg?md5id=29ebacd5f103d32a0f2fda45fccd4a5c&new_width=1000&new_height=1000&size=max&w=1526956020",
+    "model_string_on_page": "Model : WGZ150060L",
+    "finish_match": "yes",
+    "size_match": "yes",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "needs_permission",
+    "confidence": "high",
+    "reason": "Item code prefix 'DC' suggested Dongcheng but every source shows WGZ150060L is a BOSUN-brand 6\" (150mm) 60T TCT wood saw blade; Sui U Machinery & Tools (M) Sdn Bhd is a major Bosun dealer in Malaysia and lists this exact model on its own PDP. Page text states 'Model : WGZ150060L', size 6'' (150MM) 60 teeth, matching display_name. Main CDN image downloaded and verified at 1000x1000 px / ~493KB depicting the boxed Bosun blade.",
+    "human_action": ""
+  },
+  {
+    "source_position": "4366",
+    "item_code": "CYL-LOC-EPO-C101L-ORB",
+    "tier_used": 3,
+    "queries": [
+      "\"C101\" cylindrical lock epoxy ORB Malaysia",
+      "\"C101-L\" lock"
+    ],
+    "pages_opened": [
+      {
+        "url": "https://r.jina.ai/https://html.duckduckgo.com/html/?q=%22C101%22+cylindrical+lock+epoxy+ORB+Malaysia",
+        "note": "200 SERP - only Dormakaba C101 dummy lever (US), Enoc C101 cylinder design (Sweden), gym portals; nothing matching an 'Epo' brand ORB cylindrical lock"
+      },
+      {
+        "url": "https://r.jina.ai/https://html.duckduckgo.com/html/?q=%22C101-L%22+lock",
+        "note": "200 SERP - C101-L matches only Shimano brake levers and Beckhoff PLCs"
+      }
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "'Epo' appears to be a small Malaysian import house brand for tubular locks; neither the brand nor the C101-L code surfaces on any official or authorised-distributor page. All C101-L collisions are Shimano bicycle parts or Beckhoff PLC terminals. Without a page quoting C101-L with oil-rubbed-bronze finish, the bar cannot be met.",
+    "human_action": "Ask supplier for the Epo catalogue sheet or check the lock's rose/face for a stamped model; resubmit with the true OEM brand."
+  },
+  {
+    "source_position": "3387",
+    "item_code": "TOO-WRE-1EMHT020",
+    "tier_used": 3,
+    "queries": [
+      "Eastman \"E0074\" square tap handle",
+      "\"E0074\" tap handle"
+    ],
+    "pages_opened": [
+      {
+        "url": "https://www.litaventure.com/showproducts/productid/5995036/eastman-brand-hand-tap-handle-e0072-e0073-e0074/",
+        "note": "bot-wall / 'Checking...' interstitial, then timeout on retry"
+      },
+      {
+        "url": "https://r.jina.ai/https://www.litaventure.com/showproducts/productid/5995036/cid/411159/",
+        "note": "200 but served generic homepage content - the E0072/E0073/E0074 product block no longer renders; no product image obtainable"
+      }
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Only one page worldwide carries Eastman hand tap handle E0074: LITA Venture Hardware (Penang newpages-hosted shop), and that URL is Cloudflare-gated and now serves homepage content instead of the product, so neither model confirmation nor an image could be captured. It is also a combined E0072/E0073/E0074 listing, so even a cached image would risk depicting a sibling size (3/4\" variant not isolated). Eastman hand tools India (eastmanhandtools.com) does not surface E0074 in search.",
+    "human_action": "Request the Litaventure product photo directly via their WhatsApp (+60127038812) or photograph own stock."
+  },
+  {
+    "source_position": "4391",
+    "item_code": "SCA-CAM-DIG-3100072",
+    "tier_used": 2,
+    "queries": [
+      "\"luggage scale\" \"50kg\" Malaysia digital hardware brand",
+      "Camry luggage scale \"HO/50KG\"",
+      "\"HO/50KG\" luggage scale"
+    ],
+    "pages_opened": [
+      {
+        "url": "https://r.jina.ai/https://html.duckduckgo.com/html/?q=Camry+luggage+scale+%22HO%2F50KG%22",
+        "note": "200 SERP - zero organic results for HO/50KG; only ads plus a Veligaa listing of Camry EL50 pocket scale (different model)"
+      },
+      {
+        "url": "https://www.gsthardware.com.my/product/constant-electronic-luggage-scale-plastic-digital-weighing-tool-50kg-for-travel--baggage-14192-713e",
+        "note": "SERP excerpt only - Constant brand model 14192-713E, different brand/model from HO/50KG, not opened further"
+      }
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Item prefix SCA-CAM suggests Camry scales, but the stated model 'HO/50KG' has zero search presence; Camry's known luggage-scale code is EL50 (sold by Veligaa Hardware MY), which cannot be assumed identical. Other 50kg luggage scales found are Constant 14192-713E or unbranded marketplace goods. Bar item 5 fails - no page quotes HO/50KG.",
+    "human_action": "Read the actual model printed on the scale body/blister; likely Camry EL-series, then re-source against Camry official."
+  },
+  {
+    "source_position": "4408",
+    "item_code": "BURR-CAR-T.C.T-AX1020",
+    "tier_used": 2,
+    "queries": [
+      "\"Blimax\" carbide burr AX1020",
+      "Blimax carbide burr Malaysia"
+    ],
+    "pages_opened": [
+      {
+        "url": "https://r.jina.ai/https://html.duckduckgo.com/html/?q=Blimax+carbide+burr+Malaysia",
+        "note": "200 SERP - Blimax Supply Sdn Bhd is a KL hardware wholesaler (blimax.com.my) with no online product pages for AX1020; AX/CX codes appear only in Shopee listings of unbranded burrs"
+      }
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "'Blimax' is the KL retailer (Blimax Supply Sdn Bhd), not a burr manufacturer; its website carries no AX1020 product page. AX1020 is a generic Chinese tungsten-carbide rotary burr shape/size code that appears only on AliExpress/eBay/Shopee, all excluded source types. No official OEM page quotes AX1020.",
+    "human_action": "Photograph the blister card; if a mill name (e.g. Zhuzhou/cemented-carbide maker) is printed, resubmit."
+  },
+  {
+    "source_position": "4409",
+    "item_code": "BURR-CAR-T.C.T-CX1020",
+    "tier_used": 2,
+    "queries": [
+      "\"Blimax\" carbide burr CX1020",
+      "Blimax carbide burr Malaysia",
+      "CX1020 carbide burr"
+    ],
+    "pages_opened": [
+      {
+        "url": "https://r.jina.ai/https://html.duckduckgo.com/html/?q=Blimax+carbide+burr+Malaysia",
+        "note": "200 SERP - same findings as sibling row; CX1020 seen only inside a Shopee title among generic burr codes (GX/FX/CX/AX), no acceptable source"
+      }
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Same situation as sibling AX1020: CX1020 is a generic cylinder-shape carbide burr code retailed through marketplaces only; Blimax Supply Sdn Bhd's own site has no such product page. Researched together with AX1020 per brief family guidance but judged separately.",
+    "human_action": "Photograph stock; identify the mill brand on packaging for a future retry."
+  },
+  {
+    "source_position": "4379",
+    "item_code": "SHH-ROD-EJ150",
+    "tier_used": 3,
+    "queries": [
+      "\"Torikumu\" ebi prawn rod",
+      "\"TK-EB\" torikumu rod"
+    ],
+    "pages_opened": [
+      {
+        "url": "http://alpine.my/Featured.html",
+        "note": "200 - Torikumu series page (Tsuri Fishing brand site); describes Torikumu-Ebi Light/Ultralight but publishes NO model codes like TK-EB-401-2S in text"
+      },
+      {
+        "url": "http://alpine.my/blog_ebi.html",
+        "note": "200 - specs exist only as an image table (images/blog_E1.jpg) without model codes; lengths 3'8\"-8' 2-piece confirmed but codes absent"
+      },
+      {
+        "url": "https://r.jina.ai/https://www.dreamanglers.com/",
+        "note": "200 - authorised Torikumu dealer blog claims official dealership; its EBI model menu link (model-joran-torikumu-ebi.html) returns 404"
+      },
+      {
+        "url": "https://r.jina.ai/https://html.duckduckgo.com/html/?q=%22TK-EB%22+torikumu+rod",
+        "note": "200 SERP - TK-EB codes appear only on Shopee listings and BigGo aggregator"
+      }
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Brand identified: Torikumu-Ebi by Tsuri Fishing (official sites alpine.my / tsurifishing.com). However the official pages describe the Ebi Light/Ultralight series only in prose and a spec-table image that omits individual model codes; TK-EB-401-2S appears exclusively in Shopee/BigGo listings, which are excluded source types. Bar item 5 (quote model from page text) cannot be satisfied.",
+    "human_action": "Ask Tsuri Fishing/alpine.my for a model-coded price list or photograph the rod butt print TK-EB-401-2S."
+  },
+  {
+    "source_position": "3267",
+    "item_code": "GUM-HAR-VT210SG",
+    "tier_used": 3,
+    "queries": [
+      "\"VT-210SG\""
+    ],
+    "pages_opened": [
+      {
+        "url": "https://r.jina.ai/https://html.duckduckgo.com/html/?q=%22VT-210SG%22",
+        "note": "200 SERP - literally zero results for VT-210SG across the index"
+      }
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "The model string VT-210SG returns no results at all on any engine; 'High Performance Sealant-grey' is a description-level name typical of repacked silicone/pu sealant cartridges with no identifiable manufacturer. With no brand and a dead model code there is no legitimate source to gate.",
+    "human_action": "Photograph cartridge back label for manufacturer code; if it is a rebadged Silicone/PU brand (e.g. Sika/Dow), resubmit under that brand."
+  },
+  {
+    "source_position": "3512",
+    "item_code": "X-HOO-CAB-CB8001-3",
+    "tier_used": 1,
+    "queries": [
+      "\"CB8001-3\" Cabana robe hook satin"
+    ],
+    "pages_opened": [
+      {
+        "url": "https://cabana.com.my/index.php/products/bathroom/bathroom-accessories/hook-bar/cb8001-3-detail",
+        "note": "200 PDP - official Cabana site (footer: Sorento Sdn Bhd); breadcrumb Hook Bar > CB8001-3; text '3 Robe Hook Bar, Satin Finish'; product image linked in page"
+      }
+    ],
+    "official_product_page": "https://cabana.com.my/index.php/products/bathroom/bathroom-accessories/hook-bar/cb8001-3-detail",
+    "official_image_url": "https://cabana.com.my/images/virtuemart/product/CB8001-3.jpg",
+    "model_string_on_page": "CB8001-3",
+    "finish_match": "yes",
+    "size_match": "yes",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "unknown",
+    "confidence": "high",
+    "reason": "Official Malaysian brand site of Cabana (operated by Sorento Sdn Bhd, Klang) hosts the exact PDP: heading CB8001-3, 'PRODUCT Hook Bar', '3 Robe Hook Bar, Satin Finish' - matching display_name 'Cabana 3 Robe Hook (satin) CB8001-3'. Image URL taken directly from the page markup, downloaded and verified 3334x3334 px / ~338KB showing the satin 3-hook bar.",
+    "human_action": ""
+  },
+  {
+    "source_position": "4586",
+    "item_code": "REM-FAN-CEI-SI11",
+    "tier_used": 2,
+    "queries": [
+      "\"SI11\" fan remote ceiling Malaysia"
+    ],
+    "pages_opened": [
+      {
+        "url": "https://r.jina.ai/https://2lelectrical.com/product/siberiair-si11-56-remote-ceiling-fan/",
+        "note": "200 PDP - 2L Electrical Sdn Bhd (Kota Kinabalu multi-outlet wholesaler/retailer); description block states 'Brand: SIBERIAIR ... Model: SI11 ... Control: Remote'; WooCommerce gallery image SIBERIAIR-SI11.jpg"
+      }
+    ],
+    "official_product_page": "https://2lelectrical.com/product/siberiair-si11-56-remote-ceiling-fan/",
+    "official_image_url": "https://i0.wp.com/2lelectrical.com/wp-content/uploads/2023/10/SIBERIAIR-SI11.jpg?fit=1080%2C1080&ssl=1",
+    "model_string_on_page": "Model: SI11",
+    "finish_match": "yes",
+    "size_match": "yes",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "needs_permission",
+    "confidence": "medium",
+    "reason": "No Siberiair brand-owned website exists; best acceptable source is 2L Electrical Sdn Bhd, an established Sabah electrical wholesaler with five outlets, whose PDP quotes exactly 'Brand: SIBERIAIR / Model: SI11 / Remote control', matching 'Remote Fan - SI11'. Product image is the fan's own listing photo served via Jetpack CDN at fit=1080. Authorised-dealer status could not be independently verified, hence medium confidence; pixel dimensions also unverified because i0.wp.com timed out on direct download.",
+    "human_action": ""
+  },
+  {
+    "source_position": "5415",
+    "item_code": "SWI-T/BOX-940AF",
+    "tier_used": 2,
+    "queries": [
+      "\"940AF\" extension socket"
+    ],
+    "pages_opened": [
+      {
+        "url": "https://r.jina.ai/https://html.duckduckgo.com/html/?q=%22940AF%22+extension+socket",
+        "note": "200 SERP - PP100-940AF / 940AF collides only with New Era 9FORTY cap SKUs; no electrical extension-box product anywhere"
+      }
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Detected_model PP100-940AF yields no electrical products; every 940AF hit is New Era headwear. 'Extension Box 9 Meter' is a generic extension cord reel/box description with no recoverable brand. Nothing gateable.",
+    "human_action": "Check moulded brand marking on the socket body and cable tag; resubmit with real brand (e.g. MK/PDL/Su-Kam style)."
+  },
+  {
+    "source_position": "4396",
+    "item_code": "SHH-REEL-TKEB4002S",
+    "tier_used": 3,
+    "queries": [
+      "\"Torikumu\" ebi prawn rod",
+      "\"TK-EB\" torikumu rod"
+    ],
+    "pages_opened": [
+      {
+        "url": "http://alpine.my/blog_ebi.html",
+        "note": "200 - official Tsuri Fishing spec image shows Ultra Light/Light tables (4'0\" = 7 guides row exists) but no TK-EB-400-2S code in text"
+      },
+      {
+        "url": "https://r.jina.ai/https://www.dreamanglers.com/",
+        "note": "200 - authorised dealer site; EBI model subpage dead (404)"
+      }
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Researched jointly with the other Torikumu-Ebi rows. Official/dealer pages confirm the series ('GUIDE7'S' matches the 7-guide 4'0\" spec rows in the alpine.my spec image) but never publish TK-EB-400-2S or GUIDE7 as page text; those strings live only in Shopee titles. Model-code confirmation on an acceptable page is impossible today.",
+    "human_action": "Obtain Tsuri Fishing price list with model codes, or photograph rod section print."
+  },
+  {
+    "source_position": "5487",
+    "item_code": "NAI-CON-ST38",
+    "tier_used": 1,
+    "queries": [
+      "\"ST38\" concrete nail"
+    ],
+    "pages_opened": [
+      {
+        "url": "https://r.jina.ai/https://html.duckduckgo.com/html/?q=%22ST38%22+concrete+nail",
+        "note": "200 SERP - ST38 resolves to pneumatic T-nailer tools (Meite/KAMSIN/KYA) and generic nail-size charts (ST18-ST64 length codes), i.e. a size designation, not a branded SKU"
+      }
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "ST38 is an industry length/gauge designation for concrete nails (per sharpstar.net size chart), not a proprietary model; the Ekoway line is an unbranded hammer-in concrete nail box. All ST38 hits are US nailer tools or Chinese factory pages outside the allowed source types.",
+    "human_action": "Photograph a box front/back from stock; note count and length printed on label."
+  },
+  {
+    "source_position": "3166",
+    "item_code": "CUT-BLA-DT3676",
+    "tier_used": 3,
+    "queries": [
+      "DeWalt DT3676 planer blades",
+      "\"DT3676\" dewalt"
+    ],
+    "pages_opened": [
+      {
+        "url": "https://r.jina.ai/https://www.dwmx.mx/cuchillas-cepillo-dewalt-DT3676",
+        "note": "200 PDP - Mexican independent dealer (Herramientas y Equipos Profesionales SA, Monterrey); 'Modelo: DT3676' confirmed, but not an official DeWalt site and not Malaysian"
+      },
+      {
+        "url": "https://www.dewalt.com/en-us/product/dw6654/reversible-carbide-blades-2-pack",
+        "note": "SERP sighting - official DeWalt US lists DW6654 for D26676 planers, not DT3676; DT3676 is a LatAm/Asia-market accessory code"
+      }
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "DT3676 (82mm HSS planer blades for DeWalt D26676-type planers) is real but is absent from DeWalt's own .com catalogue; the only pages quoting it are a Mexican parts shop (dwmx.mx), Philippine gigatools/safetyrivet shops, Amazon MX and Shopee - all outside the permitted source list (no Malaysian authorised distributor page surfaced). Stanley Black & Decker Malaysia (Harvest) catalog search did not expose this SKU either during this pass.",
+    "human_action": "Ask Harvest Marketing (harvest.com.my, official SBD distributor MY) whether DT3676 exists in their B2B catalogue and request its product image."
+  },
+  {
+    "source_position": "3515",
+    "item_code": "DOR-BEA-AGD-108/SN",
+    "tier_used": 2,
+    "queries": [
+      "\"ADG-108\" door guard"
+    ],
+    "pages_opened": [
+      {
+        "url": "https://aurous.com.my/product/armor-ball-bearing-door-guard-security-lock-adg-108-sn-adg-108-mb/",
+        "note": "403 bot-wall (Cloudflare challenge) via jina proxy"
+      },
+      {
+        "url": "https://www.starling.com.my/product/armor-adg-108sn-ball-bering-door-guard",
+        "note": "403 bot-wall (Cloudflare challenge)"
+      },
+      {
+        "url": "https://www.gluckhardware.com.my/showproducts/productid/6055241/",
+        "note": "200 PDP - Gluck Hardware & Timber Sdn Bhd (Rawang, Selangor); variant selector 'ADG-108/(SN)' with its own thumbnail image; spec text 'Brand: Armor, Model: ADG-108, Finishing: SN Colour'"
+      }
+    ],
+    "official_product_page": "https://www.gluckhardware.com.my/showproducts/productid/6055241/",
+    "official_image_url": "https://cdn1.npcdn.net/images/1757814017a2497105cacd0740430a9c65b68adcb8.webp?md5id=fdbeb638e95f0bb8868a6e7c1969a713&new_width=1000&new_height=1000&size=max&w=1757688322&from=png&type=1",
+    "model_string_on_page": "ADG-108/(SN)",
+    "finish_match": "yes",
+    "size_match": "not_named",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "needs_permission",
+    "confidence": "medium",
+    "reason": "Gluck Hardware & Timber Sdn Bhd (established Selangor hardware/timber dealer) hosts a PDP covering Armor door guards where the SN-finish variant is individually labelled 'ADG-108/(SN)' with a dedicated thumbnail, and the spec block repeats 'Brand: Armor / Model: ADG-108 / Finishing: SN Colour' - matching display_name 'Armor Ball Bearing Door Guard ADG-108/SN'. Aurous and Starling PDPs (better-known dealers) were both bot-walled. Medium confidence only: Gluck's authorised-dealer status unverified, and the webp could not be dimension-checked locally (GDI lacks webp); CDN parameters request 1000x1000 max-size variant.",
+    "human_action": ""
+  },
+  {
+    "source_position": "3627",
+    "item_code": "FAS-RIV-PAT-3/16\"X5/8\"-BOX",
+    "tier_used": 2,
+    "queries": [
+      "\"Jaguar\" blind rivet 3/16 Malaysia"
+    ],
+    "pages_opened": [
+      {
+        "url": "https://r.jina.ai/https://html.duckduckgo.com/html/?q=%22Jaguar%22+blind+rivet+3%2F16+Malaysia",
+        "note": "200 SERP - Jaguar-brand blind rivets (500pcs/box, sizes incl. 3/16\"x5/8\") exist ONLY on Shopee MY/SG listings; no official or distributor site found"
+      }
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "'Jaguar' blind rivets are a small import brand retailed exclusively through Shopee/Lazada sellers; every listing (which does confirm 500pcs/box and 3/16 x 5/8 sizing) is an excluded source type. No manufacturer, importer, or authorised-dealer web page exists to gate an image from.",
+    "human_action": "Photograph an actual Jaguar rivet box from stock; alternatively ask the Shopee seller 'Jaguar' distributor contact for a trade pack shot."
+  },
+  {
+    "source_position": "3389",
+    "item_code": "X-GAR-CHI-JM-24",
+    "tier_used": 1,
+    "queries": [
+      "Jayamata \"JM-24\""
+    ],
+    "pages_opened": [
+      {
+        "url": "https://estore.jayamata.com.my/product/jm24-t-shape-oil-palm-shank",
+        "note": "200 PDP - official Jayamata e-store (footer: K&H Trading (Melaka) Sdn Bhd); H1 'JM24-T Shape Oil Palm Shank', barcode + spring steel spec; main gallery image plus legacy unicart2u image jm24.jpg"
+      }
+    ],
+    "official_product_page": "https://estore.jayamata.com.my/product/jm24-t-shape-oil-palm-shank",
+    "official_image_url": "https://cdn1.sgliteasset.com/jayamata/images/product/product-6676654/sKODnGsa6940ce23247e4_1765854755.jpg",
+    "model_string_on_page": "JM24-T Shape Oil Palm Shank",
+    "finish_match": "yes",
+    "size_match": "not_named",
+    "decision": "candidate",
+    "low_res": true,
+    "rights_status": "unknown",
+    "confidence": "medium",
+    "reason": "Official brand e-store of Jayamata (K&H Trading Melaka) lists JM24-T Shape Oil Palm Shank - the T-shape oil palm harvesting shank/hook matching 'Jayamata T-shape Oil Palm Harvesting Hook JM-24'. Underlying CDN image downloaded and measured at 500x500 px / ~33KB, so flagged low_res (acceptable band 500-799). Minor wording nuance: page says 'Shank' where the row says 'Hook' - same tool family, same JM24-T code, kept as candidate with medium confidence.",
+    "human_action": ""
+  },
+  {
+    "source_position": "4486",
+    "item_code": "SHH-REEL-TKEB3802S",
+    "tier_used": 3,
+    "queries": [
+      "\"Torikumu\" ebi prawn rod",
+      "\"TK-EB\" torikumu rod"
+    ],
+    "pages_opened": [
+      {
+        "url": "http://alpine.my/blog_ebi.html",
+        "note": "200 - official spec image covers 3'8\" rows (both UL and Light powers, 2S pieces) but no TK-EB-380-2S code in text"
+      },
+      {
+        "url": "https://r.jina.ai/https://www.starminfo.com/en/product/gimune/3.html",
+        "note": "unrelated STAR-M probe during batch; not applicable to this row"
+      }
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Third Torikumu-Ebi family member, judged separately per brief. Official Tsuri Fishing pages verify the 3'8\" two-piece Ebi rods exist in UL and Light powers, but model code TK-EB-380-2S is published nowhere except Shopee/marketplace titles, which fail the source bar. Family research done together; outcome independent.",
+    "human_action": "Request model-coded catalogue from Tsuri Fishing or photograph the rod's printed code."
+  },
+  {
+    "source_position": "4512",
+    "item_code": "SHH-ROD-2511400",
+    "tier_used": 3,
+    "queries": [
+      "Santec 2511 puyu fishing rod",
+      "\"santec\" fishing rod puyu Malaysia",
+      "\"santec\" rod \"2511\" fishing"
+    ],
+    "pages_opened": [
+      {
+        "url": "https://r.jina.ai/https://html.duckduckgo.com/html/?q=Santec+2511+puyu+fishing+rod",
+        "note": "200 SERP - SANTEC PUYU SOLID POLE appears on Shopee SG/PH/MY, Lazada, BigGo and an Instagram shop post; sizes 2511-300 / 2511-400 confirmed in listing text but no official brand site exists"
+      }
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Santec 2511 puyu solid pole (4m variant = 2511-400, action 18-40lbs) is confirmed real via multiple marketplace texts and a tackle-shop Instagram post, but Santec fishing tackle has no discoverable official or authorised-distributor website in MY/SG - only marketplace storefronts, all excluded sources. Bing/jina attempts returned only the photonics/faucet companies named Santec.",
+    "human_action": "Ask the local wholesaler (Angler's Heaven Shoppe style dealers) for a supplier pack shot of 2511-400."
+  },
+  {
+    "source_position": "5677",
+    "item_code": "TOO-EXT-BAR-STA-12MM-10\"",
+    "tier_used": 1,
+    "queries": [
+      "Stanley extension bar 1/2 \"252mm\"",
+      "Stanley extension bar 1/2 drive 10 inch Malaysia"
+    ],
+    "pages_opened": [
+      {
+        "url": "https://www.harvest.com.my/catalog/stanley-extension-bar-86408",
+        "note": "200 PDP - Harvest (Malaysian Stanley Black & Decker distributor) catalogue; Product Code 'Stanley 86408'; Product Spec: Size 10'', drive 1/2'', Length 252 mm"
+      }
+    ],
+    "official_product_page": "https://www.harvest.com.my/catalog/stanley-extension-bar-86408",
+    "official_image_url": "https://www.harvest.com.my/catalog/image/catalog/stanley%20extension%20bar.jpg",
+    "model_string_on_page": "Stanley 86408",
+    "finish_match": "yes",
+    "size_match": "yes",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "needs_permission",
+    "confidence": "high",
+    "reason": "STA prefix maps to Stanley per brief; Harvest (authorised SBD distributor in Malaysia) lists 'Stanley Extension Bar 86408' with spec block exactly matching the row: 1/2-inch drive, 252 mm, 10 inch. Original catalogue image fetched from the site's own image directory and verified at 2335x2335 px showing the polished chrome extension bar. Marketplace alternatives (Shopee/Lazada STMT86408-8B) ignored in favour of the distributor page.",
+    "human_action": ""
+  },
+  {
+    "source_position": "3312",
+    "item_code": "DOR-ROL-TYSON-TY505",
+    "tier_used": 2,
+    "queries": [
+      "\"TY505\" tyson roller",
+      "\"tyson\" sliding roller Malaysia hardware"
+    ],
+    "pages_opened": [
+      {
+        "url": "https://r.jina.ai/https://html.duckduckgo.com/html/?q=%22TY505%22+tyson+roller",
+        "note": "200 SERP - TY505 matches only Shimano FH-TY505 bicycle hubs and Wheel Master wheels"
+      },
+      {
+        "url": "https://r.jina.ai/https://html.duckduckgo.com/html/?q=%22tyson%22+sliding+roller+Malaysia+hardware",
+        "note": "200 SERP - Tyson Hardware Sdn Bhd is a Sungai Buloh hardware retailer with Facebook/Shopee presence and GL Bosun/Dongcheng authorised-dealer directory entries, but no own-site product pages; TY505 sliding roller not listed anywhere acceptable"
+      }
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Tyson TY505 sliding roller has no web footprint outside marketplaces/social media; TY505 itself collides entirely with Shimano bike hubs. Tyson Hardware Sdn Bhd (the plausible brand owner/retailer) operates only via Facebook and a Shopee storefront, both excluded source types, and its GL Bosun/Dongcheng dealer-directory pages carry no roller products.",
+    "human_action": "Message Tyson Hardware Sdn Bhd (FB: tyson.hardware) requesting a TY505 catalogue image."
+  },
+  {
+    "source_position": "5547",
+    "item_code": "DRI-AUG-BIT-NO.1/2\"",
+    "tier_used": 3,
+    "queries": [
+      "\"star-m\" auger bit",
+      "starminfo.com auger bit \"No.1\""
+    ],
+    "pages_opened": [
+      {
+        "url": "https://r.jina.ai/https://www.starminfo.com/en/product/gimune/4.html",
+        "note": "200 PDP - STAR-M Corporation (Japan, since 1923) official Power Drill Auger Bit page; full product-number table 4-030..4-360 sized in mm; no imperial 1/2\" or 'No.1' series in English catalogue"
+      },
+      {
+        "url": "https://www.starminfo.com/en/product/gimune/1.html",
+        "note": "404 - no gimune/1 page"
+      },
+      {
+        "url": "https://r.jina.ai/https://www.starminfo.com/en/product/gimune/3.html",
+        "note": "404 page template - section numbering does not include a 'No.1 auger bit' English page"
+      }
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Brand identified as Japan's STAR-M Corporation; its official English site documents auger bits by mm sizes and series numbers (e.g. No.4 power-drill type with codes 4-xxx) and offers no 'No.1' imperial-size page that would quote 'No.1 1/2\"'. The Ekoway naming ('Star-m Auger Bit No.1 (b)') looks like a local reseller's shorthand for a brace-type bit that the official catalogue does not expose in this form, so the exact-model bar cannot be met.",
+    "human_action": "Measure/print-check the bit packaging for the STAR-M product number (e.g. 2-130 style) and resubmit."
+  },
+  {
+    "source_position": "4480",
+    "item_code": "RAI-SUI-SUP-XXL",
+    "tier_used": 2,
+    "queries": [
+      "Supersonic rain coat trouser Malaysia \"rain suit\""
+    ],
+    "pages_opened": [
+      {
+        "url": "https://r.jina.ai/https://html.duckduckgo.com/html/?q=Supersonic+rain+coat+trouser+Malaysia+%22rain+suit%22",
+        "note": "200 SERP - sonichardware.com.my 'PVC Rain Suit C/W Trouser (Supersonic)' with size selector (full suit, no model code); remixtechnologies category page mentions Supersonic Rain Coat; no trouser-only 2XL page, no brand-official site"
+      }
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Supersonic rainwear is a small import brand visible only through Malaysian dealer listings; Sonic Hardware (Sarawak) sells the PVC suit c/w trouser with a cloth-size dropdown but publishes no model number and no trouser-only SKU, so a 2XL-trouser-specific official image cannot be gated. Detected_model '2XL' is a size token, not a model, and no brand-owned site exists.",
+    "human_action": "Photograph the 2XL trouser pack from stock, or ask Sonic Hardware for their Supersonic product photo set."
+  }
+]

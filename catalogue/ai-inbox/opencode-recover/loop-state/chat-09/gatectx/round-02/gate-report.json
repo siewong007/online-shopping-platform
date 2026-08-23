@@ -1,0 +1,461 @@
+{
+ "round": 2,
+ "rows_total": 7771,
+ "gated_states": {
+  "open": 7478,
+  "candidate": 70,
+  "verified_pass": 164,
+  "exhausted": 59,
+  "exhausted_no_progress": 0
+ },
+ "reds_by_code": {
+  "red:http": 42,
+  "red:content_type": 17,
+  "red:too_small": 17,
+  "red:schema": 2,
+  "red:model_absent": 8,
+  "red:hash_collision": 2
+ },
+ "reds": [
+  {
+   "key": "TOI-TRP-WC2300-S|SET#28",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/one-piece-washdown-closet-wc-2300-s250mm/"
+  },
+  {
+   "key": "TOI-TRP-WC2300-S|SET#28",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2025/05/WC-2300.jpg"
+  },
+  {
+   "key": "TOI-TRP-WC2300-S|SET#28",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "TOI-TRP-WC2300-S|SET#28",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "CAB-SAN-SWBC-SS6411|SET#46",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/swbc-ss6411/"
+  },
+  {
+   "key": "CAB-SAN-SWBC-SS6411|SET#46",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2025/04/SWBC-SS6411-1.jpeg"
+  },
+  {
+   "key": "CAB-SAN-SWBC-SS6411|SET#46",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "CAB-SAN-SWBC-SS6411|SET#46",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "CAB-SAN-SWBC-SS6615|SET#42",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/swbc-ss6615/"
+  },
+  {
+   "key": "CAB-SAN-SWBC-SS6615|SET#42",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2025/04/SWBC-SS6615.jpeg"
+  },
+  {
+   "key": "CAB-SAN-SWBC-SS6615|SET#42",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "CAB-SAN-SWBC-SS6615|SET#42",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2521|PCS#17",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/swp-b-2521/"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2521|PCS#17",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2021/10/SWP-B-2521.png"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2521|PCS#17",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2521|PCS#17",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3213|PCS#31",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/tall-basin-cold-tap-swp-ss-304-3213/"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3213|PCS#31",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2025/05/3213.png"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3213|PCS#31",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3213|PCS#31",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3023|PCS#21",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/swp-b-3023/"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3023|PCS#21",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2021/10/SWP-B-3023.png"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3023|PCS#21",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3023|PCS#21",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "SHO-SAN-SWP-BSP-9003RG|PCS#13",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/3-way-bath-shower-set-swp-bsp-9003rg/"
+  },
+  {
+   "key": "SHO-SAN-SWP-BSP-9003RG|PCS#13",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2025/05/SWP-BSP-9003RG.jpg"
+  },
+  {
+   "key": "SHO-SAN-SWP-BSP-9003RG|PCS#13",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "SHO-SAN-SWP-BSP-9003RG|PCS#13",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "SHO-SAN-SWP-BSP-9003G|PCS#12",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/3-way-bath-shower-set-swp-bsp-9003g/"
+  },
+  {
+   "key": "SHO-SAN-SWP-BSP-9003G|PCS#12",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2025/05/SWP-BSP-9003G.jpg"
+  },
+  {
+   "key": "SHO-SAN-SWP-BSP-9003G|PCS#12",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "SHO-SAN-SWP-BSP-9003G|PCS#12",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2931|PCS#36",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/basin-pillar-tap-mixer-swp-b-2931/"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2931|PCS#36",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2025/05/SWP-B-2931.png"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2931|PCS#36",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2931|PCS#36",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2930|PCS#37",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/basin-pillar-tap-mixer-swp-b-2930/"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2930|PCS#37",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2025/05/SWP-B-2930.png"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2930|PCS#37",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2930|PCS#37",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2924|PCS#40",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/basin-pillar-tap-mixergold-swp-b-2924/"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2924|PCS#40",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2026/01/SWP-B-2924.jpg"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2924|PCS#40",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2924|PCS#40",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2921|PCS#41",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/swp-b-2921/"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2921|PCS#41",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2021/10/SWP-B-2921.png"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2921|PCS#41",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2921|PCS#41",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3203-RG|PCS#110",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/premier-basin-pillar-cold-tap-swp-ss-304-3203-rg/"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3203-RG|PCS#110",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2025/05/SWP-SS-304-3203-RG.jpg"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3203-RG|PCS#110",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3203-RG|PCS#110",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "IND-CEM-GREY-25KG|BAG#2602",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "TAP-SAN-SWS-304-3977|PCS#1202",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/sws-304-3977/"
+  },
+  {
+   "key": "TAP-SAN-SWS-304-3977|PCS#1202",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2021/03/SWS-304-3977.jpg"
+  },
+  {
+   "key": "TAP-SAN-SWS-304-3977|PCS#1202",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "TAP-SAN-SWS-304-3977|PCS#1202",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "VAL-SAN-SW-SS-AV-80|PCS#1440",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/sw-ss-av-80/"
+  },
+  {
+   "key": "VAL-SAN-SW-SS-AV-80|PCS#1440",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2021/03/SW-SS-AV-80-1.jpg"
+  },
+  {
+   "key": "VAL-SAN-SW-SS-AV-80|PCS#1440",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "VAL-SAN-SW-SS-AV-80|PCS#1440",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "SWI-ADA-MS3106N|PCS#3361",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "CUT-DEW-DW4790|PCS#2793",
+   "code": "red:http",
+   "detail": "image status=None for ?"
+  },
+  {
+   "key": "CUT-DEW-DW4790|PCS#2793",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "CUT-DEW-DW4790|PCS#2793",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "AUT-POL-AUT-SS75ML|PCS#2754",
+   "code": "red:http",
+   "detail": "no fetched evidence for position 2754 this session"
+  },
+  {
+   "key": "SWI-ADA-MS-PT09|PCS#4462",
+   "code": "red:http",
+   "detail": "image status=None for ?"
+  },
+  {
+   "key": "SWI-ADA-MS-PT09|PCS#4462",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "SWI-ADA-MS-PT09|PCS#4462",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "SWI-SOC-ULT-M012MG|PCS#3959",
+   "code": "red:http",
+   "detail": "no fetched evidence for position 3959 this session"
+  },
+  {
+   "key": "AUT-POL-AUT-MET75ML|PCS#3044",
+   "code": "red:http",
+   "detail": "no fetched evidence for position 3044 this session"
+  },
+  {
+   "key": "SWI-SOC-ELE-E20AB|PCS#3874",
+   "code": "red:http",
+   "detail": "no fetched evidence for position 3874 this session"
+  },
+  {
+   "key": "SWI-SOC-ULT-M08913W|PCS#4434",
+   "code": "red:http",
+   "detail": "no fetched evidence for position 4434 this session"
+  },
+  {
+   "key": "SWI-SOC-ULT-M08213MG|PCS#4217",
+   "code": "red:http",
+   "detail": "no fetched evidence for position 4217 this session"
+  },
+  {
+   "key": "SWI-SOC-ULT-M08213W|PCS#4331",
+   "code": "red:http",
+   "detail": "no fetched evidence for position 4331 this session"
+  },
+  {
+   "key": "SWI-SOC-ULT-M022W|PCS#4810",
+   "code": "red:http",
+   "detail": "no fetched evidence for position 4810 this session"
+  },
+  {
+   "key": "SWI-SOC-ULT-M012W|PCS#5085",
+   "code": "red:http",
+   "detail": "no fetched evidence for position 5085 this session"
+  },
+  {
+   "key": "SWI-SOC-ULT-M031MG|PCS#4780",
+   "code": "red:http",
+   "detail": "no fetched evidence for position 4780 this session"
+  },
+  {
+   "key": "TOO-BOX-NIE-H/D-175|PCS#2065",
+   "code": "red:model_absent",
+   "detail": "model variants ['BOXNIEHD175', 'NIEHD175', 'HD175'] absent from cached page text"
+  },
+  {
+   "key": "NIE-JOI-UNI-12MM|PCS#2213",
+   "code": "red:model_absent",
+   "detail": "model variants ['JOIUNI12MM', 'UNI12MM'] absent from cached page text"
+  },
+  {
+   "key": "NIP-ZIN-GRE-GRE-5L|CAN#1526",
+   "code": "red:model_absent",
+   "detail": "model variants ['ZINGREGRE5L', 'GREGRE5L', 'GRE5L'] absent from cached page text"
+  },
+  {
+   "key": "TOR-ENE-LED-2AA|PCK#1099",
+   "code": "red:model_absent",
+   "detail": "model variants ['2AA', 'ENELED2AA', 'LED2AA'] absent from cached page text"
+  },
+  {
+   "key": "NIP-SPO-LES-5L-T|CAN#1089",
+   "code": "red:model_absent",
+   "detail": "model variants ['SPOLES5LT', 'SPOLES5L', 'LES5L'] absent from cached page text"
+  },
+  {
+   "key": "DC-JZ2060iEK|SET#1648",
+   "code": "red:model_absent",
+   "detail": "model variants ['X24A', 'JZ2060IEK'] absent from cached page text"
+  },
+  {
+   "key": "DC-DCPL208EK-20V|SET#1647",
+   "code": "red:model_absent",
+   "detail": "model variants ['X24A', 'DCPL208EK20V', 'DCPL208EK'] absent from cached page text"
+  },
+  {
+   "key": "NIP-QGL-1L-T|CAN#1080",
+   "code": "red:model_absent",
+   "detail": "model variants ['QGL1LT', 'QGL1L'] absent from cached page text"
+  },
+  {
+   "key": "SWI-SOC-ULT-M0813BMG|PCS#4121",
+   "code": "red:hash_collision",
+   "detail": "sha256 shared across positions [4121, 4123]"
+  },
+  {
+   "key": "SWI-SOC-ULT-M0813MG|PCS#4123",
+   "code": "red:hash_collision",
+   "detail": "sha256 shared across positions [4121, 4123]"
+  }
+ ]
+}

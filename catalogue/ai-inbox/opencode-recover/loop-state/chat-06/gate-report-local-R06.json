@@ -1,0 +1,27 @@
+{
+ "round": 6,
+ "rows_total": 839,
+ "gated_states": {
+  "open": 831,
+  "candidate": 8,
+  "verified_pass": 0,
+  "exhausted": 0,
+  "exhausted_no_progress": 0
+ },
+ "reds_by_code": {
+  "red:content_type": 1,
+  "red:too_small": 1
+ },
+ "reds": [
+  {
+   "key": "PEN-108-4L|PAIL#6647",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "PEN-108-4L|PAIL#6647",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  }
+ ]
+}

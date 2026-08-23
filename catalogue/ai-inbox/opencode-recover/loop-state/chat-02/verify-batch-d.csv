@@ -1,0 +1,5 @@
+source_position,verifier_verdict,finish_exact,model_exact,image_px,image_sha256,image_bytes,justification
+2751,fail,false,false,,,,"Claimed Cabana URL returns hard 404 in urllib and webfetch; no product page, model text, or image obtainable."
+3070,fail,false,false,,,,Bahco URL blocked then 404 with full browser headers; no NP-19 product content or image at claimed address.
+3212,fail,false,false,,,,Hager au/en/time-switches/eh711 returns 404 in both fetchers; no EH711 page or image exists there.
+1191,fail,false,false,,,,"Tajima products/lb39h returns 404 in both fetchers; no LB39H page, model text, or image obtainable."

@@ -1,0 +1,9 @@
+{
+  "rows": 50,
+  "candidate": 14,
+  "pending": 36,
+  "reject": 0,
+  "source_positions": "51-100",
+  "source_order_preserved": true,
+  "rights_status": "needs_permission for all rows"
+}

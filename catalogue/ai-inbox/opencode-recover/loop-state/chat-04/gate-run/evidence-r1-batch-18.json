@@ -1,0 +1,80 @@
+{
+ "3865": {
+  "page_status": 200,
+  "page_final_url": "https://mybutterfly.com.my/product/set-lpg-regulator-with-hose-182-cb/",
+  "image_status": 200,
+  "image_final_url": "https://mybutterfly.com.my/wp-content/uploads/2025/06/182-CBN.jpg",
+  "image_content_type": "image/jpeg",
+  "image_bytes_len": 119492,
+  "px_w": 1122,
+  "px_h": 1125,
+  "image_sha256": "18cc85f86980428717b0c25f1a18bb7c70b9c25e8d3ac8d1ac34128685e2fe81",
+  "asset_file": "assets/3865.jpg",
+  "fetched_round": 1
+ },
+ "3099": {
+  "page_status": 200,
+  "page_final_url": "https://www.kovea.com/team",
+  "image_status": 200,
+  "image_final_url": "https://static.wixstatic.com/media/7861da_1cf21c57c2fc431c9eec10ddd1e6b1ed~mv2.jpg",
+  "image_content_type": "image/jpeg",
+  "image_bytes_len": 113427,
+  "px_w": 1320,
+  "px_h": 1320,
+  "image_sha256": "cf9a5c1ec8db22536413ada5e6bba2d755d41061828802370cdef6305a82fe8e",
+  "asset_file": "assets/3099.jpg",
+  "fetched_round": 1
+ },
+ "5232": {
+  "page_status": 200,
+  "page_final_url": "https://selleys.my/product/supa-glue/",
+  "image_status": 200,
+  "image_final_url": "https://resourcehub.enipponpaint.com/my/filestore/8/8/5/0/9/8_ca840db2484ac9f/890588scr_27c92160d9f2d50.jpg?v=1771981565",
+  "image_content_type": "image/jpeg",
+  "image_bytes_len": 66220,
+  "px_w": 800,
+  "px_h": 800,
+  "image_sha256": "b2f3139ad1ef528983969aebdb2be486ae053906040004ac6313a792459ba7da",
+  "asset_file": "assets/5232.jpg",
+  "fetched_round": 1
+ },
+ "4660": {
+  "page_status": 200,
+  "page_final_url": "https://selleys.my/product/shoe-glue/",
+  "image_status": 200,
+  "image_final_url": "https://resourcehub.enipponpaint.com/my/filestore/0/9/5/0/9/8_c1b37fc28f70983/890590scr_6ee3831f67e3229.jpg?v=1771982278",
+  "image_content_type": "image/jpeg",
+  "image_bytes_len": 62913,
+  "px_w": 800,
+  "px_h": 800,
+  "image_sha256": "8c19376a318b9e73d92572935819e33f88e4f57793453c56554cf429fabddd83",
+  "asset_file": "assets/4660.jpg",
+  "fetched_round": 1
+ },
+ "3592": {
+  "page_status": 200,
+  "page_final_url": "https://selleys.my/?s=pvc",
+  "image_status": 0,
+  "image_final_url": "",
+  "image_content_type": "",
+  "image_bytes_len": 0,
+  "px_w": 0,
+  "px_h": 0,
+  "image_sha256": "",
+  "asset_file": "",
+  "fetched_round": 1
+ },
+ "5125": {
+  "page_status": 200,
+  "page_final_url": "https://www.arrowtoolgroup.com/search/?q=AAT555",
+  "image_status": 0,
+  "image_final_url": "",
+  "image_content_type": "",
+  "image_bytes_len": 0,
+  "px_w": 0,
+  "px_h": 0,
+  "image_sha256": "",
+  "asset_file": "",
+  "fetched_round": 1
+ }
+}

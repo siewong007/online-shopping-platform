@@ -1,0 +1,4 @@
+source_position,verifier_verdict,finish_exact,model_exact,px,bytes,justification
+3401,pass,yes,yes,600x600,21851B,Hafele PDP lists Cat.No 489.93.125 Function=Entrance SUS304 knobset; og:image is this exact file
+6796,pass,yes,yes,3000x3000,1026202B,Spear-and-Jackson Eclipse Junior Saw Blades PDP embeds product-images_11; photo shows Eclipse 71-132R 6in blades
+4552,fail,yes,no,1600x1600,41462B,"Signify asset LPPR1_TLD_STD_G13 is TL-D Standard family hero, not Lifemax"

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ekoway Hardware — Guided Project (Direction B prototype)</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="b-topstrip">Direction B — Guided Project · static design prototype, not the live site</div>
+
+<header class="b-header">
+  <div class="b-header-row">
+    <a class="b-logo" href="#/" onclick="Router.go('/')">
+      <span class="b-logo-mark">EKO</span>
+      <span class="b-logo-text"><span class="name">Ekoway Hardware</span><span class="sub">Guided Project · Sibu</span></span>
+    </a>
+    <form class="b-search" id="search-form" role="search">
+      <input type="text" id="search-input" placeholder="What are you working on? Try “paint” or “dishwasher”…" aria-label="Search products">
+      <button type="submit">Search</button>
+    </form>
+    <div class="b-header-actions">
+      <button class="b-btn-ghost b-menu-toggle" id="mobile-menu-open">☰ Projects</button>
+      <button class="b-btn-ghost" onclick="Router.go('/states')">Hard States Demo</button>
+    </div>
+  </div>
+  <nav class="b-chiprow" id="chip-row" aria-label="Departments"></nav>
+</header>
+
+<div class="b-mobile-menu" id="mobile-menu">
+  <div class="b-mobile-menu-header">
+    <strong style="font-family:var(--b-serif);font-size:18px;">What are you working on?</strong>
+    <button class="close" id="mobile-menu-close">Close</button>
+  </div>
+  <div id="mobile-task-list"></div>
+</div>
+
+<main id="main" class="b-shell">
+  <div id="view-root"></div>
+</main>
+
+<script src="data.js"></script>
+<script src="interactions.js"></script>
+</body>
+</html>

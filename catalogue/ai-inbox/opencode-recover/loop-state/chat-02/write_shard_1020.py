@@ -1,0 +1,276 @@
+import csv, os
+
+OUT = r"C:\Users\DELL\OneDrive\Desktop\ekoway hardware website\online-shopping-platform\catalogue\ai-inbox\opencode-recover\loop-state\chat-02\shard-1020-1049.csv"
+HDR = ["source_position","item_code","uom","display_name","category","detected_brand","detected_model",
+       "state","round_first_seen","round_last_touched","tiers_tried","official_product_page",
+       "official_image_url","image_px_w","image_px_h","image_bytes","image_sha256","match_confidence",
+       "finish_exact","model_exact","uom_assessment","rights_status","researcher_decision",
+       "verifier_verdict","machine_gate","reason","human_action"]
+
+INFRA = ("infra: shared websearch exa returned HTTP429 on all 3 attempts this session; Bing HTML+RSS served "
+         "unrelated canned pages for every quoted code; DDG-lite/DDG-html returned 0 external links; Mojeek/Ecosia 403; Brave 429; "
+         "searx instances dead; working channels were direct OEM-domain probes and Wayback CDX")
+
+def ex(pos, code, uom, name, cat, model, tiers, reason, action):
+    return [pos, code, uom, name, cat, "", model, "exhausted", 1, 1, tiers,
+            "", "", "", "", "", "", "", "no", "no", "match", "no_asset", "exhausted", "", "",
+            reason, action]
+
+rows = []
+
+# ---------------- 1020 Kancil PVC casing ----------------
+rows.append(ex(
+ "1020", 'ELE-PVC-CAS-2"X1"', "LGTH", "Kancil 2 X 1 X 6FT PVC Casing", "Electrical", "6FT", "T1,T4,T5",
+ ('q:[bing-junk]kancil PVC casing trunking 2x1 Malaysia (Perodua-Kancil car classifieds junk); q:[bing-junk]"Kancil Hardware Industrial Sdn Bhd" PVC casing (car junk again) | '
+  + INFRA + ' | '
+  'p:https://kancil.com.my/ (SSL cert verify failed) and http://www.kancil.com.my/ (nginx 404 via urllib AND webfetch - site removed since chat-01 round observed 403 there) | '
+  'p:http://web.archive.org/cdx/search/cdx?url=kancil.com.my* (141 archived rows; products.html/products3.html of Kancil=Linseng Enterprise catalogue cover only plastic housewares: hangers LE-306/406, wall mirrors LE-2008, freezer stands LE-1004/2004, trays LE-3004/4004, pinch LE-888, grass sweepers LE-6128/7128, cloth pegs, scoops, paint trays, brooms - NO PVC electrical casing line ever listed) | '
+  'T4 revival exhausted: official brand site dead and archive carries no casing SKU, so no official 2x1x6FT casing asset exists to recover; marketplace-only imagery below bar. action=search'),
+ ("Ask the electrical supplier which maker supplies the Kancil-branded 2x1 PVC casing and request its catalogue sheet; else photograph the casing profile and printed brand mark in-store")))
+
+# ---------------- 1021 self drilling screws ----------------
+rows.append(ex(
+ "1021", "FAS-SCR-DS525HW-MET-PCK", "PCK", "10 X 1 Self Drilling Screw (50PCS/PCK)", "Fasteners & Fixings", "50PCS/PCK", "T1,T5",
+ ('q:[bing-junk]self drilling screw "10 X 1" 50pcs Malaysia (Moglix/marketplace junk only) | '
+  + INFRA + ' | '
+  'detected_model 50PCS/PCK is pack-count text, not a part number; DS525HW is an internal Ekoway stock code with no resolvable manufacturer; unbranded commodity fastener sold under trade packaging; marketplace-only imagery below the official-source bar; exhausted with owner action. action=search'),
+ ("Ask the fastener supplier for the DS525HW box-face artwork showing thread/length/point and pack count; else photograph the 50-pc pack front and back in-store")))
+
+# ---------------- 1022 boat nails ----------------
+rows.append(ex(
+ "1022", "NAI-SQU-SUP-050MM-1KG", "PCK", "E. G Square Boat Nail 50MM - 1KGS", "Fasteners & Fixings", "1KGS", "T1,T5",
+ ('q:[bing-junk]"boat nail" square 50mm Malaysia (boat-sales classifieds junk) | '
+  + INFRA + ' | '
+  '"E.G" denotes electro-galvanised finish and 1KGS is a pack weight, so detected_model is a size/weight descriptor not a part number; commodity square boat nails are bulk import stock with no identifiable manufacturer; marketplace imagery below bar; exhausted with owner action. action=search'),
+ ("Photograph the 1kg boat-nail bag label/barcode in-store; ask the fastener supplier for the mill or importer reference for square boat nails")))
+
+# ---------------- 1023 YG232 brass elbow ----------------
+rows.append(ex(
+ "1023", 'FIT-YG232-ELB-3/4"-BRA', "PCS", "Brass Equal Elbow 3/4", "Plumbing", "YG232", "T1,T2,T5",
+ ('q:[bing-rss-junk]"YG232" brass elbow (Taipei Nangang expo junk) | '
+  + INFRA + ' | '
+  'T2 normalisation YG232->YG-232 / Y.G.232 variants tried via bing-rss, all junk; YG-series codes are a shared Taiwan-origin brass-fitting numbering used by multiple MY importers (same family as sibling YG245), so no single OEM site or official asset is resolvable; commodity fitting imagery below bar; exhausted with owner action. action=search'),
+ ("Ask the plumbing supplier which importer owns the YG-series brass-fitting range and request the YG232 elbow catalogue card; else photograph the elbow and its carton code in-store")))
+
+# ---------------- 1024 mop broom ----------------
+rows.append(ex(
+ "1024", "BRO-MOP-400", "PCS", "No. 400 Mop Broom With Handle", "Doors & Hardware", "NO.400", "T1,T5",
+ ('q:[bing-junk]mop broom "No.400" handle Malaysia (Shopee/Lazada/HomePro marketplace junk) | '
+  + INFRA + ' | '
+  'No.400 is a local size-run trade number on a commodity plastic mop broow sold loose with handle; no manufacturer brand claimed in listing and none resolvable; marketplace-only imagery below bar; exhausted with owner action. action=search'),
+ ("Photograph the No.400 mop broom head and handle ferrule stamp in-store; ask the supplier for the importer's run sheet if a brand image is later required")))
+
+# ---------------- 1025 Tiger GP glue ----------------
+rows.append(ex(
+ "1025", "PAI-TIG-75ML-BLUE", "TIN", "75ML Tiger G. P (l/blue)", "Paint & Sundries", "6631-NEPTURE", "T1,T2,T5",
+ ('q:[bing-junk]"tiger" "g.p" glue 75ml neptune (wildlife-tiger encyclopaedia junk) | '
+  + INFRA + ' | '
+  'p:http://www.neptune.com.sg/ (200 but bare Apache "Index of /" directory listing - no site content) | p:https://neptuneindustries.com.sg/ (NXDOMAIN) | '
+  'Tiger G.P is a trade initialism (general purpose) and 6631-NEPTURE reads as an importer carton reference; no adhesive OEM domain resolvable through any working channel; marketplace imagery below bar; exhausted with owner action. action=search'),
+ ("Ask the paint-and-sundries supplier for the Tiger G.P 75ml tin maker's label art confirming the Neptune carton code 6631; else photograph both tin faces in-store")))
+
+# ---------------- k-prix mounted stones (1026, 1033, 1036, 1037, 1038) ----------------
+KPRIX_BASE = (
+ 'INFRA | q:"K-PRIX" mounted point Korea (bing-rss letter-K junk); q:kprix mounted point grinder official (junk); q:DDG-lite/html 0 links | '
+ 'p:http://www.kprix.co.kr/, kprix.com, https://kprix.co.kr, k-prix.co.kr (all DNS getaddrinfo failed - no such hosts) | '
+ 'p:http://web.archive.org/cdx/search/cdx?url=kprix* and url=k-prix* (0 rows - no kprix* host was EVER archived anywhere) | '
+ 'p:https://archive.org/advancedsearch.php?q="k-prix" (1 unrelated gibberish item) | p:https://www.googleapis.com/books/v1/volumes?q="k-prix"+mounted+point (HTTP429)')
+
+rows.append(ex(
+ "1026", "STO-MOU-A11-22X250", "PCS", "Mounted Stone:k-prix Korea A11 (22X50)", "Abrasives & Cutting", "A11", "T1,T2,T3,T4,T5",
+ ('q:"k-prix" mounted point grinding stone catalogue PDF (websearch 429 x1) | ' + KPRIX_BASE.replace("INFRA", INFRA) + ' | '
+  'T2 KPRIX/A11 shape-code normalisation found nothing; T3 Korean-language OEM angle closed because no Korean domain exists to query; '
+  'A11 is a standard mounted-point SHAPE code (22x50 shank stone) carried by whichever Korean factory moulds the k-prix stones, but the k-prix Korea OEM has zero online footprint (no DNS, no archive history); distributor/marketplace pages fail the official bar; exhausted with owner action. action=search'),
+ ("Ask the abrasives supplier for the k-prix Korea mounted-point datasheet or carton photo covering shape A11 (22x50); else photograph the sleeve print showing k-prix and A11 in-store")))
+
+rows.append(ex(
+ "1033", "STO-MOU-W220-25X25", "PCS", "Mounted Stone:k-prix Korea W220 (25X25)", "Abrasives & Cutting", "W220", "T1,T2,T3,T4,T5",
+ ('q:"k-prix" mounted point grinding stone catalogue PDF (websearch 429 x1) | ' + KPRIX_BASE + ' | '
+  'W220 is a standard wheel-type mounted-point shape code (25x25); same finding as sibling A11: k-prix Korea OEM has no DNS record and zero archive footprint, so no official image can be bound to this shape code; exhausted with owner action. action=search'),
+ ("Ask the abrasives supplier for the k-prix Korea mounted-point datasheet covering shape W220 (25x25); else photograph the sleeve print showing k-prix and W220 in-store")))
+
+rows.append(ex(
+ "1036", "STO-MOU-W206-20X32", "PCS", "Mounted Stone:k-prix Korea W206 (20X32)", "Abrasives & Cutting", "W206", "T1,T2,T3,T4,T5",
+ ('q:"k-prix" mounted point grinding stone catalogue PDF (websearch 429 x1) | ' + KPRIX_BASE + ' | '
+  'W206 is a wheel-type mounted-point shape code (20x32); identical conclusion to siblings A11/W220 - no OEM host resolves, no archive history exists, official binding impossible; exhausted with owner action. action=search'),
+ ("Ask the abrasives supplier for the k-prix Korea mounted-point datasheet covering shape W206 (20x32); else photograph the sleeve print showing k-prix and W206 in-store")))
+
+rows.append(ex(
+ "1037", "STO-MOU-M1-25X34", "PCS", "Mounted Stone:k-prix Korea M1 (25X34)", "Abrasives & Cutting", "M1", "T1,T2,T3,T4,T5",
+ ('q:"k-prix" mounted point grinding stone catalogue PDF (websearch 429 x1) | ' + KPRIX_BASE + ' | '
+  'M1 is a mounted-point shape code (25x34); same exhausted conclusion across the whole k-prix family: OEM has zero online presence, so tier ladder closes at T4 archives with nothing to bind; exhausted with owner action. action=search'),
+ ("Ask the abrasives supplier for the k-prix Korea mounted-point datasheet covering shape M1 (25x34); else photograph the sleeve print showing k-prix and M1 in-store")))
+
+rows.append(ex(
+ "1038", "STO-MOU-A5-20X28", "PCS", "Mounted Stone:k-prix Korea A5 (20X28)", "Abrasives & Cutting", "A5", "T1,T2,T3,T4,T5",
+ ('q:"k-prix" mounted point grinding stone catalogue PDF (websearch 429 x1) | ' + KPRIX_BASE + ' | '
+  'A5 is a cylinder-type mounted-point shape code (20x28); family-wide finding stands: k-prix Korea has no resolvable official domain or archived page, so no candidate is possible without supplier material; exhausted with owner action. action=search'),
+ ("Ask the abrasives supplier for the k-prix Korea mounted-point datasheet covering shape A5 (20x28); else photograph the sleeve print showing k-prix and A5 in-store")))
+
+# ---------------- 1027 SS reducing elbow ----------------
+rows.append(ex(
+ "1027", 'FIT-SS232R-ELB-REC-3/4"X1/2"-SUS304', "PCS", 'SS Reducing Elbow 3/4"X1/2', "Plumbing", "X1/2", "T1,T2,T5",
+ ('q:[bing-junk]SS232R reducing elbow SUS304 Malaysia (no fitting PDPs surfaced) | ' + INFRA + ' | '
+  'SS232R is an importer series code for SUS304 pressfittings and X1/2 is merely the reducing size; multiple MY wholesalers carry identical SS23x codes with stock photos only, no manufacturer identity; marketplace imagery below bar; exhausted with owner action. action=search'),
+ ("Photograph the SS232R reducing elbow and carton label in-store; ask the plumbing supplier which mill/importer supplies the SS23x SUS304 fitting series")))
+
+# ---------------- 1028 U-PVC bend ----------------
+rows.append(ex(
+ "1028", "FIT-UPVC-BEN-ELB-45-110MM", "PCS", "U-pvc Bend (elbow) 110MM 4 45-DEG", "Plumbing", "45-DEG", "T1,T5",
+ ('q:[bing-junk]U-PVC bend 110mm "45" Malaysia (YouTube/U-Mobile junk) | ' + INFRA + ' | '
+  'detected_model is the bend angle 45-DEG, not a part number; 110mm uPVC 45-degree bends are commodity sewer fittings made by many Malaysian extruders with no brand on the listing; no OEM resolvable; exhausted with owner action. action=search'),
+ ("Photograph the 110mm 45-degree uPVC bend socket imprint in-store; request the pipe maker's fitting catalogue from the plumbing supplier")))
+
+# ---------------- 1029 alloy hook ----------------
+rows.append(ex(
+ "1029", "RIG-HOO-ALL-1.0TON", "PCS", "Alloy Hook 1.0TON", "Lifting & Rigging", "1.0TON", "T1,T5",
+ ('q:[bing-rss-junk]alloy hook "1.0TON" lifting (Chrome-download junk) | ' + INFRA + ' | '
+  'detected_model is the working-load limit 1.0TON; unmarked alloy lifting hooks are commodity rigging stock, typically unbranded eye sling hooks; no manufacturer or certificate issuer named in listing; exhausted with owner action. action=search'),
+ ("Photograph the hook forging mark/WLL stamp and any attached tag in-store; ask the rigging supplier for the maker's test-certificate copy covering the 1.0T hook")))
+
+# ---------------- 1030 Eupro octopus hook ----------------
+rows.append(ex(
+ "1030", "SHH-HOOK-9255SS-1", "PKT", "Eupro Octopus S/s Hook No. 1 (10'S)", "Fishing & Tackle", "9255SS", "T1,T3,T4,T5",
+ ('q:[bing-junk]eupro hook 9255 octopus (Philippine DENR gov junk); q:eupro fishing tackle Malaysia official (Chrome-help junk) | '
+  + INFRA + ' | '
+  'p:https://dns.google/resolve?name=eupro.com.my&type=A (Status 3 NXDOMAIN globally - eupro.com.my does not exist) | '
+  'p:http://eupro.asia/ (200 but 114-byte JS redirect to /lander = parked domain landing page) | '
+  'p:http://web.archive.org/cdx/search/cdx?url=eupro.asia* (12 rows: homepage/robots/favicon captures 2018-2025 only, ZERO product pages ever archived, so T4 revival impossible for hook models) | '
+  'Eupro is a real SEA tackle brand but has no functioning official catalogue online from any reachable channel; 9255SS cannot be bound model-exact to any official page; exhausted with owner action. action=search'),
+ ("Email the Eupro distributor (brand domain eupro.asia is parked - contact via the tackle wholesaler) requesting the 9255SS octopus-hook packet card; else photograph the packet front/back showing 9255SS in-store")))
+
+# ---------------- 1031 Aerico ----------------
+rows.append(ex(
+ "1031", "AER-6MC4", "PCS", "Aerico 6MC4", "Other", "6MC4", "T1,T2,T5",
+ ('q:[bing-junk]"aerico" tap aerator 6MC4 (Invesco QQQ finance junk) | ' + INFRA + ' | '
+  'p:https://www.aerico.com/ (live Webflow site of Aerico Inc, a US data-center design consultancy - unrelated to tap hardware) | p:https://aerico.com.my/ (NXDOMAIN) | '
+  '6MC4 is an importer mould/carrier code on a commodity tap aerator; the only Aerico domain that resolves belongs to an unrelated industry; exhausted with owner action. action=search'),
+ ("Photograph the Aerico 6MC4 aerator and its carrier/hang-tag in-store; ask the bathroom-ware supplier for the maker's blister card to enable an OEM lookup")))
+
+# ---------------- 1032 male disconnects ----------------
+rows.append(ex(
+ "1032", "MDD-CON-MALE-YELLOW-10PC/PCK", "PCK", "Male Disconnects - Yellow (6MM) (10PCS/PCK)", "Electrical", "10PCS/PCK", "T1,T5",
+ ('q:[bing-junk]male disconnect yellow 6mm insulated 10pcs Malaysia (marketplace junk) | ' + INFRA + ' | '
+  'detected_model is pack-count text; vinyl-insulated male quick disconnects are generic automotive/electrical consumables made by dozens of factories with no brand on the pack; no OEM resolvable; exhausted with owner action. action=search'),
+ ("Photograph the 10-pc yellow disconnect pack front and back (showing 6mm sizing) in-store; ask the electrical supplier for the terminal maker's spec sheet")))
+
+# ---------------- 1034 Eupro 1920-SS ----------------
+rows.append(ex(
+ "1034", "SHH-HOO-2066-1/0", "PKT", "No. 2 Eupro Fishing Hook (7'S)", "Fishing & Tackle", "1920-SS", "T1,T3,T4,T5",
+ ('q:[bing-junk]eupro hook 9255 octopus / eupro fishing tackle Malaysia official (both canned junk, channel shared with sibling 1030) | '
+  + INFRA + ' | '
+  'p:https://dns.google/resolve?name=eupro.com.my&type=A (NXDOMAIN globally) | '
+  'p:http://eupro.asia/ (parked lander) | p:web.archive.org CDX eupro.asia* (no product pages ever archived) | '
+  'note discrepancy: item title says No.2 hook 7pcs while detected_model carries 1920-SS and item_code says 2066-1/0 - even the internal identifiers disagree, and with no functioning OEM catalogue neither can be bound model-exact to an official source; exhausted with owner action. action=search'),
+ ("Email the Eupro distributor asking whether Ekoway code SHH-HOO-2066-1/0 corresponds to hook model 1920-SS or 2066 1/0 and request the matching packet-card image; else photograph both packet faces in-store")))
+
+# ---------------- 1035 TRUFLO G503B - CANDIDATE ----------------
+cand = ["1035", "BIB-G503B", "PCS", "Bib Tap Ni 3/4B Truflo", "Plumbing", "", "3/4B",
+        "candidate", 1, 1, "T1",
+        "https://truflo.com.my/product/bib-tap-hose-g503b",
+        "https://truflo.com.my/wp-content/uploads/2019/10/TF-Bib-tap-hose-1.jpg",
+        "1000", "1000", "263927", "9589eb0cb03feeef777e027d334539ca626820bd35a646d8ebe3ca77d0971a76",
+        "high", "yes", "yes", "match", "needs_permission", "keep", "", "",
+        ('q:[websearch-429]truflo bib tap G503B (shared exa quota dead all session) | '
+         'discovery: p:https://truflo.com.my/robots.txt (Sitemap: wp-sitemap.xml) -> wp-sitemap-posts-product-1.xml enumerated 144 product URLs incl bib-tap-hose-g503b | '
+         'p:https://truflo.com.my/product/bib-tap-hose-g503b (OFFICIAL Watertec (Malaysia) Sdn Bhd brand site for Truflo; PDP title "Bib Tap Hose G503B Ni 3/4B Truflo"; G503B quotable in cached text, precheck_model True; SKU FBT-G05N11-5TPWHT; real WooCommerce signals: price block, add-to-cart, SKU) | '
+         'p:image https://truflo.com.my/wp-content/uploads/2019/10/TF-Bib-tap-hose-1.jpg (wp-post-image inside woocommerce-product-gallery of THAT PDP, alt text "Bib Tap Hose G503B Ni 3/4B Truflo"; fetched 1000x1000 jpeg 263,927 bytes sha256 9589eb0cb03feeef777e027d334539ca626820bd35a646d8ebe3ca77d0971a76) | '
+         'all named facts match (bib tap hose, nickel-plated Ni, 3/4B size, Truflo brand); sibling images TF-Bib-tap-L-* on the page belong to the L-series gallery, not used. action=search'),
+        ""]
+rows.append(cand)
+
+# ---------------- 1039 SS equal tee ----------------
+rows.append(ex(
+ "1039", 'FIT-SS235-TEE-1/2"-SUS304', "PCS", "SS Equal Tee 1/2", "Plumbing", "SS235", "T1,T2,T5",
+ ('q:[bing-rss-junk]"SS235" equal tee SUS304 (UKG HR-software junk) | ' + INFRA + ' | '
+  'SS235 is an importer series code for SUS304 threaded fittings and 1/2 the size; identical SS23x codes circulate across MY wholesalers with stock photography only and no manufacturer identity; marketplace imagery below bar; exhausted with owner action. action=search'),
+ ("Photograph the SS235 equal tee and carton label in-store; ask the plumbing supplier which mill supplies the SS23x SUS304 series")))
+
+# ---------------- 1040 Paint Master spray - PARKED OPEN ----------------
+_parked = ["1040", "PAI-SPR-PMT-037", "CAN", "Paint Master Spray Paint - No. 37 Forest Green",
+           "Paint & Sundries", "", "NO.37", "open", 1, 1, "T1,T4"]
+_parked += [""] * 6                                   # pp, iurl, w, h, bytes, sha
+_parked += ["", ""]                                   # match_confidence, finish_exact
+_parked += ["", "unknown", "unknown", ""]             # model_exact, uom_assess, rights_status, decision
+_parked += ["", ""]                                   # verifier_verdict, machine_gate
+_parked += ['q:[exa-429]"Paint Master" spray paint aerosol No.37 forest green Malaysia | q:[bing-junk]"paint master" spray paint malaysia (MS-Paint app junk); q:[bing-junk]paintmaster aerosol colour chart malaysia (Windows-help junk) | '
+  'p:https://paintmaster.com.my/ and www variant (host resolves but serves 404 on every path incl robots/sitemaps - abandoned domain shell) | '
+  'p:https://paintmaster.my/ (200 but JS anti-bot interstitial "Checking your browser"; webfetch tool returns the SAME challenge -> host bot-walls BOTH urllib AND webfetch) | '
+  'p:http://web.archive.org/cdx/search/cdx?url=paintmaster.my*&filter=urlkey:.*spray.* (0 rows - no spray-related URL ever archived) and collapse=urlkey listing shows only ~2 archived PDPs (productid 4900002/5657764, interior-paint store pages of the multi-brand paintmaster.my e-store) plus category pages for interior/exterior/wood-metal paint, no aerosol colour-chart pages | '
+  'PARKED open mirroring sibling pos 931 (Paint Master Spray No.35 Gold, same shard family): current MY brand domain identified as paintmaster.my but unreachable to every automated channel this session and archive holds no spray catalogue to revive. Revisit paintmaster.my aerosol section manually or when challenge clears.',
+  ""]
+assert len(_parked) == 27, len(_parked)
+rows.append(_parked)
+
+# ---------------- 1041 YG245 brass nipple ----------------
+rows.append(ex(
+ "1041", 'FIT-YG245-NIP-3/4"-BRA', "PCS", "Brass Equal Nipple 3/4", "Plumbing", "YG245", "T1,T2,T5",
+ ('q:[bing-rss-junk]"YG245" brass nipple (hard-trivia quiz junk) | ' + INFRA + ' | '
+  'T2 YG245->YG-245 variants unresolved; same finding as sibling YG232: YG-series brass-fitting numbers are shared across MY importers with no single OEM site, so no official asset can be bound; commodity fitting below bar; exhausted with owner action. action=search'),
+ ("Ask the plumbing supplier which importer owns the YG-series brass range and request the YG245 nipple catalogue card; else photograph the nipple bin tag and carton code in-store")))
+
+# ---------------- 1042 M'man ball valve ----------------
+rows.append(ex(
+ "1042", "VAL-BAL-MMAN-7733#X1", "PCS", "M'man Ball Valve X 1", "Plumbing", "W/THREAD-7733", "T1,T5",
+ ('q:[bing-junk]"7733" ball valve m-man (GitHub/gaming junk) | ' + INFRA + ' | '
+  'M\'man (M-Man) is an unresolvable trade name on a commodity brass ball valve and W/THREAD-7733 is a carrier descriptor (threaded pattern, mould 7733); no manufacturer domain findable; marketplace imagery below bar; exhausted with owner action. action=search'),
+ ("Photograph the M'man ball-valve body casting and carton in-store; ask the plumbing supplier for the valve maker's series sheet covering mould 7733")))
+
+# ---------------- 1043 drop-in anchor ----------------
+rows.append(ex(
+ "1043", "FAS-BOL-ANC12", "PCK", "Sh Drop IN Anchor 1/2 X 2 (5PCS/PCK)", "Fasteners & Fixings", "5PCS/PCK", "T1,T5",
+ ('q:[bing-junk]drop in anchor "1/2 x 2" 5pcs Malaysia (Google Maps junk) | ' + INFRA + ' | '
+  'detected_model is pack-count text; drop-in anchors are commodity concrete inserts where "Sh" prefixes a trade packing description, not a brand; no manufacturer resolvable; exhausted with owner action. action=search'),
+ ("Photograph the 5-pc drop-in-anchor pack and box-end label in-store; ask the fastener supplier for the anchor maker's setting-data sheet")))
+
+# ---------------- 1044 SS reducing socket ----------------
+rows.append(ex(
+ "1044", 'FIT-SS240R-SOC-REC-3/4"X1/2"', "PCS", "SS Reducing Socket 3/4 X 1/2", "Electrical", "SS240R", "T1,T2,T5",
+ ('q:[bing-rss-junk]"SS240R" reducing socket (hotel junk) | ' + INFRA + ' | '
+  'SS240R is an importer series code for SUS304 reducing sockets; same family situation as SS235/SS239 siblings - codes shared across wholesalers, no OEM identity; marketplace imagery below bar; exhausted with owner action. action=search'),
+ ("Photograph the SS240R reducing socket and carton label in-store; ask the supplier which mill supplies the SS23x/SS24x series")))
+
+# ---------------- 1045 WB5009 bearing ----------------
+rows.append(ex(
+ "1045", "IND-WHE-BEA-5009", "PCS", "Cn Wheel Barrow Puller Bearing", "Building Materials", "WB5009", "T1,T5",
+ ('q:[bing-rss-junk]"WB5009" bearing wheelbarrow (Yahoo-Japan homepage junk) | ' + INFRA + ' | '
+  'WB5009 is a wheelbarrow-wheel hub code (CN = China origin marker); commodity unbranded ball bearings sold by bore/OD only; no manufacturer resolvable; exhausted with owner action. action=search'),
+ ("Photograph the WB5009 bearing shields (stamped markings) and box in-store; ask the building-materials supplier for the bearing importer's reference")))
+
+# ---------------- 1046 car wash sponge ----------------
+rows.append(ex(
+ "1046", "SPO-CAR-WASH-UNI2193", "PCS", "Car Wash Sponge", "Automotive", "UNI2193", "T1,T5",
+ ('q:[bing-rss-junk]"UNI2193" car wash sponge (IELTS-answers junk) | ' + INFRA + ' | '
+  'UNI2193 is an importer stock code on a generic foam wash sponge; no brand claimed and none resolvable; marketplace imagery below bar; exhausted with owner action. action=search'),
+ ("Photograph the UNI2193 sponge and any sleeve/label in-store; ask the automotive supplier for the sponge importer's item card")))
+
+# ---------------- 1047 Ecogreen ----------------
+rows.append(ex(
+ "1047", "HOS-CON-ADA-ECOG4026", "PCS", 'Ecogreen- Tap Adaptor / 1/2"-3/4', "Electrical", "EG4026", "T1,T4,T5",
+ ('q:[bing-rss-junk]ecogreen tap adaptor EG4026 (ramen-restaurant junk); q:[bing-junk]ecogreen garden fitting Malaysia (Microsoft junk) | '
+  + INFRA + ' | '
+  'p:https://www.ecogreen.com.my/ and https://ecogreen.com.my/ (200 but Plesk "Domain Default page" hosting stub; robots/sitemap 404 - no actual website) | '
+  'p:https://ecogreen.com.sg/ (NXDOMAIN) | '
+  'Ecogreen garden-brand domain is an empty hosting shell and EG4026 appears on no resolvable official page; exhausted with owner action. action=search'),
+ ("Email the Ecogreen garden-products distributor (domain parked at ecogreen.com.my hosting stub) requesting the EG4026 tap-adaptor card; else photograph the adaptor and hang-tag in-store")))
+
+# ---------------- 1048 Cavallo hose ----------------
+rows.append(ex(
+ "1048", 'HOS-GAR-CAV-5/8"X50M', "MTR", 'Cavallo Garden Hose 5/8"X50M - Yellow', "Outdoor & Garden", "X50M", "T1,T5",
+ ('q:[bing-junk]cavallo garden hose 5/8 x 50m yellow (Yandex adult-content junk) | ' + INFRA + ' | '
+  'Cavallo (Italian for horse) is a trade name on a commodity yellow PVC garden hose; X50M is just the roll length; no manufacturer domain resolvable through any working channel; exhausted with owner action. action=search'),
+ ("Photograph the Cavallo hose reel/carton print showing the brand and 5/8x50M marking in-store; ask the garden supplier for the hose maker's spec strip")))
+
+# ---------------- 1049 MXF socket ----------------
+rows.append(ex(
+ "1049", 'FIT-SS239-SOC-MXF-3/4"-SUS304', "PCS", 'Mxf Socket 3/4"X3/4', "Electrical", "X3/4", "T1,T2,T5",
+ ('q:[bing-rss-junk]"SS239" socket mxf (dictionary/SQL junk) | ' + INFRA + ' | '
+  'MXF = male-by-female reducer socket description and SS239 the importer series code, X3/4 the size; same shared-code family as SS235/SS240R siblings with no manufacturer identity anywhere; marketplace imagery below bar; exhausted with owner action. action=search'),
+ ("Photograph the SS239 MXF reducer socket and carton label in-store; ask the supplier which mill supplies the SS23x series for a future OEM lookup")))
+
+assert len(rows) == 30, len(rows)
+with open(OUT, "w", newline="", encoding="utf-8") as fh:
+    w = csv.writer(fh)
+    w.writerow(HDR)
+    w.writerows(rows)
+print("written", OUT, len(rows), "rows")

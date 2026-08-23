@@ -134,6 +134,8 @@ pub async fn start_gateway_checkout(
     customer_account_id: Option<i32>,
     _approval: &PaymentInitiationApproval,
 ) -> Result<PaymentCheckout> {
+    crate::db::ensure_public_checkout_fulfillment(input.fulfillment_method.as_deref())?;
+
     let order =
         crate::modules::orders::service::create_order(pool, "customer", input, customer_account_id)
             .await?;

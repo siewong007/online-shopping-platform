@@ -1,0 +1,156 @@
+[
+ {
+  "ordinal": "2794",
+  "source_position": "5888",
+  "item_code": "WOO-TIM-1\" X 2\" 4'",
+  "uom": "PCS",
+  "display_name": "Mlh Sawn Timber 1 X 2 X 4",
+  "category": "Building Materials",
+  "detected_brand": "",
+  "detected_model": "",
+  "action": "search"
+ },
+ {
+  "ordinal": "2994",
+  "source_position": "5184",
+  "item_code": "WOO-TIM-1\"X2\"X12'",
+  "uom": "PCS",
+  "display_name": "Mlh Sawn Timber 1 X 2 X 12",
+  "category": "Building Materials",
+  "detected_brand": "",
+  "detected_model": "",
+  "action": "search"
+ },
+ {
+  "ordinal": "3332",
+  "source_position": "4854",
+  "item_code": "WOO-TIM-2\"X3\"X12'",
+  "uom": "PCS",
+  "display_name": "Mlh Sawn Timber 2 X 3 X 12",
+  "category": "Building Materials",
+  "detected_brand": "",
+  "detected_model": "",
+  "action": "search"
+ },
+ {
+  "ordinal": "3072",
+  "source_position": "3388",
+  "item_code": "X-BAT-ENE-MAX+-AAA2PCS",
+  "uom": "PCK",
+  "display_name": "Enr Max Alk Aa 12 PCS",
+  "category": "Power Tools",
+  "detected_brand": "",
+  "detected_model": "",
+  "action": "search"
+ },
+ {
+  "ordinal": "3259",
+  "source_position": "3697",
+  "item_code": "X-CAR-POLISH-PW",
+  "uom": "PCS",
+  "display_name": "Pw Supercut Polish 4 IN 1",
+  "category": "Power Tools",
+  "detected_brand": "",
+  "detected_model": "",
+  "action": "search"
+ },
+ {
+  "ordinal": "3029",
+  "source_position": "7044",
+  "item_code": "X-CUT-PVC-FIL-9111-4.1/2\"",
+  "uom": "PCS",
+  "display_name": "4 1/2 Chisel Wood Handle Only - Big",
+  "category": "Hand Tools",
+  "detected_brand": "",
+  "detected_model": "",
+  "action": "search"
+ },
+ {
+  "ordinal": "2711",
+  "source_position": "4673",
+  "item_code": "X-ELE-ROP-LIT-BLU",
+  "uom": "MTR",
+  "display_name": "Rope Lite 5050-60(BLUE)",
+  "category": "Rope, Chain & Netting",
+  "detected_brand": "",
+  "detected_model": "",
+  "action": "search"
+ },
+ {
+  "ordinal": "2526",
+  "source_position": "5711",
+  "item_code": "X-FLO-MOC-MP6308",
+  "uom": "PCS",
+  "display_name": "MP6308 30X60CM",
+  "category": "Power Tools",
+  "detected_brand": "",
+  "detected_model": "MP6308",
+  "action": "search"
+ },
+ {
+  "ordinal": "2527",
+  "source_position": "5889",
+  "item_code": "X-FLO-MOC-36102",
+  "uom": "PCS",
+  "display_name": "36102 30X60CM",
+  "category": "Power Tools",
+  "detected_brand": "",
+  "detected_model": "30X60CM",
+  "action": "search"
+ },
+ {
+  "ordinal": "2528",
+  "source_position": "5891",
+  "item_code": "X-FLO-MOC-GT3811",
+  "uom": "PCS",
+  "display_name": "GT3811 30X60CM",
+  "category": "Power Tools",
+  "detected_brand": "",
+  "detected_model": "GT3811",
+  "action": "search"
+ },
+ {
+  "ordinal": "2529",
+  "source_position": "5898",
+  "item_code": "X-FLO-MOC-T38502",
+  "uom": "PCS",
+  "display_name": "T38502 30X60CM",
+  "category": "Power Tools",
+  "detected_brand": "",
+  "detected_model": "T38502",
+  "action": "search"
+ },
+ {
+  "ordinal": "3010",
+  "source_position": "5950",
+  "item_code": "X-SHI-FAC",
+  "uom": "PCS",
+  "display_name": "Face Shield",
+  "category": "Power Tools",
+  "detected_brand": "",
+  "detected_model": "",
+  "action": "search"
+ },
+ {
+  "ordinal": "3057",
+  "source_position": "7325",
+  "item_code": "X-SPO-STE-WOOL-UNI326",
+  "uom": "PCS",
+  "display_name": "Steel Wool",
+  "category": "Power Tools",
+  "detected_brand": "",
+  "detected_model": "",
+  "action": "search"
+ },
+ {
+  "ordinal": "2883",
+  "source_position": "5733",
+  "item_code": "X-SWI-PLK-4G1W-1314",
+  "uom": "PCS",
+  "display_name": "Plk 1314 10A 4G 1W Switch SIRIM",
+  "category": "Electrical",
+  "detected_brand": "",
+  "detected_model": "",
+  "action": "search"
+ }
+]

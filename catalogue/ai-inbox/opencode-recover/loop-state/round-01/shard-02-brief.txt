@@ -1,0 +1,101 @@
+source_position|item_code|uom|display_name|category|detected_brand|detected_model
+446|VAC-KHI-VC68P|SET|Khind - Vacuum Cleaner 600W (gold)|Chemicals & Adhesives|Khind|VC68P
+821|BOS-0601-5A2-0L0|UNIT|Gks 235 Turbo Circular Saw|Power Tools|Bosch|
+810|BOS-0601-9E5-1L0|UNIT|Gas 15 Ps Vacuum Cleaner|Chemicals & Adhesives|Bosch|
+856|BOS-0601-1C4-0L0|UNIT|Grw 140 Mixer|Power Tools|Bosch|
+621|FAN-PSN-F-M14DZVBKH|PCS|Panasonic Bayu 5 Black|Fans & Ventilation|Panasonic|
+578|PRE-STO-KHI-SPC6|SET|Khind Pressure Cooker 6L - SPC6|Other|Khind|SPC6
+440|VAC-KHI-VC8020MS|SET|Khind - Canister Vacuum Cleaner (sapphire Blue)|Chemicals & Adhesives|Khind|VC8020MS
+950|BOS-0601-3A0-0L0|UNIT|Gdc 140 Marble Cutter|Power Tools|Bosch|
+772|FAN-CEI-DEKA-CDKN54OAK12|UNIT|Deka Ceiling Fan Koni 54 Oak|Fans & Ventilation|Deka|
+449|X-PSN-NI-317W-LN|PCS|Panasonic Polished 0.9KG Iron|Home Appliances|Panasonic|317W-LN
+442|MIX-KHI-HM200|SET|Khind Hand Mixer (white)|Bathroom|Khind|HM200
+523|KHI-IRO-EI405-GRY|SET|Khind Electric Iron (grey)|Home Appliances|Khind|EI405
+986|BOS-0601-58F-0L0|UNIT|Gst 90 Be Jigsaw|Power Tools|Bosch|
+647|VAC-KHI-VC8630|SET|Khind - Vacuum Cleaner 2 IN 1 (blue)|Chemicals & Adhesives|Khind|VC8630
+477|JUG-KHI-EK502|SET|Khind Electric Kettle 5.0L|Home Appliances|Khind|EK502
+522|KHI-COO-MC121|SET|Khind Multi Cooker 1.2L (blue)|Home Appliances|Khind|MC121
+2602|IND-CEM-GREY-25KG|BAG|Sika Ceram 88 (25KG/BAG)|Building Materials||25KG/BAG
+1202|TAP-SAN-SWS-304-3977|PCS|Saniware Sliver Wall Bib Tap With Hose Connect|Plumbing|Saniware|SWS-304-3977
+1440|VAL-SAN-SW-SS-AV-80|PCS|Saniware Angle Valve SW-SS-AV-80|Plumbing|Saniware|SW-SS-AV-80
+1028|RIC-COO-MID-MRM18010BDG|PCS|Midea 1.8L Jartype Rice Cooker 700W|Home Appliances||MRM18010BDG
+1900|TAP-CAB-CB2807|PCS|Cabana Basin Tap|Bathroom||CB2807
+2022|TAP-CAB-CB65SS-GM|PCS|Cabana S/s 304 Basin Cold Tap-gunmetal|Bathroom||CB65SS-GM
+2067|BID-CAB-90SS-DIY|PCS|Cab 304 S/s Hand Bidet-matt|Bathroom||CB90SS-DIY
+3630|GROUT-SEAL-703|CAN|Sikagard 703 Groutseal - 1LTR|Other||1LTR
+2515|LAD-H/D-STRO-DS07|UNIT|Strongman D/s H/d Ladder DSHD07 7STEP|Ladders & Access||DSHD07
+1453|ALP-WAT-HEA-X5E|UNIT|Alpha Instant Water Heater X5-E|Home Appliances||X5-E
+1928|BID-CAB-CB88SS-BL-DIY|PCS|Cabana 2WAY Tap Hand Bidet-matt Blk|Bathroom||2WAY
+2035|TAP-CAB-CB9108|UNIT|Cabana Wall-mounted Sink Tap CB9108|Kitchen & Sinks||CB9108
+1226|TAP-SAN-SWS-304-3978|PCS|Saniware Sliver Two Way Tap|Plumbing|Saniware|SWS-304-3978
+2306|TAP-CAB-CB65SS-BL|PCS|Cab Basin Cold Tap-matt Blk|Bathroom||S/S304
+1933|DC-DCJZ03-13EK-20V|SET|Cordless Brushless Driver/hammer Drill 20V (4.0AH X2/4A) / DCJZ03-13EK|Power Tools||X2/4A
+1935|DCPB488EK|SET|Cordless Brushless Impact Wrench 20V (4.0AH X2/4A)|Power Tools||X2/4A
+1017|STA-PRE-WAS-K3|UNIT|Karcher K3 Hr Plus Pressure Washer|Power Tools|Stanley|
+1347|ALP-WAT-HEA-IM-9EP-BLK|UNIT|Alpha Instant Water Plus Rainshower-blk|Home Appliances||HEATER-IM-9EP
+1346|ALP-WAT-HEA-CX9-EP-MOC|UNIT|Alpha Instant Water Heater Rainshower-dk Mocha|Home Appliances||CX9-I
+1466|X-ALP-WAT-HEA-AS-2EP-SIL|UNIT|Alpha Instant Water Heater AS-2EP-SIL|Home Appliances||AS-2EP-SIL
+1092|BOS-0601-2C1-0L0|UNIT|Gbs 750 Belt Sander|Power Tools|Bosch|
+2865|LAD-H/D-STRO-DS08|UNIT|Strongman D/s H/d Ladder DSHD08 8STEP|Ladders & Access||DSHD08
+1194|BOS-0601-298-0L0|UNIT|Gss 2300 Orbital Sander|Power Tools|Bosch|
+1195|BOS-0601-980-4L1|UNIT|Gbl 82-270 Blower|Power Tools|Bosch|
+1273|BOS-0603-3E0-050|UNIT|Bosch 3.6V Power Scrubber|Power Tools|Bosch|
+1076|BOS-0603-9E0-050|UNIT(S)|Ixo 7 Cordless Screwdriver|Power Tools|Bosch|
+2541|BAT-CHA-KENDE-SM1212|UNIT|Kende Battery Charger 12V|Electrical||12AMP-SM1212
+1310|BOS-0601-980-5L0|UNIT|Gbl 620 Blower|Power Tools|Bosch|
+1991|TAP-CAB-CB4908|UNIT|Cabana Basin Cold Tap CB4908|Bathroom||CB4908
+2034|TAP-CAB-CB4905|UNIT|Cabana Basin Cold Tap CB4905|Bathroom||CB4905
+2533|NUM-PUNC-50730080|SET|Nietz 0-9 Number Punches 8MM 50730080|Signage & Numbering|Nietz|
+2522|FAN-TAB-KDK-KB-304|PCS|Kdk Table Fan 12|Fans & Ventilation||
+271|AGR-NET-SUN-GLO-70%|MTR|Glotool Sun Shade Netting (70%)|Rope, Chain & Netting|Glotool|
+284|PIP-HDPE-25MM-3/4"|MTR|HDPE Pipe 25MM (3/4") PN12.5(MS-1058)|Plumbing||PN12.5
+257|TAR-SHT-GT2-O/B-6'|MTR|Glotool PE Trap (GT-02) 6'X70YDS|Plumbing|Glotool|GT-02
+296|NAI-COM-65MM-20KG|PCK|2 1/2 Wire Nail|Fasteners & Fixings||
+299|NAI-COM-50MM-20KG|PCK|2 Wire Nail|Fasteners & Fixings||
+289|IND-WIR-MES-1212-20GX100|FTS|Wire Mesh 1/2/ X 1/2 X 3 X 20G X 100|Electrical||
+544|GLO-COT-700-ZS70|PAIR|Cotton Glove ZS70|Safety & Workwear|Glotool|ZS70
+816|GLO-COT-104-WHI|PAIR|Cotton Glove B104|Safety & Workwear|Glotool|B104
+562|IND-SCO-SMR-S501TY|PCS|Samurai King Steel Shovel S501TY|Building Materials|Samurai|S501TY
+924|GLO-SEM-GT891/RED|PAIR|Semi Leather Gloves - 800 Sn/red|Safety & Workwear|Glotool|
+989|GLO-SEM-GT891/YEL|PAIR|Semi Leather Gloves - 800 Sn/yellow|Safety & Workwear|Glotool|
+393|GLO-WEL-GT900/BLU|PAIR|Welding Glove - 900GT/BLUE|Safety & Workwear|Glotool|900GT/BLUE
+394|GLO-WEL-GT900/RED|PAIR|Welding Glove - 900GT/RED|Safety & Workwear|Glotool|900GT/RED
+794|GLO-WEL-SUP-500SPG|PAIR|Welding Glove - 500SP/GREEN|Safety & Workwear|Glotool|500SP/GREEN
+4189|BRA-STEEL-L-1"X1"|PCS|Steel L Bracket 1"X1 (BC185K)|Plumbing||BC185K
+3994|BRA-STEEL-L-1.5"X1.5"|PCS|Steel L Bracket 1.5"X1.5 (BC185K)|Plumbing||X1.5
+4550|ELE-CLI-CON-10A-2WAY|PCS|Double Sided Connector Clip-white (5PCS/PCK)|Electrical||5PCS/PCK
+2859|ELE-CAB-WIR-ASIA-2.5BK*|MTR|Asia PVC Cable, Black - MTR|Electrical||2.5MM2
+4548|BNW-NUT-SS304-M06|PCS|SS 304 Nut - M06|Fasteners & Fixings||M06
+2996|PLUG-TOP-SIR-13AMP|PCS|Isafe Plug Top With SIRIM|Electrical||13AMP
+4800|NAIL-RETAINING- CLIP-PVC-S110|PCK|PVC Retaining Nail Clip S110 (2PCS/PCK)|Fasteners & Fixings||S110
+3719|SWI-LAM-HOL-B218E27|PCS|E27 Hanging Holder Blk|Electrical||E27
+3770|SWI-LAM-HOL-W218E27|PCS|E27 Hanging Holder Wh|Electrical||E27
+4955|ELE-CAB-TWI-B/W-MAXWELL|MTR|Scinet Twin Cable, Blue/white|Electrical||23/0.14MM
+4926|BNW-NUT-SS304-M10|PCS|SS 304 Nut - M10|Fasteners & Fixings||M10
+3297|SHH-BELL-SINGL-PSC115|PCS|Single Fishing Bell PSC115|Fishing & Tackle||PSC115
+3403|ELE-HOL-SE3831|PCS|Kingsway E27 Wedge Holder|Electrical||E27
+2945|ABR-PAP-621-527|SHT|G60 Ewd Hand Sanding Sheet|Abrasives & Cutting||G60
+4103|WAL-PLU-S/S-CC225-M6X60MM|PCS|S/steel Wall Plug - K103-304 M6X60MM CC225|Fasteners & Fixings||K103-304
+3088|CLI-HOS-GP-1/2"|PCS|Gp S/steel Hose CLIP-1/2 (6-12MM)|Outdoor & Garden||CLIP-1/2
+5550|FIT-PVC-SOC-REC-20MMX15MM|PCS|PVC Fitting Soc Red 3/4"X1/2|Plumbing||X1/2
+3005|CLI-HOS-GP-5/8"|PCS|Gp S/steel Hose CLIP-5/8 (9-16MM)|Outdoor & Garden||CLIP-5/8
+4317|FIT-PVC-ELB-20MMX15MM|PCS|PVC Fitting Elbow Reducing 3/4"X1/2|Plumbing||X1/2
+3003|ABR-PAP-621-533|SHT|G220 Ewd Hand Sanding Sheet|Abrasives & Cutting||G220
+3002|ABR-PAP-621-532|SHT|G180 Ewd Hand Sanding Sheet|Abrasives & Cutting||G180
+3027|ABR-PAP-621-536|PCS|G400 Ewd Hand Sanding Sheet|Abrasives & Cutting||G400
+4221|WAL-PLU-S/S-60MM|PCS|304 S/steel Wall Plug M6 X 60MM|Fasteners & Fixings||CC220
+5508|ELE-CAB-WIR-1.5-YELLOW*|MTR|Win PVC Cable, Yellow 100M|Electrical||1.5MM2
+5904|ELE-PVC-SOC-TC1820MM|PCS|Tc PVC Socket|Electrical||18-20MM
+3224|FAS-BOL-EXP-12100|PCS|Sh Expansion Bolt M12 X 100|Fasteners & Fixings||M12
+3162|ROP-WIR-GAL-6.0MM|MTR|Galv Wire Rope-cnn 6.0MMX6X19|Lifting & Rigging||6.0MMX6X19
+3084|ABR-PAP-621-537|SHT|G500 Ewd Hand Sanding Sheet|Abrasives & Cutting||G500
+3085|ABR-PAP-621-538|SHT|G600 Ewd Hand Sanding Sheet|Abrasives & Cutting||G600
+3862|ELE-HOL-293-B22|PCS|Bm B22 Wedge Holder-black (ovl)|Electrical||B22
+3152|ABR-PAP-621-528|SHT|G80 Ewd Hand Sanding Sheet|Abrasives & Cutting||G80
+2985|CLI-HOS-GP-1"|PCS|Gp S/steel Hose CLIP-1 (16-25MM)|Outdoor & Garden||CLIP-1
+5849|BNW-NUT-SS304-M08|PCS|SS 304 Nut - M08|Fasteners & Fixings||M08
+6064|BNW-WAS-M6|PCK|M6 Washer (10PCS/PCK)|Fasteners & Fixings||10PCS/PCK
+4186|WEL-GLA-BLA-NO.10|PCS|Black Welding Glass 108 X 50 (no. 10)|Welding||NO.10
+3197|ABR-PAP-621-540|SHT|Ewd Hand Sanding Sheet G1000|Abrasives & Cutting||G1000
+3238|ABR-PAP-621-530|SHT|G120 Ewd Hand Sanding Sheet|Abrasives & Cutting||G120
+3402|ELE-CAB-WIR-ASIA-2.5Y*|MTR|Asia PVC Cable, Yellow - MTR|Electrical||2.5MM2

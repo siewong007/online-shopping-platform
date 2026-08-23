@@ -1,0 +1,4 @@
+source_position,verifier_verdict,finish_exact,model_exact,image_px,image_sha256,image_bytes,justification
+974,fail,n/a,no,,,0,Claimed Philips URL returns HTTP 404 via urllib and webfetch; no product content or image retrievable
+980,fail,n/a,no,,,0,Claimed ne2u URL returns HTTP 404 (live MK G2977 page sits at different slug); no image at claimed URL
+983,fail,no,yes,1280x1280,5f58c3b72eb500d43edecd055b515b3be2384cb30d6dfd1385a0bb7f9daa188f,261012,"Page redirects to HP 4-in Diamond Turbo Blade H1; pixels show segmented diamond cutting blade, not 4-1/2in metal grinding wheel"

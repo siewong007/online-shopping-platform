@@ -1,6 +1,7 @@
 mod common;
 
 use axum::http::{Method, StatusCode};
+use serde_json::json;
 use sqlx::PgPool;
 
 async fn publish_seed_products(pool: &PgPool) {
@@ -99,6 +100,35 @@ async fn storefront_no_matches_returns_empty_array_not_404(pool: PgPool) {
 
     assert_eq!(status, StatusCode::OK, "{body}");
     assert_eq!(body["products"].as_array().unwrap().len(), 0);
+}
+
+#[sqlx::test]
+async fn public_quote_rejects_delivery_until_it_is_enabled(pool: PgPool) {
+    publish_seed_products(&pool).await;
+    let product_id = sqlx::query_scalar::<_, i32>(
+        "SELECT id FROM products WHERE name = 'Milwaukee M18 9-Tool Combo Kit'",
+    )
+    .fetch_one(&pool)
+    .await
+    .expect("seed product");
+    let app = common::app(pool);
+    let (status, body) = common::request(
+        app,
+        Method::POST,
+        "/api/checkout/quote",
+        None,
+        Some(json!({
+            "items": [{ "product_id": product_id, "quantity": 1 }],
+            "fulfillment_method": "delivery"
+        })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST, "{body}");
+    let message = body.as_str().unwrap_or_default();
+    assert!(
+        message.contains("Online delivery is not available"),
+        "{body}"
+    );
 }
 
 #[sqlx::test]

@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "pass2_batch": "2501-2558",
+  "rows_processed": 50,
+  "candidate": 1,
+  "pending": 49,
+  "reject": 0,
+  "candidate_positions": [
+    2557
+  ],
+  "next_pending_batch_start_after_position": 2558,
+  "next_selection_rule": "next 50 pending rows in retry-queue source order",
+  "rights_status": "needs_permission for all rows",
+  "overlay_output": "/home/ubuntu/work/full_catalogue_image_pass/full_catalogue_campaign_master_after_branded_retry_pass2_2501_2558.csv"
+}

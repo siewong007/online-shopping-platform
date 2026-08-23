@@ -1,0 +1,134 @@
+source_position,item_code,uom,verifier_verdict,model_exact,finish_exact,model_string_on_page,justification
+2484,IND-WIR-PVC-MEGA-15X15,MTR,pass,yes,yes,,Mega Net green close-up labelled MEGA NET matches page; roll format 1m x 24m per page.
+2790,TOPLUS-HIG-GLO-1L-D,CAN,fail,no,no,,Tin reads TOPLUS HIGH GLOSS Alkyd Enamel not Weather Plus A Base; no D Base designation.
+2844,PLA-MAT-EAW150,ROLL,pass,yes,yes,,Black Elephant-King PP anti-weed mat roll with spec table listing EAW150 = 1m x 50m.
+3244,HHD-STO-JYMT-200MM,PCS,pass,yes,yes,,Page confirms JM140 L8xW2xH1 (200mm); image shows boxed JM140 double-sided stone #150/320 matching 8in stone.
+3641,ARR-BAN-STE-APB1210,ROLL,pass,yes,yes,,ARROW Black Painted Band 10m coil; page offers 12MM option with code APB1210.
+3688,MAR-PAI-WHITE,PCS,pass,no,yes,,Genuine white MUNGYO paint marker but page titles generic 'Paint Marker' family without white-variant designation.
+3716,ROP-PP-04MM,MTR,fail,yes,yes,,Asset shows braided 8-strand rope with blue tracers contradicting page's 3-strand PP rope.
+3843,MAR-PAI-BLUE,PCS,fail,no,no,,"Image shows Mungyo 12-color retail set box, not a single blue marker."
+3966,TOO-RUL-IRN-BLACK,PCS,pass,yes,yes,,Page titled Iron Square (Black) 24in single variant; one black L-shaped iron square pictured.
+4043,TOO-WRE-KEY-ASUMA-MALK001-A,SET,pass,no,yes,,Litaventure page JS-gated so no model string obtainable from page text; image shows ASUMA MALK001-A 8pc mm hex key set.
+4101,TOO-WRE-DOU-1415,PCS,void,,,,Asset misplaced by wsrv path bug; generic size-range listing shares one photo anyway - likely family-hero fail on reverify.
+4104,X-BAT-ENE-REC-4AA-4PCS,PCK,fail,no,yes,,Pictured blister is a 2-card of MAX AAA while name claims 12PCS pack.
+4242,TOO-WRE-KEY-ATHM-4,PCS,fail,no,yes,,"Zoom shows 10mm embossed on handle - sibling size, not listed 4MM."
+4390,PUM-TOI-003S,PCS,pass,yes,yes,,Same Rayaco toilet vacuum pump rubber cup aluminium rod as page photo; single-variant page.
+4478,PAI-BRU-086-50MM,PCS,fail,yes,yes,,"Range hero: four different-size CS-086 brushes, not single 2in brush."
+4584,PAI-SPR-KIMLAC-9616,TIN,void,,,,Held row (non-MY source); asset missing; row open tier2.
+4615,"PAI-BRU-SEL-2.1/2""",PCS,pass,yes,yes,,Single Selleys All Purpose brush package labelled 63mm/2.5in; page offers 2.5in option.
+4623,TOO-WRE-DOU-0809,PCS,fail,no,yes,,"Pixel evidence: etched GENIUS 512428 with heads marked 3/4 and 7/8 imperial - SAE sibling, not 8x9mm metric."
+4634,NUM-60MM-I,PCS,fail,no,no,,"ACP plate engraved 191 multi-digit tag, not individual letter I."
+4640,SAF-COA-GRE,PCS,void,,,,Asset misplaced by wsrv path bug; reverify after relocation.
+4645,TOO-COM-IRO-BUL-15MM,PCS,fail,yes,yes,,"Range hero: ~12 Iron Bull spanners of many sizes, not individual 15mm."
+4683,GRA-CUT-BLA-GCB-1290SS,PCS,fail,no,no,,"No local asset available; TOKUDEN range covers 12in and 14in blades, not single variant."
+4684,GRA-SSS-150MM-06084(6),PCS,pass,yes,yes,,Square polished stainless floor grating with Banli branding identical to page image; 150mm matches.
+4686,LMP-ENE-SAV-18W,PCS,pass,yes,yes,,Philips Master PL-C 18W 2-pin box pictured; 18W pin-type energy saving bulb matching name.
+4687,"PAI-BRU-SEL-3""",PCS,fail,no,yes,,"Family hero showing five different brush sizes, not single 3in variant."
+4713,HOS-SPR-05040,MTR,pass,yes,yes,,MIKASA-branded grey PVC steel-wire spring hose coil; spec table Int.Dia 50 x Length 40.
+4716,NUM-60MM-7,PCS,fail,no,no,,"Same rotated 191 plate, not single digit 7."
+4717,NUM-60MM-9,PCS,fail,no,no,,"Pile of multi-digit number plates, not single digit 9."
+4718,PAI-BRU-086-38MM,PCS,fail,yes,yes,,Range hero: four assorted-size brushes laid out instead of single 1-1/2in.
+4731,TOO-DRI-BIC1312,SET,pass,yes,yes,,Bossman BIC1312 keyless chuck + hex adaptor incl retail pack labelled BIC1312 exactly matching page model.
+4827,KGR-KIM-300ML-9211,TIN,void,,,,Held row (non-MY source); asset missing; row open tier2.
+4869,MAR-PEN-RED,PCS,pass,yes,yes,,Page titled Sharpie Fine Point Permanent Marker - Red; red fine point marker pictured.
+4940,PYE-FIL-L-CRACK-1KG,TIN,fail,no,no,,"Family hero showing multiple pail sizes (400g/1kg/4kg), single 1KG tin not isolatable."
+4980,"IND-CAS-PVC-RIG-6""",PCS,fail,yes,no,,Pictured Glotool rigid caster has BLACK rubber wheel contradicting Red PVC Rigid Wheel name.
+5034,CUT-PIP-PVC-35MM,PCS,pass,yes,yes,,Yellow Arrow A21000 ratcheting PVC pipe cutter captioned 35MM matches.
+5111,TOO-CHI-WOO-ARA-STC002-D,PCS,fail,yes,yes,,Family/range shot showing all six Aracut chisel sizes instead of single 1in STC002-D.
+5167,IND-CEM-3KG-WHI,PKT,fail,no,no,,"Range hero showing 20kg bag/carton/sample packets, not the specific white 3kg packet; no 301 string on page."
+5174,RIG-TUR-12MM,PCS,fail,yes,no,,Hook-and-eye turnbuckle matches type/size but bright polished finish does not read as galvanized.
+5189,"CUT-DIS-AKODA-4""-D1",PCS,fail,no,yes,,"Blade etched DEMON SERIALS 1 114x12x2.0, not claimed 4in Turbo D1."
+5281,"AER-S/S-DIA-3""-1WAY",PCS,fail,no,yes,,Page sells 3/8 variant while SKU states 3in; brand Aerico absent from page.
+5314,GAR-SHE-701,PCS,pass,yes,yes,,Straight-blade pruning shears with spring match Tiger Pruning Shears Straight model 701#.
+5453,CUT-KNI-LC-500B,PCS,pass,yes,yes,,Official Tajima LC-500 page and yellow/black LC-500-type cutter pictured.
+5470,BRO-MOP-MRMOP-L,PCS,pass,yes,yes,,Packaged Mr.Mop head visibly marked L matches L4096-H Head L.
+5471,BRO-MOP-MRMOP-M,PCS,fail,no,yes,,M-size Mr.Mop head pictured but page designation 4102-H differs from claimed article 41022.
+5489,NAI-FEL-SUP-32MM,KG,void,,,,Held row (sub-500px source); asset missing; row open tier2.
+5577,VAL-BAL-CNN-18MM,PCS,pass,yes,yes,,Steel Ball Valve listing offering 18.0MM; single chrome lever ball valve consistent.
+5610,FIT-HDPE-TEE-32MMX20MM,PCS,pass,yes,yes,,Dedicated PLF-RT32x20 reducing tee page; single black HDPE compression reducing tee pictured.
+5612,HHD-VAL-FLO-BRA-VIP-18MM,PCS,pass,yes,yes,,All-brass light-duty float valve with long stem matches VIP 136 3/4in valve.
+5619,RIG-TUR-10MM,PCS,pass,yes,yes,,Single galvanised hook-and-eye turnbuckle; page offers 10.0MM size option.
+5712,ADH-TAP-NISSHO-HCH-ES0002,ROLL,fail,yes,yes,,"Range shot showing TWO sizes (10mm and 18mm) together, not solely the named 18mm x 1.5m variant."
+5716,CHI-WAT-2554PE,PCS,pass,yes,yes,,Exact 2554PE poultry water container page; translucent PE chicken waterer with black base pictured.
+5806,NAI-FEL-SUP-25MM,KG,void,,,,Asset misplaced by wsrv path bug; reverify after relocation.
+5816,TOO-HOK-TIE-250MM,PCS,pass,yes,yes,,CN silver tie-up hook graphic labelled 10in/250MM exact; bearing claim unsubstantiated but not contradicted.
+5826,GUM-SEL-SUPA-3ML,PCS,pass,yes,yes,,Selleys Supa Glue elephant blister 2x3ml twin pack identical to page photo.
+5867,SAF-HEL-PIC-9910-YEL,PCS,pass,yes,yes,,Yellow helmet with fusion headgear; page confirms Picasaf/Nietz 9910 SIRIM yellow PCH9910Y.
+5902,DOR-STO-RUB-RED-33MM,PCS,pass,yes,yes,,Page solely for Red Door Stopper; single red rubber cylindrical stopper pictured; nothing conflicts.
+5907,HHD-VAL-FLO-BRA-VIP-12MM,PCS,pass,yes,yes,,Page SKU 1028188 designates VIP 132-1/2in light-duty float valve; same single brass valve pictured.
+5921,TOO-CLA-F-ATB80X150,PCS,fail,no,yes,,Pictured clamp is REMAX-branded while display name specifies Arrow - not the named product.
+5924,UMB-CHI-MIX,PCS,void,,,,Held row (ambiguous product interpretation); asset missing; row open tier2.
+5970,HHD-CIS-HIGH-2.5G-M0635-WHI,SET,void,,,,Held row (fitting-vs-cistern mismatch); asset missing; row open tier2.
+6002,TOO-WRE-ADJ-GD250,PCS,pass,yes,yes,,GD-logo chrome adjustable wrench embossed 10 in.; page lists 10in option.
+6005,WEL-NOZ-SET,PCS,pass,yes,yes,,Fan-wire tip cleaner set in blue metal case captioned NOZZLE CLEANER METAL CASE identical to page photo.
+6049,LOC-TRI-NUM-MIX-20MM,PCS,void,,,,Held row never fetched; page itself sells TCC-SBP20 standard padlock not number padlock; row open tier2.
+6160,TOO-FIL-SLIM-STA-160MM,PCS,pass,yes,yes,,Carded Stanley Slim Taper File marked 6in SLIM TAPER card code 22-306 exact match.
+6206,PVC-STRAPPING-BLACK,KGS,fail,yes,no,,"Image shows strapping coils in red/pink, blue and yellow, not black."
+6239,TOO-RUL-STE-300,PCS,pass,yes,yes,,TOTAL-brand 12in stainless angle square TMT61126 page image.
+6255,HHD-CIS-LOW-3.0G-M0625,SET,pass,yes,yes,,Official Techplas PCL-1103 page; single white plastic low-level Elegen cistern pictured matching name.
+6257,"IND-CAS-BRA-4""",PCS,void,,,,"Verifier judged the wrong product (prompt mispair); verdict voided, row requeued."
+6354,TOO-TES-PEN-STA-(66-120),PCS,pass,yes,yes,,Page designates Stanley 66-120 tip 3/16in length 7-1/2in; amber test pen pictured matches page photo.
+6377,SHH-SPOON-2106,PCS,pass,yes,yes,,Iwana Spoon 2106 spiked-back body confirms model; silver colourway present alongside gold.
+6378,SHH-SPOON-2159,PCS,pass,yes,yes,,Smooth-bodied 2159 spoons in chrome/holographic/gold visibly matching mix Color designation.
+6394,CLI-ELE-CAB-07MM,BOX,pass,yes,yes,,White round nail-in cable clips clearly marked 7MM matching C-7MM listing.
+6423,RAI-BOO-BLA-RUB-036#,PAIR,pass,yes,yes,,Black left-side shoe shot identical to page 8834_Left-2.jpg; model 8834 black only.
+6447,"IND-TRO-SPO-3X9""",PCS,pass,yes,yes,,CN-ST3 3-inch sponge trowel page; exactly one sponge float pictured matching type/size.
+6470,CUT-SAW-MINI-AMS10,PCS,pass,no,yes,,Page JS-walled; image itself shows ARROW Mini Saw packaging printed AMS10 10in - exact variant by pixels but model string not obtainable from page text.
+6484,WIN-CAP-4004,PCK,void,,,,Local asset missing (origin URL 404); row returns to open tier2.
+6508,SWI-S/SKT-LWD-0023,PCS,pass,yes,yes,,White 13A double-gang switched socket matches LWD SWS0023 SIRIM listing.
+6519,BAT-ENE-MAX-9V2PCS,PCK,pass,yes,yes,,Energizer MAX 9V 2-pack blister marked 9V2 matches display name and page.
+6573,BRU-CON-CRM611,PCS,pass,yes,yes,,Official Rayaco card titled '(611) WAIST SHAPE WASHING HAND BRUSH (HARD)'; waist-shaped hard washing brush pictured.
+6629,LOC-GLA-SLI-TAR-9013-01,PCS,void,,,,Asset misplaced by wsrv path bug; page confirms Target 9013 sliding glass lock; reverify after relocation.
+6640,BRA-SHE-1012,PAIR,pass,yes,yes,,Page states 10x12 black; image shows exactly two black heavy-duty L brackets matching PAIR uom.
+6653,"BRA-SHE-12""X14""",PAIR,pass,yes,yes,,BTANI-LSB12X14 variant confirmed; same pair of black heavy-duty L brackets in correct proportions.
+6656,DOR-LOC-DRA-9001-22,PCS,fail,no,yes,,Multi-model family listing; image is a third-party promo not identifiable as keyed 9001-22 variant.
+6676,BAT-ENE-MAX-D2PC,PCK,pass,yes,yes,,Page describes 2-pack Energizer Max D; image shows D2 blister pack of two D cells.
+6730,HOS-AIR-TOK-8.5MM,MTR,pass,yes,yes,,Toko-branded orange spray hose coil with brass fittings; page specifies 8.5mm x 90m.
+6736,SWI-PLU-MK-646-13A,PCS,void,,,,Asset missing (hsl fetch failed); page confirms MK 646 bakelite 13A plug top SIRIM; tier2 refetch needed.
+6750,"PIP-UPVC-4514-3""",MTR,fail,yes,no,,"Image is dark grey/black stacked pipe banner, visibly not white UPVC pipe required by name."
+6772,HOS-MAC-WAS-OUT-MWP011-C,PCS,void,,,,"Local asset missing at verification time; verdict void, row returns to open."
+6828,FIT-GAL-SOC-18MM,PCS,fail,no,no,,Correct product-type line drawing but no galvanized finish visible and no 18MM designation in text.
+6829,SAF-COA-NET-YEL,PCS,fail,no,no,,Family hero showing TWO vests orange-red and yellow - multi-colour range image not lemon-only variant.
+6834,SWI-S/SKT-LWD-0041,PCS,pass,yes,yes,,White 4-gang rocker switch plate from Liwida F3 gallery SWL0041.
+6858,BAT-ENE-MAX-C2PC,PCS,pass,yes,yes,,Page describes 2-pack Energizer Max C; image shows C2 blister pack of two C cells.
+6881,"NAI-CON-GAL-2""-BOX",BOX,fail,no,yes,,"Family shot of all five Jaguar nail sizes; page is various-size listing, not 2-inch-specific."
+6894,"FIT-UPVC-SOC-6""",PCS,pass,yes,yes,,White 160mm (6in) UPVC single socket FXUPVC0313; plain white socket coupling pictured.
+6908,MIDDY-END-CAP-RIGHT-WHT,PCS,void,,,,Asset misplaced by wsrv path bug at verification time; page text confirms MDPVC-EC white end cap L/R; reverify after relocation.
+6922,ELE-SWI-TOG-1021,PCS,pass,yes,yes,,Chrome-lever black-body 2-terminal ON/OFF toggle switch headlined 1021 exactly as titled.
+6941,OUT-CON-RUB-BLACK-318,PCS,pass,yes,yes,,Black rubber flanged connector matches Techplas FAC-1005C 38mm rubber inlet connector black.
+6942,PAI-SPR-ANC-031,PCS,pass,yes,yes,,Anchor colour-swatch image labelled APPLE GREEN 31 in apple-green tone.
+6949,TOO-TES-PEN-STA-(66-119),PCS,pass,yes,yes,,Blister-packed Stanley yellow translucent voltage tester matches Stanley 66-119 1/8 x 5.1/2.
+6961,SWI-SOC-NNE-802/1-1W2G,PCS,pass,yes,yes,,NNE-branded white 2-gang switch sealed pack bearing SIRIM sticker matches 802/1 2G 1W.
+6995,WEL-NOZ-BOC-P1/32,PCS,pass,yes,yes,,Copper BOC cutting nozzle official photo; page offers Pcs 1/32in variant.
+7045,BNW-B&N-ORI-12200,KGS,pass,yes,yes,,Self-colour mild steel hex bolt with nut matches 1/2in x 8in MS Bolt & Nut page NBBN015200.
+7052,PAI-SPR-ANC-012,PCS,pass,yes,yes,,DPI Anchor can printed 12 YELLOW with yellow cap and swatch - exact variant.
+7061,CLI-HOS-60X63,PCS,fail,no,no,,Composite showing two clamps in different finishes; no 60x63-specific designation; cannot verify variant.
+7124,INK-POT-BIG,PCS,pass,yes,yes,,Black double-chamber cast ink pot with hinged lid matches BIG INK POT page.
+7128,SWI-PLK-2G1W-5021,PCS,pass,yes,yes,,PLK 5021 white 2-gang 1-way switch plate matches factory photo.
+7137,WEL-NOZ-BOC-P1/16,PCS,fail,no,no,,All-size family listing; unmarked copper nozzle cannot be confirmed as 1/16in variant.
+7150,PAI-SPR-ANC-006,PCS,pass,yes,yes,,Anchor colour-swatch labelled ROYAL IVORY 6 in ivory tone.
+7152,PAI-SPR-ANC-029,PCS,pass,yes,yes,,Anchor DPI spray can with black cap consistent with shade 29 Flat Black 400ml.
+7166,GUN-TAC-REF-R23-8MM,BOX,fail,yes,yes,,"Rapid staple box clearly printed 6 mm, a sibling size to the 8 mm item listed."
+7192,BNW-BOL-HTM-M12-50MM,PCS,pass,yes,yes,,Single black high-tensile hex bolt; H/T Bolt - M page with M12/50MM variant offered.
+7217,RIG-CLI-GAL-05MM,PCS,pass,yes,yes,,Galvanised Wire Rope Clip listing 5.0MM variant; single galvanised U-bolt clip saddle two nuts silver finish.
+7282,CLI-ELE-CAB-25MM30'S,BOX,void,,,,Asset misplaced by wsrv path bug; reverify after relocation.
+7359,"TOI-BAS-FIX-SCR-WHT-120-4.1/2""",PCS,void,,,,Verifier passed type but no 4.5in/120mm designation on page or image; model_exact cannot be yes - escalated to tier2 per disagreement rule.
+7368,SHH-BELL-DOUBLE,PCS,pass,yes,yes,,Two-bell metal fishing bell on clip corresponds to Alpine DOUBLE variants AFB102/AFB302.
+7400,FIT-UPVC-SLE-82MM,PCS,pass,yes,yes,,Bina Plastic artwork white UPVC sleeve labelled 3in 82mm matches UPVCF-PS3 designation.
+7413,SHH-BELL-DOUBLE-PLA,PCS,pass,yes,yes,,Chrome fishing bells on spring stems with green plastic clippers match SUG double bell w/plastic clipper.
+7423,"NAI-CON-WHI-38""",BOX,fail,no,yes,,Range shot listing every size of Jaguar hardened concrete nails rather than specific 1-1/2in pack.
+7447,FIT-UPVC-SLE-50MM,PCS,pass,yes,yes,,Plain white UPVC socket pictured matches 50mm (2in) white socket page (code FXUPVC0265).
+7449,SWI-S/SKT-LWD-0011,PCS,pass,yes,yes,,Single white 1-gang 1-way switch plate matching Liwida SWL0011 F3 gallery.
+7485,"GUN-GRE-NIP-STR-1/2"" UNF 20",PCS,pass,yes,yes,,Nickel-plated straight grease nipple; straight-type table includes 1/2in UNF variant.
+7500,TOI-ACC-PLA-SCR-CJAC6002,SET,pass,yes,yes,,2-pc close-couple cistern screw set main image captioned Close Couple Cistern Screw; SKU CJAC6002 exact.
+7512,ELE-PVC-CON-TC3X10,PCS,pass,yes,yes,,Elongated three-compartment white PVC TC 3x10 conceal/nut box body matches listing.
+7573,FIT-GAL-NIP-25MM,PCS,pass,yes,yes,,Single galvanized iron hex nipple silver GI finish labelled Galvanized Nipple; nothing contradicting 1in/25MM listing.
+7593,"FIT-UPVC-U VENT- 3""",PCS,fail,no,no,,"Dark grey pipe-end banner montage, not an 82mm U-vent cowl; type and colour mismatch."
+7600,IND-SCP-WOO38,PCS,pass,yes,yes,,Steel Scraper listing 1-1/2in variant; steel-blade scrapers wooden handles consistent.
+7619,GUN-GRE-NIP-90 M6X1.0,PCS,fail,no,yes,,Page gives ranges only and photo is a multi-piece family shot mixing straight and 90-degree nipples.
+7621,BNW-BOL-U-ZP3/8X2.1/2,PCS,pass,yes,yes,,Bright zinc-plated U-bolt with nuts; page offers ZP U-Bolt 3/8 x 2-1/2in variant.
+7644,BNW-BOL-U-ZP3/8X3,PCS,void,,,,Asset misplaced by wsrv path bug; page lists ZP U-Bolt Pcs 3/8 3in; reverify after relocation.
+7647,FIT-UPVC-SOC-P/T-32MM,PCS,fail,yes,no,,KVC page designates WHITE 32mm socket but pictured coupling visibly GREY.
+7659,"FIT-PVC-NIP-1""X1.1/4""",PCS,pass,yes,yes,,Stepped reducing socket drawing matches 32mm-to-25mm PVC reducer IPR 32 W.
+7705,TOO-DRI-BIT-45+-,PCS,pass,yes,yes,,Genuine Bosch Universal Gold PH2 45mm double-ended bits in packaging match Screw Bit 2 X 45+.
+7739,"FIT-HDPE-BUS-3/4""X1/2""",PCS,pass,yes,yes,,Black HDPE reducing bush identical to page photo for PLF-B3/4x1/2 listing.

@@ -1,0 +1,54 @@
+{
+ "6796": {
+  "page_status": 200,
+  "page_final_url": "https://www.spear-and-jackson.com/products/eclipse-professional-tools/metal-cutting/small-saw-blades/junior-saw-blades",
+  "image_status": 200,
+  "image_final_url": "https://www.spear-and-jackson.com/files/product-images_11",
+  "image_content_type": "image/jpeg",
+  "image_bytes_len": 1026202,
+  "px_w": 3000,
+  "px_h": 3000,
+  "image_sha256": "fccd345a673b5afe4a29ae04633693458f942169089829c012f988ae1c0864f2",
+  "asset_file": "assets\\6796.jpg",
+  "fetched_round": 1
+ },
+ "4788": {
+  "page_status": 200,
+  "page_final_url": "https://en.bosun.com.cn/",
+  "image_status": 0,
+  "image_final_url": "",
+  "image_content_type": "text/html",
+  "image_bytes_len": 0,
+  "px_w": 0,
+  "px_h": 0,
+  "image_sha256": "",
+  "asset_file": "",
+  "fetched_round": 1
+ },
+ "3368": {
+  "page_status": 200,
+  "page_final_url": "https://www.keymaster.com.my",
+  "image_status": 0,
+  "image_final_url": "",
+  "image_content_type": "text/html",
+  "image_bytes_len": 0,
+  "px_w": 0,
+  "px_h": 0,
+  "image_sha256": "",
+  "asset_file": "",
+  "fetched_round": 1
+ },
+ "5687": {
+  "page_status": 403,
+  "page_final_url": "https://www.hikoki-powertools.com/products/accessories/",
+  "image_status": 0,
+  "image_final_url": "",
+  "image_content_type": "",
+  "image_bytes_len": 0,
+  "px_w": 0,
+  "px_h": 0,
+  "image_sha256": "",
+  "asset_file": "",
+  "fetched_round": 1
+ }
+}

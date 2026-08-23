@@ -1,0 +1,20 @@
+{
+  "status": "BUILT",
+  "range": "2559-2608 (first 50 worklist rows; last source_position=2612)",
+  "rows": 50,
+  "verified": 4,
+  "pending": 46,
+  "reject": 0,
+  "pending_with_url": 2,
+  "pending_no_url": 44,
+  "queries_empty": 0,
+  "rights_status": "needs_permission for all rows",
+  "candidate_positions": [
+    2574,
+    2589,
+    2603,
+    2604
+  ],
+  "asset_rows": 4,
+  "source_order_preserved": true
+}

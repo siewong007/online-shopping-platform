@@ -1,0 +1,10 @@
+row_id,item_code,uom,verifier_verdict,finish_exact,model_exact,justification
+1,VAL-SAN-SW-SS-AV-77,PCS,pass,no,yes,"Genuine product page ""Angle Valve SW-SS-AV-77"" with ""SKU: SW-SS-AV-77""; image SW-SS-AV-77-1.jpg is SKU-specific; SS (stainless) finish not stated anywhere on page"
+2,BOS-2608-595-077,PCS,fail,n/a,no,"HSS-G DIN 338 range page lists ""Part number 2608595042"" but target 2608595077 appears nowhere (0 hits) and cited image filename ends metal-drill-bits-hss-g-din-338-2608595042.png i.e. a sibling SKU's shot"
+3,BOS-2608-900-570,PC,fail,n/a,no,"EXPERT HEX-9 Multi Construction 4x45x90 page shows ""Part number 2608902250""; claimed model 2608900570 is absent from the page text"
+4,BOS-2608-667-446,PCS,fail,n/a,no,"PRO Plastics PVC Clean T102H page shows ""Part number 2608667051""; claimed 2608667446 is absent (that code belongs to T1052H jigsaw blade per Bosch listings), so page/image are a different blade"
+5,BOS-2608-680-259,PCS,pass,n/a,yes,"SDS plus-1 page confirms ""Part number 2608680259"" with Diameter 5.00 / Working length 100 / Total length 160 mm matching 5x100/160MM; official image hammer-drill-bit-sds-plus-1-2608680259.png is that part number's own product shot"
+6,FIT-BUT-ELB-32X32MM,PCS,fail,n/a,no,"Buteline ""Equal Elbows"" is a range page covering EE66/EE77/EE99 (only ""EE99 – 32mm x 32mm"" matches size, no ELB-32X32MM token) served by one shared photo asset/10907.jpeg for all three sizes = family/range hero"
+7,BATH-CBFAL5568,PCS,pass,yes,yes,"Page titled ""5 IN 1 BATHROOM FURNITURE: CBFAL5568"" with spec block ending ""COLOR BLACK""; image CBFAL5568-01.jpg is SKU-specific"
+8,SIN-CAB-CKS317,PCS,pass,no,yes,"Page titled ""Top Mount Kitchen Sink: CKS317"" with dims L880xW480xH250mm; image CKS317.jpg is SKU-specific; stainless-steel material claim not stated on page"
+9,BATH-CBF3612,PCS,pass,yes,yes,"Page titled ""6 IN 1 BATHROOM FURNITURE: CBF3612"" with spec ""BASIN CABINET White"" confirming -wh; image CBF3612-01.jpg is SKU-specific"

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ekoway Hardware — Trade Counter (Direction A prototype)</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="a-topstrip">
+  <span><strong>Direction A — Trade Counter</strong> · static design prototype, not the live site</span>
+</div>
+
+<header class="a-header">
+  <div class="a-header-row">
+    <a class="a-logo" href="#/" onclick="Router.go('/')">
+      <span class="a-logo-mark">EKO</span>
+      <span class="a-logo-text">
+        <span class="name">Ekoway Hardware</span>
+        <span class="sub">Trade Counter · Sibu</span>
+      </span>
+    </a>
+    <button class="a-btn-ghost a-menu-toggle" id="drawer-open" aria-label="Open departments and filters">☰ Departments</button>
+    <form class="a-search" id="search-form" role="search">
+      <input type="text" id="search-input" placeholder="Search SKU, model or product name…" aria-label="Search products">
+      <button type="submit">Search</button>
+    </form>
+    <div class="a-header-actions">
+      <button class="a-btn-ghost" onclick="Router.go('/states')">Hard States Demo</button>
+    </div>
+  </div>
+</header>
+
+<nav class="a-deptbar" aria-label="Departments">
+  <div class="a-deptbar-row" id="dept-chip-row"></div>
+</nav>
+
+<div class="a-drawer-backdrop" id="drawer-backdrop"></div>
+<aside class="a-drawer" id="mobile-drawer" aria-label="Departments and filters">
+  <button class="a-drawer-close" id="drawer-close">✕ Close</button>
+  <h3>Departments</h3>
+  <div id="drawer-dept-list"></div>
+  <h3 style="margin-top:18px;">Filters</h3>
+  <div id="drawer-facets"></div>
+</aside>
+
+<main id="main" class="a-shell">
+  <div class="a-layout">
+    <aside class="a-sidebar" id="desktop-sidebar">
+      <h3>Category</h3>
+      <div class="a-facet-group" id="facet-category"></div>
+      <h3>Price</h3>
+      <div class="a-facet-group" id="facet-price"></div>
+      <h3>Stock</h3>
+      <div class="a-facet-group" id="facet-stock"></div>
+      <button class="a-reset-link" onclick="App.resetFilters()">Reset all filters</button>
+    </aside>
+    <section class="a-main" id="view-root"></section>
+  </div>
+</main>
+
+<footer class="a-footer">
+  <div class="services" id="footer-services"></div>
+  <div>Ekoway Hardware Sdn Bhd · 永光五金 · Direction A static prototype for internal design review only — no order data, no checkout, no live inventory.</div>
+</footer>
+
+<script src="data.js"></script>
+<script src="proto-logic.js"></script>
+</body>
+</html>

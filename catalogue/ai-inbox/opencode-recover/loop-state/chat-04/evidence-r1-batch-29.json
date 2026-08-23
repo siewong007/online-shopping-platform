@@ -1,0 +1,28 @@
+{
+ "5675": {
+  "page_status": 200,
+  "page_final_url": "https://unigawa.com.my/product/pvc-layflat-hose-standard-duty-sunny-hose/",
+  "image_status": 0,
+  "image_final_url": "",
+  "image_content_type": "",
+  "image_bytes_len": 0,
+  "px_w": 0,
+  "px_h": 0,
+  "image_sha256": "",
+  "asset_file": "",
+  "fetched_round": 1
+ },
+ "7482": {
+  "page_status": 200,
+  "page_final_url": "https://www.e-trimas.com/product/320000t-headlamp-pull-switch-5-pin-oem-type-jk107",
+  "image_status": 0,
+  "image_final_url": "",
+  "image_content_type": "",
+  "image_bytes_len": 0,
+  "px_w": 0,
+  "px_h": 0,
+  "image_sha256": "",
+  "asset_file": "",
+  "fetched_round": 1
+ }
+}

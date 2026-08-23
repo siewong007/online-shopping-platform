@@ -1,0 +1,566 @@
+[
+  {
+    "source_position": "3880",
+    "item_code": "X-FLO-MOC-M66065-QC184",
+    "tier_used": 2,
+    "queries": [
+      "brave: \"M66065\" polished tile nano",
+      "yahoo: \"M66065\"",
+      "websearch: \"M66065\" tile Malaysia"
+    ],
+    "pages_opened": [
+      {"url": "https://qqceramic.com.my/product/60cm-x-60cm-ceramic-tile-polished-series-m66065/", "note": "unreachable: DNS SERVFAIL/refused for qqceramic.com.my and qqceramic.my (verified via Cloudflare DoH); curl, webfetch and r.jina.ai all fail"},
+      {"url": "http://archive.org/wayback/available?url=qqceramic.com.my/product/60cm-x-60cm-ceramic-tile-polished-series-m66065/", "note": "no archived snapshots"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Yahoo/websearch both surface an exact-model PDP '60CM X 60CM CERAMIC TILE (POLISHED SERIES) - M66065' at QQ Ceramic Sdn Bhd (Malaysian tile retailer), but the domain qqceramic.com.my (and alias .my) is currently dead at DNS level, so the page could not be opened to quote the model string or take an image. No other official/distributor source for this house-code tile exists. Cannot gate a URL I could not open.",
+    "human_action": "Retry qqceramic.com.my when its DNS/nameservers recover, or contact QQ Ceramic Sdn Bhd (Shah Alam, +603-6730 2327) for the product photo of M66065."
+  },
+  {
+    "source_position": "5999",
+    "item_code": "SWI-SOC-ULT-M031W",
+    "tier_used": 1,
+    "queries": [
+      "yahoo: \"M031W\" switch 16A"
+    ],
+    "pages_opened": [
+      {"url": "https://www.jllelectrical.com.my/showproducts/productid/3170140/cid/381441/retouch-ultra-rimless-3-gang-1-way-16a-switches-whitetexture-goldmatte-grey/", "note": "200 PDP; page text maps colour codes: WHITE=M031W, TEXTURE GOLD=M031G, MATTE GREY=M033MG/M031MG"}
+    ],
+    "official_product_page": "https://www.jllelectrical.com.my/showproducts/productid/3170140/cid/381441/retouch-ultra-rimless-3-gang-1-way-16a-switches-whitetexture-goldmatte-grey/",
+    "official_image_url": "https://cdn1.npcdn.net/npimg/165396829722310d1f54835727b6b1828ff0387281.png?md5id=d0866fb7fef7340334755089f89bdfeb&new_width=1000&new_height=1000&size=max&w=1784535547&type=9",
+    "model_string_on_page": "M031W",
+    "finish_match": "yes",
+    "size_match": "yes",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "unknown",
+    "confidence": "medium",
+    "reason": "JLL Electrical Sdn Bhd (KL electrical supplier/distributor) hosts a reTOUCH ULTRA RIMLESS 3-GANG 1-WAY 16A switch PDP whose text explicitly assigns M031W to the WHITE finish; brand series Ultra Rimless, rating 16A and gang/way all match. Used og:image hero variant at size=max which pixel-sampling shows is the bright white-switch shot among the gallery. Doubt: listing covers three colours with shared generic alt text, so white depiction rests on brightness analysis rather than explicit labelling.",
+    "human_action": ""
+  },
+  {
+    "source_position": "4812",
+    "item_code": "TOO-DRV-2WAYW3082A",
+    "tier_used": 2,
+    "queries": [
+      "brave: \"W3082A\" screwdriver",
+      "yahoo: \"W3082A\"",
+      "yahoo: adjustable two way screwdriver hardware malaysia"
+    ],
+    "pages_opened": [
+      {"url": "https://www.maxpoint.com.my/product/ect-two-way-screwdriver/", "note": "200 PDP; nearest MY two-way screwdriver is ECT ECT100, not W3082A"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "\"W3082A\" returns only Mogami W3082 speaker cable and marketplace noise; no tool brand or Malaysian distributor lists this code. The closest Malaysian two-way screwdrivers (Maxpoint ECT100, Stanley 65-201) carry different model strings. Appears to be a wholesaler house code with no public official page.",
+    "human_action": "Ask the supplier/invoice source which brand maps to W3082A, then request the product image from that brand's distributor."
+  },
+  {
+    "source_position": "5854",
+    "item_code": "ELE-PVC-BOX-TC6X8",
+    "tier_used": 2,
+    "queries": [
+      "yahoo: PVC enclosure box 6x8 Malaysia electrical"
+    ],
+    "pages_opened": [
+      {"url": "https://www.e-street.my/products/electrical-pvc-boxes/6-x-8-pvc-enclosure-box/detail/", "note": "200 but JS-rendered shell, no product content in HTML"},
+      {"url": "https://www.electricalsolutions.my/showproducts/productid/4545704/cid/474694/max-pvc-enclosure-box-6quotx8quotx3quot-6quotx8quotx4quot--8quotx10quotx4quot--9quotx12quotx6quot/", "note": "found via search snippet only; brand MAX not TC, not opened further"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "'TC' 6x8 PVC enclosure boxes appear on Lazada/Shopee (banned source types) and one JS-only storefront (e-street.my) that serves no usable HTML content. The reachable electricalsolutions.my equivalent is brand MAX, a different brand than TC. No official or authorised distributor page with verifiable model string found.",
+    "human_action": "Identify the manufacturer behind the 'TC' enclosure range via the supplier invoice, then request an asset from that manufacturer or an authorised Malaysian wholesaler."
+  },
+  {
+    "source_position": "2753",
+    "item_code": "TOO-WRE-PIP-A200MM",
+    "tier_used": 1,
+    "queries": [
+      "brave: Glotool pipe wrench American type",
+      "websearch: Glotool pipe wrench Malaysia"
+    ],
+    "pages_opened": [
+      {"url": "https://www.sonichardware.com.my/product/product/2761-glotool-pipe-wrench-american-type", "note": "200 PDP; Sonic Hardware (Sarawak) Sdn Bhd; sizes selectable 8\"-48\", packing spec lists 8\" = 6BOX x 6PCS"}
+    ],
+    "official_product_page": "https://www.sonichardware.com.my/product/product/2761-glotool-pipe-wrench-american-type",
+    "official_image_url": "https://www.sonichardware.com.my/images/com_hikashop/upload/55_424925421.jpg",
+    "model_string_on_page": "Pipe Wrench (American Type) (Glotool)",
+    "finish_match": "yes",
+    "size_match": "yes",
+    "decision": "candidate",
+    "low_res": true,
+    "rights_status": "unknown",
+    "confidence": "medium",
+    "reason": "Sonic Hardware (Sarawak) Sdn Bhd, a Malaysian hardware distributor, has a dedicated Glotool Pipe Wrench (American Type) product page; brand Glotool matches and the 8-inch size appears in the size selector and packing table. Image verified downloadable at 535x401 (below 800px, tagged low_res). Doubt: one photo serves all lengths 8\"-48\", so it cannot be confirmed the wrench depicted is specifically the 8\" version.",
+    "human_action": ""
+  },
+  {
+    "source_position": "3828",
+    "item_code": "TOO-DRV-STA-6.5X150MM-9960651930",
+    "tier_used": 1,
+    "queries": [
+      "yahoo: stanley cushion grip screwdriver 1/4 x 6",
+      "yahoo: site:my.stanleytools.global cushion grip screwdriver"
+    ],
+    "pages_opened": [
+      {"url": "https://my.stanleytools.global/products/hand-tools/screwdrivers-hex-keys/screwdrivers", "note": "200 category listing; identified STMT60828-8 Cushion Grip 65mm x 150mm Standard Screwdriver"},
+      {"url": "https://my.stanleytools.global/product/stmt60828-8/cushion-grip-65mm-x-150mm-standard-screwdriver", "note": "200 PDP; title confirms 6.5mm x 150mm Standard; STMT60828-8 in page text; image /ASIA/PRODUCT/IMAGES/HIRES/STMT60828-8_1.jpg measured 2000x2000"}
+    ],
+    "official_product_page": "https://my.stanleytools.global/product/stmt60828-8/cushion-grip-65mm-x-150mm-standard-screwdriver",
+    "official_image_url": "https://my.stanleytools.global/ASIA/PRODUCT/IMAGES/HIRES/STMT60828-8_1.jpg",
+    "model_string_on_page": "STMT60828-8",
+    "finish_match": "yes",
+    "size_match": "yes",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "unknown",
+    "confidence": "high",
+    "reason": "Official Stanley Malaysia (Stanley Black & Decker global site, my.stanleytools.global) PDP for Cushion Grip 6.5mm x 150mm Standard screwdriver, exactly 1/4\" x 6\" as named in the row; item prefix STA maps to Stanley per brief. Model STMT60828-8 quoted from page body; HIRES product image downloaded and confirmed 2000x2000 JPEG.",
+    "human_action": ""
+  },
+  {
+    "source_position": "4224",
+    "item_code": "BLI-HSS-HOL-SAW-22MM",
+    "tier_used": 2,
+    "queries": [
+      "brave: \"Blimax\" hole saw",
+      "yahoo: blimax hole saw malaysia",
+      "yahoo: site:powertoolmalaysia.com blimax",
+      "yahoo: \"blimax\" \"hole saw\""
+    ],
+    "pages_opened": [
+      {"url": "https://www.blimax.com.my/our-products/", "note": "200; full category tree enumerated - no hole saw / power-tool-accessories cutting category contains a hole saw product"},
+      {"url": "https://www.kwongteckchiong.com/brands/blimax", "note": "200 Google-Sites brand page; mentions Blimax laser tile cutter BLM800/BLM1000, no per-product hole saw pages"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "The official Blimax Supply Sdn Bhd site (blimax.com.my) was opened and its complete category tree contains no HSS hole saw product or model string; remaining hits are Lazada/Shopee marketplaces (banned) or unrelated Blimax namesakes. The 22mm size appears nowhere on an allowed source.",
+    "human_action": "Contact Blimax Supply Sdn Bhd (KL) directly for their HSS hole saw catalogue sheet/photo, or confirm whether the 22mm holesaw is actually a different brand carried under the Blimax counter name."
+  },
+  {
+    "source_position": "5013",
+    "item_code": "SHH-SPE-FIS-FS605",
+    "tier_used": 1,
+    "queries": [
+      "yahoo: \"FS8102\" fish spear",
+      "yahoo: fish spear 3 prong 4 prong Malaysia tackle buy"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "House-label fishing spears (/8105 series codes) surface only on Lazada/Shopee/eBay marketplaces; no brand owner or authorised distributor page exists for a 5-prong /8105 spear. Per brief, unbranded house-label fish spears are a legitimate clean no-candidate.",
+    "human_action": "Photograph the actual stocked item in-store, or ask the tackle supplier (code owner of 8105/8106) for a product image."
+  },
+  {
+    "source_position": "5081",
+    "item_code": "SHH-LINE-L/G-OSML15",
+    "tier_used": 3,
+    "queries": [
+      "brave: Omega Shigeru mono line fishing 15lb",
+      "brave: Omga Shigeru monofilament line",
+      "yahoo: \"Omga Shigeru\" mono line",
+      "yahoo: Omga Hayasu fishing line",
+      "websearch: Omga \"Shigeru\" fishing line 15lb"
+    ],
+    "pages_opened": [
+      {"url": "https://fishinglinestore.com/line/omga-hayasu-spool-mono-line-rainbow-6lb-50lb", "note": "host unreachable from this network (connection refused); also no wayback snapshot"},
+      {"url": "http://archive.org/wayback/available?url=fishinglinestore.com/line/omga-hayasu-spool-mono-line-rainbow-6lb-50lb", "note": "archived_snapshots empty"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "True brand is OMGA (Japanese-style mono lines, Shigeru green / Hayasu rainbow ranges, 15lbs size exists per Shopee specs). The only non-marketplace retailer carrying it, fishinglinestore.com, is unreachable from this network and unarchived, so no model string could be quoted from an allowed source type. All other hits are Shopee/eBay/Amazon (banned).",
+    "human_action": "Retry fishinglinestore.com (OpenCart shop) from an unrestricted network, or contact the OMGA line importer/distributor in MY for Shigeru green 15lbs imagery."
+  },
+  {
+    "source_position": "5106",
+    "item_code": "SHH-LINE-L/G-OHML15",
+    "tier_used": 3,
+    "queries": [
+      "brave: Omega Hayasu fishing line rainbow",
+      "yahoo: Omga Hayasu fishing line",
+      "websearch: Omga \"Shigeru\" fishing line 15lb"
+    ],
+    "pages_opened": [
+      {"url": "https://fishinglinestore.com/line/omga-hayasu-spool-mono-line-rainbow-6lb-50lb", "note": "host unreachable (connection refused); wayback snapshot absent"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "OMGA Hayasu rainbow mono line exists (6lb-50lb range includes 15lb) but the single known specialist retailer is unreachable and archived copies do not exist; every other listing is a banned marketplace. No allowed-source page could be opened to verify the model string or harvest an image.",
+    "human_action": "Same as Shigeru row: retry fishinglinestore.com later or request asset from OMGA distributor."
+  },
+  {
+    "source_position": "5268",
+    "item_code": "LOC-WAT-CS-508",
+    "tier_used": 2,
+    "queries": [
+      "brave: Corsa meter lock Malaysia",
+      "yahoo: \"CS-508\" lock",
+      "yahoo: corsa lock malaysia official website",
+      "websearch: Corsa \"CS-508\" meter lock water"
+    ],
+    "pages_opened": [
+      {"url": "https://www.blackhardwareplt.com.my/ourproducts/cid/458855/cat/lock/", "note": "bot-wall ('Checking your browser' interstitial) - parked"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "CORSA Water Meter Lock CS-508 exists only on Lazada/Shopee listings (banned types); Corsa's own digital-lock storefronts do not list the meter lock and no authorised-distributor page with the CS-508 string was found. One candidate retailer catalog (blackhardwareplt.com.my) sits behind a browser-check bot wall and was parked per instructions.",
+    "human_action": "Approach the CORSA lock distributor in Malaysia for a CS-508 product image, or retry blackhardwareplt.com.my outside its bot protection."
+  },
+  {
+    "source_position": "5083",
+    "item_code": "SHH-SPE-FIS-FS604",
+    "tier_used": 1,
+    "queries": [
+      "yahoo: \"FS8102\" fish spear",
+      "yahoo: fish spear 3 prong 4 prong Malaysia tackle buy"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "4-prong /8105 (SFF4) fish spear shares the same house-code family as the other spear rows; searches return only marketplace sellers. No brand owner or allowed distributor page exists to verify the code or take an image.",
+    "human_action": "Photograph stock in-store or request image from the tackle supplier owning the 8105 code."
+  },
+  {
+    "source_position": "5025",
+    "item_code": "AIR-DUS-LX03",
+    "tier_used": 1,
+    "queries": [
+      "yahoo: \"AD04\" air duster"
+    ],
+    "pages_opened": [
+      {"url": "https://www.aircraftair.com/SG-AD04_AIR-DUSTER_BLOW-GUN-PLASTIC-HANDLE-LONG-NOZZLE", "note": "200 PDP; body id SG-AD04_AIR-DUSTER_BLOW-GUN-PLASTIC-HANDLE-LONG-NOZZLE; specs: nozzle length 260mm, long nozzle"}
+    ],
+    "official_product_page": "https://www.aircraftair.com/SG-AD04_AIR-DUSTER_BLOW-GUN-PLASTIC-HANDLE-LONG-NOZZLE",
+    "official_image_url": "https://b2c.et-dev.co.za/img/rs:fit:1000:1000:1/ex:1/data/products/vermontsales/SG%20AD04.jpg?lm=1740044553",
+    "model_string_on_page": "SG-AD04",
+    "finish_match": "yes",
+    "size_match": "yes",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "unknown",
+    "confidence": "medium",
+    "reason": "Official AIRCRAFT (Air Craft air tools) global OEM site hosts the SG-AD04 Air Duster/blow gun plastic-handle long-nozzle PDP; AD04 model token appears in body id and image filename, and 'long' matches the row's Long descriptor. Downloaded image variant measures exactly 1000x1000 JPEG (58KB). Minor doubt: row says 'PVC' while the OEM says plastic handle, and the retail code is shortened AD04 vs SG-AD04.",
+    "human_action": ""
+  },
+  {
+    "source_position": "5178",
+    "item_code": "SHH-SPE-FIS-FS504",
+    "tier_used": 1,
+    "queries": [
+      "yahoo: \"FS8102\" fish spear",
+      "yahoo: fish spear 3 prong 4 prong Malaysia tackle buy"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "House-coded 4-prong spear (/8106/FS8102) found only on banned marketplaces; no manufacturer or authorised dealer page carries these codes. Clean no-candidate for an unbranded generic.",
+    "human_action": "Request product image from the tackle wholesaler issuing the FS8102/8106 codes."
+  },
+  {
+    "source_position": "3996",
+    "item_code": "DOR-HIN-A177",
+    "tier_used": 2,
+    "queries": [
+      "yahoo: \"A177\" hinge stainless flush",
+      "websearch: \"A177\" stainless flush hinge Malaysia"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "\"A177\" as a hinge returns only unrelated items (FHC A177 screen-door latch US, generic flush hinge categories). Malaysian hinge makers (Hin Loong, Heiken, KBA) do not publish an A177 4\"x2.5mm stainless flush hinge. Looks like a supplier house code with no public official page.",
+    "human_action": "Confirm with the door-hardware supplier which factory's A177 this is, then pull the image from that maker's catalogue."
+  },
+  {
+    "source_position": "5239",
+    "item_code": "SHH-SPE-FIS-FS503",
+    "tier_used": 1,
+    "queries": [
+      "yahoo: \"FS8102\" fish spear",
+      "yahoo: fish spear 3 prong 4 prong Malaysia tackle buy"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "3-prong house-coded spear (/8106/FS8102/FS8107): only marketplace hits, no allowed source. Unbranded generic per brief guidance.",
+    "human_action": "Photograph stock or obtain image from code-owning tackle supplier."
+  },
+  {
+    "source_position": "5133",
+    "item_code": "MDD-CON-MALE-RED",
+    "tier_used": 2,
+    "queries": [
+      "yahoo: insulated male disconnect terminals red 1.5mm buy malaysia"
+    ],
+    "pages_opened": [
+      {"url": "https://www.e-trimas.com/product/insulated-red-male-bullet-terminal-disconnects-20pcs", "note": "200 PDP but og:title reads 'Insulated Red Male Bullet Terminal Disconnects (10PCS)', SKU MPD1.25-156, brand Hong Xuan - pack size and gauge conflict with row (20PCS/PCK, 1.5MM)"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "yes",
+    "size_match": "no",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "E-TRIMAS (Trimas Auto Electrical Sdn Bhd, MY) sells visually identical Hong Xuan red male bullet disconnects, but the PDP states a 10-piece pack and SKU MPD1.25 (1.25mm class), conflicting with the row's 20PCS/PCK and 1.5MM. Bar requires exact pack/gauge facts, so rejected despite being the closest authorised-looking Malaysian seller.",
+    "human_action": "Check whether e-trimas or AIE Industrial carries a 20pcs/pack 1.5mm red male disconnect SKU, then use that exact PDP."
+  },
+  {
+    "source_position": "2814",
+    "item_code": "FLO-PVC-NO.490-12",
+    "tier_used": 2,
+    "queries": [
+      "yahoo: \"359-03\" PVC flooring",
+      "yahoo: \"105-03\" flooring PVC",
+      "yahoo: \"K15201\" flooring",
+      "yahoo: \"K28605\"",
+      "brave: \"K28605\""
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Display code 'PVC Flooring No. 359-03' returns zero flooring-relevant results on any engine; these numeric pattern codes are internal numbering of a Malaysian PVC sheet-vinyl supplier with no online official presence. Nothing resembling an official product page exists to verify against.",
+    "human_action": "Identify the PVC flooring supplier brand from purchase records and request their printed pattern card/photo for 359-03."
+  },
+  {
+    "source_position": "2835",
+    "item_code": "FLO-PVC-477-12",
+    "tier_used": 2,
+    "queries": [
+      "yahoo: \"105-03\" flooring PVC",
+      "yahoo: \"359-03\" PVC flooring"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "'No. 105-03' yields only Alpha Wire PVC-105 tubing and unrelated foreign flooring pages; no Malaysian PVC-sheet seller publishes this pattern code. House number with no official web footprint.",
+    "human_action": "Source pattern photo from the local PVC flooring importer listed on the purchase invoice."
+  },
+  {
+    "source_position": "2836",
+    "item_code": "FLO-PVC-NO-K21314",
+    "tier_used": 2,
+    "queries": [
+      "yahoo: \"K15201\" flooring"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "K15201 collides with Kohler faucet parts and aerospace numbers; no flooring product anywhere uses this code publicly. Internal supplier numbering.",
+    "human_action": "Request the K-series pattern chart from the flooring supplier."
+  },
+  {
+    "source_position": "2837",
+    "item_code": "FLO-PVC-NO-YP 25709",
+    "tier_used": 2,
+    "queries": [
+      "yahoo: \"K31210\""
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "K31210 resolves only to UNS steel grades and shotgun models; nothing in PVC flooring. No official source exists for this house pattern number.",
+    "human_action": "Request pattern photo from supplier; consider renaming SKU to the supplier's printed pattern name."
+  },
+  {
+    "source_position": "2838",
+    "item_code": "FLO-PVC-NO.K28605",
+    "tier_used": 2,
+    "queries": [
+      "yahoo: \"K28605\"",
+      "brave: \"K28605\" polished tile nano (group-level)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "K28605 hits aerospace spindles, Kohler engines and KEGG orthology - never flooring. The K-pattern series belongs to a local vinyl supplier without web listings.",
+    "human_action": "Get the physical sample/pattern book photographed for K28605."
+  },
+  {
+    "source_position": "3050",
+    "item_code": "FLO-PVC-KJ-TH121-2",
+    "tier_used": 3,
+    "queries": [
+      "yahoo: Zirafah PVC flooring Malaysia",
+      "yahoo: \"H117-12\" OR \"H065-6\" PVC flooring"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "'Zirafah' (Malay for giraffe, likely a house vinyl brand) has no web presence beyond unrelated Inovar results; H117-12 likewise appears only in unrelated machinery contexts. No official or distributor page to verify the model string.",
+    "human_action": "Identify who supplies Zirafah-branded PVC flooring and request their catalogue images for H117-12."
+  },
+  {
+    "source_position": "3051",
+    "item_code": "FLO-PVC-NO-H198-1",
+    "tier_used": 3,
+    "queries": [
+      "yahoo: Zirafah PVC flooring Malaysia",
+      "yahoo: \"H117-12\" OR \"H065-6\" PVC flooring"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "H065-6 shares the fate of its sibling H117-12: no flooring-related index coverage at all under either code or the Zirafah name. House code without official footprint.",
+    "human_action": "Request H065-6 pattern image together with H117-12 from the same supplier."
+  },
+  {
+    "source_position": "4078",
+    "item_code": "BOS-1619-P09-976",
+    "tier_used": 2,
+    "queries": [
+      "yahoo: \"1603-340-037\" Bosch",
+      "yahoo: bosch \"1603340037\"",
+      "yahoo: \"1603-340-037\""
+    ],
+    "pages_opened": [
+      {"url": "https://www.repairtoolparts.com/bosch-parts/bosch-1603-0601603134-parts-list", "note": "found via search; Bosch 1603 router parts diagram reseller (US), not an allowed source type; not gated"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Part number 1603-340-037 (round nut, white, supersedes/replaces for Bosch 1603 router family) shows up only in US repair-parts reseller diagrams (repairtoolparts, partselect, jackssmallengines), which are not permitted source types. Bosch's own sites expose spare parts only via tool-model lookup with no per-part product page/image, and the unseparated form 1603340037 returns nothing. Brand prefix BOS=Bosch confirmed but no allowable page/image pair exists.",
+    "human_action": "Pull the part photo from Bosch's official STS spare-parts portal by looking up model 1603 (0601603134) explode view, or request the part image from Bosch Power Tools Malaysia service centre."
+  }
+]

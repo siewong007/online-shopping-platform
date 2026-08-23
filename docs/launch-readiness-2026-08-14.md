@@ -2,11 +2,13 @@
 
 This record reflects the repository and deployed production state inspected on 14 August 2026. The live store is intentionally fail-closed while the release is prepared: the storefront is reachable, no demo merchandise is published, and the legacy unpaid checkout endpoint is blocked.
 
+**Addendum 20 August 2026:** the owner cancelled the 20% gross-margin holdback. Selling prices are AutoCount Price 1. Cost is not stored and must not be used to hide or unpublish SKUs.
+
 ## P0 — blocks a real order
 
 - Prepare a clean, reviewed release from the current provider-neutral checkout and catalogue work, then deploy it with production payments still disabled.
 - Let the deployment runner apply migrations 0028–0033 and verify the readiness endpoint before exposing checkout.
-- Publish the validated Ekoway catalogue. The local import contains 7,771 in-stock source products across 40 categories; keep the 124 items below 20% gross margin unpublished until the owner approves a margin rule, and do not restore the eight removed demo products.
+- Publish the validated Ekoway catalogue. The local import contains 7,771 in-stock source products across 40 categories. **Do not hold SKUs back for a 20% margin rule** (cancelled 20 Aug 2026). Do not restore the eight removed demo products.
 - Complete HitPay Malaysia business verification, obtain production-only credentials, activate the approved production methods, configure a production webhook salt, and perform one controlled live payment/refund. This is a human/external blocker and must not reuse sandbox credentials.
 - Remove the temporary Caddy guard on `POST /api/checkout` only in the same controlled release that exposes the secure `/api/checkout/payment` flow.
 
@@ -14,7 +16,7 @@ This record reflects the repository and deployed production state inspected on 1
 
 - Connect and test transactional order/payment/refund email. Until then, use an explicit manual confirmation procedure through the store phone/WhatsApp and do not promise automatic email.
 - Confirm owner-controlled policy facts: SST applicability, business/opening hours, cancellation cutoff, return eligibility/exclusions, return window, refund-processing target, and who pays return delivery.
-- Review the 124 catalogue items below 20% gross margin after gateway fees and operating costs; approve a minimum-margin rule before publishing them.
+- ~~Review the 124 catalogue items below 20% gross margin~~ **Cancelled 20 Aug 2026** — sell at Price 1; do not store cost.
 - Review customer-facing product names (currently close to AutoCount descriptions), the 228 products in `other`, and category placement. Preserve source item codes internally.
 - Keep launch pickup-only. Correct shipping classes and add approved rates/couriers before enabling delivery.
 - Add admin login throttling and finish the planned production session hardening/MFA work.

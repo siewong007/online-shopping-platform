@@ -10,8 +10,8 @@ use crate::{
     app_state::AppState,
     modules::{
         admin_users, audit, auth, catalog, customer_auth, customer_portal, dashboard, health,
-        invoices, offers, orders, payments, permissions, reviews, sales, settings, storefront,
-        support,
+        integrations, invoices, offers, orders, payments, permissions, reviews, sales, settings,
+        storefront, support,
     },
 };
 
@@ -248,6 +248,11 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
             // The full AutoCount export is ~1 MB of CSV, over Axum's 2 MB default once the
             // catalogue grows; give this one route its own ceiling.
             post(catalog::controller::import_catalogue)
+                .layer(DefaultBodyLimit::max(16 * 1024 * 1024)),
+        )
+        .route(
+            "/api/integrations/autocount/stock-price",
+            post(integrations::controller::push_stock_price)
                 .layer(DefaultBodyLimit::max(16 * 1024 * 1024)),
         )
         .route(

@@ -1,0 +1,11 @@
+ERR gbooks <HTTPError 429: 'Too Many Requests'>
+ERR https://www.paintmaster.com.my/ <HTTPError 404: 'Not Found'>
+ERR http://www.paintmaster.com.my/ <HTTPError 404: 'Not Found'>
+ERR https://paintmaster.com/ URLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED]
+OK 200 https://paintmaster.my/ len 300 b'<!DOCTYPE html>\n<html lang="en">\n\n<head moznomarginboxes mozdisallowselectionpri'
+OK 200 https://www.aerico.com/ len 300 b'<!DOCTYPE html><!-- This site was created in Webflow. https://webflow.com --><!-'
+ERR https://aerico.com.my/ URLError(gaierror(11001, 'getaddrinfo failed'))
+OK 200 http://www.neptune.com.sg/ len 300 b'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/st'
+ERR https://neptuneindustries.com.sg/ URLError(gaierror(11001, 'getaddrinfo failed'))
+OK 200 https://ecogreen.com.my/ len 300 b'<!doctype html>\r\n<html lang="en">\r\n<head>\r\n    <meta charset="utf-8">\r\n    <titl'
+OK 200 http://ecogreen.com.my/ len 300 b'<!doctype html>\r\n<html lang="en">\r\n<head>\r\n    <meta charset="utf-8">\r\n    <titl'

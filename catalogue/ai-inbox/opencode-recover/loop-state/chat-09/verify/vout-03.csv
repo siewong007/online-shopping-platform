@@ -1,0 +1,10 @@
+row_id,item_code,uom,verifier_verdict,finish_exact,model_exact,justification
+1,SIN-CAB-CKS319,PCS,pass,yes,yes,"Page title/H1 show ""CKS319"" under Top Mount Kitchen Sink; image CKS319.jpg is a stainless steel double-bowl sink confirming S/s"
+2,PAI-SPR-GUN-TM-71,UNIT,pass,n/a,yes,"Haupon product-detail p=24 states ""Model/Item No : TM-71"" and title ""HVLP 低壓噴槍TM-71""; main gallery image F_20210408092875FKB49v.PNG shows the TM-71 gun with TM-71 on its label"
+3,SHO-CAB-CSS8801,PCS,pass,n/a,yes,"Breadcrumb and H1 read ""CSS8801"" on Exposed Shower Set page; image CSS8801-01.jpg is the model-specific chrome shower set photo"
+4,SHO-SAN-SSP-6005503SS,PCS,pass,yes,yes,"Page title/SKU ""SSP-6005503SS"" with description ""3 Way Bath Shower Set ... Finishing: SS""; image ssp-6005503ss.png named for exact SKU"
+5,TAP-CAB-CB4942-BL,PCS,pass,yes,yes,"H1 ""CB4942-BL"" with description ""High Basin Cold Tap / Matt Black""; image CB4942-BL.jpg shows the matt black tap"
+6,TAP-CAB-CB4944-CR,PCS,pass,n/a,yes,"H1 ""CB4944-CR"" on genuine Basin Tap detail page; image CB4944-CR.jpg is the model's own chrome tap photo"
+7,FAN-WALL-KDK-KU408-16",PCS,pass,n/a,yes,"KDK page heading ""KU408 (40cm/16″)"" matches item code incl. 16 inch; spec table MODEL: KU408; image product-mobile_Wall-Fans_KU408-1.png is KU408-specific"
+8,SHO-SAN-SSP-6005502SS,PCS,pass,yes,yes,"Page title/SKU ""SSP-6005502SS"" with description ""Finishing: SS""; image SSP-6005502SS.png named for exact SKU"
+9,"FAN-VEN-KDK-20WUD-8""",PCS,pass,n/a,yes,"KDK page heading ""20WUD (20cm/8″)"" matches item code incl. 8 inch; spec MODEL: 20WUD; image product-mobile_Glass-Mount-Propeller_20WUD.png is 20WUD-specific"

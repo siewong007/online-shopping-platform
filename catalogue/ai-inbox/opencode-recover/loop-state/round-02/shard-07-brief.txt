@@ -1,0 +1,101 @@
+source_position|item_code|uom|display_name|category|detected_brand|detected_model
+4693|SHH-SINKER-HOLE-NO.3|PCK|Hole Sinker No. 3 (5PCS/PCK)|Fishing & Tackle||5PCS/PCK
+5906|FIT-YG225-BUSH-3/8"X1/4"-BRA|PCS|Brass Bushing 3/8 X 1/4|Plumbing||YG225
+4192|CLI-HOS-GP-3"|PCS|Gp S/steel Hose CLIP-3 (52-76MM)|Outdoor & Garden||CLIP-3
+6329|MET-WAT-WASHER-1/2"|PCK|Water Meter Washer 1/2 (2PCS/PCK)|Fasteners & Fixings||2PCS/PCK
+4928|CEI-ROSE-408A-131-CR3|PCS|408A 131 CR3 Ceiling Rose|Building Materials||CR3
+4925|BNW-B&N-RBN-110|PCK|Sr G. I Boit & Nut 3/16 X 1 (7PCS/PCK)|Fasteners & Fixings||7PCS/PCK
+5587|FAS-SCR-DRY-BLA-6#1-1/2"|PCK|Hunter/bk - Drywall Screw 6 (20PCS/PCK) X1-1/2|Fasteners & Fixings||20PCS/PCK
+3155|ELE-CAB-VDE-BLK|MTR|Taicon 23/0.15 X 2 Core Vde Cable - Black|Electrical|Taicon|
+3284|GUN-T-7006-MINI|PCS|Fiesto Mini Tufting Gun|Fasteners & Fixings||T-7006
+2823|RAI-BOO-KRK-Y38#|PAIR|Rainshoes - 38 (5) 7000YLW|Curtains & Blinds||7000YLW
+3852|SWI-SOC-ULT-M20AMG|PCS|Ultra 20A Dou Pole Swi Neon-mat Grey (M20AMG)|Electrical||M20AMG
+5460|REC--SQL-1200V|PCS|Rectifier 1200V|Other||SQL-100A
+3831|VAL-ANG-CVL-CA9009|PCS|Cavallo 304 SS Angle Valve|Plumbing||CA9009
+3213|TOO-HAM-WOOD-BLI-27MM|PCS|Blimax Wood Claw|Hand Tools||HAMMER-27MM
+4407|BLA-SAW-TCT-4X30T|PCS|Blimax Tct Saw BLADE-4"X30T|Power Tool Accessories||BLADE-4
+4592|SIN-WAS-SSS-A110|PCS|2.1/2 S/s Waste A110|Plumbing||A110
+3231|PLA-BAG-W1000-2227|PCK|22 X 27 X Tbag Aa|Packaging||WHITE/1KG
+3543|SAF-HEL-YEL|PCS|PVC Uvee Safety Helmet-yel|Safety & Workwear||810-YL
+3523|LOC-GLO-BRA-GLBBC20|PCS|Glocks Brass Padlock GLBBC20|Locks & Security||GLBBC20
+4705|DRI-SET-WOO|SET|GW5 Wood Drill Bit Set 5PCS|Power Tool Accessories||GW5
+3708|HHD-DKI-FLO-VAL|PCS|Dki Isb Cistern Float|Fishing & Tackle||VALVE-440
+2710|BRO-MOP-350|PCS|No. 350 Mop Broom With Handle|Doors & Hardware||NO.350
+4680|ELE-ADA-3WAY-BER-YK368|PCS|Pro-smart 33N 3WAY Adaptor W/neon|Electrical||33N
+3752|CR-1220/5BE|PCS|CR-1220/5B Lithium 3V|Other||CR-1220/5B
+3848|SHH-HOO-4206-NO.1|PKT|4206 No. 1 Galah Hook (20'S)|Fishing & Tackle||NO.1
+3877|TOO-COM-W0305G-10*12MM|PCS|2 Open Wrench (10*12MM)|Hand Tools||10*12MM
+1870|PAI-SPR-PMT-039|CAN|Paint Master Spray Paint - No. 39 Black|Paint & Sundries||NO.39
+3015|HOS-SPA-TAP-C222|PCS|C222 Spare Cartridge (for L Handle)|Doors & Hardware||C222
+4066|TOO-FIL-BCC-5.5200MM|PCS|Bahco Chain Saw File 168-8-5.5-3P 7/321IN|Hand Tools||168-8-5.5-3P
+3052|GAR-SPR-E93/G851|PCS|Water Sprayer 1000CC|Outdoor & Garden||1000CC
+5185|BIB-G501B|PCS|Bib Tap Truflo|Plumbing||G501B
+5390|CAB-LUG-300AMP|PCK|Cable Lug (white) 300AMP 2PCS/PCK|Electrical||300AMP
+2551|SHH-YEL-HOSE-10MMX2MM|FTS|Yellow Hose (10MMX2MM)|Outdoor & Garden||10MMX2MM
+4162|FLO-MOC-KV910|PCS|Kv 910 12"X12 Homotile|Flooring||X12
+3454|HOS-CON-MEN-40200012|PCS|Ecogreen- Hose Mender / 1/2|Outdoor & Garden||EG4035
+5785|NAIL-TUFTING-TN-8316-PCK|PCK|Round Plate Tufting Nail (10PCS/PCK) 16MMX8.5MM|Fasteners & Fixings||10PCS/PCK
+4559|IND-RAG-COL-1KGS|KGS|Cotton Rag - Colour 1KGS|Building Materials||1KGS
+5784|NAIL-TUFTING-TN-7316-PCK|PCK|Round Plate Tufting Nail (10PCS/PCK) 16MMX7.3MM|Fasteners & Fixings||10PCS/PCK
+4339|CUT-ELE-EDM-4240|PCS|4 X 240 Gold Elephant Mop Disc|Housewares||EDM-4240
+4756|TIE-CAB-BLA-6"|PKT|6 Black Cable Tie (20PCS/PCK)|Rope, Chain & Netting||20PCS/PCK
+4725|SHH-LINE-WHI-NO.50|PCS|(bs)long White M. L No. 50|Fishing & Tackle||NO.50
+4606|CUT-KNI-HX18|BOX|Tct NT18 N. T Cutter Blade (10PCS/BOX)|Abrasives & Cutting||NT18
+4775|SHH-HOOK-12146BN-8|PKT|No. 8 Hytac Hook 20'S|Fishing & Tackle||12146BN
+3859|CLI-ELE-CAB-05MM100S|BOX|Cable Clip 5MM/100'S (bd)|Electrical||5MM/100
+6194|FAS-SCR-TAP-PAN-8#1.1/4"|PCK|8 X1-1/4 Ph Self Tapping Screw-pan Head (20PCS/PCK)|Fasteners & Fixings||X1-1/4
+4416|FAS-SCR-CSK-1" X 8G-PCK|PCK|Sr Csk Tapping Screw 1 X 8G (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+3912|DOR-BOL-RAI-100M|PCS|Rb Pad BOLT-4|Fasteners & Fixings||BOLT-4
+4702|BNW-B&N-RBN-210|PCK|Sr G. I Boit & Nut 1/4 X 1 (5PCS/PCK)|Fasteners & Fixings||5PCS/PCK
+4628|FAS-SCR-TAP-CSK-10#1-1/2"|PCK|10 X1-1/2"CSK Self Tapping Screw-flat Head (10PCS/PCK)|Fasteners & Fixings||X1-1/2
+5027|BNW-B&N-RBN-204|PCK|Sr G. I Boit & Nut 1/4 X 1/2 (5PCS/PCK)|Fasteners & Fixings||5PCS/PCK
+5220|BNW-B&N-RBN-105|PCK|Sr G. I Boit & Nut 3/16 X 5/8 (7PCS/PCK)|Fasteners & Fixings||7PCS/PCK
+5676|TIE-CAB-BLA-4"|PKT|4 Black Cable Tie (20PCS/PCK)|Rope, Chain & Netting||20PCS/PCK
+6851|NAI-CON-GAL-1.1/2"-PCK|PCK|1-1/2 Galvanised Steel Nail (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+2623|LOC-COL-RB501|PCS|Colex Anti- Cut Long Shackkle Padlock RB-501|Locks & Security||RB-501
+2800|RAI-BOO-KRK-Y42#|PAIR|Rainshoes - 42 (9) 7000YLW|Curtains & Blinds||7000YLW
+3135|IND-TRO-SMR1011B|PCS|Smr Blue H'dle SS Trowel 4"X11|Hand Tools||X11
+3186|MEA-TAP-SENSUI-X7-25FT|PCS|X7 25FT Sensui Measuring Tape|Hand Tools||25FT
+3293|RAI-BOO-KRK-B39M9000|PAIR|Korakoh Rain Shoes Blk - 6/39|Curtains & Blinds||M9000
+3446|BRU-CUP-3"-MR.MARK|PCS|Mr. Mark M10 X 1.5 Cup Brush|Other||M10
+2625|TOO-DRV-STA-6.5X125MM-9960651920|PCS|Cushion Grip S/dr Std - (1/4"X5")|Power Tools||6.5X125MM
+3310|BRA-SHE-YG782-10"|PAIR|White H/duty Shelf Bracket 10|Housewares||YG782
+3325|HDPE-VAL-BAL-PP-COMP-MALE-25MM|PCS|PP Compression Ballvalve Male- 25MMX3/4|Other||25MMX3/4
+3930|SHH-HOO-4206-NO.2|PKT|4206 No. 2 Galah Hook (20'S)|Fishing & Tackle||NO.2
+3980|HOS-SPA-NOZ-NZ-22|PCS|Tap Nozzle - Zinc Alloy|Building Materials||NZ-22
+4146|SHH-HOO-4206-NO.5|PKT|4206 No. 5 Galah Hook (20'S)|Fishing & Tackle||NO.5
+4430|SHH-SINKER-HOLE-NO.2|PCK|Hole Sinker No. 2 (10PCS/PCK)|Fishing & Tackle||10PCS/PCK
+5644|SIN-FLE-PVC-OUT-1.1/4"|PCS|Corsa Flexible Hose Pipe - 1.1/4 (350-800MM)|Plumbing||350-800MM
+4510|SHH-HOOK-9290BN12|PKT|Sode Hook No. 12(15'S)|Fishing & Tackle||9290BN
+3560|CLI-ELE-CAB-10MM100'S|BOX|Cable Clip 10MM/100'S|Electrical||10MM/100
+5923|TOO-DRI-MAG-BSP037-E|PCS|Asuma Box Bit Socket|Electrical||12X65MM
+4778|SHH-LINE-WHI-NO.20|PCS|(bs)long White M. L No. 20|Fishing & Tackle||NO.20
+2709|BRA-BID-SHO-SA033|PCS|28 Milano Hand Shower Bracket|Bathroom||SA033
+4250|CLI-ELE-CAB-04MM100'S|BOX|Cable Clip 4MM/100'S (bd)|Electrical||4MM/100
+2756|CHA-CAP-ROU-EXT-22MM|PCK|Round External Cap 22MM (4PCS/PCK)|Outdoor & Garden||4PCS/PCK
+4575|CLI-HOS-GP-2"|PCS|Gp S/steel Hose CLIP-2 (27-51MM)|Outdoor & Garden||CLIP-2
+2820|LAM-4402SB|BOX|Seal Beam 4402-24V|Lighting||4402-24V
+3169|FAS-SCR-ZPH-DSMHO516-BOX|BOX|Sr Zph Self Drilling Screw (1000PCS/BOX) DSM-HO516|Fasteners & Fixings||1000PCS/BOX
+2679|IND-CAS-H/DUTY-MCLSC-4"|PCS|4 DL5 H/duty Mcl Swivel Caster|Fishing & Tackle||DL5
+2666|MEA-TAP-SUN-10M|PCS|Sunlon M. Tape 10.0M/33|Hand Tools||10.0M/33
+2876|RAI-BOO-KRK-Y39#|PAIR|Rainshoes - 39 (6) 7000YLW|Curtains & Blinds||7000YLW
+3811|COC-BAL-L908|PCS|Leon 1/2 Lockable Ballcock- L908|Plumbing||L908
+3851|SWI-SOC-MK-NEO-S4787|PCS|Mk 20A Dp Switch W Neon Wide Rocker Socket|Electrical||S4787NW
+3375|IND-CAS-SWI-LSCB-2"|PCS|2 DL5 Tpe L Base Swivel Caster W Brake|Fishing & Tackle||DL5
+3984|SWI-ADA-3WAY-MK-692|PCS|Mk 692 3WAY Adaptor|Electrical||3WAY
+3288|LOC-COL-TA501|PCS|Colex Single Titanium Coated Padlock TA-501|Locks & Security||TA-501
+4239|SWI-SOC-ULT-M0815W|PCS|Ultra 15A Round Pin Swi Soc Neon-whi (M0815W)|Electrical||M0815W
+3329|IND-CAS-SWI-LSC-2"|PCS|2 DL5 Tpe L Base Swivel Caster|Fishing & Tackle||DL5
+4380|SWI-SOC-ULT-M022MG|PCS|Ultra 16A 2 GANG 2 Way-matte Grey (M022MG)|Electrical||M022MG
+3411|TOO-CLA-F-BLI-10"|PCS|Blimax Quick Release F CLAMP-10|Hand Tools||CLAMP-10
+4281|CUT-BLA-WOO-KNI10530T|PCS|Knight Circular Saw Blade - Wood 4"X30T|Power Tool Accessories||X30T
+3294|RAI-BOO-KRK-B42M|PAIR|Rainshoes - 42 (9) 6000BLK|Curtains & Blinds||6000BLK
+4521|DRI-BIT-3/8"XM10|PCS|3/8 X M10 X 1.5MM Sensui Hole Saw Hex Sh|Power Tool Accessories||M10
+3638|SHH-LINE-WHI-NO.300|PKT|(sf) Round White M. L. No. 300|Fishing & Tackle||NO.300
+4675|BNW-THR-ZP-12MM|PCS|Zp Thread Rod 1/2 X 6FTS|Fasteners & Fixings||6FTS
+4652|COC-STO-JOP-2SC01W|PCS|Jopex STOPCOCK-2SC01W|Plumbing||STOPCOCK-2SC01W
+4062|SHH-LINE-WHI-NO.250|PKT|(sf) Round White M. L. No. 250|Fishing & Tackle||NO.250
+3271|NAIL-TUFTING-TN-7225|PCK|U Clip Tufting Nail 25MM X 7.3MM (10PCS/PCK)|Fasteners & Fixings||10PCS/PCK
+2855|BRO-MOP-300|PCS|No. 300 Mop Broom With Handle|Doors & Hardware||NO.300
+4198|IND-CAS-SWI-1"|PCS|1 DL5 Tpe 360 Degree Swivel Caster|Fishing & Tackle||DL5
+4319|IND-CAS-FIX-1"|PCS|1 DL5 Tpe Fixed Caster|Building Materials||DL5

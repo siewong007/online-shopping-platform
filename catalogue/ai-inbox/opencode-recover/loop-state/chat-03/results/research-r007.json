@@ -1,0 +1,555 @@
+[
+  {
+    "source_position": "3636",
+    "item_code": "REF-DELINEATOR-50M",
+    "tier_used": 1,
+    "queries": [
+      "\"Picasaf\" delineator PVC",
+      "\"Picasaf\" official website (native attempt - HTTP 429)",
+      "\"Picasaf\" official website retry (HTTP 429)"
+    ],
+    "pages_opened": [
+      {
+        "url": "https://b2b-uat.sunwaywinstar.com/en/picasaf-pvc-delineator-reflective-ylw-50pcx50m-10bag",
+        "note": "200 PDP but product image is default placeholder (default-image.png); variant YLW/GREEN, part NZPEQDR50GR - not RED"
+      },
+      {
+        "url": "https://www.lkkhardware.com/showproducts/productid/3587413/picasaf-pvc-reflective-delineator-rope-50m/",
+        "note": "bot-wall (JS challenge), RED/YELLOW variants advertised in search snippet only"
+      },
+      {
+        "url": "https://www.ukhardwaretrading.com/showproducts/productid/5092239/cid/522922/picasaf-pvc-delineator-reflective/",
+        "note": "bot-wall (JS challenge)"
+      }
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "50PCX50M",
+    "finish_match": "no",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Picasaf (Nietz-Picasaf) confirmed as a real Malaysian safety brand sold via authorised B2B channels. The whitelisted Sunway Winstar B2B PDP carries the exact 50PCX50M pack format but only YLW/GREEN variants and its product image is a default placeholder, so it fails colour match and image requirements. The two dealer PDPs advertising red stock (LKK Hardware, UK Hardware) are behind JS bot-walls and could not be opened.",
+    "human_action": "Request a red-variant product photo from Nietz/Picasaf distributor (Sunway Winstar or LKK Hardware) or shoot an own pack-shot of stock."
+  },
+  {
+    "source_position": "3722",
+    "item_code": "BAS-CAB-CKS330/331BK",
+    "tier_used": 2,
+    "queries": [
+      "\"CKS330\" OR \"CKS331\" Cabana basket",
+      "CKS330 OR CKS331 Cabana basket (Bing fallback - quotes ignored, noise)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Codes CKS330/CKS331 return nothing relevant on any engine; results are unrelated US decor baskets named 'Cabana'. Cabana's official Malaysian site (cabana.com.my by Sorento Sdn Bhd) was crawled for the CB-series family work and lists bathroom/kitchen products only, with no houseware basket section. No permissible page quoting this model exists.",
+    "human_action": "Confirm with Sorento Sdn Bhd / Cabana distributor that the 400X260 basket exists under these codes and request an official photo."
+  },
+  {
+    "source_position": "3841",
+    "item_code": "LOC-COL-ZK504",
+    "tier_used": 2,
+    "queries": [
+      "\"ZK-504\" padlock chrome (native attempt - HTTP 429)",
+      "\"ZK-504\" padlock chrome (Bing fallback)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "ZK-504 as a chrome-plated padlock is not indexed anywhere; Bing fallback returned ~140k hits dominated by ZKTeco, ZK web framework and restaurants, none a padlock PDP. Native search quota died mid-batch so deeper patterns (filetype:pdf, distributor) could not be run.",
+    "human_action": "Read the actual manufacturer name from the packaging/barcode and re-run searches next batch with fresh quota."
+  },
+  {
+    "source_position": "3824",
+    "item_code": "SHE-CAB-CB501A",
+    "tier_used": 1,
+    "queries": [
+      "site crawl: cabana.com.my Bathroom Accessories > Shelf category listing"
+    ],
+    "pages_opened": [
+      {
+        "url": "https://cabana.com.my/index.php/products/bathroom/bathroom-accessories/shelf",
+        "note": "200 category listing, CB501A present"
+      },
+      {
+        "url": "https://cabana.com.my/index.php/products/bathroom/bathroom-accessories/shelf/cb501a-detail",
+        "note": "200 PDP"
+      }
+    ],
+    "official_product_page": "https://cabana.com.my/index.php/products/bathroom/bathroom-accessories/shelf/cb501a-detail",
+    "official_image_url": "https://cabana.com.my/images/virtuemart/product/CB501A.jpg",
+    "model_string_on_page": "CB501A",
+    "finish_match": "yes",
+    "size_match": "yes",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "unknown",
+    "confidence": "high",
+    "reason": "Official brand site of Cabana (Sorento Sdn Bhd, Klang, Malaysia). PDP title 'Shelf: CB501A', model string CB501A quoted on page, described as 'Corner Glass Shelf L250xW230xH40mm' which matches the glass-shelf SKU. The full-size original JPG (CB501A.jpg plus alt shot CB501A3.jpg) is linked directly from the PDP gallery.",
+    "human_action": ""
+  },
+  {
+    "source_position": "2932",
+    "item_code": "FAS-SCR-F/H-1 1/4\" X 8# BOX",
+    "tier_used": 1,
+    "queries": [
+      "none executed - unbranded generic (flat-head self-drilling screw named only by head type, size and box count); brief treats unbranded generics as clean no-candidate"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Row carries no brand and no model code - only head type (flat), size (1-1/4 x 8) and pack count (1000pcs). There is no official page to find for an unnamed commodity fastener; forcing a lookalike would violate the sibling-SKU rule.",
+    "human_action": "Shoot an own pack-shot of the stock box; optionally ask the supplier for the mill's brand."
+  },
+  {
+    "source_position": "3690",
+    "item_code": "PEN-ECO100-4KG-BLK",
+    "tier_used": 2,
+    "queries": [
+      "\"Eco 100\" waterproofing black coating pail Malaysia (Bing fallback)",
+      "\"Picasaf\" style native queries for this row were blocked by HTTP 429 quota exhaustion"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Bing fallback returned ~128k hits but none matching a black 'Eco 100' waterproofing coating in Malaysia - results were Eco-Shop retail, KL Eco Park etc. The PEN prefix hints at Pentens but that link could not be verified because the primary search provider was rate-limited to failure during this batch.",
+    "human_action": "Confirm manufacturer from the pail label (possibly Pentens); if Pentens ECO-100 exists, fetch pentens.com PDP next batch."
+  },
+  {
+    "source_position": "3873",
+    "item_code": "SHH-NET-0.20D-1\"",
+    "tier_used": 1,
+    "queries": [
+      "none executed - house-label fishing net complete set (dia 0.20mm x 1 inch mesh, 6ft x 100ft), unbranded commodity; brief exempts clean no-candidate"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Display name describes a spec ('1 6'/100 Complete Set Net', 0.20D dia) with no brand or model code. Unbranded netting has no official product page to source from.",
+    "human_action": "Shoot own pack-shot; keep supplier label photo for spec reference."
+  },
+  {
+    "source_position": "2879",
+    "item_code": "TOO-GUN-GLU-STA-996069GR20B",
+    "tier_used": 2,
+    "queries": [
+      "trigger feed hot melt glue gun round pin 240V 40W Malaysia (Bing fallback)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "STA prefix maps to Stanley but detected_model '240V/40W' is spec text, and the embedded token 996069GR20B looks like an internal purchase code rather than a Stanley catalogue number. Bing fallback returned dictionary/TV noise with zero glue-gun matches. Native search quota was exhausted before a Stanley GR-series check could be run.",
+    "human_action": "Check the gun body for printed brand/model (Stanley GR10/GR20 family likely) then re-search next batch."
+  },
+  {
+    "source_position": "2984",
+    "item_code": "BNW-B&N-RBN-250-BOX",
+    "tier_used": 1,
+    "queries": [
+      "none executed - unbranded G.I. bolt & nut box (1/4 x 5), commodity fastener with no brand/model; clean no-candidate applies"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Galvanised iron bolt-and-nut boxes are sold by size only with no manufacturer identity; RBN-250 is an internal pack code. No official page can exist for an unnamed commodity.",
+    "human_action": "Shoot own pack-shot of the box."
+  },
+  {
+    "source_position": "3116",
+    "item_code": "TOO-CUT-BOLW0118A",
+    "tier_used": 1,
+    "queries": [
+      "\"W0118A\" bolt cutter",
+      "\"Wynns\" bolt cutter \"W0118A\" OR \"W0117A\""
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "needs_permission",
+    "confidence": "medium",
+    "reason": "Brand and model identified: WYNNS heavy-duty bolt cutters, W0118A = 18in/450mm which matches the display size. However W0118A appears only on banned marketplaces (Shopee/Lazada/Alibaba/Daraz) and one Sri Lankan retailer; no Wynns OEM site or authorised MY dealer page is indexed, and bar item 3 forbids those sources. Model text was seen only in snippets, never quoted from an opened permissible page.",
+    "human_action": "Contact Wynns tools regional distributor for an official asset, else photograph own stock."
+  },
+  {
+    "source_position": "2976",
+    "item_code": "PUL-GAT-6153X2T",
+    "tier_used": 1,
+    "queries": [
+      "\"6153X2T\" gate puller",
+      "\"R'key\" OR \"Rkey\" gate puller Malaysia"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Both queries returned zero relevant results - no R'key brand site, no 6153X2T anywhere. R'key appears to be a small local autogate/gate-hardware brand without an indexable web presence.",
+    "human_action": "Source brand/model info from packaging or supplier invoice, then retry; otherwise own photo."
+  },
+  {
+    "source_position": "2991",
+    "item_code": "FAS-SCR-TAP-CSK-8#2 1/2\"-BOX",
+    "tier_used": 1,
+    "queries": [
+      "none executed - unbranded CSK self-tapping screw named only by head, gauge and length; clean no-candidate for generics"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "No brand or model tokens beyond size/count; an unnamed commodity screw has no official page to match against.",
+    "human_action": "Shoot own pack-shot of the stock box."
+  },
+  {
+    "source_position": "4882",
+    "item_code": "TAP-SKC-M18X2.50",
+    "tier_used": 2,
+    "queries": [
+      "SKC hand tap M18 x 2.5 Malaysia (Bing fallback)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "SKC is a real Korean cutting-tool maker but the Bing fallback returned pure YouTube noise - no SKC hand-tap M18x2.50 page surfaced. Primary search provider was already rate-limited when this row came up, preventing site-targeted patterns.",
+    "human_action": "Search skctool.co.kr catalogue or Malaysian cutting-tool distributors (Leeden etc.) for an M18x2.5 hand-tap set photo next batch."
+  },
+  {
+    "source_position": "3161",
+    "item_code": "NAIL-TUFTING-TN-7225-BOX",
+    "tier_used": 2,
+    "queries": [
+      "\"TN-7225\" OR \"TN-7220\" tufting nail (Bing fallback)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "TN-7225/TN-7220 codes are unindexed - results degraded to Nike TN and Tamil Nadu noise. These look like internal supplier codes for U-clip tufting nails rather than public catalogue models.",
+    "human_action": "Ask supplier for the actual manufacturer brand of the U-clip nails; otherwise own photo."
+  },
+  {
+    "source_position": "4009",
+    "item_code": "SHH-ROD-TKKT27032S",
+    "tier_used": 1,
+    "queries": [
+      "\"Torikumu\" \"Kotai\" rod TK-KT2-703",
+      "\"Kotai\" fishing rod \"TK-KT2\" (Bing fallback)"
+    ],
+    "pages_opened": [
+      {
+        "url": "http://m.alpinemsc.com/featured.html",
+        "note": "200 Torikumu series page (brand/distributor site)"
+      },
+      {
+        "url": "http://m.alpinemsc.com/blog_kt.html",
+        "note": "200 Kotai specification blog - covers Series 3/4/5 only"
+      },
+      {
+        "url": "http://torikumurods.blogspot.com/",
+        "note": "200 official brand blog - no KT2 content"
+      }
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "Torikumu-Kotai 3 Series / 4 Series / 5 Series (TK-KT family only; TK-KT2-703-2S absent)",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Torikumu's official web presence (alpinemsc.com / tsurifishing.com, DreamAnglers) documents the Kotai family but only Series 3, 4 and 5, with one family photo per series covering four colours - no 'Kotai II' Medium 7'0\" variant and no model string TK-KT2-703-2S anywhere on-page. Marketplace listings show different Kotai I codes (TK-KT-564-2S etc.), confirming the II variant is not documented on any permissible page.",
+    "human_action": "Ask Alpine MSC / DreamAnglers for the Kotai II spec sheet and per-model photo."
+  },
+  {
+    "source_position": "4181",
+    "item_code": "TOO-CLA-BLI-B212",
+    "tier_used": 2,
+    "queries": [
+      "Blimax B212 partition keel clamp (Brave attempt - HTTP 429)",
+      "Blimax B212 keel clamp (Bing fallback)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Only ~60 Bing results and every one irrelevant (game forums, translation pages) - Blimax B212 partition keel clamp is effectively unindexed. Brand may be a small local importer's label with no web catalogue.",
+    "human_action": "Request the Blimax clamp photo/spec from the drywall partition supplier."
+  },
+  {
+    "source_position": "2857",
+    "item_code": "CUT-SICKLE-JM22B",
+    "tier_used": 2,
+    "queries": [
+      "\"JYMTJM-22B\" OR \"JM-22B\" sickle harvesting palm (native attempt - HTTP 429)",
+      "JYMTJM-22B sickle palm (Bing fallback)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "JYMTJM-22B returns zero relevant hits (Bing fell back to junk Indonesian pages), suggesting an internal supplier code for a palm/harvesting sickle rather than a public model. No brand site to escalate to.",
+    "human_action": "Photograph own stock; read blade stamp for the real maker's code."
+  },
+  {
+    "source_position": "3957",
+    "item_code": "SHH-REEL-HK3000",
+    "tier_used": 2,
+    "queries": [
+      "\"HK3000\" fishing reel 12BB (native attempt - HTTP 429)",
+      "fishing reel HK3000 12BB (Bing fallback)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "'HK3000 12BB' matches no branded reel on any permissible source - Bing returned only generic fishing guides. HK3000 alone is too ambiguous to attribute to a maker without seeing the reel body branding.",
+    "human_action": "Identify brand printed on the reel body/box and re-search next batch."
+  },
+  {
+    "source_position": "3254",
+    "item_code": "TOO-CUT-BOLW0117A",
+    "tier_used": 1,
+    "queries": [
+      "\"W0118A\" bolt cutter",
+      "\"Wynns\" bolt cutter \"W0118A\" OR \"W0117A\""
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "needs_permission",
+    "confidence": "medium",
+    "reason": "Same Wynns family as W0118A: W0117A = 14in (~350mm) bolt cutter consistent with the display size, but evidence exists only in Shopee/Lazada/Daraz listings which are banned source classes. No Wynns OEM or authorised-dealer PDP found; model string never quoted from an opened permissible page.",
+    "human_action": "Same as W0118A - Wynns distributor enquiry or own pack-shot."
+  },
+  {
+    "source_position": "4016",
+    "item_code": "TOO-SOC-SET-10-32MM",
+    "tier_used": 1,
+    "queries": [
+      "none executed - unbranded 25PC socket wrench set (10-32MM, TWN origin mark); clean no-candidate for generics"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "TWN is a country-of-origin marker, not a brand; the set is described only by piece count and size range. No identifiable manufacturer means no official page exists.",
+    "human_action": "Shoot own kit photo showing case and size range."
+  },
+  {
+    "source_position": "3093",
+    "item_code": "FAS-SCR-P/H-1\" X 8#-BOX",
+    "tier_used": 1,
+    "queries": [
+      "none executed - unbranded pan-head self-drilling screw named only by head type, size and count; clean no-candidate for generics"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Commodity fastener with no brand or model identity; nothing to match an official page against.",
+    "human_action": "Shoot own pack-shot of the stock box."
+  },
+  {
+    "source_position": "3094",
+    "item_code": "FAS-SCR-TD640HW-WOOD",
+    "tier_used": 2,
+    "queries": [
+      "TD640HW self drilling screw (Bing fallback)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "TD640HW yields ~57 results, none relevant - it is not a publicly catalogued screw model and reads like an internal purchasing code (the description itself mixes self-drilling and wood-thread terms). No brand to escalate to.",
+    "human_action": "Ask the screws supplier for the mill brand behind TD640HW; else own photo."
+  },
+  {
+    "source_position": "5148",
+    "item_code": "TAP-CAB-CB5105A",
+    "tier_used": 1,
+    "queries": [
+      "\"Cabana\" \"CB5105A\" hose bib tap"
+    ],
+    "pages_opened": [
+      {
+        "url": "https://cabana.com.my/index.php/products/bathroom/basin-tap/cb5105a-detail",
+        "note": "200 PDP"
+      }
+    ],
+    "official_product_page": "https://cabana.com.my/index.php/products/bathroom/basin-tap/cb5105a-detail",
+    "official_image_url": "https://cabana.com.my/images/virtuemart/product/CB5105A.jpg",
+    "model_string_on_page": "CB5105A",
+    "finish_match": "yes",
+    "size_match": "not_named",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "unknown",
+    "confidence": "high",
+    "reason": "Official Cabana site (Sorento Sdn Bhd) PDP titled 'Basin Tap: CB5105A' with body text 'Hose Bib Tap with Screw Collar' - exactly the SKU in the row; brass/chrome finish per distributor copy. Full-size original product JPG linked directly from the PDP. Corroborated by authorised dealer Zhin Heng (zhinheng.com.my) listing the same model.",
+    "human_action": ""
+  },
+  {
+    "source_position": "3245",
+    "item_code": "NAIL-TUFTING-TN-7220-BOX",
+    "tier_used": 2,
+    "queries": [
+      "\"TN-7225\" OR \"TN-7220\" tufting nail (Bing fallback, shared with TN-7225 row)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "TN-7220 shares the same fate as TN-7225: unindexed internal-style codes, search returning Nike/sneaker noise. No manufacturer page to quote a model string from.",
+    "human_action": "Same as TN-7225 - get maker brand from supplier; else own photo."
+  },
+  {
+    "source_position": "4042",
+    "item_code": "TOO-CLA-GW473250",
+    "tier_used": 2,
+    "queries": [
+      "\"W0473H\" OR (\"G-shape clamp\" \"W0473\") (native attempt - HTTP 429)",
+      "\"W0473H\" clamp (Bing fallback)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "W0473H returns only ~63 results, all irrelevant - the G-clamp model is unindexed. The W-prefix mirrors the Wynns numbering seen on the bolt cutters, but no Wynns official/dealer pages are indexed for clamps either, and primary search quota was exhausted before a brand-site hunt could start.",
+    "human_action": "Enquire with Wynns/hand-tool distributor about the 10in G-clamp asset; else own photo."
+  }
+]

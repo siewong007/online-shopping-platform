@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ekoway Round 3 — Project Panorama</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#products">Skip to products</a>
+    <div class="concept-label" aria-hidden="true">
+      <span>Round 3 · Direction 1</span><span>Project Panorama</span>
+    </div>
+    <header class="site-header">
+      <a class="brand" href="#products" aria-label="Ekoway storefront">
+        <img src="/frontend/public/ekoway/ekoway-logo.jpeg" alt="Ekoway Hardware" />
+        <span><strong>Ekoway</strong><small>Hardware · Sibu</small></span>
+      </a>
+      <nav class="primary-nav" aria-label="Primary navigation">
+        <a href="#products" aria-current="page">Shop</a>
+        <a href="#services">Services</a>
+        <a href="#trade">Trade desk</a>
+      </nav>
+      <label class="search-shell">
+        <span>Search Ekoway</span>
+        <input id="searchInput" type="search" placeholder="What are you improving?" />
+      </label>
+      <div class="utilities" aria-label="Store utilities">
+        <button type="button">Account</button>
+        <button class="cart-button" type="button">Cart <span>0</span></button>
+      </div>
+    </header>
+
+    <div class="store-layout">
+      <nav class="department-index" id="categoryNav" aria-label="Product categories">
+        <div class="index-heading"><span>Browse</span><strong>Departments</strong></div>
+        <div id="categoryButtons"></div>
+      </nav>
+
+      <main class="panorama-main">
+        <section class="panorama-heading" aria-labelledby="pageTitle">
+          <div>
+            <p class="eyebrow">Projects start with the right piece</p>
+            <h1 id="pageTitle">Make the next room <em>feel possible.</em></h1>
+          </div>
+          <div class="discovery-tools">
+            <details class="filter-menu">
+              <summary>Filter</summary>
+              <label><input id="lowStockOnly" type="checkbox" /> Low stock only</label>
+            </details>
+            <label class="sort-control">
+              <span>Sort</span>
+              <select id="sortSelect">
+                <option value="featured">Featured</option>
+                <option value="price_asc">Price: Low–High</option>
+                <option value="price_desc">Price: High–Low</option>
+                <option value="name" selected>Name</option>
+              </select>
+            </label>
+            <p id="resultCount" aria-live="polite"></p>
+          </div>
+        </section>
+
+        <section class="panorama-track" id="products" aria-label="Product panorama"></section>
+        <p class="continuation" id="continuation" aria-live="polite"></p>
+      </main>
+    </div>
+
+    <template id="sceneTemplate">
+      <article class="product-scene" tabindex="0">
+        <div class="scene-atmosphere">
+          <span class="atmosphere-label">Category atmosphere</span>
+          <span class="image-status">Exact product image unavailable</span>
+        </div>
+        <div class="scene-facts">
+          <span class="category-name"></span>
+          <h2><a class="product-name" href="#"></a></h2>
+          <div class="decision-line">
+            <div><strong class="price"></strong><span class="stock"></span></div>
+            <div class="actions">
+              <a class="open-product" href="#">Open</a>
+              <button class="add-button" type="button">Add to Cart</button>
+            </div>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

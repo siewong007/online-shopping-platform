@@ -1,0 +1,564 @@
+[
+  {
+    "source_position": "5325",
+    "item_code": "AER-6UT66",
+    "tier_used": 1,
+    "queries": [
+      "websearch: \"Aerico\" \"6UT66\" -> HTTP 429",
+      "bing: \"Aerico\" \"6UT66\" -> engine returned unrelated junk (ChatGPT/OpenAI pages)",
+      "google.com/search -> JS bot-wall",
+      "direct probe: https://aerico.com -> transport error / no site"
+    ],
+    "pages_opened": [
+      {"url": "https://www.bing.com/search?q=%22Aerico%22+%226UT66%22", "note": "SERP junk, zero relevant hits"},
+      {"url": "https://aerico.com", "note": "transport error - DNS/connection failure"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "low",
+    "reason": "Brand 'Aerico' could not be resolved to any official or distributor web presence. All general search engines were unavailable this session (websearch tool HTTP 429, DDG transport errors, Bing serving unrelated junk, Google JS wall), so discovery relied on direct navigation and the brand domain is dead. No page quoting '6UT66' was found anywhere.",
+    "human_action": "Identify manufacturer from packaging or supplier invoice (likely a regional air-accessory house brand) and request an official product photo directly from them."
+  },
+  {
+    "source_position": "6260",
+    "item_code": "NAI-CON-ACE-16-BOX",
+    "tier_used": 1,
+    "queries": [
+      "direct navigation: acehardware.com.my root",
+      "site inspection of acehardware.com.my category links (paint/tools/hardware)"
+    ],
+    "pages_opened": [
+      {"url": "https://www.acehardware.com.my", "note": "200 but stale WordPress demo template ('Hello world!', envato/kalium tags); no product catalog or working search"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "'Ace' here is Ace Hardware Malaysia's own-brand nails; the Malaysian corporate site exists but is a broken demo shell with no e-catalog, so no PDP for galvanised flat head nails 16 x 2.0 (500g). Search engines were down this session (websearch 429, Bing/Google unusable), preventing discovery of any authorised-dealer page carrying this pack.",
+    "human_action": "Request the ACE own-brand nail packaging artwork/photo from Ace Hardware Malaysia merchandising, or photograph a stock box."
+  },
+  {
+    "source_position": "4504",
+    "item_code": "NAI-ROO-SUP-P65MM",
+    "tier_used": 1,
+    "queries": [
+      "row assessed as unbranded commodity (E.G = electro-galvanised roofing nail, plain shank, 65mm, 1kg retail pack); search engines unavailable this session"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Unbranded commodity fastener sold by weight; there is no model code to gate a match on and no manufacturer PDP can be identified. Per brief, a clean no-candidate is correct for unbranded generics rather than forcing a match.",
+    "human_action": "Shoot an in-house photo of the 1kg pack; optionally add brand once supplier carton is checked."
+  },
+  {
+    "source_position": "5326",
+    "item_code": "AIR-DUS-PVC-LX02",
+    "tier_used": 1,
+    "queries": [
+      "adjacent-position analysis: sits next to Aerico 6UT66 in source (pos 5325/5326), same air-accessory section; no brand token in display_name",
+      "search engines unavailable this session (websearch 429; DDG/Bing/Google blocked)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "low",
+    "reason": "'AD02 PVC Air Duster' carries no resolvable brand and 'AD02' alone produced no verifiable OEM page given the search-engine outage. Without a brand or reachable listing, bar items 2-5 cannot be satisfied.",
+    "human_action": "Check supplier invoice/carton for the duster-gun maker, then source their PDP; otherwise photograph the item."
+  },
+  {
+    "source_position": "2999",
+    "item_code": "TOO-NIE-TAM-T25",
+    "tier_used": 2,
+    "queries": [
+      "websearch: Nietz 53283025 tamper wrench -> HTTP 429",
+      "bing: Nietz 53283025 tamper wrench -> unrelated junk results",
+      "google.com/search -> JS bot-wall",
+      "site search nietz.com.my/?s=53283025&post_type=product -> 0 results",
+      "site search nietz.com.my/?s=tamper&post_type=product -> found family PDP (Tier 2 normalisation: 53283025 falls inside code span 53283009-53283055)"
+    ],
+    "pages_opened": [
+      {"url": "https://nietz.com.my", "note": "200 - official NIETZ Malaysia brand site"},
+      {"url": "https://nietz.com.my/?s=53283025&post_type=product", "note": "200 - no results for exact part number"},
+      {"url": "https://nietz.com.my/product/nietz-extra-long-tamper-tx-star-wrench-s2-red/", "note": "200 PDP - 'CODE: 532-83-0XX', red S2 extra-long tamper TX-star wrench"}
+    ],
+    "official_product_page": "https://nietz.com.my/product/nietz-extra-long-tamper-tx-star-wrench-s2-red/",
+    "official_image_url": "https://nietz.com.my/wp-content/uploads/2024/07/37_53283009-until-53283055-1.png",
+    "model_string_on_page": "CODE: 532-83-0XX (gallery asset named 37_53283009-until-53283055, i.e. codes 53283009 until 53283055)",
+    "finish_match": "yes",
+    "size_match": "unclear",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "needs_permission",
+    "confidence": "medium",
+    "reason": "Official NIETZ Malaysia lists one product for the whole extra-long tamper TX-star wrench series with CODE 532-83-0XX and gallery assets explicitly spanning part numbers 53283009-53283055, which includes our 53283025 (T25). Title confirms red finish matching '(red)' in the row. No per-size page or image exists on the brand site, so the shared official image is used; exact tip size is not individually depicted.",
+    "human_action": ""
+  },
+  {
+    "source_position": "5409",
+    "item_code": "SHH-HOO-MS4310-NO.1/0",
+    "tier_used": 1,
+    "queries": [
+      "websearch: Eupro MS4310 fishing hook -> HTTP 429",
+      "direct navigation: eupro.com root -> official Eupro site live",
+      "eupro.com Hook category -> full hook list inspected",
+      "eupro.myshopify.com/products.json -> 404 (brand Shopify store dead)"
+    ],
+    "pages_opened": [
+      {"url": "http://eupro.com", "note": "200 - official Eupro site"},
+      {"url": "http://eupro.com/index.php?p=hook", "note": "200 - hook catalog lists exactly six models: 3829BN, 3255BN, 3918BN, 3988BN, 3168BN, 7930BN; no MS4310 and no pagination"},
+      {"url": "https://eupro.myshopify.com/products.json?limit=250", "note": "404 - store not live"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Eupro's official site is live but its complete hook section contains only six models, none numbered MS4310; the row's stray detected_model '1920-SS' matches nothing either. The item appears discontinued or OEM-only, so no official page/image can satisfy the bar.",
+    "human_action": "Ask the Eupro Malaysia distributor for the MS4310 No.1/0 (9's) hook card artwork or confirm substitution."
+  },
+  {
+    "source_position": "5666",
+    "item_code": "LIQ-MOL-HAN-WAS-300G",
+    "tier_used": 3,
+    "queries": [
+      "German-name analysis: HANDWASCHPASTE = hand cleaning paste, 300g tin/tube; no brand token in row",
+      "search engines unavailable this session (websearch 429; DDG/Bing/Google/Mojeek/Ecosia/Brave/Yandex/SearXNG all blocked or empty)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "low",
+    "reason": "Generic German-language product name with no detected brand; multiple German makers sell a 'Handwaschpaste 300g'. With every search engine hostile this session, the maker behind this SKU could not be identified, so no official page can be gated.",
+    "human_action": "Read maker name off the can label (likely German industrial-skincare brand), then pull that maker's product page and og:image."
+  },
+  {
+    "source_position": "6483",
+    "item_code": "SWI-PLU-UMS-150 15A",
+    "tier_used": 2,
+    "queries": [
+      "normalisation: UMS + PT150R + 15A air-cond plug top, SIRIM",
+      "direct probe https://ums.com.my -> wrong company (Universal Measuring Systems)",
+      "direct probe www.umsonline.com.my -> transport error",
+      "direct probe https://ums.com.sg -> 403 bot-wall"
+    ],
+    "pages_opened": [
+      {"url": "https://ums.com.my", "note": "200 but different company (Universal Measuring Systems), not the electrical accessories brand"},
+      {"url": "https://www.umsonline.com.my", "note": "transport error"},
+      {"url": "https://ums.com.sg", "note": "403 - hostile/bot-walled; content unverifiable"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "low",
+    "reason": "UMS is the electrical wiring-accessory brand but its official domain(s) are either taken by another company, dead, or bot-walled (403), so no PT150R plug-top page could be opened or quoted. Search engines were fully unavailable, ruling out dealer-page discovery.",
+    "human_action": "Obtain PT150R artwork from the UMS wiring-accessories distributor or the SIRIM permit holder; verify brand website offline."
+  },
+  {
+    "source_position": "2799",
+    "item_code": "MAC-SEA-SF-200-90200007",
+    "tier_used": 1,
+    "queries": [
+      "assessed as generic spare part (heat element + cutter kit for impulse sealers); SF-300 is the sealer body size, not a brandable model; search engines unavailable this session"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Unbranded consumable spare (element kit for an SF-300 impulse sealer); such kits are sold loose without manufacturer PDPs. Nothing to gate a candidate on without inventing a source.",
+    "human_action": "Photograph the actual element kit against a ruler showing width (matches SF-300 ~300mm jaw)."
+  },
+  {
+    "source_position": "3066",
+    "item_code": "TOO-NIE-TAM-T20",
+    "tier_used": 2,
+    "queries": [
+      "same research as TOO-NIE-TAM-T25: site search nietz.com.my ?s=tamper -> family PDP (Tier 2 normalisation: 53283020 within code span 53283009-53283055)"
+    ],
+    "pages_opened": [
+      {"url": "https://nietz.com.my/product/nietz-extra-long-tamper-tx-star-wrench-s2-red/", "note": "200 PDP - same single listing covers T-sizes incl. 53283020"}
+    ],
+    "official_product_page": "https://nietz.com.my/product/nietz-extra-long-tamper-tx-star-wrench-s2-red/",
+    "official_image_url": "https://nietz.com.my/wp-content/uploads/2024/07/37_53283009-until-53283055-1.png",
+    "model_string_on_page": "CODE: 532-83-0XX (gallery asset named 37_53283009-until-53283055)",
+    "finish_match": "yes",
+    "size_match": "unclear",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "needs_permission",
+    "confidence": "medium",
+    "reason": "Judged separately from the T25 row against the same official NIETZ Malaysia listing: CODE 532-83-0XX spans part numbers 53283009-53283055 including our 53283020 (T20), title confirms red finish. The brand site offers one shared image for the whole size series, so the exact T20 tip is not individually depicted.",
+    "human_action": ""
+  },
+  {
+    "source_position": "6603",
+    "item_code": "COC-STO-RA-G501B",
+    "tier_used": 1,
+    "queries": [
+      "name parse: 'Stopvavle Ra Truflo G501B' -> stop valve, RA pattern, Truflo brand?, model G501B",
+      "direct probe https://www.truflo.com -> unrelated US pump manufacturer"
+    ],
+    "pages_opened": [
+      {"url": "https://www.truflo.com", "note": "200 - Truflo Pumps Inc., Greensboro NC; centrifugal pumps only, no valves, unrelated brand"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "low",
+    "reason": "The only reachable 'Truflo' domain is an American pump maker that does not produce brass stop valves, indicating the valve's 'Truflo' is likely a Taiwanese/Malaysian trade mark not resolvable this session (all search engines down). Model G501B therefore has no verifiable official page.",
+    "human_action": "Identify the valve maker from carton branding, then locate that maker's (or their MY distributor's) G501B page."
+  },
+  {
+    "source_position": "5531",
+    "item_code": "STO-MOU-M4-26X27",
+    "tier_used": 3,
+    "queries": [
+      "K-Prix Korea mounted point, shape M4, size 26x27mm",
+      "direct probes kprix.com / kprix.co.kr / k-prix.com -> transport errors"
+    ],
+    "pages_opened": [
+      {"url": "https://www.kprix.com", "note": "transport error"},
+      {"url": "https://kprix.co.kr", "note": "transport error"},
+      {"url": "https://k-prix.com", "note": "transport error"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "K-Prix is a Korean mounted-point abrasive brand but every plausible domain failed at DNS/transport level this session and search engines were unavailable to find the real host. No M4 shape-chart page could be opened, so nothing verifiable to cite.",
+    "human_action": "Locate K-Prix Korea's official site (or Dae Kwang Abrasive) offline and request the M4 mounted point chart image covering 26x27mm."
+  },
+  {
+    "source_position": "5585",
+    "item_code": "DZ-GEN-BCC-180",
+    "tier_used": 1,
+    "queries": [
+      "unbranded generic cold chisel 10x180x15mm (item prefix GEN); search engines unavailable this session"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "House-brand unbranded chisel defined only by dimensions; no manufacturer exists to provide an official page. Forcing any branded chisel image would violate bar item 4.",
+    "human_action": "In-house photo of the chisel with dimension callouts."
+  },
+  {
+    "source_position": "6644",
+    "item_code": "FIT-YG231-ELB-MXF-1/2\"-BRA",
+    "tier_used": 1,
+    "queries": [
+      "'YG231' assessed as casting mould number on an unbranded brass MXF elbow; search engines unavailable this session"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "yes",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "YG-prefixed numbers are internal mould/cavity marks found on generic Taiwan-made brass fittings; no brand name exists in the row and no official page can be tied to YG231. A generic fitting photo would fail the exact-model rule.",
+    "human_action": "Photograph the actual elbow; if carton reveals a maker (e.g., Taiwanese foundry mark), revisit."
+  },
+  {
+    "source_position": "5446",
+    "item_code": "TRCK-(0.40MM)-75MM-10FTS",
+    "tier_used": 1,
+    "queries": [
+      "generic metal stud track 75mm x 25/40mm web x 3000mm, 0.40mm gauge (item prefix TRCK, no brand); search engines unavailable"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Commodity drywall track section sold by length; unbranded and dimension-defined only. Correct outcome per brief is no-candidate.",
+    "human_action": "In-house photo of the track profile with gauge/thickness noted."
+  },
+  {
+    "source_position": "2737",
+    "item_code": "PAI-SPR-PMT-023",
+    "tier_used": 2,
+    "queries": [
+      "Paint Master Spray Paint No. 23 Scarlet (MY aerosol brand)",
+      "domain probes: paintmaster.com.my (root 404, with and without www)",
+      "paintmaster.com -> unrelated Texas painting company"
+    ],
+    "pages_opened": [
+      {"url": "https://www.paintmaster.com.my", "note": "404 - no site hosted"},
+      {"url": "https://paintmaster.com.my", "note": "404 - no site hosted"},
+      {"url": "https://www.paintmaster.com", "note": "200 but unrelated US house-painting firm"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Paint Master is a Malaysian aerosol brand but hosts no findable official site (.com.my returns 404, .com is an unrelated Texas painter), and with all search engines down no authorised-distributor PDP for colour No. 23 Scarlet could be located. Marketplace listings are excluded by the bar, leaving no compliant source.",
+    "human_action": "Request can artwork for No. 23 Scarlet from Paint Master Marketing Sdn Bhd or an authorised wholesaler; check brand's social channels offline for a usable official shot."
+  },
+  {
+    "source_position": "2738",
+    "item_code": "PAI-SPR-PMT-031",
+    "tier_used": 2,
+    "queries": [
+      "same family research as PAI-SPR-PMT-023 (Paint Master No. 31 Deep Yellow): paintmaster.com.my 404; .com unrelated; engines down"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Same finding as the sibling colour row: no official Paint Master web presence is reachable, and each colour needs its own specific can image, which no compliant source provides. Judged separately but sharing the identical blocker.",
+    "human_action": "Request Deep Yellow (No. 31) can artwork from the brand/authorised wholesaler."
+  },
+  {
+    "source_position": "2739",
+    "item_code": "PAI-SPR-PMT-327",
+    "tier_used": 2,
+    "queries": [
+      "same family research as PAI-SPR-PMT-023 (Paint Master No. 327 Deep Violet): paintmaster.com.my 404; .com unrelated; engines down"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Same as sibling Paint Master colours: brand's .com.my is dead, .com is unrelated, and no distributor PDP was discoverable during the search outage. No compliant image source exists for this specific violet can.",
+    "human_action": "Request Deep Violet (No. 327) can artwork from the brand/authorised wholesaler."
+  },
+  {
+    "source_position": "3189",
+    "item_code": "SHO-PVC-ARM100",
+    "tier_used": 1,
+    "queries": [
+      "'SY' PVC shower rose ARM-4 - local Malaysian sanitary brand; search engines unavailable this session"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "low",
+    "reason": "'SY' appears to be a small local PVC sanitary brand with no discoverable web presence; ARM-4 shower rose returned no verifiable official or dealer page under the session's search outage. Nothing compliant to cite.",
+    "human_action": "Ask the plumbing supplier for the SY shower rose carton/leaflet art, or photograph the rose."
+  },
+  {
+    "source_position": "3240",
+    "item_code": "BOS-2609-110-015",
+    "tier_used": 1,
+    "queries": [
+      "parse: Bosch pin spanner accessory, part no. 2609110015 (for SAG/small angle grinder)",
+      "direct probe https://spareparts.bosch-pt.com -> transport error",
+      "search engines unavailable (websearch 429; Bing junk; Google JS wall)"
+    ],
+    "pages_opened": [
+      {"url": "https://spareparts.bosch-pt.com", "note": "transport error - Bosch power-tool spare-parts portal unreachable"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "low",
+    "reason": "Item decodes to Bosch accessory part number 2609110015 (pin/spanner for angle grinder), but Bosch's spare-parts portal would not connect and search engines were down, so no official page quoting the number could be opened. Bar item 5 (model string quoted from page text) cannot be met without it.",
+    "human_action": "Retry bosch-pt.com spare-parts catalogue when network allows, searching 2609110015; alternatively request exploded-diagram image from Bosch Power Tools Malaysia."
+  },
+  {
+    "source_position": "5704",
+    "item_code": "SHH-FROG-SET-Y24A",
+    "tier_used": 1,
+    "queries": [
+      "'Y24A Fishing Tackle' frog set - no brand token beyond code; eupro.com hook/tackle sections already inspected with no Y-series match; engines down"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "low",
+    "reason": "Bare code Y24A with the generic words 'Fishing Tackle'; no manufacturer is identifiable, and the one regional tackle brand checked (Eupro) does not carry a Y24A. Cannot satisfy the sourcing bar without inventing a match.",
+    "human_action": "Inspect packaging for maker; if it is an unbranded import set, shoot an in-house photo."
+  },
+  {
+    "source_position": "2256",
+    "item_code": "LOC-SAN-PB26332MM",
+    "tier_used": 1,
+    "queries": [
+      "Sanlock PB padlock 32mm (detected_model LOCK-263)",
+      "direct probes sanlock.com.my with and without www -> transport errors"
+    ],
+    "pages_opened": [
+      {"url": "https://www.sanlock.com.my", "note": "transport error"},
+      {"url": "https://sanlock.com.my", "note": "transport error - host unreachable/DNS failure"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Sanlock is a known Malaysian padlock brand but its domain fails at connection level (parked/hostile), and with all search engines down no authorised dealer page for the PB laminated pad 32mm could be found. The row's LOCK-263 token matches nothing verifiable.",
+    "human_action": "Contact San Lock Industries Malaysia for the PB-32 product sheet, or retry their domain later."
+  },
+  {
+    "source_position": "2954",
+    "item_code": "MAC-SEA-SF-200-90200005",
+    "tier_used": 1,
+    "queries": [
+      "generic spare part (heat element kit for SF-200 impulse sealer); same conclusion as SF-300 sibling row; engines unavailable"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "yes",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Unbranded consumable element kit sized for an SF-200 sealer; no manufacturer PDP exists for loose spares of this class. Judged separately from the SF-300 row; identical blocker.",
+    "human_action": "Photograph the actual SF-200 element kit with jaw-width reference."
+  },
+  {
+    "source_position": "3503",
+    "item_code": "LAM-E27-R80-RWG",
+    "tier_used": 1,
+    "queries": [
+      "Tungsram E27 R80 reflector lamp (r,w,g)",
+      "direct probe tungsram.com -> licensing landing page only",
+      "direct probe tungsram.hu -> 'Under construction'"
+    ],
+    "pages_opened": [
+      {"url": "https://www.tungsram.com", "note": "200 but replaced by brand-licensing/distributor landing page; no product catalog"},
+      {"url": "https://tungsram.hu", "note": "200 'Under construction...' placeholder"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "The official TUNGSRAM sites no longer publish any product catalog (corporate site is now a licensing-application page, Hungarian site under construction), consistent with this legacy incandescent R80 reflector being discontinued. No official page or image remains reachable to gate.",
+    "human_action": "Use GE Current/Tungsram archived spec sheet to identify the SKU visually, then photograph stock; or request legacy lamp imagery from the brand licensing contact form."
+  },
+  {
+    "source_position": "6154",
+    "item_code": "SHH-SWIVEL-NO.2",
+    "tier_used": 1,
+    "queries": [
+      "nickel fishing swivel No.2 - unbranded commodity tackle; engines down this session"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "not_named",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Plain nickel barrel swivels sold by size number are unbranded commodity tackle; no manufacturer page can exist for the bulk-packed item. Clean no-candidate per brief guidance on generics.",
+    "human_action": "In-house macro photo of a No.2 swivel; note packing quantity."
+  }
+]

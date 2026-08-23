@@ -1,0 +1,8 @@
+source_position,verifier_verdict,finish_exact,model_exact,px,bytes,justification
+6243,pass,yes,yes,1000x1000,162378B,"Card clearly shows CR2032 lithium coin cell, 2032 and 1 PACK - exact model and pack count"
+6358,pass,yes,yes,1000x1000,192010B,"Card clearly shows CR2016, 2016 and 1 BATT/PILE - exact model and pack count"
+6488,pass,yes,yes,1000x1000,186151B,"Card clearly shows CR2025, 2025 and 1 BATT/PILE - exact model and pack count"
+4922,pass,yes,yes,521x600,122463B,Blister marked AAA2 with two MAX AAA cells - correct model and 2PC pack
+5925,pass,yes,yes,521x600,118689B,Blister marked AA8 with eight MAX AA cells - correct model and 8PC pack
+6489,pass,yes,yes,517x600,107017B,Blister marked 9V1 with a single MAX 9V battery - correct model and 1PC pack
+6008,pass,yes,yes,525x600,116384B,Blister marked AAA8 with eight MAX AAA cells - correct model and 8PC pack

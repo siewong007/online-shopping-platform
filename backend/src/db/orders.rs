@@ -36,6 +36,22 @@ const FULFILLMENT_DELIVERY_TRANSITIONS: &[(&str, &[&str])] = &[
     ("canceled", &[]),
 ];
 
+fn public_delivery_enabled() -> bool {
+    std::env::var("PUBLIC_DELIVERY_ENABLED")
+        .map(|value| value.eq_ignore_ascii_case("true"))
+        .unwrap_or(false)
+}
+
+pub fn ensure_public_checkout_fulfillment(method: Option<&str>) -> Result<String> {
+    let method = normalize_fulfillment_method(method)?;
+    if method == "delivery" && !public_delivery_enabled() {
+        bail!(
+            "Online delivery is not available. Choose pickup, or WhatsApp the store for a quote."
+        );
+    }
+    Ok(method)
+}
+
 fn normalize_fulfillment_method(method: Option<&str>) -> Result<String> {
     let method = method.unwrap_or("pickup").trim().to_lowercase();
 
@@ -377,7 +393,8 @@ pub async fn quote_checkout(pool: &PgPool, input: &CheckoutQuoteInput) -> Result
         .sum();
     let (tax_cents, merchandise_total_cents) =
         compute_tax_and_total(subtotal_cents, discount_cents, tax_rate_bps);
-    let fulfillment_method = normalize_fulfillment_method(input.fulfillment_method.as_deref())?;
+    let fulfillment_method =
+        ensure_public_checkout_fulfillment(input.fulfillment_method.as_deref())?;
     let (shipping_options, shipping_cents, requires_shipping_selection) =
         if fulfillment_method == "delivery" {
             let address = input.shipping_address.as_ref().ok_or_else(|| {

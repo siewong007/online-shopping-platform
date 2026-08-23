@@ -1,0 +1,86 @@
+[
+  {
+    "source_position": "4442",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Page title reads 'SB202-B1 20V BATTERY 2AH' matching item BAT-STA-SB202 / 'Battery V20 2.0AH Lithium-ion'. Image shows the actual Stanley FATMAX V20 battery pack labelled 'V20 LITHIUM ION 2.0AH' — a real product depiction, not a banner."
+  },
+  {
+    "source_position": "4546",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Page is a genuine NIETZ product page quoting CODE: NSEM901 for its ear muffle, corresponding to the item's EM9001/'Picasaf 9001' designation; page text does not repeat NRR21 but nothing contradicts it. Asset and the row's official image both show the same red/black behind-the-neck ear muffs."
+  },
+  {
+    "source_position": "4586",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Page is 'SIBERIAIR SI11 56\" REMOTE CEILING FAN' with Description quoting Model: SI11, matching display name 'Remote Fan - SI11'. Page states Colour: Matte Black and the asset shows a dark matte-finish 3-blade remote ceiling fan with box marked CF-SI11/54/MB."
+  },
+  {
+    "source_position": "5010",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Page is titled 'Jaya Mata Interconnecting Harvesting Pole Clamping Bracket JM444', matching item POL-HAR-NYL-JM444 and display name. Asset shows the actual yellow-zinc clamping bracket labelled JM 444 Interconnecting Harvesting Pole Clamping Bracket."
+  },
+  {
+    "source_position": "5015",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Page 'Kitchen Tap: CB1540SS-BL' describes 'Pillar Mounted Kitchen Tap S/Steel 304 Matt Black', exactly matching display name including the -BL black finish. Asset shows a matt black pillar-mounted kitchen tap of this design."
+  },
+  {
+    "source_position": "5025",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Page is an AirCraft product listing with 'Model: SG AD04' / SKU 'SG AD04' for Air Duster/blow gun long nozzle (260mm), matching display name 'AD04 Long PVC Air Duster'. Asset shows this exact SG AD04 blow gun in its blister pack."
+  },
+  {
+    "source_position": "5087",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Page 'Basin Tap: CB9114-A' explicitly describes it as 'Two Way Tap', matching display name 'Cabana Two Way Tap' and item TAP-CAB-CB9114. Asset shows a chrome two-handle two-outlet wall tap consistent with the page's product photo style."
+  },
+  {
+    "source_position": "5088",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Page title is 'SKC 801 M24 x 3.00 Metric Hand Tap', matching display name 'Skc Hand Tap M24 X 3.00'. Asset is that listing's own image showing SKC-brand hand taps (taper/plug/bottoming set); no colour named in display_name and image plausibly depicts this article."
+  },
+  {
+    "source_position": "5126",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Wufu page quotes Technical data model 'DO-9-EC' (Air Washing Gun, 4.5mm nozzle, 750ml cup) under Washing Guns with auto-maintenance application, matching display name 'Wufu Air Engine Cleaning Gun (DO-9-EC)'. Asset shows the actual gun with long nozzle and metal cup."
+  },
+  {
+    "source_position": "5148",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Page 'Basin Tap: CB5105A' describes 'Hose Bib Tap with Screw Collar', matching display name 'Cabana Hose Bib Tap CB5105A'. Asset shows a chrome wall-mounted hose bib tap with screw collar matching the page's product depiction."
+  },
+  {
+    "source_position": "5166",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Gluck page lists Sorento floor grating/floor trap variants SRT6641 / SRT6642 BL / SRT6643-GM, with specs table quoting 'SRT6642 BL ... Color: Black', matching item GRA-SOR-SRT6642-BL. Asset shows the SRT6642-BL matt black anti-odour floor trap itself."
+  },
+  {
+    "source_position": "5353",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Page is 'Angle Valve: CB5100' describing an Angle Valve, matching display name 'Cabana Angle Valve CB5100' and item VAL-CAB-CB5100. No colour named in display_name; asset plausibly shows this chrome angle valve as depicted on the page."
+  }
+]

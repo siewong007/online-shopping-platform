@@ -21,10 +21,10 @@ Facts and sources: [research.md](research.md) (researched 2026-07-04; re-verify 
 
 | Question | Why it matters | Answer |
 |---|---|---|
-| AutoCount edition + version (on-premise Accounting 2.x? Cloud Accounting? OneSales?) | Chooses the entire Phase 2 architecture | TBD-user-to-fill (待使用者填寫) |
+| AutoCount edition + version (on-premise Accounting 2.x? Cloud Accounting? OneSales?) | Chooses the entire Phase 2 architecture | **Desktop / on-premise** (owner, 20 Aug 2026). Exact 2.x version still TBD. Not Cloud. |
 | Annual turnover band | Which MyInvois phase applies (RM1–5M live since 2026-01-01) | TBD-user-to-fill (待使用者填寫) |
 | Who operates AutoCount (in-house accountant? external firm?) | Manual-import MVP viability | TBD-user-to-fill (待使用者填寫) |
-| Objects to sync: invoices only, or also debtors / stock items / payments? | Scope of mapping work | TBD-user-to-fill (待使用者填寫) |
+| Objects to sync: invoices only, or also debtors / stock items / payments? | Scope of mapping work | **Now:** Price 1 + stock **from AutoCount → website**. Invoices/payments later (WhatsApp pickup does not create a paid website order). |
 | Sync direction: push-only, or read back payment/e-invoice status? | Phase 3 scope | TBD-user-to-fill (待使用者填寫) |
 | Does Excel/API import auto-trigger e-invoice submission in their setup? | Compliance workflow | TBD-user-to-fill (待使用者填寫) (test with AutoCount reseller) |
 
@@ -43,6 +43,21 @@ Build an admin-console export: "Download AutoCount import file" for a date range
   so re-exports don't double-post.
 - Acceptance: a real file imports cleanly into the user's AutoCount with zero manual
   column fixes; re-running the export excludes already-exported invoices.
+
+## Ekoway shop layout (20 Aug 2026)
+
+AutoCount runs on a **Windows PC in the shop**. The website runs on a VPS (`ekowayhardware.com`). The VPS **cannot** open AutoCount by itself (no Cloud API; the shop PC is behind the shop network).
+
+Live Price 1 / stock therefore has to be **pushed out of the shop PC**:
+
+1. **Manual (works today):** export the item listing from AutoCount (Price 1 + qty), send the file, we load it.
+2. **Scheduled, no extra AutoCount licence:** a small program on the AutoCount PC exports the same file every N minutes and uploads it to the website. Needs that PC online and AutoCount not locked out of export.
+3. **True plugin (later):** AutoCount **Integrator** (file drop) or **AOTG / API module** if the reseller already sold it — then a Windows helper next to AutoCount. Do **not** write into AutoCount SQL.
+
+Do not start a .NET bridge until the owner confirms they have (or will buy) the API/Integrator module.
+
+Shop-PC push (built 20 Aug 2026, no AutoCount SQL, no cost):  
+`POST /api/integrations/autocount/stock-price` + `scripts/autocount-sync/`. See [stock-price-push.md](stock-price-push.md).
 
 ## Phase 2 — Automation (pick ONE branch after Phase 0)
 

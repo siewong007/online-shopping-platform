@@ -1,0 +1,84 @@
+{
+  "targets": [
+    "15*15CM",
+    "400X260",
+    "430X260",
+    "6X6",
+    "CAB-CB1530S-BL",
+    "CB1180-RG",
+    "CB1518SS",
+    "CB1540SS-BL",
+    "CB1547SS-RG",
+    "CB2131",
+    "CB2132",
+    "CB2136",
+    "CB2805A",
+    "CB2806A",
+    "CB451A",
+    "CB476-BLK",
+    "CB501A",
+    "CB504A",
+    "CB505",
+    "CB5100",
+    "CB5105A",
+    "CB5106A",
+    "CB6331",
+    "CB789",
+    "CB799",
+    "CB8006-3",
+    "CB8006-5",
+    "CB802-3",
+    "CB802-5",
+    "CB9100",
+    "CB9105",
+    "CB9106",
+    "CB9114",
+    "CSK12A",
+    "CSK14B",
+    "CSK15A",
+    "L350",
+    "SUS304"
+  ],
+  "found": {
+    "CB1540SS-BL": {
+      "page": "https://www.cabana.com.my/index.php/products/kitchen/kitchen-faucet/cb1540ss-bl-detail",
+      "status": 200,
+      "images": [
+        {
+          "src": "https://www.cabana.com.my/images/virtuemart/product/CB1540SS-BL.jpg",
+          "alt": ""
+        }
+      ]
+    },
+    "CB2805A": {
+      "page": "https://www.cabana.com.my/index.php/products/kitchen/kitchen-faucet/cb2805a-ss-cr-diy-detail",
+      "status": 200,
+      "images": [
+        {
+          "src": "https://www.cabana.com.my/images/virtuemart/product/CB2805A3.jpg",
+          "alt": ""
+        }
+      ]
+    },
+    "CB2806A": {
+      "page": "https://www.cabana.com.my/index.php/products/kitchen/kitchen-faucet/cb2806a-ss-cr-diy-detail",
+      "status": 200,
+      "images": [
+        {
+          "src": "https://www.cabana.com.my/images/virtuemart/product/CB2806A8.jpg",
+          "alt": ""
+        }
+      ]
+    },
+    "CB6331": {
+      "page": "https://www.cabana.com.my/index.php/products/kitchen/kitchen-faucet/cb6331-detail",
+      "status": 200,
+      "images": [
+        {
+          "src": "https://www.cabana.com.my/images/virtuemart/product/CB6331.jpg",
+          "alt": ""
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "3447": {
+    "page_status": 200,
+    "page_final_url": "https://tinaiksupply.com.my/product/orbit-hose-clip/",
+    "image_status": 0,
+    "image_final_url": "",
+    "image_content_type": "",
+    "image_bytes_len": 0,
+    "px_w": 0,
+    "px_h": 0,
+    "image_sha256": "",
+    "asset_file": "",
+    "fetched_round": 1
+  },
+  "4338": {
+    "page_status": 200,
+    "page_final_url": "https://sonichardware.com.my/hikashop-menu-for-module-194/product/2024-lion-brand-brass-bib-cock",
+    "image_status": 0,
+    "image_final_url": "",
+    "image_content_type": "",
+    "image_bytes_len": 0,
+    "px_w": 0,
+    "px_h": 0,
+    "image_sha256": "",
+    "asset_file": "",
+    "fetched_round": 1
+  }
+}

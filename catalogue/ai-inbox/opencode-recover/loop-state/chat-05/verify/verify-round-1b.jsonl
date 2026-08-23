@@ -1,0 +1,9 @@
+{"pos":5610,"verifier_verdict":"pass","model_exact":"yes","finish_exact":"yes","justification":"Dedicated PLF-RT32x20 reducing tee page; single black HDPE compression reducing tee pictured."}
+{"pos":5712,"verifier_verdict":"fail","model_exact":"yes","finish_exact":"yes","justification":"Range shot showing TWO sizes (10mm and 18mm) together, not solely the named 18mm x 1.5m variant."}
+{"pos":5902,"verifier_verdict":"pass","model_exact":"yes","finish_exact":"yes","justification":"Page solely for Red Door Stopper; single red rubber cylindrical stopper pictured; nothing conflicts."}
+{"pos":6394,"verifier_verdict":"pass","model_exact":"yes","finish_exact":"yes","justification":"White round nail-in cable clips clearly marked 7MM matching C-7MM listing."}
+{"pos":6484,"verifier_verdict":"void","model_exact":"","finish_exact":"","justification":"Local asset missing (origin URL 404); row returns to open tier2."}
+{"pos":6573,"verifier_verdict":"pass","model_exact":"yes","finish_exact":"yes","justification":"Official Rayaco card titled '(611) WAIST SHAPE WASHING HAND BRUSH (HARD)'; waist-shaped hard washing brush pictured."}
+{"pos":6640,"verifier_verdict":"pass","model_exact":"yes","finish_exact":"yes","justification":"Page states 10x12 black; image shows exactly two black heavy-duty L brackets matching PAIR uom."}
+{"pos":6653,"verifier_verdict":"pass","model_exact":"yes","finish_exact":"yes","justification":"BTANI-LSB12X14 variant confirmed; same pair of black heavy-duty L brackets in correct proportions."}
+{"pos":6750,"verifier_verdict":"fail","model_exact":"yes","finish_exact":"no","justification":"Image is dark grey/black stacked pipe banner, visibly not white UPVC pipe required by name."}

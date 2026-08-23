@@ -1,0 +1,25 @@
+{
+ "round": 6,
+ "rows_total": 270,
+ "states": {
+  "exhausted": 244,
+  "candidate": 19,
+  "open": 7
+ },
+ "reds_by_code": {
+  "red:http": 1,
+  "red:model_absent": 1
+ },
+ "reds": [
+  {
+   "key": "SHE-CAB-CB781-BL|PCS#1197",
+   "code": "red:http",
+   "detail": "image status=404 for https://www.cabana.com.my/images/virtuemart/product/CB781-BL-01.jpg"
+  },
+  {
+   "key": "SPRA-BOSNY-B136-400CC|CAN#3508",
+   "code": "red:model_absent",
+   "detail": "['B13640CC', 'TOKENS:B136|40CC', 'BOSNYB136400CC']"
+  }
+ ]
+}

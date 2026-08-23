@@ -14,9 +14,13 @@ use super::{
 
 pub async fn login(
     State(state): State<AppState>,
+    headers: HeaderMap,
     Json(input): Json<AdminLoginInput>,
 ) -> Result<Json<AdminAuthPayload>, error::HttpError> {
-    service::login(&state.pool, &input).await.map(Json)
+    let client_key = service::client_key_from_headers(&headers);
+    service::login(&state.pool, &input, &client_key)
+        .await
+        .map(Json)
 }
 
 pub async fn logout(

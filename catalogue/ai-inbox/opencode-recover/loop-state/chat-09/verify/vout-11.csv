@@ -1,0 +1,11 @@
+row_id,item_code,uom,verifier_verdict,finish_exact,model_exact,justification
+1,FAN-CEI-KDK-K14PH-WA-56"",PCS,pass,yes,yes,"Genuine KDK PDP with spec table MODEL K14PH-WA / COLOR WOOD ACACIA / 56in 140CM DC ceiling fan; image product-thumbnail_K14PH-WA.png is the model's own thumbnail."
+2,VAC-MID-MVC-V18K-BG,PCS,pass,yes,yes,"Midea PDP titled 'Midea Canister Bagless Vacuum - MVC-V18K-BG' with specs Power 1800W Color Black Gold; image lives in .../mvc-v18k-bg/ folder named MVC-V18K-BG-gallery1-1040x1040.jpg."
+3,TOW-CAB-CB720-GM,PCS,pass,yes,yes,"Cabana PDP 'Towel Shelf & Bar: CB720-GM' states Towel Shelf Length 24in Gunmetal confirming -GM steel-body finish; image CB720-GM.jpg is named for the exact SKU."
+4,BID-CAB-CB55CR,UNIT,pass,yes,yes,"Cabana PDP 'Bidet: CB55CR' breadcrumb HOME>Products>Bathroom>Bidet>CB55CR and detail text 'Bidet Chrome'; image CB55CR CB55CR-PJ.jpg carries the model code."
+5,NIP-HYD-WOD-MET-1L,CAN,pass,n/a,yes,"Nippon Paint genuine PDP titled 'Hydro Wood & Metal Primer - Water-based primer for wood & metal' exactly matching code HYD-WOD-MET (1L pack size); image hydro-wood-metal-primer.webp is the product's own hero shot."
+6,SHO-CAB-CSA300AA,UNIT,pass,n/a,yes,"Cabana PDP 'Shower Arm: CSA300AA' states 'Shower Arm 20 x 1.0 x 300mm S/Steel Chrome' matching display dims exactly; image CSA300AA-01.jpg named for the exact model."
+7,SWI-SOC-ELE-TSB913,PCS,pass,yes,yes,"Chin Chun PDP h1 'RETOUCH 13A UNIVERSAL TRACK SOCKET - BLUE RED LED (TS-B913)' SKU 88071066; supplied image hash 39a75ee6252bbd6a21e1f1843f5b6267 equals the PDP main image while sibling TS-GD913/TS-BK913 listings use different hashes."
+8,SWI-SOC-ELE-TSR13,PCS,pass,yes,yes,"JLL PDP COLOUR selector lists variant TS-R13 with dedicated image npimg/16508685987e737ead02210488fa7c71d9059f77ae.webp byte-identical to supplied URL (alt='TS-R13'), distinct from GD13/BK13/B13/GY13 variant images."
+9,TOO-BOX-NIE-H/D-178,PCS,pass,n/a,yes,"Nietz PDP 'NIETZ Heavy Duty Tool Box 178' CODE: 505-23-178 with 'Two removable organizers on top of the cover' matching display; image 8_50523178.png encodes the same 50523178 code."
+10,VAL-SOR-SRTWT806,PCS,pass,yes,yes,"Sorento VirtueMart PDP h1 'SRTWT806' description 'Angle Valve (Brass)' under VALVES; supplied SRTWT806-01.jpg is that PDP's own main product photo (chrome-plated brass standard, nothing contradicts)."

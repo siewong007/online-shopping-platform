@@ -1,5 +1,6 @@
 mod admin;
 mod audit;
+mod autocount_stock_price;
 mod catalog;
 mod catalogue_import;
 mod customer_auth;
@@ -22,6 +23,7 @@ mod support;
 
 pub use admin::*;
 pub use audit::*;
+pub use autocount_stock_price::*;
 pub use catalog::*;
 pub use catalogue_import::*;
 pub use customer_auth::*;

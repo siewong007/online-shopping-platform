@@ -1,0 +1,586 @@
+[
+  {
+    "source_position": "3024",
+    "item_code": "TOO-COM-W0287H-15MM",
+    "tier_used": 2,
+    "queries": [
+      "\"W0287H\" ratchet wrench (primary websearch -> HTTP 429)",
+      "\"W0287H\" ratchet (DDG html -> bot-wall captcha)",
+      "W0287H combination ratchet wrench 15mm (Bing -> degraded/junk results)",
+      "W0287H wrench (Yahoo)",
+      "Wynn's W0287 ratchet wrench (Yahoo)",
+      "\"W0287E\" (Yahoo)",
+      "digitallocksystems.com/?s=w0287&post_type=product",
+      "winstarelectrical.com/?s=w0287 ; aikchinhin.sg/?s=w0287"
+    ],
+    "pages_opened": [
+      {"url": "https://www.tiamhengmachinery.com/product/wynns-w0287", "note": "200 but Next.js ERP store; no product data/images in HTML (client-side API)"},
+      {"url": "https://en.wynnstools.com/", "note": "200 official Wynn's (Guangdong) site; JS catalog, no site search, Baidu site: index empty"},
+      {"url": "https://digitallocksystems.com/?s=w0287&post_type=product", "note": "200, no matching products"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "The W-code family was identified as Wynn's (威力狮) tools via sibling codes (CT2-W0283 crimp tool, WS70xx cutters), and a WYNN'S W0287 COMBINATION RATCHET WRENCH (CR-V) dealer page exists (tiamhengmachinery.com), but it renders product data client-side so neither the 15MM/H suffix nor any image could be extracted. Official wynnstools.com/en.wynnstools.com is JS-only with no working search and is not indexed by Baidu/Yahoo for W0287H. Remaining sources for W0287E/H are Shopee/Lazada marketplaces, which are excluded by the brief.",
+    "human_action": "Ask a Wynn's distributor (e.g. Tiam Heng Machinery, HSL Electrical Penang) for an official W0287H 15MM product photo, or photograph the stocked item."
+  },
+  {
+    "source_position": "5947",
+    "item_code": "TOO-CUT-CALWS708B",
+    "tier_used": 2,
+    "queries": [
+      "WS708B cable cutter (Yahoo)",
+      "wynns cable cutter WS708B (Yahoo)",
+      "WS708B site:wynnstools.com (Baidu -> 0 results)"
+    ],
+    "pages_opened": [
+      {"url": "https://en.wynnstools.com/product/36/", "note": "200 'New Products' category, JS-paginated, no WS708B entry visible"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "WS708B is confirmed as a Wynn's (威力狮) 200mm Cr-V cable cutter (Taobao listing title '威力狮电缆剪 型号WS708B 规格200mm'), matching the row's Cr-v 200MM spec, but Taobao/Alibaba are excluded source kinds. The official wynnstools.com site has no indexed page for WS708B and no usable internal search; no Malaysian authorised-distributor PDP with this model string could be found.",
+    "human_action": "Request a WS708B product image from Guangdong Wynn's Holding Group (wynnstools@wynnstools.com) or from the local Wynn's importer."
+  },
+  {
+    "source_position": "3259",
+    "item_code": "CON-CAB-600A",
+    "tier_used": 1,
+    "queries": [
+      "Glotool cable connector 600A Malaysia (Yahoo)",
+      "site:sonichardware.com.my glotool connector (Yahoo)",
+      "sonichardware.com.my homepage/product fetches (IWR/webfetch)"
+    ],
+    "pages_opened": [
+      {"url": "https://www.skhardware.com.my/glotool-1", "note": "200 Glotool brand category, only 10 hand-tool products, no cable connector"},
+      {"url": "https://sonichardware.com.my/", "note": "repeated timeouts (IWR and webfetch) - parked as hostile"},
+      {"url": "https://lapasarmall.com/brands/GLOTOOL", "note": "B2B marketplace - excluded source kind, not opened"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Sonic Hardware (Sarawak) Sdn Bhd carries exactly this item ('Cable Connector (Glotool)' with Model select '600AMP', PACKING 1 CTN = 50PCS) per search-index snippets, and a Facebook post by United Credible shows model string 'GCP-600 GLOTOOL', but sonichardware.com.my consistently times out from here (bot-hostile) so the page could not be opened to verify text or extract an image. No other acceptable-source PDP for the 600A Glotool connector was found.",
+    "human_action": "Open sonichardware.com.my Cable Connector (Glotool) product page in a browser off-peak and save the 600AMP variant image, or email sales@sonichardware.com.my for a photo."
+  },
+  {
+    "source_position": "5911",
+    "item_code": "NAI-AIR-LEO-T50",
+    "tier_used": 2,
+    "queries": [
+      "\"Leo\" air nail T50 Malaysia (Yahoo)",
+      "corated LEO air nails T-50 2500pc (Yahoo)",
+      "sunmaxhardware LEO air nail (Yahoo)"
+    ],
+    "pages_opened": [
+      {"url": "https://www.corated.com.my/shop/leo-t50-leo-air-nails-t", "note": "404 via fetcher (slug truncated in SERP); corated.com.my root loads but shop is fully JS ('Powered by 6F Solutions')"},
+      {"url": "https://www.ukhardwaretrading.com/6228626/leo-t-air-nail", "note": "404 (also without www)"},
+      {"url": "https://www.sunmaxhardware.com/cid/163624 and /1983164/leo-nails", "note": "404 via fetcher"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "LEO AIR NAILS T-50 (2500PC/BOX) exists as a Corated Enterprise (Klang) product and 'LEO T Air Nail' pages exist at UK Hardware Trading and Sunmax Hardware, but every one of these dealer URLs 404'd through the fetcher or is a JS-only store, so no page could be opened to quote the model string or take a direct image URL. All other T50 air-nail sources are Shopee/Lazada (excluded).",
+    "human_action": "Screenshot corated.com.my LEO AIR NAILS T-50 product page in a browser and export its product image, or request the pack shot from Corated Enterprise."
+  },
+  {
+    "source_position": "2982",
+    "item_code": "TOO-WRE-PIP-W250C",
+    "tier_used": 2,
+    "queries": [
+      "W250C pipe wrench 250mm (Yahoo)",
+      "\"W250C\" wrench (Yahoo -> zero organic results)",
+      "W0287-family check: Wynn's attribution test via CT2-W0283 / WS708B (see sibling rows)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "The exact code W250C returns no relevant results on any reachable engine (only unrelated RIDGID/Stanley/workPro pipe wrenches); unlike W0283/WS708B it could not be tied to the Wynn's numbering scheme either. This appears to be a house/OEM code without any published product page, so per the brief a clean no-candidate is recorded.",
+    "human_action": "Check the Ekoway supplier invoice/catalogue for the real manufacturer code of the heavy pipe wrench, then re-search that code."
+  },
+  {
+    "source_position": "3649",
+    "item_code": "GAR-RAK-BLA-6T",
+    "tier_used": 1,
+    "queries": [
+      "6 teeth framer rake garden Malaysia (Yahoo)"
+    ],
+    "pages_opened": [
+      {"url": "https://www.ewarehouse.my/BTani-Heavy-Duty-Steel-Rake-6T", "note": "seen in SERP only; listing states 'images shown are for illustration purposes only'"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "'Framer rake' 6-teeth heads are commodity items sold under assorted local labels (BTani 6T etc.) on marketplaces and eWarehouse, and eWarehouse itself disclaims its photos as illustrative. No brand owner or authorised-distributor product page naming this model exists, so there is nothing that can pass the gate.",
+    "human_action": "Photograph the actual stocked rake head, or identify the importer label on the item and re-search that brand."
+  },
+  {
+    "source_position": "3721",
+    "item_code": "X-CAR-WAX-MUL-CLE-A10",
+    "tier_used": 2,
+    "queries": [
+      "\"multi clean\" A10 500ml (Yahoo)",
+      "A10 Multi Clean car wax interpretation checks (SERP side-links only)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "All hits for 'Multi Clean' point to unrelated brands (US Multi-Clean commercial chemicals, Würth Multiclean, Unitor Multi Clean) - none offer an 'A10' 500ML automotive multi-clean. The row appears to be a locally packed house product with no published official page.",
+    "human_action": "Photograph the bottle/label; if a maker's brand is printed on the label, re-run research against that maker's site."
+  },
+  {
+    "source_position": "4835",
+    "item_code": "SHH-REEL-1188S135",
+    "tier_used": 1,
+    "queries": [
+      "udang galah fishing rod transparent 1188 (Yahoo)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "'1188 Sin Udang Galah TRANSPARENT' prawn rods are house-label tackle; searches surface only Shopee/Lazada aggregators, clipart sites, and a different XPUYU rod at TCETackles. No manufacturer or authorised dealer page names the TRANSPARENT135 (4'6\") variant, so nothing passes the gate.",
+    "human_action": "Photograph the rod; alternatively contact the wholesaler that supplies the '1188' rods for a product sheet."
+  },
+  {
+    "source_position": "5103",
+    "item_code": "MIN-TAN-TUL-1.5KGS",
+    "tier_used": 2,
+    "queries": [
+      "Worker minyak tanah tulen kerosene Malaysia (Yahoo)"
+    ],
+    "pages_opened": [
+      {"url": "https://buatanmalaysia.com/product/18-00410wk-pt-59906", "note": "connection closed unexpectedly (hostile) - parked"},
+      {"url": "https://www.contractorstore.com.my/product/wk-pt-59906", "note": "'launching soon' placeholder, no product content"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "WORKER W-906 MINYAK TANAH TULEN exists (buatanmalaysia.com and contractorstore.com.my list code WK-PT-59906), but buatanmalaysia.com drops connections from this environment and contractorstore.com.my is an empty coming-soon shell; remaining listings are Shopee/Lazada (excluded). The maker's own site for the WORKER brand could not be located via reachable engines.",
+    "human_action": "Open buatanmalaysia.com WK-PT-59906 in a browser and save the product image, or identify the WORKER paint/kerosene manufacturer and request official artwork."
+  },
+  {
+    "source_position": "5929",
+    "item_code": "DOR-FLU-SGD-2108\"",
+    "tier_used": 1,
+    "queries": [
+      "ADB-2108 flush bolt (Yahoo)",
+      "aurous armor flush bolt SUS304 ADB-2108 (Yahoo)",
+      "onehome.com.my/?s=ADB-2108&post_type=product (WordPress search)"
+    ],
+    "pages_opened": [
+      {"url": "https://aurous.com.my/product/armor-stainless-steel-sus304-box-type-flush-bolt-ss-mb-6-8-12", "note": "HTTP 401 auth wall - parked"},
+      {"url": "https://onehome.com.my/product/armor-flush-bolt-adb-2000", "note": "200 but this is the 6-inch sibling ADB-2106/SS"},
+      {"url": "https://onehome.com.my/product/armor-flush-bolt-adb-2000-series-adb-2108-2/", "note": "200 PDP; <title> 'ARMOR Flush Bolt ADB-2000 Series ADB-2108'; WooCommerce featured image /wp-content/uploads/2021/05/ADB-2000-Series.jpg (full-size variant present alongside -300x300 thumb)"}
+    ],
+    "official_product_page": "https://onehome.com.my/product/armor-flush-bolt-adb-2000-series-adb-2108-2/",
+    "official_image_url": "https://onehome.com.my/wp-content/uploads/2021/05/ADB-2000-Series.jpg",
+    "model_string_on_page": "ARMOR Flush Bolt ADB-2000 Series ADB-2108 (page title and body)",
+    "finish_match": "yes",
+    "size_match": "yes",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "unknown",
+    "confidence": "medium",
+    "reason": "One Home Gallery (Kajang, MY) runs a dedicated WooCommerce PDP titled 'ARMOR Flush Bolt ADB-2000 Series ADB-2108' whose additional-information block mirrors the sibling ADB-2106/SS page (Material Stainless Steel SUS 304, Finishing SS); a separate matt-black variant page (...adb-2108-mb-2/) exists, confirming this page represents the SS finish. ADB-2108 is the 8-inch member of the ADB-2000 box-type series per corroborating retailer specs (aurous/Shopee listings: ADB-2106=6\", ADB-2108=8\", ADB-2112=12\"). Image dimensions could not be byte-verified because the host stalls direct image downloads, but the non-resized upload URL was taken rather than thumbnails.",
+    "human_action": ""
+  },
+  {
+    "source_position": "5853",
+    "item_code": "DRI-AUG-BIT-NO.1/4\"",
+    "tier_used": 3,
+    "queries": [
+      "Star-M No.1 auger bit quarter inch (Yahoo)",
+      "starminfo \"No.1\" auger bit (Yahoo)",
+      "star-m auger bit No.1 (Yahoo)"
+    ],
+    "pages_opened": [
+      {"url": "https://www.starminfo.com/en/product (Power Drill Auger Bit / Combination Auger Bit pages)", "note": "200 official STAR-M CORPORATION English catalog; series pages exist but the site exposes no search and the specific No.1 1/4-inch product page/URL could not be reached within budget"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "low",
+    "reason": "Brand anchor is strong: STAR-M CORPORATION (starminfo.com, Miki City Japan) makes the No.1 straight-shank auger bit line, and dealers (Blackwoods AU, tyzacktools, Workshop Heaven) sell Star-M augers. However the official English catalog is JS-navigated with no keyword search, and no reachable page quoting 'No.1' together with a 1/4 inch size plus a direct image URL could be captured, so the exact-model bar cannot be met yet.",
+    "human_action": "Browse starminfo.com English auger-bit section in a browser for the No.1 series inch-size table; if 1/4\" exists, save its product image, else treat as mm-equivalent (6mm) decision needed."
+  },
+  {
+    "source_position": "2745",
+    "item_code": "ELE-D/L-MGM-MQTL1119-SQ-12W-4000K",
+    "tier_used": 1,
+    "queries": [
+      "MQTL1119 LED panel light (Yahoo)",
+      "Megaman MQTL1119-F downlight (primary websearch -> HTTP 429)",
+      "megaman-ap.com product_desc_64 direct open"
+    ],
+    "pages_opened": [
+      {"url": "https://www.megaman-ap.com/product_desc_64", "note": "returns empty JS 'Document' shell - hostile to text fetch"},
+      {"url": "https://esltrade.com.my/megaman-downlight-mqtl1119-f", "note": "200 full PDP: 'MEGAMAN® MQTL1119-F LED Recessed Downlight ... Square Panel, Integrated Driver with SIRIM Approved'; description lists 9W(4\"), 12W(5\"), 15W(6\"), 24W(8\") and 3000K/4000K/6500K options"}
+    ],
+    "official_product_page": "https://esltrade.com.my/megaman-downlight-mqtl1119-f",
+    "official_image_url": "https://esltrade.com.my/wp-content/uploads/2025/12/MEGAMAN-RECESSED-DOWNLIGHT-MQTL1119-F.jpg",
+    "model_string_on_page": "MEGAMAN® MQTL1119-F (title, tags and description)",
+    "finish_match": "yes",
+    "size_match": "yes",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "unknown",
+    "confidence": "medium",
+    "reason": "ESL Lighting (M) Sdn Bhd (Selangor dealer, stocking Megaman since 2006) publishes a dedicated MQTL1119-F square backlit panel/downlight page whose spec text covers exactly our variant: 12W corresponds to the 5-inch size, 4000K Neutral White is an offered colour temperature, and SIRIM/MS approval matches the '(sr)' hint. Image URL is the full-size WP upload named for this exact model; pixel dimensions could not be byte-verified (host stalls image downloads) but the non-thumbnail original was selected. Official megaman-ap.com product page is JS-walled, so the Malaysian authorised dealer page is used.",
+    "human_action": ""
+  },
+  {
+    "source_position": "3906",
+    "item_code": "X-FLO-MOC-M66002-QC501AB",
+    "tier_used": 1,
+    "queries": [
+      "M66002 nano polished tile 600x600 (Yahoo)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Model M66002 returns only Chinese factory/aggregator noise (Made-in-China, Alibaba, Indian vitrified-tile sites) with no page carrying the model string on an acceptable source kind. Polished-tile codes of this style are factory catalogue numbers without brand-owned PDPs reachable here.",
+    "human_action": "Identify the tile factory behind M66002 (box imprint) and request the official tile face image from them."
+  },
+  {
+    "source_position": "4000",
+    "item_code": "FAS-RIV-PAT-1/8\"X1/4\"-BOX",
+    "tier_used": 1,
+    "queries": [
+      "Jaguar blind rivet 1/8 x 1/4 Malaysia (Yahoo)",
+      "sonichardware jaguar blind rivet 1442 (Yahoo)",
+      "soongwung.com jaguar-blind-rivet size-string check (IWR)"
+    ],
+    "pages_opened": [
+      {"url": "https://sonichardware.com.my/1442-jaguar-blind-rivet", "note": "404 via fetcher (with and without www) although Google's crawl shows 'Blind Rivet (Jaguar): T/PC 1/8 X 1/4' size selector - host blocks us; parked"},
+      {"url": "https://soongwung.com/product/jaguar-blind-rivet", "note": "200 Soong Wung Industrial (Jaguar rivets importer) PDP; gallery C72.png..C77.png (600x600 thumbs + originals) but page text contains NO '1/8 x 1/4' size string, so image-to-size mapping cannot be verified"},
+      {"url": "https://www.hardwarehouse.com.my/264/Jaguar-Blind-Rivet", "note": "404; site also disclaims images as illustration-only"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Two acceptable-looking Malaysian dealer PDPs exist for JAGUAR blind rivets: Sonic Hardware's page explicitly offers 'T/PC 1/8 X 1/4' but its host refuses all our fetches (404/timeouts), and Soong Wung's page opens cleanly but never names the 1/8 x 1/4 size in text and its seven gallery images cannot be tied to a specific size, violating bar items 1 and 4. Marketplaces (Shopee/Lazada) confirm the brand/size combo but are excluded.",
+    "human_action": "Fetch sonichardware.com.my/1442-jaguar-blind-rivet in a normal browser and save the 1/8 X 1/4 variant image; alternatively ask Soong Wung Industrial which gallery image corresponds to the 1/8 x 1/4 (1000pcs/box) pack."
+  },
+  {
+    "source_position": "4130",
+    "item_code": "CHA-MKX-2026",
+    "tier_used": 2,
+    "queries": [
+      "\"MKX-2026\" (Yahoo)",
+      "\"MKX-2026\" charger mark-x (Yahoo)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "MKX-2026 is the MARK-X (Mr.Mark, Jiason Machinery) 18V brushless impact drill, and the 'charger' is only ever sold bundled inside drill kits (Shopee/Lazada/machinerytools.com.my kit listings). No standalone charger-for-MKX-2026 product page exists anywhere, and the drill kit pages are sibling products, not this spare-part SKU.",
+    "human_action": "Ask Jiason Machinery/Mr.Mark service centre for the standalone charger part number and official spare-part photo for MKX-2026."
+  },
+  {
+    "source_position": "5995",
+    "item_code": "NAI-AIR-LEO-F30",
+    "tier_used": 2,
+    "queries": [
+      "\"Leo\" air nail F30 Malaysia (Yahoo)",
+      "sunmaxhardware LEO air nail (Yahoo)"
+    ],
+    "pages_opened": [
+      {"url": "https://www.ukhardwaretrading.com/527740/leo-f-air-nail and /6228625/leo-f-air-nail", "note": "both 404 via fetcher"},
+      {"url": "https://www.corated.com.my/shop/leo-t50-leo-air-nails-t", "note": "404; F30 sibling assumed same JS store issue"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "'LEO F Air Nail' dealer pages exist (UK Hardware Trading, Sunmax) and Lazada bundles show LEO F15/F20/F25/F30 packs, but every candidate dealer URL 404s through the fetcher and the rest are excluded marketplaces; no page could be opened to verify the F30 model string or capture an image.",
+    "human_action": "Open ukhardwaretrading.com 'LEO F Air Nail' pages in a browser, or request the F30 pack photo from Corated Enterprise (they stock the T50 sibling)."
+  },
+  {
+    "source_position": "5917",
+    "item_code": "TAP-SKC-M08X1.25",
+    "tier_used": 3,
+    "queries": [
+      "\"SKC\" hand tap M08 (Yahoo)",
+      "niolin-industrial.com/products/skc-hand-tap-m8-x1-25 (and slug variants, all 404)"
+    ],
+    "pages_opened": [
+      {"url": "http://www.skc-taps.com/english/01", "note": "200 OFFICIAL SKC THREAD TOOL MFG. CO.,LTD 'HAND TAPS - METRIC STANDARD' page; contains only small type-diagram GIFs (taper/plug/bottoming) and no per-size (M8) text or product photo suitable for gating"},
+      {"url": "https://www.sonichardware.com.my/3457-skc-hand-tap-japan-m", "note": "Google snippet shows exact 'Set M08 1.25 PACKING : 1 SET = 3 PCS' but host is unfetchable (parked)"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "SKC Thread Tool Mfg. Co. (Japan, skc-taps.com) is the maker and its metric-standard hand-tap page covers M8x1.25 generically, but it publishes only schematic drawings, not model photos, and does not render the M8 designation as text we can quote. The one dealer page showing the exact 'M08 1.25' set (Sonic Hardware) is bot-blocked. Nothing satisfies both the model-quote and image requirements.",
+    "human_action": "Retrieve the Sonic Hardware SKC Hand Tap (JAPAN) M08 1.25 page in a browser and save its image, or request a product photo from SKC's Malaysian agent."
+  },
+  {
+    "source_position": "4950",
+    "item_code": "TOO-WRE-BAS-ABT11",
+    "tier_used": 1,
+    "queries": [
+      "\"ABT\" basin wrench 11 Malaysia (Yahoo)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "ABT-branded wrenches appear only inside Lazada/Shopee shop listings; ABT Brothers Enterprise (abtmy.com) is a process-equipment supplier, not this tool brand. No authorised dealer or brand PDP naming the ABT basin wrench 11 exists to gate.",
+    "human_action": "Photograph the stocked basin wrench; check neck stamp for the actual OEM and re-search."
+  },
+  {
+    "source_position": "6056",
+    "item_code": "TOO-ELE-CRMW0283",
+    "tier_used": 2,
+    "queries": [
+      "W0283 crimping tool modular plug 200mm (Yahoo)",
+      "威力狮工具 wynn 官网 (Baidu - found official site)",
+      "WS708B site:wynnstools.com (Baidu control, 0 hits)"
+    ],
+    "pages_opened": [
+      {"url": "https://www.hslelectrical.com.my/wynn-s-w0283-modular-plug-crimping-tool/", "note": "200 HUP SEN LEE ELECTRICAL SDN BHD (Penang) PDP; description 'Wynns W0283 200mm (8\") Modular Plug Crimping Tool'; gallery incl. /image/.../product-495/WYNNS-W0283-800x800.jpg"},
+      {"url": "https://digitallocksystems.com/product/wynns-200mm-8-modular-plug-crimping-tool-model-ct2-w0283/", "note": "200 SG retailer PDP 'Model : CT2-W0283'; main img 600x800 webp - kept as corroboration, MY dealer preferred"}
+    ],
+    "official_product_page": "https://www.hslelectrical.com.my/wynn-s-w0283-modular-plug-crimping-tool/",
+    "official_image_url": "https://www.hslelectrical.com.my/image/hslelectrical/image/cache/data/all_product_images/product-495/WYNNS-W0283-800x800.jpg",
+    "model_string_on_page": "WYNN'S W0283 MODULAR PLUG CRIMPING TOOL / 'Wynns W0283 200mm (8\")'",
+    "finish_match": "yes",
+    "size_match": "yes",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "unknown",
+    "confidence": "high",
+    "reason": "Malaysian electrical dealer HSL Electrical (Hup Sen Lee, Penang) hosts a dedicated WYNN'S W0283 product page whose description repeats 'Wynns W0283 200mm (8\")' matching the row's Modular Plug Crimp 200MM, with an 800x800 product JPG (WYNNS-W0283_SHOPEE-800x800.jpg also present in the gallery). Brand identification is corroborated by Singapore dealer digitallocksystems.com selling the identical tool as 'Wynn's ... Model : CT2-W0283'. Wynn's official site exists (wynnstools.com) but is JS-only, so the authorised-dealer page is used.",
+    "human_action": ""
+  },
+  {
+    "source_position": "6122",
+    "item_code": "LEO-S/S-LOC-BOL-LB304-4",
+    "tier_used": 1,
+    "queries": [
+      "\"LB304\" lockable bolt stainless (Yahoo)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "LB304 resolves to unrelated Indian mortise door-lock sets (Homexpert/CRUST on Moglix/Amazon) - clearly not a 'Leon' stainless steel lockable door bolt. No brand called Leon with model LB304-4 could be located on any acceptable source.",
+    "human_action": "Check the packaging brand on the physical item (possibly a local 'LEON' hardware label) and search that maker's catalogue."
+  },
+  {
+    "source_position": "4946",
+    "item_code": "SHH-REEL-1188S120",
+    "tier_used": 1,
+    "queries": [
+      "udang galah fishing rod transparent 1188 (Yahoo) - shared sweep with TRANSPARENT135 row"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Same house-label prawn-rod family as the TRANSPARENT135 row; no official or dealer page distinguishes the TRANSPARENT120 (4'0\") variant. Only marketplace aggregators carry it.",
+    "human_action": "Photograph the 4'0\" rod; request the '1188' series product sheet from the fishing-tackle wholesaler."
+  },
+  {
+    "source_position": "5129",
+    "item_code": "HOR-LIO-24VDC",
+    "tier_used": 1,
+    "queries": [
+      "horn 24VDC lion Malaysia (Yahoo)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "'Lion disc horn 12V/24V' is sold only via Shopee/Lazada sellers under various labels; javatech.com.my lists a generic 'ELECTRIC HORN 24V' without the Lion brand/model, and KVC/AMICI list other brands. No Lion-brand owner or authorised dealer page with this horn exists to gate.",
+    "human_action": "Photograph the horn; the die-cast stamp usually shows the true maker (e.g. Roots/Lion) for a follow-up search."
+  },
+  {
+    "source_position": "7442",
+    "item_code": "SWI-OMR-H3G8C",
+    "tier_used": 1,
+    "queries": [
+      "Omron H3G-8C timer specification (Bing -> brand-level junk)",
+      "omron h3g-8c timer (Qwant Lite -> empty result shell)",
+      "\"H3G-8C\" omron timer 60s (Yahoo)",
+      "site:ia.omron.com H3G (Yahoo)",
+      "\"H3G-8C\" Malaysia (Yahoo)"
+    ],
+    "pages_opened": [
+      {"url": "https://www.ia.omron.com (Analog Timers category / family pages)", "note": "H3G is discontinued; no H3G family/product page remains on Omron Industrial Automation"},
+      {"url": "https://edata.omron.com.au/eData/Timers (H3G Data Sheet)", "note": "OFFICIAL Omron PDF datasheet covering H3G-8C; per brief, PDF may only discover models, cannot be gated as the image"},
+      {"url": "https://www.vtech.my/h3g-8c-30m-detail", "note": "404 via fetcher; snippet showed OMRON H3G-8C (30M) 24VDC TIMER - wrong time-range sibling (30M vs our 60S)"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "Omron officially discontinued the H3G timer series: the global industrial site keeps no H3G-8C PDP, leaving only the official edata.omron.com.au PDF datasheet, which the brief forbids as an image source. Malaysian dealer pages (vtech.my) either 404 or list the 30-minute sibling instead of the 60-second range in our row, and everything else is marketplace/reseller stock (Shopee, Lazada, US surplus houses).",
+    "human_action": "Request a product photograph from an Omron Malaysia authorised distributor (or myOMRON support), or take an in-house photo of the unit facing the range dial showing '60S'."
+  },
+  {
+    "source_position": "3172",
+    "item_code": "TOO-COM-W0287E-12MM",
+    "tier_used": 2,
+    "queries": [
+      "Wynn's W0287 ratchet wrench (Yahoo)",
+      "\"W0287E\" (Yahoo)",
+      "digitallocksystems.com/?s=w0287&post_type=product",
+      "winstarelectrical.com/?s=w0287 ; aikchinhin.sg/?s=w0287"
+    ],
+    "pages_opened": [
+      {"url": "https://www.tiamhengmachinery.com/product/wynns-w0287", "note": "200 but JS-rendered ERP store; W0287 family page without extractable per-size data or images"},
+      {"url": "https://en.wynnstools.com/", "note": "official Wynn's site, JS catalog, no search; not indexed for W0287E"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "WYNN'S W0287E 12MM RATCHET COMBINATION WRENCH exists (Lazada/Shopee listings describe 12MM, CR-V, 72 teeth) and a Vietnamese reseller (donghetot.vn) carries it, but those are excluded source kinds; the only acceptable-kind page (Tiam Heng Machinery W0287 family) hides its data behind client-side rendering so neither the E/12MM facts nor an image could be verified.",
+    "human_action": "Open tiamhengmachinery.com/product/wynns-w0287 in a browser to capture the 12MM variant image, or request the W0287E pack shot from a Wynn's distributor."
+  },
+  {
+    "source_position": "3882",
+    "item_code": "BNW-B&N-RBN-115-BOX",
+    "tier_used": 1,
+    "queries": [
+      "SRI galvanised iron bolt nut 3/16 box Malaysia (Yahoo)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "G.I. roofing bolt & nut 3/16 x 1-1/2 boxes are commodity fasteners (ACE brand appears on marketplaces; Saliran/SLS/Standard Bolts are general fastener suppliers without model-numbered PDPs). Code RBN-115 traces to no published product page on an acceptable source kind.",
+    "human_action": "Photograph the box front/back (brand panel gives the true maker); consider ACE galvanised roofing bolt & nut as the likely equivalent to re-search."
+  }
+]

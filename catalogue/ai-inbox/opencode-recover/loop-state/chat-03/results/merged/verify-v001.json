@@ -1,0 +1,86 @@
+[
+  {
+    "source_position": "2589",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Page is a genuine DongCheng Malaysia product page headed 'DJZ10A' with spec block 'ELECTRIC DRILL/ DJZ10A', 300W, Steel Φ10mm, matching DC-J1Z-FF-10A / 'Electric Drill / DJZ10A'. Asset shows the blue/black DongCheng electric drill with key chuck, consistent with the official DJZ10A-1.jpg photo; no colour/size variant is named."
+  },
+  {
+    "source_position": "2603",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Page product title is 'NIETZ ALUMINIUM LADDER HEAVY DUTY DOUBLE SIDED 6 STEPS DSHD06' (manufacturer Nietz-Strongman MIM), matching 'D/s H/d Ladder DSHD06 6STEP'. Asset shows the Strongman-branded double-sided aluminium heavy-duty ladder in the same style as the listing photos."
+  },
+  {
+    "source_position": "2645",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "dongchengtool.com page is headed 'DSM09-100S(4\")' with 800W / Max Wheel Dia Φ100mm specs and displays DSM09-100S.jpg, exactly the model in DC-DSM09-100S / 'Angle Grinder / DSM09-100S'. Asset is that same DongCheng angle grinder product photo; no colour variant named."
+  },
+  {
+    "source_position": "2745",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "ESL Trade page is 'MEGAMAN® MQTL1119-F LED Recessed Downlight ... Square Panel', offering 9W(4\")/12W(5\")/15W(6\")/24W(8\") and 3000K/4000K/6500K, covering the item's SQ-12W-4000K designation. Asset is a square white panel labelled '(MQTL1119-F Series)' with Megaman/ESL Trade branding, i.e. the square 5\"-class panel."
+  },
+  {
+    "source_position": "2950",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "SKL Hardware page sells \"''EAGLE'' EG2030 20M WATER HOSE REEL COMPLETE SET\" including hose reel EG-2030, connectors, spray gun and 20m hose, matching 'Eagle Hose Reel 20M Hose (EG2030)'. Asset shows that reel with yellow hose and grey/orange spray gun (YLCHANDTOOLS watermark belongs to the same seller); note the vin category 'Fishing & Tackle' looks mis-tagged but the page/product/image themselves match."
+  },
+  {
+    "source_position": "3064",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Docasa page is 'Lodge WD005 S (S-Trap)', a Close Couple Washdown Water Closet quoting 'S-Trap 250mm', matching 'Closed Coupled WC 250MM S Trap' / WD005-S-TRAP. Asset is the white close-coupled WC shown in the official WD005.jpg photo."
+  },
+  {
+    "source_position": "3113",
+    "verifier_verdict": "fail",
+    "model_exact": "no",
+    "finish_exact": "no",
+    "justification": "Page is 'Boneo WD014 P (P-Trap)' (P-Trap 80mm), i.e. the P-trap sibling, while display_name/item_code specify the S-trap 250MM variant ('-S'); Docasa separately lists 'Boneo WD014 S (S-Trap)', and the series word 'Epson' in display_name appears nowhere on the page. Wrong trap-type variant sourced."
+  },
+  {
+    "source_position": "3194",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Metrostar page is 'King Toyo Auto Tester KT-1960', SKU KT-1960, brand KING TOYO, an automotive circuit tester 3–48V, matching TOO-TES-PEN-KT1960. Asset is the listing's own Metrostar-branded collage showing the tester in use and the unit itself; no colour variant named."
+  },
+  {
+    "source_position": "3204",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Sunlight Rack page is a genuine product page 'Metal ST150 Hand Truck' (metal deck variant, distinct from its sibling PVC ST150), matching 'Platform Hand Truck-metal ST150'. Asset is the page's own product image — a blue-deck metal platform trolley; the page states no capacity so the '150KGS' claim is not contradicted."
+  },
+  {
+    "source_position": "3253",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Docasa page is 'Destin WD012 S (S-Trap)', a close-coupled WC quoting 'S-Trap 200mm/250mm', matching item WD012 'Close Couple 200MM S Trap'. Asset matches the official WD012.jpg white WC photo. Caveat: display_name's series word 'Luton' differs from the page's series name 'Destin', though model code, trap type and size all match."
+  },
+  {
+    "source_position": "3356",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Camry (camry.cn) page is 'CAMRY Digital Weighing Scale & Commercial Scale Model EI-02HS' (Commercial Scale, capacities 2kg/3kg/6kg), matching SCA-CAM-EI02HS-3KG. Asset is the page's own hero product photo of the digital scale; no colour variant named."
+  },
+  {
+    "source_position": "3389",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Jayamata estore page is 'JM24-T Shape Oil Palm Shank' (Material: Spring Steel, barcode 9555031606574) under Palm Oil Harvesting Tools, matching X-GAR-CHI-JM-24 / 'Jayamata T-shape Oil Palm Harvesting Hook'. Asset is the page's main product photo of the T-shape shank."
+  }
+]

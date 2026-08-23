@@ -75,6 +75,7 @@ services:
       APP_ENV: "production"
       DATABASE_URL: "postgres://shop_admin:${POSTGRES_PASSWORD}@postgres:5432/online_shopping"
       ADMIN_SEED_PASSWORD: "${ADMIN_SEED_PASSWORD:?ADMIN_SEED_PASSWORD is required}"
+      AUTOCOUNT_SYNC_TOKEN: "${AUTOCOUNT_SYNC_TOKEN:-}"
       FRONTEND_ORIGIN: "https://ekowayhardware.com"
       # HitPay production capability is intentionally disabled until PAYMENT_PRIMARY_PROVIDER
       # is explicitly set to hitpay and a separate production credential pair is added to the

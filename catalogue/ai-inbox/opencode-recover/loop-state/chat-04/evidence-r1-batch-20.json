@@ -1,0 +1,28 @@
+{
+ "3185": {
+  "page_status": 200,
+  "page_final_url": "https://www.sonichardware.com.my/categories-listing/product/2282-mikasa-net-hose",
+  "image_status": 200,
+  "image_final_url": "https://sonichardware.com.my/images/com_hikashop/upload/thumbnails/600x600f/4-1.jpg",
+  "image_content_type": "image/jpeg",
+  "image_bytes_len": 22631,
+  "px_w": 600,
+  "px_h": 600,
+  "image_sha256": "0ed2545e45bcc2349dbe50702c12e5fbab96444e3ae92fdea63e01ba1ad2295e",
+  "asset_file": "C:\\Users\\DELL\\OneDrive\\Desktop\\ekoway hardware website\\online-shopping-platform\\catalogue\\ai-inbox\\assets\\3185.jpg",
+  "fetched_round": 1
+ },
+ "4633": {
+  "page_status": 200,
+  "page_final_url": "https://www.rayaco.com.my/showproducts/productid/2989433/cid/185996/v81202-48l-multipurpose-bin-with-handle-recycle/",
+  "image_status": 200,
+  "image_final_url": "https://cdn1.npcdn.net/images/1751943517cefbad91a4c9e0d254e918495546abdc.webp?md5id=2db57e442e48e8860facef49e0a8f2dc&new_width=1000&new_height=1000&size=max&w=1770278800&from=jpg&type=9",
+  "image_content_type": "image/webp",
+  "image_bytes_len": 114774,
+  "px_w": 1000,
+  "px_h": 1006,
+  "image_sha256": "4ae5a6403109463fbeed8416d7e56527f918b7dd7f711b7dfeea4043c9cd9c0a",
+  "asset_file": "C:\\Users\\DELL\\OneDrive\\Desktop\\ekoway hardware website\\online-shopping-platform\\catalogue\\ai-inbox\\assets\\4633.webp",
+  "fetched_round": 1
+ }
+}

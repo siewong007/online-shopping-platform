@@ -1,0 +1,88 @@
+item_code,uom,display_name,category,stock_qty,price_myr,reason,excel_uom,excel_price
+NIP-WTRB-5L-P,CAN,5L Nippon Weatherbond Quartz Pastel Base,Paint & Sundries,12,244.00,excel_price_zero,CAN,0.00
+NIP-VIN-EAS-15L-A,DRUM,15L Nippon Vinilex Easywash Accent Base,Paint & Sundries,8,354.00,excel_price_zero,DRUM,0.00
+NIP-WTRB-18L-A,DRUM,18L Nippon Weatherbond Quartz Accent Base,Paint & Sundries,5,539.00,excel_price_zero,DRUM,0.00
+NIP-WTRB-18L-T,DRUM,18L Nippon Weatherbond Quartz Tint Base,Paint & Sundries,5,549.00,excel_price_zero,DRUM,0.00
+NIP-ROOF-20L-T,UNIT,20L Nippon Roof Coating Tint Base,Building Materials,4,609.00,excel_price_zero,UNIT,0.00
+NIP-ECO-T,CAN,1L 811-2336 Medium Yellow T,Paint & Sundries,6,134.00,excel_price_zero,CAN,0.00
+NIP-ECO-KX,CAN,1L 811-0018 White Kx,Paint & Sundries,10,76.90,excel_price_zero,CAN,0.00
+NIP-QLA-5L-P,CAN,5L Nippon Q-lac Pastel Base,Paint & Sundries,13,169.00,excel_price_zero,CAN,0.00
+NIP-WTRB-5L-A,CAN,5L Nippon Weatherbond Quartz Accent Base,Paint & Sundries,10,209.00,excel_price_zero,CAN,0.00
+NIP-ECO-A,CAN,1L 811-2573 Or Yel A,Paint & Sundries,6,119.00,excel_price_zero,CAN,0.00
+NIP-ECO-V,CAN,1L 811-0422 Magenta V,Paint & Sundries,6,119.00,excel_price_zero,CAN,0.00
+NIP-QSH-EXT-20L-D,DRUM,18L Nippon Q-shield Extra Deep Base,Paint & Sundries,4,449.00,excel_price_zero,DRUM,0.00
+NIP-QSH-EXT-20L-A,DRUM,18L Nippon Q-shield Extra Accent Base,Paint & Sundries,4,429.00,excel_price_zero,DRUM,0.00
+NIP-QLA-5L-A,CAN,5L Nippon Q-lac Accent Base,Paint & Sundries,10,159.00,excel_price_zero,CAN,0.00
+NIP-ECO-D,CAN,1L 811-5511 Phthalo Green D,Paint & Sundries,7,78.90,excel_price_zero,CAN,0.00
+NIP-QSH-EXT-20L-T,DRUM,18L Nippon Q-shield Extra Tint Base,Paint & Sundries,4,389.00,excel_price_zero,DRUM,0.00
+NIP-QGL-15L-T,DRUM,15L Nippon Q-glo Tint Base,Paint & Sundries,4,364.00,excel_price_zero,DRUM,0.00
+NIP-WTRB-5L-T,CAN,5L Nippon Weatherbond Quartz Tint Base,Paint & Sundries,6,244.00,excel_price_zero,CAN,0.00
+NIP-QSH-EXT-5L-T,CAN,5L Nippon Q-shield Extra Tint Base,Paint & Sundries,7,179.00,excel_price_zero,CAN,0.00
+NIP-WTRB-18L-D,DRUM,18L Nippon Weatherbond Quartz Deep Base,Paint & Sundries,2,559.00,excel_price_zero,DRUM,0.00
+NIP-ECO-E,CAN,1L 811-7214 Phthalo Blue E,Paint & Sundries,6,62.90,excel_price_zero,CAN,0.00
+NIP-QGL-15L-D,DRUM,15L Nippon Q-glo Deep Base,Paint & Sundries,3,359.00,excel_price_zero,DRUM,0.00
+NIP-QGL-5L-T,CAN,5L Nippon Q-glo Tint Base,Paint & Sundries,6,164.00,excel_price_zero,CAN,0.00
+NIP-ECO-F,CAN,1L 811-1046 Red Oxide F,Paint & Sundries,4,79.90,excel_price_zero,CAN,0.00
+NIP-QSH-EXT-5L-D,CAN,5L Nippon Q-shield Extra Deep Base,Paint & Sundries,5,179.00,excel_price_zero,CAN,0.00
+NIP-QLA-5L-D,CAN,5L Nippon Q-lac Deep Base,Paint & Sundries,5,174.00,excel_price_zero,CAN,0.00
+NIP-QSH-EXT-5L-A,CAN,5L Nippon Q-shield Extra Accent Base,Paint & Sundries,6,144.00,excel_price_zero,CAN,0.00
+NIP-SAT-GLO-5L-T,CAN,5L Nippon Satin Glo Tint Base,Paint & Sundries,4,214.00,excel_price_zero,CAN,0.00
+NIP-PHG-1L-D,CAN,1L Platone High Gloss Deep Base,Paint & Sundries,21,38.90,excel_price_zero,CAN,0.00
+NIP-ECO-HT,CAN,1L 811-0746 Red Ht,Paint & Sundries,1,274.00,excel_price_zero,CAN,0.00
+NIP-9000-GF-5L-T,CAN,5L Nippon 9000 Gf Tint Base,Paint & Sundries,3,239.00,excel_price_zero,CAN,0.00
+NIP-ECO-C,CAN,1L 811-1810 Yellow Oxide C,Paint & Sundries,4,61.90,excel_price_zero,CAN,0.00
+NIP-VIN-EAS-15L-T,DRUM,15L Nippon Vinilex Easywash Tint Base,Paint & Sundries,2,359.00,excel_price_zero,DRUM,0.00
+NIP-ODO-5L,TIN,5L Nippon Odourlite Soft Matt - A (5L),Paint & Sundries,2,339.00,excel_price_zero,TIN,0.00
+NIP-WTRB-1L-P,CAN,1L Nippon Weatherbond Quartz Pastel Base,Paint & Sundries,10,67.90,excel_price_zero,CAN,0.00
+NIP-VIN-EAS-5L-A,CAN,5L Nippon Vinilex Easywash Accent Base,Paint & Sundries,4,164.00,excel_price_zero,CAN,0.00
+NIP-SAT-GLO-15L-A,DRUM,15L Nippon Satin Glo Accent Base,Paint & Sundries,2,319.00,excel_price_zero,DRUM,0.00
+NIP-9000-GF-1L-D,CAN,1L Nippon 9000 Gf Deep Base,Paint & Sundries,8,63.90,excel_price_zero,CAN,0.00
+NIP-ECO-EY,CAN,1L 811-2885 Hs Yellow Ey,Paint & Sundries,1,159.00,excel_price_zero,CAN,0.00
+NIP-VIN-EAS-20L-T,DRUM,18L Nippon Vinilex Easywash Tint Base,Paint & Sundries,1,454.00,excel_price_zero,DRUM,0.00
+NIP-ROOF-20L-A,UNIT,20L Nippon Roof Coating Accent Base,Building Materials,2,539.00,excel_price_zero,UNIT,0.00
+NIP-VIN-EAS-1L-A,CAN,1L Nippon Vinilex Easywash Accent Base,Paint & Sundries,7,51.90,excel_price_zero,CAN,0.00
+NIP-VIN-EAS-1L-T,CAN,1L Nippon Vinilex Easywash Tint Base,Paint & Sundries,7,51.90,excel_price_zero,CAN,0.00
+NIP-QLA-1L-D,CAN,1L Nippon Q-lac Deep Base,Paint & Sundries,5,59.90,excel_price_zero,CAN,0.00
+NIP-9000-GF-1L-T,CAN,1L Nippon 9000 Gf Tint Base,Paint & Sundries,4,72.90,excel_price_zero,CAN,0.00
+NIP-SAT-GLO-1L-A,CAN,1L Nippon Satin Glo Accent Base,Paint & Sundries,5,58.90,excel_price_zero,CAN,0.00
+NIP-QGL-1L-D,TIN,1L Nippon Q-glo Deep Base,Paint & Sundries,6,43.90,excel_price_zero,TIN,0.00
+NIP-ROOF-18L-D,DRUM,18L Nippon Roof Coating Deep Base,Building Materials,1,629.00,excel_price_zero,DRUM,0.00
+NIP-VIN-EAS-1L-D,CAN,1L Nippon Vinilex Easywash Deep Base,Paint & Sundries,3,46.90,excel_price_zero,CAN,0.00
+NIP-TIM-5L-D 4/6/19,CAN,5L Nippon Timbershade Deep Base,Paint & Sundries,1,114.00,excel_price_zero,CAN,0.00
+NIP-SPO-LES-5L-T,CAN,5L Nippon Spot-less Plus Tint Base,Paint & Sundries,3,204.00,excel_price_zero,CAN,0.00
+NIP-ROOF-5L-D,CAN,5L Nippon Roof Coating Deep Base,Building Materials,1,239.00,excel_price_zero,CAN,0.00
+NIP-ROOF-5L-T,CAN,5L Nippon Roof Coating Tint Base,Building Materials,1,224.00,excel_price_zero,CAN,0.00
+NIP-ROOF-5L-A,CAN,5L Nippon Roof Coating Accent Base,Building Materials,1,199.00,excel_price_zero,CAN,0.00
+NIP-ODOURLITE-1L-A,CAN,1L Nippon Odourlite Soft Matt Accent Base,Paint & Sundries,5,69.90,excel_price_zero,CAN,0.00
+NIP-ECO-CB,CAN,1L 811-7338 Eco 100 Cobalt Blue Cb,Paint & Sundries,1,324.00,excel_price_zero,CAN,0.00
+NIP-ECO-LR,CAN,1L 811-0736 Eco 200 Red Lr,Paint & Sundries,1,289.00,excel_price_zero,CAN,0.00
+NIP-FLO-5L-D,CAN,5L Nippon Floor Coating Deep Base,Paint & Sundries,1,214.00,excel_price_zero,CAN,0.00
+NIP-ECO-OG,CAN,1L 811-5554 Eco 100 Oxide Green Og,Paint & Sundries,1,174.00,excel_price_zero,CAN,0.00
+NIP-ECO-OR,CAN,1L 811-1025 Eco 100 Red Oxide Or,Paint & Sundries,2,78.90,excel_price_zero,CAN,0.00
+NIP-SPO-LES-5L-P,CAN,5L Nippon Spot-less Plus Pastel Base,Paint & Sundries,1,144.00,excel_price_zero,CAN,0.00
+STI-ROL,ROLL,Cc Roll Sticker 101MM X 54MM (barcode),Signage & Numbering,40,9.90,excel_price_zero,ROLL,0.00
+NIP-ODOURLITE-1L-T,CAN,1L Nippon Odourlite Soft Matt Tint Base,Paint & Sundries,1,74.90,excel_price_zero,CAN,0.00
+NIP-ODO-SFT-MATT-5L-T,CAN,5L Nippon Odourlite Soft Matt - T,Paint & Sundries,2,30.90,excel_price_zero,CAN,0.00
+NIP-ODOURLITE-1L-P,CAN,1L Nippon Odourlite Soft Matt Pastel Base,Paint & Sundries,1,51.90,excel_price_zero,CAN,0.00
+TOPLUS-HIG-GLO-5L-B,CAN,5L Toplus High Gloss B Base,Paint & Sundries,10,88.90,excel_price_zero,CAN,0.00
+TOPLUS-HIG-GLO-5L-D,CAN,5L Toplus High Gloss D Base,Paint & Sundries,8,109.00,excel_price_zero,CAN,0.00
+TOPLUS-HIG-GLO-1L-A,CAN,1L Toplus High Gloss A Base,Paint & Sundries,17,28.90,excel_price_zero,CAN,0.00
+TOPLUS-HIG-GLO-5L-C,CAN,5L Toplus High Gloss C Base,Paint & Sundries,6,79.90,excel_price_zero,CAN,0.00
+TOPLUS-HIG-GLO-1L-D,CAN,1L Toplus High Gloss D Base,Paint & Sundries,12,25.90,excel_price_zero,CAN,0.00
+LAM-4402SB,BOX,Seal Beam 4402-24V,Lighting,14,3.30,excel_price_zero,BOX,0.00
+COC-SIN-DOU-VIP3366,SET,Two-way Arc Sink Tap: Vip 3366 Pillar 1/2,Kitchen & Sinks,2,229.00,item_code_not_in_excel,,
+TOPLUS-HIG-GLO-1L-B,CAN,1L Toplus High Gloss B Base,Paint & Sundries,8,25.90,excel_price_zero,CAN,0.00
+"DOR-72'WX71.7/8""",SET,"72'W X 71 7/8 H Pc White Casement Window Outer, Inner Frame 5MM Green Reflective",Doors & Hardware,1,1229.00,excel_price_zero,SET,0.00
+FLO-PVC-K32606,ROLL,PVC Flooring No. K36205,Flooring,2,164.00,item_code_not_in_excel,,
+TOPLUS-WEA-PLUS-5L-B,CAN,5L Toplus Weather Plus B Base,Paint & Sundries,8,124.00,excel_price_zero,CAN,0.00
+TOPLUS-GOLD-5L-D,CAN,5L Toplus Gold D Base,Paint & Sundries,4,87.90,excel_price_zero,CAN,0.00
+X-FLO-MOC-MP6308,PCS,MP6308 30X60CM,Power Tools,1,8.50,excel_price_zero,PCS,0.00
+X-FLO-MOC-36102,PCS,36102 30X60CM,Power Tools,1,7.10,excel_price_zero,PCS,0.00
+X-FLO-MOC-GT3811,PCS,GT3811 30X60CM,Power Tools,1,7.10,excel_price_zero,PCS,0.00
+X-FLO-MOC-T38502,PCS,T38502 30X60CM,Power Tools,1,7.10,excel_price_zero,PCS,0.00
+X-GUM-STA-9960GS20DT,PKT,7 X 50 Dual Temp Glue Stick - Short (6 Pcs/pack),Chemicals & Adhesives,10,7.80,excel_price_zero,PKT,0.00
+I-30CC-PELIKAN,BOT,Pelikan Stamp Pad Ink-blue,Other,1,11.00,excel_price_zero,BOT,0.00
+MIX-HANDLE,PCS,Handle,Doors & Hardware,6,2.20,excel_price_zero,PCS,0.00
+MOT-FAN-BIG,PCS,Motor Fan (b),Other,8,4.40,excel_price_zero,PCS,0.00
+TAP-S2440ST,ROLL,905 Stationery Tape-st,Plumbing,2,3.70,excel_price_zero,ROLL,0.00
+MOT-FAN-SMALL,PCS,Motor Fan,Other,5,2.20,excel_price_zero,PCS,0.00

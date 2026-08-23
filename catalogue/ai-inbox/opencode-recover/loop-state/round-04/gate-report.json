@@ -1,0 +1,38 @@
+{
+ "round": 4,
+ "rows_total": 7771,
+ "gated_states": {
+  "open": 7606,
+  "candidate": 8,
+  "verified_pass": 157,
+  "exhausted": 0,
+  "exhausted_no_progress": 0
+ },
+ "reds_by_code": {
+  "red:schema": 2,
+  "red:http": 1,
+  "red:model_absent": 1
+ },
+ "reds": [
+  {
+   "key": "IND-CEM-GREY-25KG|BAG#2602",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "SWI-ADA-MS3106N|PCS#3361",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "TOO-FIL-BCC-4.0200MM|PCS#3549",
+   "code": "red:http",
+   "detail": "page status=403 for https://www.bahco.com/int_en/round-chainsaw-file-4-mm---12-x-3-pck-168-8-4-0-3p.html"
+  },
+  {
+   "key": "TOO-FIL-BCC-4.0200MM|PCS#3549",
+   "code": "red:model_absent",
+   "detail": "model variants ['1688403P', 'FILBCC40200MM', 'BCC40200MM'] absent from cached page text"
+  }
+ ]
+}

@@ -1,0 +1,14 @@
+source_position,item_code,uom,verifier_verdict,finish_exact,model_exact,justification
+4192,"CLI-HOS-GP-3""",PCS,fail,no,no,Page text has no GP token - only TECO-MAH/TECO-HAS stock-code table on 'Teco Stainless Steel Hose Clip' page; 2"/3" sizes not stated so model unproven; generic shared photo 500x350px 28KB cannot pin size
+4928,CEI-ROSE-408A-131-CR3,PCS,pass,yes,yes,'HKW 408A 3 TERMINAL CEILING ROSE' in page text and legible in pixels (white, HKW logo); official EXC Electrical distributor page; 1000x1000px webp 20404B image/jpeg-equivalent content-type image/webp
+3852,SWI-SOC-ULT-M20AMG,PCS,fail,yes,no,'M20AMG - 20A Double-pole switch C/W Neon' present in page CODE list but the listing image clearly shows a 45A-marked reTOUCH DP switch (the M45AMG sibling) so pixels contradict required 20A variant; 1032x1000px webp 29870B
+3543,SAF-HEL-YEL,PCS,pass,yes,yes,'10-00004 S-UVEE-0810-YLW UV2 810 INDUSTRIAL SAFETY HELMET-YELLOW' with Reference S-UVEE-0810-YLW in page text; pixels show yellow UVEE helmet; official Mr. Mark site; 800x800px jpg 89993B
+3052,GAR-SPR-E93/G851,PCS,pass,yes,yes,'E-93 1000cc Water Sprayer' is the page title on OEM elianware.com and pixels show the white E-93 sprayer main photo (G851 alias not found on page but E-93 OEM model proven); 600x600px jpg 33112B
+5185,BIB-G501B,PCS,pass,yes,yes,'Bib Tap G501B' (SKU FBT-G05011-5TPWHT) in page text on OEM truflo.com.my; pixels show white Truflo bib tap; 1000x1000px jpg 253011B
+3454,HOS-CON-MEN-40200012,PCS,fail,yes,no,Page proves 'ECOGREEN EG4035 HOSE MENDER 1/2''' and pixels match the Ecogreen blister but item-code token 40200012 appears nowhere in page text so exact model identity unproven; 600x600px png 242231B
+3446,"BRU-CUP-3""-MR.MARK",PCS,pass,yes,yes,'Reference: MK-WEL-13000' literally in page text of official Mr. Mark cup-brush page and its spec-table image lists MK-WEL-13000-1.5/-1.25 = 75mm/m-3'' covering the 3-inch item; pixels show the wire cup brush; 750x750px jpg 140835B
+4575,"CLI-HOS-GP-2""",PCS,fail,no,no,Same Tecoline hose-clip page contains no GP model token (only TECO-MAH/HAS codes with mm ranges) so 2-inch variant unproven; shared generic photo 500x350px 28KB
+3851,SWI-SOC-MK-NEO-S4787,PCS,fail,yes,yes,'Model : S4787NWHI' 20A DP water-heater switch white confirmed in Samajaya page text and pixels but fetched image is only 472x451px and 17372B failing both >=500px and >=20KB gates
+3984,SWI-ADA-3WAY-MK-692,PCS,pass,yes,yes,'MK 692 WHITE 3 WAY ADAPTOR' in JLL page text and pixels show MK 692 WHI 3 Way 13A adaptor; 1000x1003px webp 30158B
+4380,SWI-SOC-ULT-M022MG,PCS,pass,yes,yes,'M022MG - 2 GANG 2 WAY' listed in retouch.my ULTRA RIMLESS 16A page CODE list under Matte Grey; pixels show 2-gang matte-grey reTOUCH switch; 1017x1000px webp 48676B
+4652,COC-STO-JOP-2SC01W,PCS,pass,yes,yes,'2SC01W ( 20MM )' variant and '20mm -2SC01W' in LKK JOPEX PVC STOPCOCK (WHITE) page text; pixels show white Jopex stopcock; 1000x1000px webp 23826B

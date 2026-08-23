@@ -1,0 +1,13 @@
+source_position,item_code,uom,display_name,category,detected_brand,detected_model,action,start_tier,tried,prior_decision,prior_page,prior_image,prior_reason,ledger_state
+7694,SHH-LASTIK-KAYU,PCS,Lastik Kayu,Fishing & Tackle,,,search,1,,,,,,open
+4579,GAS-REF-120ML,PCS,Vance Gas 120ML,Home Appliances,,,search,1,,,,,,open
+4714,HOS-SPR-TOKO-25MX50M,MTR,Toko Spring Hose - 25MM X 50M,Outdoor & Garden,,,search,1,,,,,,open
+7091,SHH-HOO-21P6,PCS,21 Pontoon Treble Hook (6G),Fishing & Tackle,,,search,1,,,,,,open
+3133,HOS-NET-MIK-32MM,MTR,Mikasa Net Hose - 32MM X 40M,Outdoor & Garden,,,search,1,,,,,,open
+7698,OIL-FUN-7010,PCS,Betterware PVC Liquid Funnel 10 130,Housewares,,,search,1,,,,,,open
+7577,TOO-DRV-KT100+,PCS,4 King Top (+) Screw Driver,Fasteners & Fixings,,,search,1,,,,,,open
+7754,"BRU-WIR-BRA-5""",PCS,5 Brass Wire Brush,Electrical,,,search,1,,,,,,open
+7030,"BRA-SHE-8""x10""",PAIR,8 X 10 Shelf Bracket (PAIR),Housewares,,,duplicate_listing,1,,,,,,open
+7566,"HOI-PUL-SIN-1.1/2""",PCS,Single Pulley 1.1/2 (PCS),Lifting & Rigging,,,duplicate_listing,1,,,,,,open
+7687,IND-GAL-WIRE-20#-500G,PKG,20 X 500G Wire,Electrical,,,search,1,,,,,,open
+6388,TOO-RUL-STE-250,PCS,Steel Angle Square 10,Power Tools,,,search,1,,,,,,open

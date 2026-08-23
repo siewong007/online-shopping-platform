@@ -13,4 +13,25 @@ postgres-data-pg18-backup-20260711
 # tracked (deploy/backup.env.example). Never commit the real file or the machine-readable status.
 deploy/backup.env
 deploy/backup-status.json
+scripts/autocount-sync/config.ps1
 **/backup-status.json
+
+# AI image-sourcing working cache. Regenerable or rights-encumbered; never part of
+# the resume point. loop-ledger.csv records every image URL and sha256, so a new
+# machine can re-fetch. Binaries travel by OneDrive, not git.
+catalogue/ai-inbox/**/pagecache/
+catalogue/ai-inbox/**/assets/
+catalogue/ai-inbox/**/__pycache__/
+catalogue/ai-inbox/**/tmp/
+catalogue/ai-inbox/**/sandbox/
+_tmp_harvest_probe.csv
+# Downloaded product-image binaries and supplier PDFs inside the AI inbox.
+# The CSV/JSON/MD state next to them IS committed — that is the resume point.
+catalogue/ai-inbox/**/*-assets/
+catalogue/ai-inbox/**/*.pdf
+catalogue/ai-inbox/**/*.jpg
+catalogue/ai-inbox/**/*.jpeg
+catalogue/ai-inbox/**/*.png
+catalogue/ai-inbox/**/*.webp
+catalogue/ai-inbox/**/*.gif
+catalogue/ai-inbox/**/*.html

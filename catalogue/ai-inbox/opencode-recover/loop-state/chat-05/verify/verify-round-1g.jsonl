@@ -1,0 +1,24 @@
+{"pos":6470,"verifier_verdict":"pass","model_exact":"no","finish_exact":"yes","justification":"Page JS-walled; image itself shows ARROW Mini Saw packaging printed AMS10 10in - exact variant by pixels but model string not obtainable from page text."}
+{"pos":6908,"verifier_verdict":"void","model_exact":"","finish_exact":"","justification":"Asset misplaced by wsrv path bug at verification time; page text confirms MDPVC-EC white end cap L/R; reverify after relocation."}
+{"pos":7739,"verifier_verdict":"pass","model_exact":"yes","finish_exact":"yes","justification":"Black HDPE reducing bush identical to page photo for PLF-B3/4x1/2 listing."}
+{"pos":3843,"verifier_verdict":"fail","model_exact":"no","finish_exact":"no","justification":"Image shows Mungyo 12-color retail set box, not a single blue marker."}
+{"pos":4634,"verifier_verdict":"fail","model_exact":"no","finish_exact":"no","justification":"ACP plate engraved 191 multi-digit tag, not individual letter I."}
+{"pos":4716,"verifier_verdict":"fail","model_exact":"no","finish_exact":"no","justification":"Same rotated 191 plate, not single digit 7."}
+{"pos":4717,"verifier_verdict":"fail","model_exact":"no","finish_exact":"no","justification":"Pile of multi-digit number plates, not single digit 9."}
+{"pos":6629,"verifier_verdict":"void","model_exact":"","finish_exact":"","justification":"Asset misplaced by wsrv path bug; page confirms Target 9013 sliding glass lock; reverify after relocation."}
+{"pos":7449,"verifier_verdict":"pass","model_exact":"yes","finish_exact":"yes","justification":"Single white 1-gang 1-way switch plate matching Liwida SWL0011 F3 gallery."}
+{"pos":7644,"verifier_verdict":"void","model_exact":"","finish_exact":"","justification":"Asset misplaced by wsrv path bug; page lists ZP U-Bolt Pcs 3/8 3in; reverify after relocation."}
+{"pos":6828,"verifier_verdict":"fail","model_exact":"no","finish_exact":"no","justification":"Correct product-type line drawing but no galvanized finish visible and no 18MM designation in text."}
+{"pos":6736,"verifier_verdict":"void","model_exact":"","finish_exact":"","justification":"Asset missing (hsl fetch failed); page confirms MK 646 bakelite 13A plug top SIRIM; tier2 refetch needed."}
+{"pos":5907,"verifier_verdict":"pass","model_exact":"yes","finish_exact":"yes","justification":"Page SKU 1028188 designates VIP 132-1/2in light-duty float valve; same single brass valve pictured."}
+{"pos":4101,"verifier_verdict":"void","model_exact":"","finish_exact":"","justification":"Asset misplaced by wsrv path bug; generic size-range listing shares one photo anyway - likely family-hero fail on reverify."}
+{"pos":4940,"verifier_verdict":"fail","model_exact":"no","finish_exact":"no","justification":"Family hero showing multiple pail sizes (400g/1kg/4kg), single 1KG tin not isolatable."}
+{"pos":4623,"verifier_verdict":"fail","model_exact":"no","finish_exact":"yes","justification":"Pixel evidence: etched GENIUS 512428 with heads marked 3/4 and 7/8 imperial - SAE sibling, not 8x9mm metric."}
+{"pos":7128,"verifier_verdict":"pass","model_exact":"yes","finish_exact":"yes","justification":"PLK 5021 white 2-gang 1-way switch plate matches factory photo."}
+{"pos":4640,"verifier_verdict":"void","model_exact":"","finish_exact":"","justification":"Asset misplaced by wsrv path bug; reverify after relocation."}
+{"pos":6423,"verifier_verdict":"pass","model_exact":"yes","finish_exact":"yes","justification":"Black left-side shoe shot identical to page 8834_Left-2.jpg; model 8834 black only."}
+{"pos":5806,"verifier_verdict":"void","model_exact":"","finish_exact":"","justification":"Asset misplaced by wsrv path bug; reverify after relocation."}
+{"pos":2484,"verifier_verdict":"pass","model_exact":"yes","finish_exact":"yes","justification":"Mega Net green close-up labelled MEGA NET matches page; roll format 1m x 24m per page."}
+{"pos":7282,"verifier_verdict":"void","model_exact":"","finish_exact":"","justification":"Asset misplaced by wsrv path bug; reverify after relocation."}
+{"pos":5816,"verifier_verdict":"pass","model_exact":"yes","finish_exact":"yes","justification":"CN silver tie-up hook graphic labelled 10in/250MM exact; bearing claim unsubstantiated but not contradicted."}
+{"pos":5826,"verifier_verdict":"pass","model_exact":"yes","finish_exact":"yes","justification":"Selleys Supa Glue elephant blister 2x3ml twin pack identical to page photo."}

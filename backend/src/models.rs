@@ -991,6 +991,16 @@ pub struct CatalogueImportRow {
 }
 
 #[derive(Debug, Clone, Serialize)]
+pub struct AutocountStockPriceReport {
+    pub rows_read: usize,
+    pub products_matched: usize,
+    pub products_updated: usize,
+    pub listings_hidden: usize,
+    pub unmatched: usize,
+    pub problems: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct CatalogueImportReport {
     pub rows_read: usize,
     pub products_created: usize,

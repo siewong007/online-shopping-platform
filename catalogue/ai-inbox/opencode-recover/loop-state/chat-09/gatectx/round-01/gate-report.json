@@ -1,0 +1,575 @@
+{
+ "round": 1,
+ "rows_total": 7771,
+ "gated_states": {
+  "open": 7497,
+  "candidate": 0,
+  "verified_pass": 215,
+  "exhausted": 59,
+  "exhausted_no_progress": 0
+ },
+ "reds_by_code": {
+  "red:http": 35,
+  "red:content_type": 17,
+  "red:too_small": 17,
+  "red:schema": 40,
+  "red:hash_collision": 2
+ },
+ "reds": [
+  {
+   "key": "TOI-TRP-WC2300-S|SET#28",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/one-piece-washdown-closet-wc-2300-s250mm/"
+  },
+  {
+   "key": "TOI-TRP-WC2300-S|SET#28",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2025/05/WC-2300.jpg"
+  },
+  {
+   "key": "TOI-TRP-WC2300-S|SET#28",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "TOI-TRP-WC2300-S|SET#28",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "CAB-SAN-SWBC-SS6411|SET#46",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/swbc-ss6411/"
+  },
+  {
+   "key": "CAB-SAN-SWBC-SS6411|SET#46",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2025/04/SWBC-SS6411-1.jpeg"
+  },
+  {
+   "key": "CAB-SAN-SWBC-SS6411|SET#46",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "CAB-SAN-SWBC-SS6411|SET#46",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "CAB-SAN-SWBC-SS6615|SET#42",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/swbc-ss6615/"
+  },
+  {
+   "key": "CAB-SAN-SWBC-SS6615|SET#42",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2025/04/SWBC-SS6615.jpeg"
+  },
+  {
+   "key": "CAB-SAN-SWBC-SS6615|SET#42",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "CAB-SAN-SWBC-SS6615|SET#42",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2521|PCS#17",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/swp-b-2521/"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2521|PCS#17",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2021/10/SWP-B-2521.png"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2521|PCS#17",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2521|PCS#17",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3213|PCS#31",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/tall-basin-cold-tap-swp-ss-304-3213/"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3213|PCS#31",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2025/05/3213.png"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3213|PCS#31",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3213|PCS#31",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3023|PCS#21",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/swp-b-3023/"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3023|PCS#21",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2021/10/SWP-B-3023.png"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3023|PCS#21",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3023|PCS#21",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "SHO-SAN-SWP-BSP-9003RG|PCS#13",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/3-way-bath-shower-set-swp-bsp-9003rg/"
+  },
+  {
+   "key": "SHO-SAN-SWP-BSP-9003RG|PCS#13",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2025/05/SWP-BSP-9003RG.jpg"
+  },
+  {
+   "key": "SHO-SAN-SWP-BSP-9003RG|PCS#13",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "SHO-SAN-SWP-BSP-9003RG|PCS#13",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "SHO-SAN-SWP-BSP-9003G|PCS#12",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/3-way-bath-shower-set-swp-bsp-9003g/"
+  },
+  {
+   "key": "SHO-SAN-SWP-BSP-9003G|PCS#12",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2025/05/SWP-BSP-9003G.jpg"
+  },
+  {
+   "key": "SHO-SAN-SWP-BSP-9003G|PCS#12",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "SHO-SAN-SWP-BSP-9003G|PCS#12",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2931|PCS#36",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/basin-pillar-tap-mixer-swp-b-2931/"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2931|PCS#36",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2025/05/SWP-B-2931.png"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2931|PCS#36",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2931|PCS#36",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2930|PCS#37",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/basin-pillar-tap-mixer-swp-b-2930/"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2930|PCS#37",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2025/05/SWP-B-2930.png"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2930|PCS#37",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2930|PCS#37",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2924|PCS#40",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/basin-pillar-tap-mixergold-swp-b-2924/"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2924|PCS#40",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2026/01/SWP-B-2924.jpg"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2924|PCS#40",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2924|PCS#40",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2921|PCS#41",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/swp-b-2921/"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2921|PCS#41",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2021/10/SWP-B-2921.png"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2921|PCS#41",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-2921|PCS#41",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3203-RG|PCS#110",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/premier-basin-pillar-cold-tap-swp-ss-304-3203-rg/"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3203-RG|PCS#110",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2025/05/SWP-SS-304-3203-RG.jpg"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3203-RG|PCS#110",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "TAP-SAN-SWP-B-3203-RG|PCS#110",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "IND-CEM-GREY-25KG|BAG#2602",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "TAP-SAN-SWS-304-3977|PCS#1202",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/sws-304-3977/"
+  },
+  {
+   "key": "TAP-SAN-SWS-304-3977|PCS#1202",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2021/03/SWS-304-3977.jpg"
+  },
+  {
+   "key": "TAP-SAN-SWS-304-3977|PCS#1202",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "TAP-SAN-SWS-304-3977|PCS#1202",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "VAL-SAN-SW-SS-AV-80|PCS#1440",
+   "code": "red:http",
+   "detail": "page status=-1 for https://saniware.com/product/sw-ss-av-80/"
+  },
+  {
+   "key": "VAL-SAN-SW-SS-AV-80|PCS#1440",
+   "code": "red:http",
+   "detail": "image status=-1 for https://saniware.com/wp-content/uploads/2021/03/SW-SS-AV-80-1.jpg"
+  },
+  {
+   "key": "VAL-SAN-SW-SS-AV-80|PCS#1440",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "VAL-SAN-SW-SS-AV-80|PCS#1440",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "SWI-ADA-MS3106N|PCS#3361",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "CUT-DEW-DW4790|PCS#2793",
+   "code": "red:http",
+   "detail": "image status=None for ?"
+  },
+  {
+   "key": "CUT-DEW-DW4790|PCS#2793",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "CUT-DEW-DW4790|PCS#2793",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "AUT-POL-AUT-SS75ML|PCS#2754",
+   "code": "red:http",
+   "detail": "no fetched evidence for position 2754 this session"
+  },
+  {
+   "key": "SWI-ADA-MS-PT09|PCS#4462",
+   "code": "red:http",
+   "detail": "image status=None for ?"
+  },
+  {
+   "key": "SWI-ADA-MS-PT09|PCS#4462",
+   "code": "red:content_type",
+   "detail": "content-type=missing"
+  },
+  {
+   "key": "SWI-ADA-MS-PT09|PCS#4462",
+   "code": "red:too_small",
+   "detail": "long_edge=0px bytes=0"
+  },
+  {
+   "key": "SWI-SOC-ULT-M012MG|PCS#3959",
+   "code": "red:http",
+   "detail": "no fetched evidence for position 3959 this session"
+  },
+  {
+   "key": "AUT-POL-AUT-MET75ML|PCS#3044",
+   "code": "red:http",
+   "detail": "no fetched evidence for position 3044 this session"
+  },
+  {
+   "key": "BOS-F016-800-361|PCS#2109",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "BLE-MID-MBL-6010W|PCS#1642",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "VAL-SAN-SW-SS-AV-77|PCS#1439",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "BOS-2608-634-994|PCS#1643",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "BOS-2608-680-259|PCS#1823",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "SIN-CAB-CKS317|PCS#1208",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "PAI-SPR-GUN-TM-71|UNIT#1885",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "SHO-CAB-CSS8801|PCS#1323",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "TAP-CAB-CB4944-CR|PCS#1359",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "FAN-WALL-KDK-KU408-16\"|PCS#1352",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "FAN-VEN-KDK-20WUD-8\"|PCS#1365",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "TAP-CAB-CB5189|UNIT#1462",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "SIN-CAB-CKS819|PCS#1514",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "FAN-VEN-KDK-30AQM8-12\"|PCS#1417",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "FAN-VEN-KDK-20TGQF-8\"|PCS#1482",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "TAP-CAB-CB3803|UNIT#1556",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "FAN-VEN-KDK-15WUD-6\"|PCS#1481",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "SIN-CAB-CKS806|PCS#1583",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "FAN-VEN-KDK-25AQM7-10\"|PCS#1536",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "HAN-CLE-3.78L-58550369|CAN#1383",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "GRA-SOR-SRT382-6|PCS#1294",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "VAL-ANG-SRTWT908SS|PCS#1308",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "BOS-2608-631-017|PCS#1975",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "TOI-TRP-WC-CWC7603-S-SH(250MM)|PCS#1210",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "TOI-TRP-WC-CWC7601-RL-S(250MM)|PCS#1267",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "VAC-DEC-BHFEA18D1|UNIT#1816",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "WEL-MAC-STA-MIG160|UNIT#2364",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "SIN-CAB-CKS315|PCS#1336",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "DC-DCKIT36BK|SET#1889",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "PUM-TSU-HPC6120|UNIT#1908",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "TAP-CAB-CB4907|UNIT#1461",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "EXH-FAN-OS-16EF|PCS#1456",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "FAN-WALL-KDK-KU453-18\"|PCS#1418",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "FAN-STA-OS-20SF|PCS#1534",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "BAS-CAB-CWB1409-CB|PCS#1574",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "MIX-CAB-CB4723|PCS#1636",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "DC-ZIJ-FF04-13(SET)|SET#2193",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "DC-Q1F-FF-32|SET#2424",
+   "code": "red:schema",
+   "detail": "verified_pass requires finish_exact=yes"
+  },
+  {
+   "key": "SWI-SOC-ULT-M0813BMG|PCS#4121",
+   "code": "red:hash_collision",
+   "detail": "sha256 shared across positions [4121, 4123]"
+  },
+  {
+   "key": "SWI-SOC-ULT-M0813MG|PCS#4123",
+   "code": "red:hash_collision",
+   "detail": "sha256 shared across positions [4121, 4123]"
+  }
+ ]
+}

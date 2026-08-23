@@ -8,7 +8,7 @@ use axum::{
 
 use crate::{
     app_state::AppState,
-    error,
+    db, error,
     models::Paged,
     modules::{
         auth::model::AdminIdentity, customer_auth::model::CustomerIdentity, payments::activation,
@@ -159,6 +159,9 @@ pub async fn checkout(
             "This checkout route is unavailable. Please use the secure checkout.".to_string(),
         ));
     }
+
+    db::ensure_public_checkout_fulfillment(input.fulfillment_method.as_deref())
+        .map_err(error::map_admin_error)?;
 
     let customer_account_id = identity.map(|identity| identity.customer_account_id);
     service::create_order(&state.pool, "customer", &input, customer_account_id)

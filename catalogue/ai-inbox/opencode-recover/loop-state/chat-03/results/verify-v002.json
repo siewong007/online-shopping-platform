@@ -1,0 +1,86 @@
+[
+  {
+    "source_position": "2714",
+    "verifier_verdict": "fail",
+    "model_exact": "yes",
+    "finish_exact": "no",
+    "justification": "Page is titled 'Midea 130L R600A CHEST FREEZER | MD-RC151FZB01' and the asset banner itself prints 'MD-RC151FZB01 CHEST FREEZER 130L SINGLE DOOR', so the model code matches, but display_name names a 99L capacity which both page and image contradict with 130L."
+  },
+  {
+    "source_position": "2745",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Page quotes 'MEGAMAN MQTL1119-F LED Recessed Downlight ... Backlit Square Panel' with 12W (5\") and 4000K among its variants, matching item code MQTL1119-SQ-12W-4000K; the asset shows the square white Megaman panel downlight labelled MQTL1119-F Series."
+  },
+  {
+    "source_position": "2950",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "SKL Hardware page title reads \"'EAGLE' EG2030 20M WATER HOSE REEL COMPLETE SET\", matching display_name; the asset shows the complete hose-reel set (blue drum, metal stand, yellow hose, spray gun) of exactly this type."
+  },
+  {
+    "source_position": "2965",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "DongCheng Singapore page 'Dong Cheng Air Nailer D03-T50DC' specs brad nails up to 50mm; the asset shows the blue Dong Cheng brad nailer of that model."
+  },
+  {
+    "source_position": "3001",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Geolaser page title 'STARWELD MMA ARC STICK IGBT INVERTER WELDING MACHINE (MMA120 / MMA160 / MMA200)', brand field 'Starweld', variant option MMA200E all match; asset shows an MMA200E inverter welder with cables. Note: the seller's own listing mixes branding (photos/heading say NIETZ while title/brand say Starweld)."
+  },
+  {
+    "source_position": "3056",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Bacera page 'Inspire INS6035-One-Piece-Water-Closet' lists 'S Trap 150mm/250mm' and Rimless Washdown in White, matching 'One Piece Wash Down WC S-TRAP-250MM IS6035'; asset shows the white one-piece Inspire WC."
+  },
+  {
+    "source_position": "3064",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Docasa page 'Lodge WD005 S (S-Trap)' describes Close Couple Washdown Water Closet, Dual Flush 3/6L, S-Trap 250mm, matching display_name and item code WD005-S-TRAP; asset shows the close-coupled white WD005."
+  },
+  {
+    "source_position": "3113",
+    "verifier_verdict": "fail",
+    "model_exact": "yes",
+    "finish_exact": "no",
+    "justification": "Page quotes series string 'Boneo WD014 P (P-Trap)' so model family WD014 appears, but it is Docasa's Boneo P-trap sibling variant while the item claims brand 'Epson' (nowhere on page) and S-trap; the shared close-coupled photo cannot be pinned to an Epson-branded S-trap 250mm variant."
+  },
+  {
+    "source_position": "3121",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Buatan Malaysia page 'SGDH-753030 [ AB4BB 5\"x 3\"x 3MM SUS 304 HINGE ]' states 4 Ball Bearing and 3PCS/PACK, matching '(5\\\"X3\\\"X3.0MMX3PCS) 4BB St. Guchi Hinges'; asset shows the stainless StGuchi-logoed hinge."
+  },
+  {
+    "source_position": "3151",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Rapid official page 'Rapid PRO R23 Staple Gun' (product code 5001684) matches; the asset depicts the all-steel chrome R23 staple gun with yellow accents."
+  },
+  {
+    "source_position": "3194",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Metrostar page 'King Toyo Auto Tester KT-1960', SKU KT-1960, brand KING TOYO, automotive circuit tester 3-48V with cable; asset composite includes the actual black tester pen with lead plus usage shots."
+  },
+  {
+    "source_position": "3204",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Sunlight Track product page is titled 'Metal ST150 Hand Truck' (distinct from their PVC ST150 sibling), matching 'Platform Hand Truck-metal ST150'; asset shows the metal flat-platform hand truck with folding handle."
+  }
+]

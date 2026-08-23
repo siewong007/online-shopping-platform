@@ -1,0 +1,15 @@
+{
+  "shard": "2501-2600",
+  "rows": 100,
+  "verified_candidate": 3,
+  "pending": 97,
+  "rejected": 0,
+  "rights_status": "needs_permission for all rows",
+  "candidate_positions": [
+    2531,
+    2576,
+    2582
+  ],
+  "asset_count": 3,
+  "source_order_preserved": true
+}

@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "complete_path": "/home/ubuntu/work/full_catalogue_image_pass/COMPLETE.md",
+  "master_sha256": "2a446c56713a1730469232b1e21e2a530b6c749bf8d49833aab529f84747b73f",
+  "coverage_index_sha256": "86ba861a181b6435bf7c4cd48afa1906c90d5dd0a861f83cc927762c420d6e63",
+  "evidence_ledger_sha256": "90502d5b37f9493f0f93b360343ab17a8620786868d10a557828f054e8db18f1",
+  "rows": 7771,
+  "verified_candidate": 151,
+  "pending": 7620,
+  "rejected": 0,
+  "rights_status": "needs_permission for all rows",
+  "preserved_full_pass_assets": 11
+}

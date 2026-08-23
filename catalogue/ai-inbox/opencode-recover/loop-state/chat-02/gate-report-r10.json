@@ -1,0 +1,45 @@
+{
+ "round": 10,
+ "rows_total": 300,
+ "states": {
+  "exhausted": 267,
+  "open": 18,
+  "candidate": 15
+ },
+ "reds_by_code": {
+  "red:http": 5,
+  "red:model_absent": 1
+ },
+ "reds": [
+  {
+   "key": "SHE-CAB-CB476-BLK|PCS#2653",
+   "code": "red:http",
+   "detail": "no fetched evidence for position 2653"
+  },
+  {
+   "key": "SPRA-BOSNY-B136-400CC|CAN#3508",
+   "code": "red:model_absent",
+   "detail": "['B13640CC', 'TOKENS:B136|40CC', 'BOSNYB136400CC']"
+  },
+  {
+   "key": "CUT-SCI-JM-317|PCS#4132",
+   "code": "red:http",
+   "detail": "no fetched evidence for position 4132"
+  },
+  {
+   "key": "SWI-SOC-ULT-M074W|PCS#4669",
+   "code": "red:http",
+   "detail": "no fetched evidence for position 4669"
+  },
+  {
+   "key": "BIB-G503B|PCS#5771",
+   "code": "red:http",
+   "detail": "no fetched evidence for position 5771"
+  },
+  {
+   "key": "CUT-BLA-LB39H|PCS#6437",
+   "code": "red:http",
+   "detail": "no fetched evidence for position 6437"
+  }
+ ]
+}

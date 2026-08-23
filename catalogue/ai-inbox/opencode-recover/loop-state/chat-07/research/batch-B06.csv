@@ -1,0 +1,26 @@
+source_position,item_code,uom,display_name,category,detected_brand,detected_model,action,start_tier,tried,prior_decision,prior_page,prior_image,prior_reason,ledger_state
+7508,IND-SCP-WOO100,PCS,Gd Scraper 4,Building Materials,,,search,1,,,,,,open
+7662,X-FLO-MOC-ARDESIA-BLUE,PCS,Ardesia Blue 12 X 12 Floor Tiles,Power Tools,,,search,1,,,,,,open
+7663,X-FLO-MOC-PRE-WHI,PCS,Premium White 12 X 12 Floor Tiles,Power Tools,,,search,1,,,,,,open
+7667,DOR-TOW-BOL65,PCS,2 1/2 Aluminium Tower Bolt,Fasteners & Fixings,,,search,1,,,,,,open
+7497,RIG-TUR-08MM,PCS,Galvanised Turnbuckle 08MM,Lifting & Rigging,,,search,1,,,,,,open
+7750,BRU-COP-204,PCS,204 Copper Brush,Other,,,search,1,,,,,,open
+7766,"BNW-BOL-U-ZP5/16X1.1/2""",PCS,Zp U-bolt 5/16 X 1.1/2,Fasteners & Fixings,,,search,1,,,,,,open
+7741,IND-SCP-WOO50,PCS,Gd Scraper 2 (PCS),Building Materials,,,duplicate_listing,1,,,,,,open
+7725,X-BNW-BOL-HTM-M12-90MM,PCS,H/t Bolt - M 12 X 90MM,Fasteners & Fixings,,,search,1,,,,,,open
+7751,BRU-PLA-E838,PCS,Plastic Brush,Other,,,search,1,,,,,,open
+7770,ELE-STA-HOL,PCS,Starter Holder,Electrical,,,search,1,,,,,,open
+7613,FAS-HOO-EYE-16#,PCS,16 Hook & Eyes (PCS),Fasteners & Fixings,,,duplicate_listing,1,,,,,,open
+7719,IND-SCP-WOO25,PCS,Gd Scraper 1 (PCS),Building Materials,,,duplicate_listing,1,,,,,,open
+7657,X-STR-GUN-NED-6IN,PCS,6 IN Gunny Needle,Packaging,,,search,1,,,,,,open
+7568,FAS-HOO-EYE-10#,PCS,10 Hook & Eyes,Fasteners & Fixings,,,search,1,,,,,,open
+7771,"ELE-PVC-ELB-BLUE-3/4""",PCS,Ele PVC Elbow 3/4 Blue,Plumbing,,,search,1,,,,,,open
+3120,"DOR-72'WX71.7/8""",SET,"72'W X 71 7/8 H Pc White Casement Window Outer, Inner Frame 5MM Green Reflective",Doors & Hardware,,,search,1,,,,,,open
+7768,"SHE-LEA-1""X3""",KGS,Lead Sheet 1 X 3,Other,,,search,1,,,,,,open
+7767,PVC-STRAPPING-PURPLE,KGS,PVC Strapping Purple,Packaging,,,search,1,,,,,,open
+7769,TAB-PVC-515-11,MTR,137CM X 25M Thick 107 Table Cloth - 515-11,Housewares,,,search,1,,,,,,open
+280,"DOR-HIN-JTC-SSS-4""",SET,"Smr S/steel Hinges 4""X3""X2.0MM",Doors & Hardware,,X2.0MM,reopen,2,,pending,,,"Q: SMR s/steel hinges 4x3x2.0mm searches: unbranded hinge commodity, marketplace-only results (excluded). unbranded_commodity.",open
+270,CIMA-DL-L-199Y-RND-18W-CIELO-DL,SET,Cielo Iii 199Y 18W L/dl (rnd/daylight),Lighting,,199Y,reopen,2,,pending,https://www.cimalighting.com.my/product/cielo-199-driver-on-board-led-downlight-12w-18w-sirim-lampu-siling-rumah-round-square-downlight-4-6-white-lights-home-room-ceiling-lighting,,Q: cimalighting.com.my Cielo Gen-III 199Y 12W/18W downlight page (hint) - brand-official product page; 18W round matches; daylight CCT claimed in row needs page confirmation.,open
+106,ELE-HOL-TC818-E27,PCS,Taicon Tc 818 E27 Lamp Holder,Lighting,Taicon,E27,reopen,2,,reject,,,Q: Taicon official-site check (DNS NXDOMAIN taicon.com.my; taicon.com unrelated capacitor maker; marketplace/wholesaler presence only). no_official_taicon_website.,open
+16,ELE-BUL-E27-3W-RED,PCS,Taicon E27 3W LED Color Bulb-red,Lighting,Taicon,E27,reopen,2,,reject,,,"Q: ""Taicon"" ""E27"" bulb site:.com.my; ""Taicon electric"" official website; Taicon catalogue filetype:pdf; DNS check taicon.com.my=NXDOMAIN. taicon.com is unrelated JP capacitor maker; brand only on marketplaces/wholesalers. no_official_taicon_website.",open
+287,ELE-D/L-ECO-3030-24W,PCS,Hms Downlite Hsp 503-24W 6500K,Electrical,,503-24W,reopen,2,,reject,,,Q: HMS Downlite HSP 503-24W unverifiable; closest hit FSL FSP503 is a different brand - mislabeled listing.,open

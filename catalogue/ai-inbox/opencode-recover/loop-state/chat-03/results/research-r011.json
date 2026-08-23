@@ -1,0 +1,558 @@
+[
+  {
+    "source_position": "4481",
+    "item_code": "RAI-SUI-SUP-XXXL",
+    "tier_used": 3,
+    "queries": [
+      "\"D204TN\" T-adaptor SIRIM (DDG html)",
+      "Supersonic raincoat Malaysia \"rain suit\" pvc (DDG captcha bot-wall)",
+      "Supersonic raincoat Malaysia official",
+      "\"supersonic\" \"rain suit\" trouser 3XL"
+    ],
+    "pages_opened": [
+      {"url": "https://remixtechnologies.com/product/supersonic-pvc", "note": "200 PDP - Remix Technologies Sdn Bhd (Bintulu safety-equipment distributor), Brand: SuperSonic"}
+    ],
+    "official_product_page": "https://remixtechnologies.com/product/supersonic-pvc",
+    "official_image_url": "",
+    "model_string_on_page": "Supersonic PVC Rainsuit w Trouser / Brand: SuperSonic",
+    "finish_match": "unclear",
+    "size_match": "no",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "No official Supersonic brand site exists in search results; the best branded page is Malaysian distributor Remix Technologies' 'Supersonic PVC Rainsuit w Trouser'. However the page lists Size: M / L / XL / 2XL only - no 3XL as named in the row - and depicts the full suit, not a trouser-only SKU. Other listings (Sonic Hardware, Wang Thong, innovest) are unverified resellers/marketplaces which fail the source bar. Facts do not match, so this is a clean fail.",
+    "human_action": "Contact SuperSonic brand owner or Remix Technologies for a trouser-only 3XL asset, or photograph the stocked item in-store."
+  },
+  {
+    "source_position": "5465",
+    "item_code": "SWI-T/SOC-EUR-8744-4G",
+    "tier_used": 2,
+    "queries": [
+      "\"D204TN\" T-adaptor SIRIM (DDG html - no results)",
+      "\"D204TN\" (Yahoo)",
+      "\"D204\" T-adaptor OR \"T-socket\" adaptor Malaysia (Yahoo)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "The model string D204TN returns zero relevant hits on DDG and Yahoo/Bing even after normalising to D204 and expanding T-adaptor/T-socket wording with Malaysia/SIRIM qualifiers. No brand could be attached to the code (item-code token EUR suggests a possible Euro-series adaptor but nothing corroborates it). With no page carrying the model string there is nothing to verify against.",
+    "human_action": "Check the physical unit's SIRIM label/branding in-store, then search the manufacturer catalogue directly by that brand name."
+  },
+  {
+    "source_position": "4363",
+    "item_code": "CUT-KNI-HOL-JM-80",
+    "tier_used": 3,
+    "queries": [
+      "\"Jayamata\" knife stainless Malaysia (DDG html)",
+      "\"JM-80\" JayaMata knife (Bing - junk results)",
+      "site:jayamata.online \"JM-80\" (Bing - junk results)",
+      "site:estore.jayamata.com.my JM80 (Yahoo)"
+    ],
+    "pages_opened": [
+      {"url": "https://estore.jayamata.com.my/product/jm80-abs-handle-s", "note": "200 but wrong slug - SPA shell only, og:image = store logo"},
+      {"url": "https://estore.jayamata.com.my/product/jm80-abs-handle", "note": "200 official JayaMata e-store PDP route but fully client-rendered; HTML contains only styles/logo, no product data"},
+      {"url": "https://jayamata.online/", "note": "transport error (host unreachable from tooling)"},
+      {"url": "https://www.jayamata.online/", "note": "transport error"},
+      {"url": "https://estore.jayamata.com.my/api/product/detail?slug=jm80-abs-handle", "note": "404 - API guess failed"}
+    ],
+    "official_product_page": "https://estore.jayamata.com.my/product/jm80-abs-handle",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "medium",
+    "reason": "JayaMata's official e-store does host an 'ABS Handle Sportman Knives JM80' product at /product/jm80-abs-handle (confirmed via indexed title/description and the live route), but the store is a Next.js client-side SPA so the fetched HTML yields no direct product image URL - og:image is just the store logo. The only pages with extractable JM80 imagery (kiongjounghardware.com, Lazada, Shopee) are unverified resellers/marketplaces which fail the source bar. Model text could not be quoted from served page content either.",
+    "human_action": "Open https://estore.jayamata.com.my/product/jm80-abs-handle in a JS-capable browser and capture the gallery image URL, or request the asset from Jaya Mata directly."
+  },
+  {
+    "source_position": "2897",
+    "item_code": "TOO-COM-W0287K-18MM",
+    "tier_used": 3,
+    "queries": [
+      "\"W0287K\" ratchet wrench (DDG html)",
+      "WYNNS 威力狮 tools official website (Yahoo)",
+      "site:wynnstools.com W0287 (Yahoo)"
+    ],
+    "pages_opened": [
+      {"url": "https://www.mymro.cn/u-23F0721.html", "note": "200 - MyMRO (ex-Grainger China) listing: 制造商型号 w0287K, 规格 18mm, CR-V, 镜面 chrome, brand 威力狮/WYNNS"},
+      {"url": "https://www.wynnstools.com/product/511", "note": "404 - slug needed .html suffix"},
+      {"url": "https://www.wynnstools.com/product/511.html", "note": "200 official OEM PDP - H1 'W0287A~W0287Q 单向棘轮两用扳手 (镜面)(铬钒钢)'"}
+    ],
+    "official_product_page": "https://www.wynnstools.com/product/511.html",
+    "official_image_url": "https://www.wynnstools.com/repository/image/59f82de4-342f-4cfa-9733-e60bdfbb4636.jpg",
+    "model_string_on_page": "W0287A~W0287Q 单向棘轮两用扳手 (镜面)(铬钒钢)",
+    "finish_match": "yes",
+    "size_match": "yes",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "unknown",
+    "confidence": "medium",
+    "reason": "Brand identified: 'Com Ratchet Wrench' corresponds to Chinese tool maker 威力狮/WYNNS whose official site wynnstools.com carries the exact series entry W0287A~W0287Q ratchet combination wrench, mirror-chrome CR-V (H1 quotes the model range containing K). Authorised MRO distributor MyMRO (ex-Grainger China, 正品行货 guarantee) separately confirms制造商型号 w0287K = 规格18mm mirror finish, closing the size pairing. Image is the manufacturer's own cover photo of this wrench design; all sizes in the range share one physical design/photo.",
+    "human_action": ""
+  },
+  {
+    "source_position": "2896",
+    "item_code": "TOO-COM-W0287J-17MM",
+    "tier_used": 3,
+    "queries": [
+      "\"W0287K\" ratchet wrench (DDG html - family search)",
+      "site:wynnstools.com W0287 (Yahoo - family search)"
+    ],
+    "pages_opened": [
+      {"url": "https://www.wynnstools.com/product/511.html", "note": "200 official OEM PDP covering W0287A~W0287Q incl. J"}
+    ],
+    "official_product_page": "https://www.wynnstools.com/product/511.html",
+    "official_image_url": "https://www.wynnstools.com/repository/image/59f82de4-342f-4cfa-9733-e60bdfbb4636.jpg",
+    "model_string_on_page": "W0287A~W0287Q 单向棘轮两用扳手 (镜面)(铬钒钢)",
+    "finish_match": "yes",
+    "size_match": "unclear",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "unknown",
+    "confidence": "medium",
+    "reason": "Same official Wynns series entry as sibling W0287K: H1 lists model range W0287A~W0287Q which includes J, mirror-chrome CR-V ratchet combination wrench. The 17mm value is not printed anywhere online for w0287J specifically (only K=18mm is independently confirmed via MyMRO); the sequential A-Q sizing makes 17mm consistent but unverifiable from page text, hence size_match unclear. Manufacturer's own product photo applies to the whole range.",
+    "human_action": ""
+  },
+  {
+    "source_position": "5790",
+    "item_code": "VAL-CAB-CB2131",
+    "tier_used": 1,
+    "queries": [
+      "Cabana \"CB2131\" angle valve (DDG html)"
+    ],
+    "pages_opened": [
+      {"url": "https://www.cabana.com.my/index.php/products/bathroom/bathroom-accessories/angle-valve/cb2131-detail", "note": "200 official PDP - title/meta/H1 'CB2131', desc 'Angle Valve, Zinc Alloy'"},
+      {"url": "https://www.cabana.com.my/index.php/products/bathroom/bathroom-accessories/angle-valve", "note": "200 category page 1 of 2 (30 items) - confirms CB2131 in current lineup"},
+      {"url": "https://www.cabana.com.my/index.php/products/bathroom/bathroom-accessories/angle-valve?start=30", "note": "200 category page 2 of 2 (items 31-33)"}
+    ],
+    "official_product_page": "https://www.cabana.com.my/index.php/products/bathroom/bathroom-accessories/angle-valve/cb2131-detail",
+    "official_image_url": "https://www.cabana.com.my/images/virtuemart/product/CB2131.jpg",
+    "model_string_on_page": "CB2131",
+    "finish_match": "yes",
+    "size_match": "not_named",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "unknown",
+    "confidence": "high",
+    "reason": "Official Cabana (Sorento Sdn Bhd, Klang) product detail page titled 'Angle Valve: CB2131' with CB2131 in meta description, H1, breadcrumbs and VirtueMart product record; main-image anchor points directly at /images/virtuemart/product/CB2131.jpg. Row names brand Cabana and model CB2131 - exact match. Page states Zinc Alloy angle valve; row names no finish/size tokens so nothing conflicts.",
+    "human_action": ""
+  },
+  {
+    "source_position": "5791",
+    "item_code": "VAL-CAB-CB2132",
+    "tier_used": 2,
+    "queries": [
+      "Cabana \"CB2131\" angle valve (family search, DDG html)",
+      "cabana.com.my internal shop search keyword=CB2132"
+    ],
+    "pages_opened": [
+      {"url": "https://www.cabana.com.my/index.php/products/bathroom/bathroom-accessories/angle-valve/cb2132-detail", "note": "404 - guessed slug does not exist"},
+      {"url": "https://www.cabana.com.my/index.php/products/bathroom/bathroom-accessories/angle-valve", "note": "200 - full catalog page 1 (30 of 33 valves), no CB2132"},
+      {"url": "https://www.cabana.com.my/index.php/products/bathroom/bathroom-accessories/angle-valve?start=30", "note": "200 - page 2 (items 31-33), no CB2132"},
+      {"url": "https://www.cabana.com.my/index.php/component/virtuemart/results,1-?search=true&keyword=CB2132&Itemid=873", "note": "200 - 'No records found' / 'No result : (CB2132)'"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Cabana's own website demonstrably does not carry CB2132: its complete Angle Valve listing (33 SKUs across both pagination pages) and the internal VirtueMart shop search both return zero records for the code. Remaining hits are third-party resellers (zhinheng, homebagus, marketplaces) whose authorised status cannot be verified, so they fail the source bar. The model appears discontinued from the current official line-up.",
+    "human_action": "Confirm discontinuation with Sorento Sdn Bhd (Cabana HQ, Klang) or request archived artwork; otherwise photograph the stocked valve."
+  },
+  {
+    "source_position": "5792",
+    "item_code": "VAL-CAB-CB2136",
+    "tier_used": 2,
+    "queries": [
+      "cabana.com.my internal shop search keyword=CB2136"
+    ],
+    "pages_opened": [
+      {"url": "https://www.cabana.com.my/index.php/component/virtuemart/results,1-?search=true&keyword=CB2136&Itemid=873", "note": "200 - 'No records found.' / 'No result : (CB2136)'"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Same evidence pattern as sibling CB2132: Cabana's internal shop search explicitly returns 'No records found' for CB2136, and the model is absent from the complete 33-SKU angle-valve catalog enumerated earlier. Only unverified reseller listings exist elsewhere, which do not meet the brief's source bar.",
+    "human_action": "Confirm discontinued status with Sorento Sdn Bhd or photograph stock; reseller images could be used only if authorisation is established."
+  },
+  {
+    "source_position": "5760",
+    "item_code": "SIN-BAS-VIP-NO.49",
+    "tier_used": 2,
+    "queries": [
+      "VIP wash basin waste pop-up \"49\" Malaysia (Yahoo)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "'VIP Brand' No.49 pop-up washbasin waste returned no brand-owned or distributor pages at all - only marketplace noise (Shopee searches, BigGo aggregator) and unrelated products (Bacera PW49 basin, Fienza wastes). This looks like a house-label plumbing accessory with no official web presence; per the brief a clean no-candidate is the correct outcome rather than forcing a match.",
+    "human_action": "Photograph the item in-store; optionally ask the supplier for their product sheet image."
+  },
+  {
+    "source_position": "3783",
+    "item_code": "FAS-RIV-PAT-5/32X5/8-BOX",
+    "tier_used": 1,
+    "queries": [
+      "\"Jaguar\" blind rivet Malaysia 5/32 (Yahoo)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Jaguar-brand blind rivets are sold in Malaysia exclusively through marketplaces (Shopee/Lazada/TikTok) and general hardware/industrial resellers (Hardware House, Soong Wung Industrial). No official Jaguar fastener manufacturer site surfaced, and none of the resellers can be confirmed as an authorised distributor, so every available source fails the brief's allowed-source list despite correct sizes being listed there.",
+    "human_action": "Identify Jaguar rivets' Malaysian principal/importer and request official artwork, or use Soong Wung/Hardware House imagery only after confirming dealership."
+  },
+  {
+    "source_position": "5571",
+    "item_code": "TAP-SKC-M08X1.00",
+    "tier_used": 2,
+    "queries": [
+      "\"SKC\" hand tap M8 x 1.00 Malaysia (Yahoo)"
+    ],
+    "pages_opened": [
+      {"url": "https://www.highwaymarketingsb.com/brand/57-skc", "note": "200 - Highway Marketing Sdn Bhd (Bintulu industrial supplier) dedicated SKC brand catalog, 51 products incl. 'SKC 801 M8 x 1.00 Metric Hand Tap' card with product link and large_default image URL"}
+    ],
+    "official_product_page": "https://www.highwaymarketingsb.com/hss-taps-dies/1279-skc-801-m8-x-1-00-metric-hand-tap.html",
+    "official_image_url": "https://www.highwaymarketingsb.com/2480-large_default/skc-801-m8-x-1-00-metric-hand-tap.jpg",
+    "model_string_on_page": "SKC 801 M8 x 1.00 Metric Hand Tap",
+    "finish_match": "yes",
+    "size_match": "yes",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "needs_permission",
+    "confidence": "medium",
+    "reason": "Highway Marketing Sdn Bhd runs a dedicated SKC Hand Taps & Dies brand storefront whose listing card titles the exact product 'SKC 801 M8 x 1.00 Metric Hand Tap' with brand tag SKC and links to its PDP; the large_default image variant (900px theme size) was extracted verbatim from that card. Size M08 x 1.00 matches the row exactly. Confidence medium because the page does not state authorised-dealer status and no official SKC Japan site was reachable to prefer.",
+    "human_action": ""
+  },
+  {
+    "source_position": "3594",
+    "item_code": "HOO-CAB-CB802-3",
+    "tier_used": 1,
+    "queries": [
+      "Cabana \"CB802-3\" hook (DDG html)"
+    ],
+    "pages_opened": [
+      {"url": "https://cabana.com.my/index.php/products/bathroom/bathroom-accessories/hook-bar/cb802-3-detail", "note": "200 official PDP - title/H1 'CB802-3', desc '3 Robe Hook Bar / Stainless Steel / Polish Finish'"}
+    ],
+    "official_product_page": "https://cabana.com.my/index.php/products/bathroom/bathroom-accessories/hook-bar/cb802-3-detail",
+    "official_image_url": "https://cabana.com.my/images/virtuemart/product/CB802-3.jpg",
+    "model_string_on_page": "CB802-3",
+    "finish_match": "yes",
+    "size_match": "not_named",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "unknown",
+    "confidence": "high",
+    "reason": "Official Cabana hook-bar PDP 'Hook Bar: CB802-3'; page description reads '3 Robe Hook Bar, Stainless Steel, Polish Finish', matching the row's Hook BAR (polish) naming exactly, and the main-image anchor serves the model-named JPG directly. Row names no numeric size beyond the model code, so nothing conflicts.",
+    "human_action": ""
+  },
+  {
+    "source_position": "2926",
+    "item_code": "TOO-COM-W0287I-16MM",
+    "tier_used": 3,
+    "queries": [
+      "\"W0287K\" ratchet wrench (DDG html - family search)",
+      "site:wynnstools.com W0287 (Yahoo - family search)"
+    ],
+    "pages_opened": [
+      {"url": "https://www.wynnstools.com/product/511.html", "note": "200 official OEM PDP covering W0287A~W0287Q incl. I"}
+    ],
+    "official_product_page": "https://www.wynnstools.com/product/511.html",
+    "official_image_url": "https://www.wynnstools.com/repository/image/59f82de4-342f-4cfa-9733-e60bdfbb4636.jpg",
+    "model_string_on_page": "W0287A~W0287Q 单向棘轮两用扳手 (镜面)(铬钒钢)",
+    "finish_match": "yes",
+    "size_match": "unclear",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "unknown",
+    "confidence": "medium",
+    "reason": "Official Wynns series entry W0287A~W0287Q (mirror-chrome CR-V ratchet combination wrench) includes suffix I; the manufacturer photo covers the whole range. As with sibling J, the specific 16mm figure is not printed on any reachable page (sequential A-Q sizing implies it; only K=18mm is independently corroborated via MyMRO), so size stays unclear while brand/model/finish verify.",
+    "human_action": ""
+  },
+  {
+    "source_position": "2641",
+    "item_code": "TOO-WRE-PIP-A350MM",
+    "tier_used": 2,
+    "queries": [
+      "\"Glotool\" pipe wrench (Yahoo - junk/ads only)",
+      "\"glotool\" Malaysia hardware (Yahoo - no results)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Glotool has no discoverable web presence: quoted Yahoo/Bing queries return either US 'glo tool' ads or literally no results, and no .com.my brand or dealer page attaches to the name. It behaves like a regional house-label tool line, so per the brief a clean no-candidate is correct.",
+    "human_action": "Ask the Glotool importer/supplier for a product image sheet, or photograph the 14-inch American-type pipe wrench in-store."
+  },
+  {
+    "source_position": "2858",
+    "item_code": "DUS-11L-GHO2811",
+    "tier_used": 2,
+    "queries": [
+      "\"GHO2811\" OR \"GHO-2811\" dustbin (Yahoo)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "The GHO2811 code (with and without separator) matches nothing product-related anywhere - results were unrelated noise (forums, Tumblr, Wikipedia). The GHO prefix looks like a supplier/house code for an unbranded 11L step dustbin with no official product page in existence.",
+    "human_action": "Request the dustbin's packaging art from the local supplier or photograph the unit."
+  },
+  {
+    "source_position": "4648",
+    "item_code": "TOO-WRE-ADJMW2914",
+    "tier_used": 3,
+    "queries": [
+      "site:wynnstools.com W2914 (Yahoo)"
+    ],
+    "pages_opened": [
+      {"url": "https://www.wynnstools.com/product/451.html", "note": "200 official OEM PDP - H1 'W2914 迷你短柄活动扳手(全抛光)' (mini short-handle adjustable wrench, fully polished)"}
+    ],
+    "official_product_page": "https://www.wynnstools.com/product/451.html",
+    "official_image_url": "https://www.wynnstools.com/repository/image/bdb4864a-8b7e-4c3f-aa62-9025e9f57de3.jpg",
+    "model_string_on_page": "W2914 迷你短柄活动扳手(全抛光)",
+    "finish_match": "yes",
+    "size_match": "unclear",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "unknown",
+    "confidence": "medium",
+    "reason": "Official Wynns single-model page for W2914, described exactly as a mini short-handle adjustable wrench with clear scale and full polish - matching 'Mini Adjustable Wrench'. Manufacturer cover image extracted from the page's productCoverImgUrl. The 200mm figure is not printed on the page (spec table empty on the CMS), so size stays unclear although the model code is unique and exact.",
+    "human_action": ""
+  },
+  {
+    "source_position": "3679",
+    "item_code": "BNW-B&N-RBN-120-BOX",
+    "tier_used": 1,
+    "queries": [
+      "\"G.I\" bolt & nut \"3/16 x 2\" Malaysia (Yahoo - no relevant results)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Generic galvanised-iron bolt & nut in box (the 'Sr'/'RBN-120' tokens are house-catalog prefixes, not a detectable brand). Search returns no brand-owned or authorised-dealer page for this commodity fastener; commodity fixings of this type are correctly left as no-candidate under the brief.",
+    "human_action": "Use a generic G.I. bolt & nut pack shot photographed in-house."
+  },
+  {
+    "source_position": "4692",
+    "item_code": "SHH-REEL-1188S165",
+    "tier_used": 3,
+    "queries": [
+      "\"Udang Galah\" rod transparent Malaysia (Yahoo)",
+      "\"Sin Udang Galah\" rod (Yahoo)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "'1188 Sin Udang Galah TRANSPARENT165' prawn rods surface only on Shopee/Lazada marketplaces and BigGo aggregators; branded prawn-rod pages found (CastKing 2685/2686, XPUYU #BU, Sealand spinning at sugseller/TCE) are different brands and models, not this house-label spear. No official or authorised source exists for this SKU.",
+    "human_action": "Photograph the rod in-store; check with the local tackle wholesaler that supplies the '1188 Sin' line for original artwork."
+  },
+  {
+    "source_position": "2630",
+    "item_code": "ELE-D/L-LSM-96W-3CLR-SQ",
+    "tier_used": 1,
+    "queries": [
+      "\"LED module\" 96W 3 channel square floodlight repair (Yahoo)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "This is a generic unbranded LED source module (96W, 3-colour, square lens) used for floodlight repairs - no manufacturer, model code or brand attaches to it in any search. Results were DIY videos and unrelated 96W fixtures (Diode LED channel, Warehouse Lighting floodlights) which are not this component. Clean no-candidate for an unbranded part.",
+    "human_action": "Photograph the module; if volume justifies it, identify the Shenzhen OEM from the unit's silk-screen markings."
+  },
+  {
+    "source_position": "3782",
+    "item_code": "FAS-RIV-PAT-1/8\"X5/16\"-BOX",
+    "tier_used": 1,
+    "queries": [
+      "\"Jaguar\" blind rivet Malaysia 5/32 (Yahoo - family search)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Same finding as sibling Jaguar rivet rows: the brand sells through marketplaces and general resellers only (Shopee/Lazada/TikTok, Hardware House, Soong Wung), with no official Jaguar fastener site and no verifiable authorised distributor page. Sources that do show the 1/8 x 5/16 size fail the allowed-source test.",
+    "human_action": "Establish who imports Jaguar rivets in Malaysia and request official pack artwork."
+  },
+  {
+    "source_position": "4697",
+    "item_code": "TOO-CLA-GW473125",
+    "tier_used": 3,
+    "queries": [
+      "site:wynnstools.com W0473 (Yahoo)"
+    ],
+    "pages_opened": [
+      {"url": "https://www.wynnstools.com/product/340.html", "note": "200 official OEM PDP - H1 'W0473A~W0473I 重型G字夹' (heavy-duty G-clamp), high-carbon steel, T-handle"}
+    ],
+    "official_product_page": "https://www.wynnstools.com/product/340.html",
+    "official_image_url": "https://www.wynnstools.com/repository/image/7642fa57-2a1f-478a-a510-86d7c2c7ed41.jpg",
+    "model_string_on_page": "W0473A~W0473I 重型G字夹",
+    "finish_match": "yes",
+    "size_match": "unclear",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "unknown",
+    "confidence": "medium",
+    "reason": "Official Wynns heavy G-clamp entry W0473A~W0473I includes detected_model suffix E ('Heavy G-shape Clamp'); the manufacturer cover image shows this clamp family. The 5-inch throat is not printed on the page (range spans sizes A-I), so size remains unclear. Note: item_code token GW473125 conflicts with detected_model W0473E - the W0473E mapping was taken as authoritative since it resolves to a real manufacturer series; worth reconciling in the catalog.",
+    "human_action": ""
+  },
+  {
+    "source_position": "3657",
+    "item_code": "DOR-BEA-ADG-911",
+    "tier_used": 2,
+    "queries": [
+      "\"ADG-911\" (Yahoo)",
+      "Armor brand door guard Malaysia official website (Yahoo)",
+      "site:armor.com.my ADG-911 (Yahoo)"
+    ],
+    "pages_opened": [
+      {"url": "https://armor.com.my/?s=ADG-911&post_type=product", "note": "403 - bot-wall on WP search endpoint"}
+    ],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "ADG-911 is confirmed as ARMOR brand door guard, SN satin-nickel zinc diecast with ball bearing - matching the row's naming - but the brand's own Malaysian site armor.com.my has no ADG-911 product page (site-restricted search surfaces no such SKU; their catalog focuses on locks/closers/stoppers). Every image-bearing listing (Shopee, Lazada, thelivingdepot) is a reseller or marketplace and fails the allowed-source bar.",
+    "human_action": "Request ADG-911 artwork from Armor Hardware Sdn Bhd (Puchong) or confirm which Armour distributor Ekoway buys from and use their official asset."
+  },
+  {
+    "source_position": "3888",
+    "item_code": "FAS-RIV-PAT-3/16\"X3/8\"-BOX",
+    "tier_used": 1,
+    "queries": [
+      "\"Jaguar\" blind rivet Malaysia 5/32 (Yahoo - family search)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Third Jaguar blind-rivet size; identical conclusion - brand distributed only via marketplaces and unverified hardware resellers, no official manufacturer page or provable authorised-distributor product page exists for any Jaguar rivet size including 3/16 x 3/8.",
+    "human_action": "Identify the Jaguar rivet principal/importer and request official pack imagery."
+  },
+  {
+    "source_position": "4759",
+    "item_code": "TOO-LOC-PLI-W0042",
+    "tier_used": 3,
+    "queries": [
+      "site:wynnstools.com W0042 (Yahoo)"
+    ],
+    "pages_opened": [
+      {"url": "https://www.wynnstools.com/product/314.html", "note": "200 official OEM PDP - H1 'W0042，W0043，W0051 尖咀大力钳 (铆钉式)' (long-nose lock-grip pliers, rivet-style adjuster)"}
+    ],
+    "official_product_page": "https://www.wynnstools.com/product/314.html",
+    "official_image_url": "https://www.wynnstools.com/repository/image/4fee072e-af2e-4db8-a901-3e2a9b180747.jpg",
+    "model_string_on_page": "W0042，W0043，W0051 尖咀大力钳 (铆钉式)",
+    "finish_match": "yes",
+    "size_match": "unclear",
+    "decision": "candidate",
+    "low_res": false,
+    "rights_status": "unknown",
+    "confidence": "medium",
+    "reason": "Official Wynns entry names W0042 first in its model group for long-nose lock-grip pliers with rivet-type adjustment screw, matching 'Lock-grip Pliers W0042'; the manufacturer cover image depicts these pliers. The 225mm length is not printed on the page (sizes split across W0042/W0043/W0051), so size stays unclear. Row's Locks & Security category is a mis-bucket - item is a plier - but that doesn't affect sourcing.",
+    "human_action": ""
+  },
+  {
+    "source_position": "4753",
+    "item_code": "SHH-REEL-1188S150",
+    "tier_used": 3,
+    "queries": [
+      "\"Sin Udang Galah\" rod (Yahoo - shared with sibling row)"
+    ],
+    "pages_opened": [],
+    "official_product_page": "",
+    "official_image_url": "",
+    "model_string_on_page": "",
+    "finish_match": "unclear",
+    "size_match": "unclear",
+    "decision": "no_candidate",
+    "low_res": false,
+    "rights_status": "no_asset",
+    "confidence": "high",
+    "reason": "Sibling of SHH-REEL-1188S165: the '1188 Sin Udang Galah TRANSPARENT150 (5ft)' house-label prawn rod has no official brand page; searches return only marketplaces/aggregators and different brands' prawn rods (CastKing/XPUYU/Sealand). Judged separately but same clean no-candidate outcome.",
+    "human_action": "Photograph the 5-foot rod in-store or request artwork from the supplying tackle wholesaler."
+  }
+]

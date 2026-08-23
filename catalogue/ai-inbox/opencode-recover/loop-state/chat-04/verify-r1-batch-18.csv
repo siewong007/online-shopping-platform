@@ -1,0 +1,5 @@
+source_position,verifier_verdict,finish_exact,model_exact,px,bytes,justification
+3865,pass,yes,yes,1122x1125,119492B,Official mybutterfly.com.my PDP SET LPG REGULATOR WITH HOSE 182-CB uses this exact image; packshot shows regulator + 1.5M black hose kit
+3099,pass,yes,yes,1320x1320,113427B,Exact wixstatic asset on official kovea.com Gas Torch page ROCKET KT-2008-1; real product photo
+5232,pass,yes,yes,800x800,66220B,Packshot reads Selleys Supa Glue Liquid 3mL on Nippon Paint official resourcehub asset hub
+4660,pass,yes,yes,800x800,62913B,Packshot reads Selleys Shoe Glue 15mL on Nippon Paint official resourcehub asset hub

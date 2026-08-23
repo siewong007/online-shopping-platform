@@ -1,0 +1,11 @@
+{
+  "shard": "4101-4200",
+  "rows": 100,
+  "verified_candidate": 0,
+  "pending": 100,
+  "rejected": 0,
+  "rights_status": "needs_permission for all rows",
+  "candidate_positions": [],
+  "source_order_preserved": true,
+  "method": "manufacturer-first, fail-closed; no exact image evidence preserved"
+}

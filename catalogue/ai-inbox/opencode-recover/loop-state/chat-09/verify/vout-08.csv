@@ -1,0 +1,11 @@
+row_id,item_code,uom,verifier_verdict,finish_exact,model_exact,justification
+1,"FAN-WALL-KDK-KU453-18""",PCS,pass,n/a,yes,"KDK page reads 'Wall Fans KU453 (45cm/18-inch)' with SPECIFICATION MODEL KU453; image product-thumbnail_Wall-Fans-KU453.png carries the exact model"
+2,FAN-STA-OS-20SF,PCS,pass,n/a,yes,"Yuan Ming page titled 'OSAKI Commercial Stand Fan 20-inch - OS-20SF' lists Model: OS-20SF; image OS20SF_FRONT.png is a model-specific front shot"
+3,BAS-CAB-CWB1409-CB,PCS,pass,n/a,yes,"Cabana detail page 'Wash Basin: CWB1409-CB' describes COUNTER TOP BASIN L415xW415xH135mm; image CWB1409-33.jpg is model-specific"
+4,MIX-CAB-CB4723,PCS,pass,n/a,yes,"Cabana detail page 'Concealed Shower Set: CB4723' (Shower Mixer Tap) matches the bath/shower mixer; image CB4723-01.jpg is model-specific"
+5,NIP-ODO-SFT-MATT-5L-P,CAN,fail,yes,no,"Page is genuine Odourlite Soft Matt Finish (Finishing: Soft Matt) but supplied image odourlite-gloss.webp is the gloss-variant/family shot shared across the Odourlite range and no model/size code (5L/-P) is confirmed on the page"
+6,DC-ZIJ-FF04-13(SET),SET,pass,n/a,yes,"DongCheng page 'ELECTRIC IMPACT DRILL/ DZJ04-13' RM264.00 confirms the exact model named in display_name; image DZJ04-13.jpg is model-specific"
+7,"FAN-WALL-KDK-KU-408-YG-16""",PCS,pass,yes,yes,"KDK page reads 'Wall Fans KU408 YG (40cm/16-inch)' with SPECIFICATION MODEL KU408 YG COLOR GREY confirming the -YG variant; image product-thumbnail_Wall-Fans-KU408-YG-1.png is model-specific"
+8,GAS-STO-BGC-933/305,PCS,pass,yes,yes,"Butterfly page '[ BGC-933/305 ] BUTTERFLY S/S DOUBLE GAS COOKER (130 + 130 MM)' lists Model: BGC-933/305 Stainless Steel Body; the CDN webp is the dedicated photo on this product page"
+9,DC-DVC12,SET,fail,n/a,yes,"Page confirms DVC12 12L 1200W vacuum cleaner matching display_name but the row's category 'Chemicals & Adhesives' contradicts the product type"
+10,DC-M1B-FF-82X1,SET,fail,n/a,no,"Page and image are for DongCheng model DMB82 ('ELECTRIC PLANNER/ DMB82'); the item_code model M1B-FF-82X1 appears nowhere in the page text (URL slug only)"

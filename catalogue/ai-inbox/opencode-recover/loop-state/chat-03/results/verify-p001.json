@@ -1,0 +1,65 @@
+[
+  {
+    "source_position": "1002",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Bosch PRO Stainless Steel HSS-Co page option table lists \"2 608 585 880 / Diameter, mm 4.00\", matching item_code tail -880 and 4.0MM; asset 1002.png is the gold HSS-Co twist bit matching the variant image slug o471535v82_2608585880."
+  },
+  {
+    "source_position": "1082",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Same HSS-Co page lists \"2 608 585 874 / Diameter, mm 2.00\", matching -874 and 2.0MM; asset 1082.png is the gold cobalt twist bit matching variant image slug o461768v82_2608585874."
+  },
+  {
+    "source_position": "1083",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Same HSS-Co page lists \"2 608 585 876 / Diameter, mm 3.00\", matching -876 and 3.0MM; asset 1083.png is the gold cobalt twist bit matching variant image slug o471533v82_2608585876."
+  },
+  {
+    "source_position": "1084",
+    "verifier_verdict": "fail",
+    "model_exact": "no",
+    "finish_exact": "no",
+    "justification": "Official page would not open (response >5MB on two tries), so part number 2608595056 and 3.2MM could not be confirmed in page text; asset 1084.png is an unbranded plain silver twist bit with no visible size or model marking to pin it to this variant."
+  },
+  {
+    "source_position": "1085",
+    "verifier_verdict": "fail",
+    "model_exact": "no",
+    "finish_exact": "no",
+    "justification": "Official page would not open (response >5MB on two tries), so part number 2608595058 and 3.5MM could not be confirmed in page text; asset 1085.png is an unbranded silver twist bit with no visible marking tying it to this specific diameter."
+  },
+  {
+    "source_position": "2574",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "DongCheng page is titled \"DMY02-185SH\" with specs \"ELECTRIC CIRCULAR SAW/ DMY02-185, Rated Power Input 1100W, Blade Dia. 185mm\" (~7\"), matching display_name and DC-DMY02-185SH; asset 2574.jpg is the same product photo (DMY02-185.jpg) showing the blue saw labelled DMY02-185 with a 185mm 24T blade."
+  },
+  {
+    "source_position": "2638",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Kim Chok page genuinely sells \"Weida Water Tank Rectangular\", variant RT4.5CB summarised as \"RT4.5CB ... 100G/450L\", matching TANK-REC-450L and 450L rectangular tank; asset 2638.png is the listing's own image (same boutirapp ID as official_image_url) depicting the blue Weida rectangular tank at 32\"x31\"x51\"."
+  },
+  {
+    "source_position": "2650",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "Hup Sheng page is \"Masada MHB30Y: Low Profile Bottle Jack 30ton, Maximum Height 260mm, 14kg\" with description \"Model: MHB30Y (Made in Japan)\", WLL 30000kg, matching JAC-BOT-MAS-MHB-30TON / Masada Bottle Jack; asset 2650.jpg is the official Masada-MHB30Y.jpg photo of the orange low-profile bottle jack bearing the MASADA JACK logo."
+  },
+  {
+    "source_position": "2651",
+    "verifier_verdict": "pass",
+    "model_exact": "yes",
+    "finish_exact": "yes",
+    "justification": "mymesin.com.my page was blocked by a JavaScript browser check on two tries, so judged on the image alone: asset 2651.webp is an ESKO promo showing the actual blue low-profile floor jack captioned \"ESKO Low Profile Floor Jack EK-J3075L, 3 Ton\", matching item_code tail EK-J3075L and display_name (double-pump 3-ton low-profile hydraulic floor jack)."
+  }
+]

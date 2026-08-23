@@ -1,0 +1,101 @@
+source_position|item_code|uom|display_name|category|detected_brand|detected_model
+2856|CLI-HOS-13-23|PCS|PVC Wing Hose Clip 13-23|Outdoor & Garden||WH300
+2629|ELE-CAB-PVC-4.00MM-BLK-MTR|MTR|Ktk PVC Cable Black 100M -mtr|Electrical||4.0MM2
+3534|ELE-PVC-CAS-1"|LGTH|Kancil 1 X 6FT PVC Casing|Electrical||6FT
+6012|BNW-WAS-1/4"|PKT|1/4 Iron Washer (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+4856|BNW-NUT-SS304-M12|PCS|SS 304 Nut - M12|Fasteners & Fixings||M12
+5197|FAS-PLU-PVC-GREY-SW260|PCK|Grey PVC Wall Plug|Fasteners & Fixings||SW-260
+3311|CLI-HOS-GP-3/4"|PCS|Gp S/steel Hose CLIP-3/4 (13-19MM)|Outdoor & Garden||CLIP-3/4
+3278|ABR-PAP-621-539|SHT|G800 Ewd Hand Sanding Sheet|Abrasives & Cutting||G800
+6319|X-SWI-LWD-1WAY-2GANG|PCS|Niko S - 1G1W Switch White|Electrical||1G1W
+2627|ACE-HAM-ANC-1/4X2|PCK|Ace Hammer Drive Anchor 650 1/4 X 2 (10PCS/PCK)|Hand Tools||10PCS/PCK
+4864|FIT-PVC-TEE-20MMX15MM|PCS|PVC Fitting Tee Reducing 3/4 X1/2|Plumbing||X1/2
+2962|CLI-HOS-13-19|PCS|PVC Wing Hose Clip 13-19|Outdoor & Garden||WH300
+3043|X-ADH-TAP-MWP037A|PCS|Vago Seal Tape|Power Tools||12MMX0.075MMX15M
+4668|SOC-PVC-BOX-6MM|PCS|PVC 2WAY Box 3/4|Other||2WAY
+3398|CLI-HOS-GP-7/8"|PCS|Gp S/steel Hose Clip - 7/8 (13-23MM)|Outdoor & Garden||13-23MM
+3061|SWI-S/SKT-LWD-4013-13A|PCS|NNE 13A S/skt (sr)|Electrical||813/S
+3069|CLI-HOS-GP-1.1/2"|PCS|Gp S/steel Hose Clip- 1.1/2 (21-38MM)|Outdoor & Garden||21-38MM
+3221|DOR-STO-25X25MM|PCS|Red Rubber Door Stopper|Doors & Hardware||25X25MM
+3252|SWI-PLU-MK-654-13A|PCS|Mk 654 Whi 13A Plug Top 3PIN|Electrical||3PIN
+2773|CUT-BLA-ECL-1218T|PCS|Eclipse Hacksaw Blade - 12MM X 18T Predator|Hand Tools||18T
+3465|ABR-PAP-621-529|SHT|G100 Ewd Hand Sanding Sheet|Abrasives & Cutting||G100
+3171|SHH-SINKER-NO.1|PCK|Single Head Sinker No. 1 (2PCS/PCK)|Fishing & Tackle||2PCS/PCK
+5387|ACE-NUTS-5/16"X38MM|PCS|Ace Brand Bsw Hexagon Long Nuts LN-5/16"X38MM|Fasteners & Fixings||LN-5/16
+2884|ELE-T5-4FT-CIELO-D/L|PCS|Cielo T5 LED Fitting 4FT 18W DL-860|Plumbing||4FT
+2770|PLUG-TOP-UMS-13A|PCS|Ums 13A Plugtop (PT130R-S)|Other||PT130R-S
+4816|ACE-NUTS-3/8"X38MM|PCS|Ace Brand Bsw Hexagon Long Nuts LN-3/8"X38MM|Fasteners & Fixings||LN-3/8
+3396|CHA-PVC-BEL-G6MM|MTR|Cn/kh PVC (green)|Rope, Chain & Netting||CHAIN-6MM
+2970|IND-FIL-100MM|ROLL|Stretch Film 4IN X|Building Materials||230GM
+2931|FAS-SCR-CSK-1 1/4" X 8G|PCK|Sr Csk Tapping Screw 1 1/4 X 8G (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+3733|FAS-SCR-TAP-CSK-8#1"-PCK|PACK|8 X1"CSK Self Tapping Screw-flat Head (10PCS/PCK)|Fasteners & Fixings||10PCS/PCK
+5963|ELE-PVC-TEE-3W|PCS|19MM Tee Box (3WAY Box)|Plumbing||3WAY
+4205|PIC-HAN-GOL-1-1/2"|PCK|Golden Picture Hanger-m'sia 1-1/2 (2PAIR/PCK)|Housewares||2PAIR/PCK
+4113|HOS-CON-13-16MM|PCS|Power Hose Joint|Outdoor & Garden||13-16MM
+3872|PIP-UPVC-5255-1.1/2"|MTR|1 1/2"(40MM) X 6M Upvc Pipe|Plumbing||BS5255
+3308|BNW-BOL-SS304-M10-30MM|PCS|SS 304 Bolt - M10 X 30MM|Fasteners & Fixings||M10
+3188|SHH-SINKER-NO.2|PCK|Single Head Sinker No. 2 (2PCS/PCK)|Fishing & Tackle||2PCS/PCK
+2986|CUT-DIS-HIT-GRI-4X6MM|PCS|Grinding Wheel 4 X 6MM (100X6X16MM)|Abrasives & Cutting||100X6X16MM
+3391|ANT-KILL-BAIT|PCK|Ant Killing Bait 35GM|Other||35GM
+4732|WAL-PLU-S/S-CC226-M8X70MM|PCS|S/steel Wall Plug - K103-304 M8X70MM CC226|Fasteners & Fixings||K103-304
+4313|FAS-SCR-DRY-WHI-6#1.1/4"|PCK|Hunter/wh - Drywall Screw 6 (20PCS/PCK) X1-1/4|Fasteners & Fixings||20PCS/PCK
+6072|ELE-PVC-CRO-4W|PCS|19MM Cross Box 4WAY|Electrical||4WAY
+4349|SWI-LAM-HOL-SE220E-E27|PCS|E27 Battern Holder - White|Electrical||E27
+5548|FAS-SCR-TAP-CSK-8#1 1/2"|PACK|8 X1-1/2 Csk Self Tapping Screw - Flat Head (10PCS/PCK)|Fasteners & Fixings||X1-1/2
+4303|CAP-01.5UF-415V-CBB61|PCS|Capacitor 415V Sh-po Square Black|Electrical||01.5UF
+3181|FAS-SCR-TAP-CSK-8#2 1/2"|PACK|8 X2-1/2 Csk Self Tapping Screw-flat Head (10PCS/PCK)|Fasteners & Fixings||X2-1/2
+3338|SHH-SINKER-NO.5|PCS|Single Head Sinker No. 5 (1PCS/PCK)|Fishing & Tackle||1PCS/PCK
+3449|FAS-SCR-P/H-3/4" X 8#|PCK|Sr P/h Self Drilling Screw 3/4 X 8 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+3571|TAP-WIR-3MSCTBLUE|PCS|3M Blue Gu Vinyl Elec Tape 150|Plumbing||18MMX5MM
+3092|FAS-SCR-DRY-WHI-6#1"BOX|BOX|Hunter/wh - Drywall Screw 6 X1|Fasteners & Fixings||6#X1
+4585|PIC-HAN-GOL-1"|PCK|Golden Picture Hanger-m'sia 1 (2PAIR/PCK)|Housewares||2PAIR/PCK
+3141|SHH-SINKER-NO.6|PCS|Single Head Sinker No. 6 (1PC/PCK)|Fishing & Tackle||1PC/PCK
+2928|WIN-HOO-PIN-8406|PCK|Sr Pin Hook 8406 (25PCS/PCK)|Doors & Hardware||25PCS/PCK
+3153|BNW-BOL-SS304-M10-50MM|PCS|SS 304 Bolt - M10 X 50MM|Fasteners & Fixings||M10
+3361|SWI-ADA-MS3106N|PCS|Morries Uk Plug Travel Adaptor|Electrical||MS3106N
+3533|ELE-D/L-HOME-2103-18W-6500K|PCS|Hermanns Downlite -rd -6500K|Electrical||6500K
+3999|FAS-RIV-PAT-1/8"X1/2"-PCK|PCK|Blind Rivet: Jaguar 1/8 X 1/2 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+6743|FAS-SCR-DRY-WHI-6#3/4"|PCK|Hunter/wh - Drywall Screw 6 X3/4 (20PCS/PCK)|Fasteners & Fixings||X3/4
+3658|DOR-ROL-CAT-RDL304|PCS|S/s Double Roller Catch (4PCS/PCK)|Doors & Hardware||4PCS/PCK
+3039|SWI-SOC-ELE-E0813B|PCS|Elegance 13A Flat Pin Double Pole Swi Soc-blk (E0813B)|Electrical||E0813B
+3283|FAS-SCR-F/H-1 1/4" X 8#|PKT|Sr F/h Self Drilling Screw 1 1/4 X 8 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+3881|ABR-PAP-621-531|SHT|G150 Ewd Hand Sanding Sheet|Abrasives & Cutting||G150
+6739|BNW-WAS-M5|PCK|M5 Washer (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+2644|BRO-PLA-SB200|PCS|Plastic Broom 260G|Housewares||SB200
+2708|TOO-MAG-MC03A|PCK|Magnetic Catch (4PCS/PCK)|Power Tools||4PCS/PCK
+3623|CUT-DIS-MARK-12300-P024|PCS|Mr. Mark P24 Master Fibre Disc - Blk|Abrasives & Cutting||P24
+3343|CUT-ELE-EFM430|PCS|Gold Elephant Flexible Grinding Disc|Abrasives & Cutting||EFM-430
+5511|FAS-SCR-TAP-PAN-8#1"|PACK|8 X1 Ph Self Tapping Screw-pan Head (20PCS/PCK))|Fasteners & Fixings||20PCS/PCK
+4524|FAS-RIV-PAT-1/8"X1/4"-PCK|PCK|Blind Rivet: Jaguar 1/8 X 1/4 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+5512|FAS-SCR-ZPH-DSMHO516|PCS|Sr Zph Self Drilling Screw (20PCS/PCK) DSM-HO516|Fasteners & Fixings||20PCS/PCK
+3955|PIP-HDPE-32MM-1"|MTR|PN 12.5 X 100M HDPE Pipe|Plumbing||SIRIM-32MM
+3306|WAS-TAP-PAI|PCS|Washi Tape 24MMX15M|Other||24MMX15M
+3907|ABR-PAP-621-541|SHT|Ewd Hand Sanding Sheet G1200|Abrasives & Cutting||G1200
+5905|FAS-SCR-TAP-PAN-6#3/4"|PACK|6 X3/4 Self Tapping Screw-pan Head (20PCS/PCK)|Fasteners & Fixings||X3/4
+4246|WAL-PLU-S/S-CC227-M10X80MM|PCS|S/steel Wall Plug - K103-304 M10X80MM CC227|Fasteners & Fixings||K103-304
+3915|FAS-SCR-TAP-CSK-6#2"|PACK|6 X2 Csk Self Tapping Screw-flat Head (10PCS/PCK)|Fasteners & Fixings||10PCS/PCK
+2730|ELE-BUL-C7-E12-MINI|PCS|C7 E12 Mini Candle Bulb (clear)|Lighting||E12
+5259|FAS-SCR-ZPH-DSMHO520|PCS|Sr Zph Self Drilling Screw (20PCS/PCK) DSM-HO520|Fasteners & Fixings||20PCS/PCK
+2727|BRU-SPO-B3PCS|PKT|3M 213 Scouring Sponge Pad W/ab 3'S (kh SB1200775)|Other||SB1200775
+4893|FAS-SCR-CSK-3" X 8G-PCK|PCK|Sr Csk Tapping Screw 3 X 8G (10PCS/PCK)|Fasteners & Fixings||10PCS/PCK
+5317|NAI-CON-GAL-2.1/2"-PCK|PCK|2-1/2 Galvanised Steel Nail- (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+3445|BNW-BOL-SS304-M10-35MM|PCS|SS 304 Bolt - M10 X 35MM|Fasteners & Fixings||M10
+3969|ABR-PAP-621-534|PCS|G240 Ewd Hand Sanding Sheet|Abrasives & Cutting||G240
+3970|ABR-PAP-621-535|SHT|G320 Ewd Hand Sanding Sheet|Abrasives & Cutting||G320
+3863|FAS-RIV-PAT-1/8"X3/4"-PCK|PCK|Blind Rivet: Jaguar 1/8 X 3/4 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+3646|FAS-SCR-TAP-CSK-6#2-1/2"|PACK|6 X2-1/2"CSK Self Tapping Screw-flat Head (10PCS/PCK)|Fasteners & Fixings||X2-1/2
+6054|SOC-BOX-28-13A|PCS|GI Socket Box|Electrical||28X13A
+3858|BRA-S/S-L-85383|PCS|Stainless Steel L Bracket 85383-85X85|Plumbing||85383-85X85
+5258|FAS-SCR-TAP-CSK-10#2"|PCK|10 X2 Csk Self Tapping Screw-flat Head (10PCS/PCK)|Fasteners & Fixings||10PCS/PCK
+5009|PIP-UPVC-5255-1.1/4"|MTR|1 1/4"(32MM) X 6M Upvc Pipe|Plumbing||BS5255
+4257|FAS-RIV-PAT-1/8"X5/16"-PCK|PCK|Blind Rivet: Jaguar 1/8 X 5/16 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+5878|SOC-6MM-3WAY|PCS|PVC 3/4 3WAY Box|Other||3WAY
+2868|SPO-SCOTCH-BRITE-3M|PCK|3M Scotch Brite 31B 3PCS Scouring Pad (KH1578-6)|Other||31B
+3724|BNW-BOL-SS304-M10-25MM|PCS|SS 304 Bolt - M10 X 25MM|Fasteners & Fixings||M10
+3223|ELE-T5-4-CIELO-W/W|PCS|Cielo T5 LED Fitting 4FT 18W WW-830|Plumbing||4FT
+3163|SANDEX-VEL-PAD-M10-4"|PCS|Sandex 4 Velcro Backing Pad, M10|Abrasives & Cutting||M10
+4143|PIP-HDPE-25MM-PN12.5|LTH|3M HDPE Pipe - Non SIRIM X 25MM|Plumbing||PN12.5
+2659|WAL-PLU-JWP-6MM|PCK|Jaw Wall Plug 6MM (10PCS/PCK)|Fasteners & Fixings||10PCS/PCK
+3759|FAS-SCR-P/H-5/8" X 8#|PCK|Sr P/h Self Drilling Screw 5/8 X 8 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+3706|FAS-SCR-F/H-5/8" X 8#|PCK|Sr F/h Self Drilling Screw 5/8 X 8 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+6742|FAS-SCR-DRY-BLA-6#1"|PCK|Hunter/bk - Drywall Screw 6 X1 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK

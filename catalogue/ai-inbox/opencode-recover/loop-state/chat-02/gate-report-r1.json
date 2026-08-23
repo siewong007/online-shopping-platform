@@ -1,0 +1,40 @@
+{
+ "round": 1,
+ "rows_total": 60,
+ "states": {
+  "open": 22,
+  "exhausted": 37,
+  "candidate": 1
+ },
+ "reds_by_code": {
+  "red:schema": 4,
+  "red:http": 1
+ },
+ "reds": [
+  {
+   "key": "SWI-MK-2G1W-S4782|PCS#904",
+   "code": "red:schema",
+   "detail": "empty query log"
+  },
+  {
+   "key": "SWI-SOC-ULT-M000MG|PCS#919",
+   "code": "red:schema",
+   "detail": "empty query log"
+  },
+  {
+   "key": "CUT-FLA-TAI-A80100|PCS#921",
+   "code": "red:schema",
+   "detail": "empty query log"
+  },
+  {
+   "key": "DRI-SAW-A68-10MM|PCS#927",
+   "code": "red:schema",
+   "detail": "empty query log"
+  },
+  {
+   "key": "CUT-SCI-JM-317|PCS#918",
+   "code": "red:http",
+   "detail": "page status=None for ?"
+  }
+ ]
+}

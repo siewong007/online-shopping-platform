@@ -1,0 +1,148 @@
+import csv, sys
+
+OUT = r"C:\Users\DELL\OneDrive\Desktop\ekoway hardware website\online-shopping-platform\catalogue\ai-inbox\opencode-recover\loop-state\chat-02\shard-930-959.csv"
+
+HDR = ["source_position","item_code","uom","display_name","category","detected_brand","detected_model",
+       "state","round_first_seen","round_last_touched","tiers_tried","official_product_page","official_image_url",
+       "image_px_w","image_px_h","image_bytes","image_sha256","match_confidence","finish_exact","model_exact",
+       "uom_assessment","rights_status","researcher_decision","verifier_verdict","machine_gate","reason","human_action"]
+
+INFRA = ("infra: websearch exa HTTP429 at batch start (not retried); Bing HTML scrape, Bing RSS and webfetch-Bing-RSS "
+         "return unrelated junk; DuckDuckGo lite timeouts; working fallbacks this session were direct OEM-domain probes and Wayback CDX")
+
+def row(pos, item, uom, name, cat, model, state, tiers, reason, human=""):
+    return [pos,item,uom,name,cat,"",model,state,"1","1",tiers,"","","","","","","",
+            "no" if state=="exhausted" else "","no" if state=="exhausted" else "",
+            "match" if state=="exhausted" else "unknown",
+            "no_asset" if state=="exhausted" else "unknown",
+            "exhausted" if state=="exhausted" else "","","",reason,human]
+
+rows=[]
+A=row("930","TAB-SHE-PVC-2604","MTR","ZT-447 PVC Sheet","Housewares","ZT-447","exhausted","T1,T5",
+ 'q:[exa-429]"ZT-447" PVC sheet site:.com.my | q:[bing-junk]ZT-447 PVC sheet official | '+INFRA+' | ZT-447 is an importer/trade code on commodity PVC sheet stock; no manufacturer brand or official domain identifiable through any working channel; marketplace-only imagery expected which is below the official-source bar; exhausted with owner action. action=search',
+ "Ask Salim's plastics supplier for the manufacturer/importer printed on the ZT-447 carton and request a profile sheet; else photograph the PVC sheet stock in-store with the label visible")
+rows.append(A)
+
+rows.append(row("931","PAI-SPR-PMT-035","CAN","Paint Master Spray Paint - No. 35 Gold","Paint & Sundries","NO.35","open","T1,T4",
+ 'q:[exa-429]"Paint Master" "No.35" gold spray Malaysia | q:[bing-junk]"Paint Master" spray paint official Malaysia | p:http://web.archive.org/cdx/search/cdx?url=paintmaster.com.my* (3 urls: root+robots only) | p:http://web.archive.org/web/20211210083608/http://paintmaster.com.my/ (200; crawl-time HTTP301 -> https://www.paintmaster.my/) | p:https://www.paintmaster.my/ (urllib 200 but JS anti-bot interstitial Checking-your-browser; webfetch tool returns same challenge -> host bot-walls both urllib AND webfetch) | parked open: current official Paint Master MY brand domain identified but unreachable to bots this session; rerun ladder against paintmaster.my aerosol colour-chart PDP for No.35 Gold when challenge clears or via manual browser fetch'))
+
+for pos,item,name,model,human in [
+ ("932","TOO-COM-W0305D-8*10MM","2 Open Wrench (8*10MM)","8*10MM",
+  "Photograph the 8x10MM double open-end wrench on the size board in-store; ask the hand-tools supplier for the maker carton brand for a future OEM lookup"),
+]:
+    rows.append(row(pos,item,"PCS",name,"Hand Tools",model,"exhausted","T1,T5",
+     'q:[exa-429]"8x10" double open end wrench Malaysia official | '+INFRA+' | unbranded commodity wrench sold loose; item code embeds only size W0305D; no OEM presence identifiable from any channel; marketplace-only imagery below source bar; exhausted with owner action. action=search',human))
+
+rows.append(row("933","STO-MOU-A39-20X20","PCS","Mounted Stone:k-prix Korea A39 (20X20)","Abrasives & Cutting","A39","exhausted","T1,T4,T5",
+ 'q:[exa-429]"k-prix" mounted point A39 Korea | p:http://web.archive.org/cdx/search/cdx?url=kprix* -> 0 urls (first-hand this session) | p:same-chat sibling probes pos901 shard-900-929.csv: kprix.co.kr / kprix.com / k-prix.com / koreaabrasive.co.kr DNS fail, CDX zero | A39 is a mounted-point shape/size code (20x20mm); Korean K-Prix brand has no resolvable official domain or archive footprint from here; any mounted-point photo would risk wrong-SKU substitution; exhausted with owner action. action=search',
+ "Request the K-Prix mounted-points catalogue card for shape A39 (20x20mm) from Salim's abrasives importer; else photograph the stone packaging showing the A39 marking in-store"))
+
+rows.append(row("934","IND-SCP-FR9788-2","PCS","2 Faris W Handle Finishing Scraper","Doors & Hardware","FR9788","exhausted","T1,T4,T5",
+ 'q:[exa-429]Faris FR9788 finishing scraper Malaysia | p:http://web.archive.org/cdx/search/cdx?url=faris.com* (unrelated personal/portfolio host) | p:http://web.archive.org/cdx/search/cdx?url=faris.com.my* (2022 Signetique web-design template assets, not a tools brand site) | p:https://www.faris.com.my/ (live DNS NXDOMAIN) | FR9788 is an importer mould code on a Faris-brand scraper; no OEM site exists or is reachable; marketplace imagery below bar; exhausted with owner action. action=search',
+ "Email Salim's scraper importer for FR9788 blister-card artwork; else photograph both faces of the scraper card in-store"))
+
+rows.append(row("935",'FIT-SS378-TEE-1/2"',"PCS","304 Fxfxm Tee 1/2 SS378","Plumbing","SS378","exhausted","T1,T2,T5",
+ 'q:[exa-429]SS378 tee fitting 1/2 stainless 304 | '+INFRA+' | T2 normalisation: SS378 is a standards designation for plumbing fittings, not a maker SKU; commodity fxf tee sold loose in bins with no manufacturer identity on record; no OEM page to seek; exhausted with owner action. action=search',
+ "Photograph the 1/2in SS304 female-x-female tee beside a ruler in-store; ask Salim's plumbing supplier which factory supplies its SS378-series fittings"))
+
+rows.append(row("936",'FIT-YG232-ELB-1/2"-BRA',"PCS","Brass Equal Elbow 1/2","Plumbing","YG232","exhausted","T1,T2,T5",
+ 'q:[exa-429]YG232 brass equal elbow 1/2 Malaysia | '+INFRA+' | T2: YG-prefix is a local brass-fittings importer series (same family as YG251A/YG252 elsewhere in this brief); no OEM domain guessable or archived; commodity fitting sold lose; exhausted with owner action. action=search'.replace("lose","loose"),
+ "Ask the plumbing-fittings importer which factory supplies the YG232 series and request an official elbow packshot; else photograph the 1/2in brass equal elbow card in-store"))
+
+rows.append(row("937","DOR-LOC-DRA-138A-22","PCS","Cp Sq Drawer Lock","Locks & Security","138A-22","exhausted","T1,T5",
+ 'q:[exa-429]138A-22 CP square drawer lock | '+INFRA+' | 138A-22 is a generic lock-size code with no brand on record; commodity drawer lock; no OEM findable; marketplace imagery below bar; exhausted with owner action. action=search',
+ "Photograph the CP square drawer lock front plus keyway in-store; read any maker stamp on the lock face or carton and email that importer for a product image"))
+
+rows.append(row("938","SHH-HOOK-406-NO.4","PKT","Saki Sepit Biru 406 No. 4 (20'S)","Fishing & Tackle","NO.4","exhausted","T1,T5",
+ 'q:[exa-429]Saki hooks sepit biru 406 | p:http://web.archive.org/cdx/search/cdx?url=saki* (junk single robots entry; no tackle brand host) | '+INFRA+' | Saki loose-bagged import hook (20s pack No.4); no official brand domain reachable; marketplace-only imagery below bar; exhausted with owner action. action=search',
+ "Read the importer/brand-owner address printed on the Saki hook bag in-store and email them for a No.4 406-series packshot; else photograph the bag front and back in-store"))
+
+rows.append(row("939","X-FLO-MOC-N813D","PCS","16\"X16 Floor Tiles N813D","Power Tools","X16","exhausted","T1,T5",
+ 'q:[exa-429]N813D floor tile 16x16 | '+INFRA+' | N813D is a factory glaze/mould code from an unnamed tile maker (listing category Power Tools is mislabeled upstream); manufacturer not identifiable from the code alone so any tile photo risks wrong-SKU; exhausted with owner action. action=search',
+ "Read the floor-tile box branding in-store and email that factory/exporter for an N813D 16x16 tile photo; else photograph tile surface and box label in-store"))
+
+EURO_P='p:https://eupro.com/ (200 live; official Eupro tackle brand site, developed by IT Partnership Solution; nav lists Hook category) | p:eupro.myshopify.com (SSL certificate expired - defunct storefront) | p:http://eupro.com/index.php?p=hook (live origin timed out twice >120s) | p:http://web.archive.org/web/20231207112126/http://eupro.com/index.php?p=hook (official Hook range = exactly 3829BN Beak, 3255BN Eye Turned-up, 3918BN Light Circle, 3988BN Live Bait, 3168BN Baitholder, 7930BN O\'Shaughnessy Long Shank; 2019-02-16 capture shows same six)'
+rows.append(row("940","SHH-HOOK-45708-NO.7","PKT","2908 No. 2 Eupro Prawn Hook (15'S)","Fishing & Tackle","NO.2","exhausted","T1,T4,T5",
+ 'q:[exa-429]Eupro prawn hook 2908 official website | '+EURO_P+' | 2908 prawn hook absent from the official range on both captures; also flag listing mismatch: item_code embeds 45708 while display says 2908; exhausted with owner action. action=search',
+ "Email Eupro via the eupro.com contact page requesting an official 2908 prawn-hook No.2 (15's) packshot; else photograph the packet in-store showing the 2908 marking"))
+rows.append(row("941","SHH-HOOK-45708-NO.9","PKT","2908 No. 4 Eupro Prawn Hook (15'S)","Fishing & Tackle","NO.4","exhausted","T1,T4,T5",
+ 'q:[exa-429]Eupro prawn hook 2908 official website | '+EURO_P+' | distinct SKU from pos 940 (No.4 vs No.2); 2908 absent from official range on both captures; item_code/display 45708-vs-2908 mismatch flagged; exhausted with owner action. action=search',
+ "Email Eupro via eupro.com contact requesting an official 2908 prawn-hook No.4 (15's) packshot; else photograph the packet in-store showing the 2908 marking"))
+
+rows.append(row("942",'FIT-SS233-PLU-3/4"-SUS304',"PCS","SS Square Plug 3/4","Electrical","SS233","exhausted","T1,T2,T5",
+ 'q:[exa-429]SS233 square plug 3/4 SUS304 | '+INFRA+' | T2: SS233 is a mould/series code on commodity stainless pipe plug (categorised Electrical in listing); no maker identity on record; no OEM to seek; exhausted with owner action. action=search',
+ "Photograph the 3/4in SUS304 square plug beside a tape measure in-store; ask Salim's plumbing importer for its SS233-series source sheet"))
+
+rows.append(row("943","CAB-LUG-04-6","PCK","Cable Lug 4-6 (10PCS/PCK)","Electrical","10PCS/PCK","exhausted","T1,T5",
+ 'q:[exa-429]cable lug 4-6 pack Malaysia official | '+INFRA+' | generic unbranded cable lugs sold as 10-piece packs; detected_model is a pack quantity not a part number; no OEM identity possible; exhausted with owner action. action=search',
+ "Photograph one opened 10-piece cable-lug pack in-store; if the carton shows a maker mark, email that factory for an official product image"))
+
+rows.append(row("944","SWI-SOC-ULT-M000W","PCS","Ultra 1 GANG Blank Plate-white (M000W)","Electrical","M000W","exhausted","T1,T2,T5",
+ 'q:[exa-429]Ultra M000W blank plate switch | p:same-chat sibling probes pos919 shard-900-929.csv: https://ultra.com.my/ resolves to Ultra Computer Centre PC retailer, unrelated wiring-accessory brand | T2 family note: M000MG/M000W matte-grey/white blank plates share one unnamed Ultra accessory line; no official MY wiring-accessory site reachable through any channel; exhausted with owner action. action=search',
+ "Read the brand stamped on the plate or carton in-store; email that importer for a white M000W blank-plate image; else photograph front and side profiles in-store"))
+
+rows.append(row("945","FAS-SCR-ZPH-DSMHO625","PCK","Sr Zph Self Drilling Screw DSM-HO625(20PCS/PCK)","Fasteners & Fixings","DSM-HO625","exhausted","T1,T2,T5",
+ 'q:[exa-429]ZPH DSM-HO625 self drilling screw | '+INFRA+' | T2: ZPH is a screw importer mark and DSM-HO625 a pack/mould code (20pcs); commodity fastener with no OEM footprint findable; exhausted with owner action. action=search',
+ "Photograph the ZPH self-drilling screw card in-store; request the fastener importer's ZPH range sheet covering DSM-HO625 for future listings"))
+
+EUB='q:[exa-429]Eupro fishing hook 10829BL | '+EURO_P+' | 10829BL black-finish hook absent from the official Hook range on both captures'
+rows.append(row("946","SHH-HOOK-10829BL-NO.14","PKT","Eupro Fishing Hook No. 14 (12PC)","Fishing & Tackle","10829BL","exhausted","T1,T4,T5",
+ EUB+'; distinct SKU from pos 947 (No.14 12pc vs No.20 6pc); exhausted with owner action. action=search',
+ "Email Eupro via eupro.com contact requesting an official 10829BL No.14 (12pc) hook-card image; else photograph the card front/back in-store"))
+rows.append(row("947","SHH-HOOK-10829BL-NO.20","PKT","Eupro Fishing Hook No. 20 (6PC)","Fishing & Tackle","10829BL","exhausted","T1,T4,T5",
+ EUB+'; parent decision mirrored for this distinct SKU; exhausted with owner action. action=search',
+ "Email Eupro via eupro.com contact requesting an official 10829BL No.20 (6pc) hook-card image; else photograph the card front/back in-store"))
+
+rows.append(row("948",'CLI-HOS-GP-6"',"PCS","Gp S/steel Hose CLIP-6 (102-152MM)","Outdoor & Garden","CLIP-6","exhausted","T1,T5",
+ 'q:[exa-429]stainless hose clip 6 inch 102-152mm band clamp | '+INFRA+' | GP-band worm-drive clip sold loose; CLIP-6 is a size token not a maker SKU; no OEM identity possible; exhausted with owner action. action=search',
+ "Photograph the 6in stainless hose clip next to a tape in-store; check band embossing for a maker mark and email that factory for a catalogue shot"))
+
+EXORI='q:[exa-429]Exori super strong hook 4310N official | p:https://exori.co.id/ (live DNS NXDOMAIN) | p:http://web.archive.org/cdx/search/cdx?url=exori* -> 0 urls (first-hand this session)'
+rows.append(row("949","SHH-HOOK-4310N-NO.2","PKT","No. 2 Exori Super Strong Hook (20'S)","Fishing & Tackle","4310N","exhausted","T1,T4,T5",
+ EXORI+' | Exori is an Indonesian-market hook brand sold loose in MY tackle shops; no official domain exists or is archived; 4310N pattern code only on packet; exhausted with owner action. action=search',
+ "Email the Exori distributor shown on the hook packet (brand-owner address printed on backing) requesting a 4310N No.2 20's card image; else photograph the card in-store"))
+rows.append(row("950","SHH-HOOK-4310N-NO.3/0","PKT","No. 3/0 Exori Super Strong Hook (10'S)","Fishing & Tackle","4310N","exhausted","T1,T4,T5",
+ EXORI+' | distinct SKU from pos 949 (No.3/0 10\'s vs No.2 20\'s); parent decision mirrored; exhausted with owner action. action=search',
+ "Email the Exori distributor shown on the hook packet requesting a 4310N No.3/0 10's card image; else photograph the card in-store"))
+
+rows.append(row("951","FIT-YG251A-SOC-8MM-BRA","PCS","T Brass Connector 8MM","Plumbing","YG251A","exhausted","T1,T2,T5",
+ 'q:[exa-429]YG251A brass connector 8mm | '+INFRA+' | T2: YG-prefix local fittings-importer series; YG251A a mould code for an 8mm T-connector; no OEM domain guessable or archived; exhausted with owner action. action=search',
+ "Ask Salim's plumbing-fittings importer for the YG251A series source factory and an 8mm T-connector packshot; else photograph the connector in-store with the YG251A stamp visible"))
+
+rows.append(row("952","SHH-HOOK-12146BN-1","PKT","No. 1 Hytac Hook 14'S","Fishing & Tackle","12146BN","exhausted","T1,T4,T5",
+ 'q:[exa-429]Hytac fishing hook 12146BN | p:http://web.archive.org/cdx/search/cdx?url=hytac.com* -> 52 urls all belonging to unrelated US packaging-materials firm CMT (Hytac B1X/FLX/W machining PDFs) | p:https://www.hytac.com.sg/ (live DNS NXDOMAIN) | p:hytac.com live-host timeout, content unrelated | fishing-tackle Hytac has no reachable official domain; 12146BN is a packet code only; exhausted with owner action. action=search',
+ "Identify the Hytac hook importer from the packet barcode/address at Salim's tackle counter and email for a 12146BN No.1 14's card image; else photograph the packet in-store"))
+
+rows.append(row("953","TIE-CAB-SS-150MM","PCK","SS Cable Ties (10PCS/PCK) SUS304 M4.6X150MM","Electrical","10PCS/PCK","exhausted","T1,T5",
+ 'q:[exa-429]SUS304 stainless cable tie M4.6x150 official | '+INFRA+' | generic unbranded stainless cable ties in 10-packs; detected_model is pack quantity; no OEM identity possible; exhausted with owner action. action=search',
+ "Photograph a 10-piece SUS304 tie pack in-store showing length against a rule; if carton bears a factory mark, email it for an official image"))
+
+rows.append(row("954","SOC-PG9-GEW","PCS","PG9 Gewiss GW52002","Other","PG9","exhausted","T1,T2,T3,T4",
+ 'q:[exa-429]Gewiss GW52002 PG9 gland | q:[bing-junk]"GW52002" cable gland Malaysia | p:https://www.gewiss.com/sitemap-index.xml -> ww/en products sitemap (16146 urls) | p:https://www.gewiss.com/ww/en/products/product.1000002.1000095.GW52002 (200; text quotes NYLON CABLE GLAND - PG PITCH 9 - GREY RAL 7035 - IP66, Code: GW52002) | p:https://www.gewiss.com/content/gewiss/ww/en/products/product.datasheet.1000002.1000095.GW52002.pdf (200; quotes GW52002 and PG 9) | p:image fetched+hashed this session: gewiss.com dam product img.jpeg 1000x1000 42992B sha256 489723eefd1bf74f360accbaf45c4b4812f260cee3a8f7567b3a41fcaac0f1e2 (assets/954.jpg, evidence.json, hashes.csv) | BLOCKER: machine model gate unsatisfiable - detected_model PG9 normalises to 3 chars below the >=4 variant floor, and the only >=4 variant PG9GEW never occurs verbatim because Gewiss writes PG PITCH 9 / pg9 pitch; precheck_model_in_page False on every official document | p:https://www.gewiss.com.my/ DNS NXDOMAIN; no authorised MY distributor page discoverable with search channels dead | honest outcome: official OEM asset EXISTS but cannot be recorded gate-perfectly; NOT reused or substituted; escalate to verifier for override or rerun if a MY distributor page containing literal PG9 Gewiss phrasing surfaces. action=search',
+ "Email the Gewiss Malaysia authorised electrical distributor (via gewiss.com WW contacts) for a GW52002 PG9 nylon gland packshot quoting their own phrasing, or have staff photograph the gland packet showing GW52002 in-store; ask verifier whether the 1000x1000 hashed OEM asset can be admitted despite the 3-char model floor"))
+
+rows.append(row("955","SHH-SWIVEL-NO.8","PKT","Nickel Swivel No. 8","Fishing & Tackle","NO.8","exhausted","T1,T5",
+ 'q:[exa-429]nickel fishing swivel No.8 official | '+INFRA+' | generic nickel barrel swivels sold in 10-packets; No.8 is a size grade not a model; no brand on record; no OEM identity possible; exhausted with owner action. action=search',
+ "Photograph the swivel packet front and contents in-store; read any importer mark on the backing card and email for an official product shot"))
+
+rows.append(row("956","DOR-BOL-RAI-150MM","PCS","Rb Pad BOLT-6","Fasteners & Fixings","BOLT-6","exhausted","T1,T5",
+ 'q:[exa-429]RB pad bolt 6 inch door | '+INFRA+' | RB trade-mark pad bolt/bolt-6 sold loose; BOLT-6 a size token; item_code suggests 150MM door bolt; no OEM identity on record; exhausted with owner action. action=search',
+ "Photograph the RB pad bolt packaging and 150MM body in-store; ask the fastener counter which importer supplies the RB line and email for a catalogue image"))
+
+rows.append(row("957","FIT-YG252-SOC-8MM-BRA","PCS","Straight Brass Connector 8MM","Plumbing","YG252","exhausted","T1,T2,T5",
+ 'q:[exa-429]YG252 straight brass connector 8mm | '+INFRA+' | T2: YG-prefix local fittings-importer series sibling of YG232/YG251A; no OEM domain findable; exhausted with owner action. action=search',
+ "Ask the plumbing-fittings importer for the YG252 series factory and an 8mm straight-connector packshot; else photograph the connector showing the YG252 stamp in-store"))
+
+rows.append(row("958","WAS-BAS-FIL-S90(185)","PCS","S90 (185) Steel Washing Basin Filter","Bathroom","S90","exhausted","T1,T2,T5",
+ 'q:[exa-429]S90 basin waste filter 185 steel | '+INFRA+' | S90(185) is a size code for commodity sink-strainer cups; no brand on record; wrong-manufacturer substitution risk; exhausted with owner action. action=search',
+ "Photograph the S90 strainer cup with diameter marked in-store; ask the bathroom-ware importer for its basin-filter catalogue page"))
+
+rows.append(row("959","CHA-CAP-SQU-EXT-19MM","PCK","Square External Cap 19MM (4PCS/PCK)","Outdoor & Garden","4PCS/PCK","exhausted","T1,T5",
+ 'q:[exa-429]square external cap 19mm chain fitting | '+INFRA+' | generic galvanised chain-link caps in 4-packs; detected_model is pack quantity; no brand/OEM identity possible; exhausted with owner action. action=search',
+ "Photograph the 4-piece cap pack and one cap profile in-store; if the bin tag names an importer, email them for an official product image"))
+
+with open(OUT,"w",newline="",encoding="utf-8") as fh:
+    w=csv.writer(fh)
+    w.writerow(HDR)
+    w.writerows(rows)
+print("wrote",len(rows),"rows")

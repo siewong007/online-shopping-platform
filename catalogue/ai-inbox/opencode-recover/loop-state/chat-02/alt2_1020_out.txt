@@ -1,0 +1,4 @@
+ERR cdx kprix* TimeoutError('timed out')
+CDX k-prix* rows 0
+ERR ECOSIA <HTTPError 403: 'Forbidden'>
+ERR BRAVE <HTTPError 429: 'Too Many Requests'>

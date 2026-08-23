@@ -1,0 +1,5 @@
+source_position,verifier_verdict,finish_exact,model_exact,px,bytes,justification
+2933,pass,yes,yes,900x900,95372B,Official Arrow AU JT21CM Light-Duty Staple Gun page SKU ARJT21CM all-chrome uses this exact image; packshot engraved MODEL JT-21M
+4501,pass,yes,yes,179x536,123814B,Packshot self-identifies HARDEX Super Instant Adhesive 6495 Special Industry Grade 20g; dims 179x536 verified true long edge 536>=500
+4767,fail,no,no,1200x1200,565348B,Sui U marketing composite showing two different Isano models 1363HB + 1364HB with watermarks - family/multi-product shot SKU not identifiable
+5519,pass,yes,yes,1000x1000,263775B,Official techplas.com.my FAI-1007 page Side Inlet Ball Valve 9in uses this exact photo; overview confirms 9in arm and 1/2 OD20 fitting

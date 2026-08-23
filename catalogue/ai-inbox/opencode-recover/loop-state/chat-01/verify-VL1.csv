@@ -1,0 +1,21 @@
+source_position,item_code,uom,verifier_verdict,finish_exact,model_exact,justification
+627,FAN-CEI-DEKA-CX146BK12,UNIT,pass,yes,yes,Page title 'X-ONE 46 - Deka Fan Malaysia'; spec table Colour: BK/WH/DW (BK=black); image is all-black X-ONE 46 fan - finish and model match.
+632,FAN-CEI-DEKA-CDKN54MG12,UNIT,pass,yes,yes,Page title 'KONI 54 - Deka Fan Malaysia'; spec Model: KONI 54; colour list MG/MTW/OAK/LW; Q&A confirms MG=Magnesium; image is magnesium KONI 54 fan.
+772,FAN-CEI-DEKA-CDKN54OAK12,UNIT,pass,yes,yes,Same KONI 54 page; slide label 'KONI 54 - OAK' and colour list includes OAK; image shows oak wood-tone blade variant - match.
+640,FAN-CEI-DEKA-CCM34MG12,UNIT,pass,yes,yes,Page title 'CONCEPT MINI - Deka Fan Malaysia'; spec Colour: MG/WH; Q&A 'Available in magnesium and white'; image is magnesium Concept Mini - consistent.
+469,GAS-STO-KHI-GC6010,SET,pass,n/a,yes,Page title 'KHIND Gas Cooker GC6010'; image shows GC6010 double gas cooker with model printed on body - match; no finish claim in display name.
+446,VAC-KHI-VC68P,SET,pass,yes,yes,Page title 'KHIND Vacuum Cleaner VC68P'; spec table Colour: Gold; image is gold VC68P vacuum - finish and model confirmed.
+578,PRE-STO-KHI-SPC6,SET,pass,n/a,yes,Page title 'KHIND Smart Pressure Cooker SPC6'; og:image matches brief URL exactly; photo shows KHIND pressure/slow cooker - model confirmed.
+440,VAC-KHI-VC8020MS,SET,pass,yes,yes,Page meta 'Canister Vacuum Cleaner VC8020MS - KHIND MSapphire Series'; spec table Colour: Sapphire Blue; image shows blue canister vacuum with MSAPPHIRE branding - consistent.
+442,MIX-KHI-HM200,SET,pass,yes,yes,Page title 'KHIND Hand Mixer HM200'; spec table Colour: White; official cover HM200_WH.jpg shows white hand mixer - finish and model match.
+523,KHI-IRO-EI405-GRY,SET,pass,yes,yes,"Page title 'KHIND Electric Dry Iron EI405'; spec table Colour: Grey; image shows grey-accented dry iron (white/grey two-tone) - model confirmed, finish consistent."
+647,VAC-KHI-VC8630,SET,pass,yes,yes,Page title 'KHIND Vacuum Cleaner VC8630'; page text Colour: Blue and FAQ 'This blue colour model is 2 in 1 vacuum cleaner'; image shows blue 2-in-1 stick vacuum - exact match.
+477,JUG-KHI-EK502,SET,pass,n/a,yes,Page title 'KHIND 5L Stainless Steel Kettle EK502'; features SUS304 stainless steel body; image shows stainless steel KHIND kettle - model confirmed.
+522,KHI-COO-MC121,SET,pass,yes,yes,Page title 'KHIND Multi Cooker MC121'; meta description 1.2L Multi Cooker; spec table Colour: Blue; image shows blue 1.2L cooker - model and finish confirmed.
+1202,TAP-SAN-SWS-304-3977,PCS,pass,yes,yes,Page title 'Premier Basin Tap Series SWS-304-3977'; meta description 'Wall Bib Tap in silver'; image shows silver wall bib tap with hose-connect nozzle ('Sliver'=Silver typo) - model and finish match.
+1440,VAL-SAN-SW-SS-AV-80,PCS,pass,n/a,yes,Page title 'Angle Valve SW-SS-AV-80 - Saniware'; image shows SW-SS-AV-80 stainless steel angle valve - model confirmed.
+1996,BID-CAB-CB91SS-BL-DIY,PCS,pass,yes,yes,Page meta title/description CB91SS-BL-DIY; product description 'Hand Bidet / S/Steel 304 / Matt Black'; image shows matt black bidet spray - model and finish confirmed.
+2067,BID-CAB-CB90SS-DIY,PCS,pass,n/a,yes,Page meta title CB90SS-DIY; description 'Hand Bidet / S/Steel 304 / Matt'; image shows stainless matt bidet spray - matches display name Cab 304 S/s Hand Bidet-matt.
+2602,IND-CEM-GREY-25KG,BAG,pass,n/a,yes,Sika official PDP SikaCeram-88; page asset filename contains 25kg; packaging lists sizes incl. 25kg bag; image is my-SikaCeram-88-25kg grey bag - confirmed.
+3630,GROUT-SEAL-703,CAN,pass,n/a,yes,Sika official page Sikagard-703 GroutSeal; packaging lists '500ml / 1 L pail / 5 L pail' confirming 1 LTR size; image shows Sikagard-703 GroutSeal container - model confirmed.
+3361,SWI-ADA-MS3106N,PCS,pass,n/a,yes,Page title 'MORRIES UK Plug Travel Adaptor with LED Indicator - MS3106N'; breadcrumb and h1 confirm MORRIES brand + MS3106N; image shows MS3106N adaptor packaging - model confirmed.

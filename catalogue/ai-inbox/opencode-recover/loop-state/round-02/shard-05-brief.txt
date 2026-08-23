@@ -1,0 +1,101 @@
+source_position|item_code|uom|display_name|category|detected_brand|detected_model
+3468|BNW-BOL-SS304-M12-50MM|PCS|SS 304 Bolt - M12 X 50MM|Fasteners & Fixings||M12
+5710|WAL-PLU-S/S-70MM|PCS|304 S/steel Wall Plug M8 X 70|Fasteners & Fixings||CC221
+5290|FAS-SCR-DRY-BLA-6#1-1/4"|PCK|Hunter/bk - Drywall Screw 6 (20PCS/PCK) X1-1/4|Fasteners & Fixings||20PCS/PCK
+4976|FAS-RIV-PAT-1/8"X3/8"-PCK|PCK|Blind Rivet: Jaguar 1/8 X 3/8 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+3730|FAS-SCR-DRY-WHI-6#3/4"-BOX|BOX|Hunter/wh - Drywall Screw 6 X3/4|Fasteners & Fixings||X3/4
+3472|BRO-PLA-SB LD-1803S|PCS|200G Cs Plastic Broom|Housewares||LD-1803S
+2619|HOS-CON-ECO4113|PCS|Ecogreen- Hose Connector / 3/4|Outdoor & Garden||EG4113
+6564|SWI-OMS-MIR-SHORT|PCS|Series Microswitch Limit Switch Short|Electrical||LXW5-11G2
+3367|CLI-HOS-GP-5"|PCS|Gp S/steel Hose CLIP-5 (76-127MM)|Outdoor & Garden||CLIP-5
+3883|BNW-B&N-RBN-215|PCK|Sr G. I Boit & Nut 1/4 X 1 1/2 (5PCS/PCK)|Fasteners & Fixings||5PCS/PCK
+5681|ACE-NUTS-1/2"X38MM|PCS|Ace Brand Bsw Hexagon Long Nuts LN-1/2"X38MM|Fasteners & Fixings||LN-1/2
+7129|BNW-WAS-M4|PCK|M4 Washer (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+3132|HHD-FLU-M0676-L110W-40MM|PCS|Techplas Flap Outlet Valve|Plumbing||L110-W
+3496|ELE-D/L-MGM-MQTL2048-4000K|PCS|Mgm 2 1/2 7W Eye Ball|Electrical||MQTL2048
+3683|ELE-D/L-HGD603-18W-6500K|PCS|Hms Downlite Hgd 603/18W 6500K|Electrical||603/18W
+3661|ELE-SOL-TIN12MM250G|PCS|Japan Soldering Wire|Electrical||1.2X100G
+2893|NAI-SQU-SUP-038MM-1KG|PKG|E. G Square Boat Nail 38MM - 1KGS|Fasteners & Fixings||1KGS
+3250|SHH-SINKER-NO.1/4|PCK|Single Head Sinker No. 1/4 (10PCS/PCK)|Fishing & Tackle||10PCS/PCK
+3726|CUT-ELE-EDM-4060|PCS|4 X 60 Gold Elephant Mop Disc|Housewares||EDM-4060
+4148|SHH-LINE-WHI-NO.12|PCS|(bs)long White M. L No. 12|Fishing & Tackle||NO.12
+4175|SHH-LINE-WHI-NO.08|PCS|(bs)long White M. L No. 8|Fishing & Tackle||NO.8
+5575|TOO-DRV-MAG-M845|PCS|Spandek Screw Adaptor M8X45MM|Fasteners & Fixings||M8X45MM
+3260|DOR-STO-RUB-RED-38MM|PCS|Door Stopper Rubber Red 1-1/2"X1-7/8|Doors & Hardware||X1-7/8
+3972|BNW-B&N-RBN-120|PCK|Sr G. I Boit & Nut 3/16 X 2 (7PCS/PCK)|Fasteners & Fixings||7PCS/PCK
+6227|FAS-RIV-PAT-3/16X1/2-PCK|PCK|Blind Rivet: Jaguar 3/16 X 1/2 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+5742|ELE-PVC-CON-TC3X7-TC022|PCS|Tc 3 X 7 PVC Conceal Box (TC022)|Electrical||TC022
+2793|CUT-DEW-DW4790|PCS|Diamond Blade, Continous Rim 4|Abrasives & Cutting||DW4790
+3074|IND-CAS-SWI-BRA-2"|PCS|2 DL5 Tpe 360 Degree Swivel Caster W Brakes|Fishing & Tackle||DL5
+2699|CHA-CAP-SQU-INT-16X51MM|PCK|Rectangular Internal Cap (4PCS/PCK)|Outdoor & Garden||4PCS/PCK
+4166|GER-PLUG-BP8ES|PCS|Ngk 14 X 19.0 Spark Plug (generator)|Electrical||BP8ES
+3611|SAF-SPE-PIC-ST21-SMO|PCS|Picasaf Protective Eyewear-smoke ST21|Safety & Workwear||ST21
+2672|BRU-HAN0HAW-452135|PCS|Glotool 452135-3008 Steel Wire Brush|Electrical|Glotool|
+5417|TOO-DRV-MAG-M865|PCS|Spandek Screw Adaptor M8X65MM|Fasteners & Fixings||M8X65MM
+4225|CUT-DIS-MARK-12300-P120|PCS|Mr. Mark P120 Master Fibre Disc - Blk|Abrasives & Cutting||P120
+4477|IND-FOI-D/S-1.2MX25M|MTR|Glofoil Alum Foil Double Side (GT120)|Building Materials||GT120
+5659|FIT-UPVC-BEN-ELB-45-40MM|PCS|U-pvc Bend (elbow) 40MM 1-1/2 45-DEG|Plumbing||45-DEG
+2754|AUT-POL-AUT-SS75ML|PCS|Autosol S/steel|Other||POLISH-75ML
+2817|IND-CAS-75MM|PCS|3 DL5 Tpr M/duty 2 Bearing Fixed Caster|Building Materials||DL5
+3183|GUM-HAR-30|SET|Metal Expoxy Hardex 3 Ton|Lifting & Rigging||HE-30
+2677|GRA-CUT-BLA-GCD01|PCS|Cutting Grass|Outdoor & Garden||DT-04
+3430|INK-POT-TC250|PCS|TC250 Big Ink Pot|Other||TC250
+4603|BNW-THR-ZP-09MM|PCS|Zp Thread Rod 3/8 X 6FTS|Fasteners & Fixings||6FTS
+4213|SHH-LINE-WHI-NO.06|PCS|(bs)long White M. L No. 6|Fishing & Tackle||NO.6
+5091|CAP-02.0UF-400V|EA|Capacitor Uf Black Square ITALY'/400V Bd|Electrical||CPI-02.0
+3890|FAS-SCR-P/H-1 1/2" X 8#|PCK|Sr P/h Self Drilling Screw 1 1/2 X 8 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+5609|FAS-SCR-ZPH-DSMHO525|PCK|Sr Zph Self Drilling Screw DSM-HO525(20PCS/PCK)|Fasteners & Fixings||DSM-HO525
+5695|FIT-HDPE-ADA-FEM-25MMX1/2"|PCS|HDPE Adaptor Female 25MMX1/2|Plumbing||25MMX1/2
+5592|NAI-CLI-777-S|PCS|Nail Clipper 12'S|Fasteners & Fixings||777/N608
+6726|FAS-SCR-DRY-BLA-6#2"|PCK|Hunter/bk - Drywall Screw 6 X2 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+2294|ADH-ELE-3G|PCS|X'traseal Super Glue (economy PACK)3GX12 (DOZ)|Chemicals & Adhesives||3GX12
+5638|FAS-RIV-PAT-5/32X3/8-PCK|PCK|Blind Rivet: Jaguar 5/32 X 3/8 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+7108|NAI-CON-GAL-3/4"-PCK|PCK|3/4 Galvanised Steel Nail (20CS/PCK)|Fasteners & Fixings||20CS/PCK
+3006|COC-BAL-SAN-CKT1512|PCS|Sanwa BALLCOCK-CKT15 1/2|Plumbing||BALLCOCK-CKT15
+3889|FAS-SCR-DRY-BLA-6#1-1/4"BOX|BOX|Moon Arrow/bk - Drywall Screw 6|Fasteners & Fixings||6#X1-1/4
+4123|SWI-SOC-ULT-M0813MG|PCS|Ultra 13A Flat Pin Swi Soc Neon-mat Grey (M0813MG)|Electrical||M0813MG
+3286|IND-CAS-SWI-2"|PCS|2 DL5 Tpe 360 Degree Swivel Caster|Fishing & Tackle||DL5
+4462|SWI-ADA-MS-PT09|PCS|Morries Travel Adaptor For Europe, Middle East&south America|Electrical||MS-PT09
+3483|PLA-BAG-W500-1315|PCK|13 X 15 X Tbag (aa)|Packaging||WHITE/500G
+3008|DOR-HAN-CH608-NA-R|PCS|Na-r Casement Handle|Doors & Hardware||CH608
+4086|FAS-RIV-PAT-3/16"X3/4"-PCK|PCK|Blind Rivet: Jaguar 3/16 X 3/4 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+5744|FIT-HDPE-ADA-FEM-25MMX3/4"|PCS|HDPE Adaptor Female 25MMX3/4|Plumbing||25MMX3/4
+4525|FAS-RIV-PAT-3/16"X3/8"-PCK|PCK|Blind Rivet: Jaguar 3/16 X 3/8 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+5692|FAS-RIV-PAT-5/32X1/2-PCK|PCK|Blind Rivet: Jaguar 5/32 X 1/2 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+3060|POW-YELLOW|TIN|Yellow Powder|Other||500GM
+4405|BAT-PSN-LIT3V-CR-1616/5BE|PCS|CR-1616/5B Lithium 3V|Electrical||CR-1616/5B
+4312|FAS-BOL-EXP-TRAC130-M8X90X50|PCS|M8 X 90 X 50 Brain Hook Expansion Bolt|Fasteners & Fixings||TRAC130
+4600|WAL-PLU-S/S-CC228-M12X100MM|PCS|S/steel Wall Plug - K103-304 M12X100MM CC228|Fasteners & Fixings||K103-304
+2675|DOR-HAN-DK063-NA-L|PCS|Dekko Na-l Casement Handle|Doors & Hardware||DK063
+4739|FAS-BOL-EXP-OAC120-M6X70X40|PCS|Brain Expansion Eye Bolt OAC120 M6X70X40|Fasteners & Fixings||OAC120
+4272|TIE-CAB-BLA-8"|PKT|8 Black Cable Tie (20PCS/PCK)|Rope, Chain & Netting||20PCS/PCK
+4384|BRU-RAD-4X642R|PCS|1-1/2"X642R Radiator Brush|Automotive||X642R
+6141|HOL-POR-E27|PCS|E27 Porcelin Holder Wire|Electrical||E27
+4431|SHH-SINKER-HOLE-NO.4|PCK|Hole Sinker No. 4 (3PCS/PCK)|Fishing & Tackle||3PCS/PCK
+5855|ELE-SOC-PLU-SATELITE|PCK|F Satelite Screw Plug (2PCS/PCK)|Fasteners & Fixings||2PCS/PCK
+5552|FIT-YG245-NIP-1/4"-BRA|PCS|Brass Equal Nipple 1/4|Plumbing||YG245
+3884|BNW-BOL-SS304-M12-30MM|PCS|SS 304 Bolt - M12 X 30MM|Fasteners & Fixings||M12
+3624|DOR-KNO-CLEAR|PCK|Local PVC Cabinet Handle (2PCS/PCK)|Doors & Hardware||2PCS/PCK
+3946|CLI-HOS-GP-2.3/4"|PCS|Gp S/steel Hose CLIP-2.3/4 (44-67MM)|Outdoor & Garden||CLIP-2.3/4
+2955|MEA-TAP-BLI-7.5M-B7|PCS|Blimax Measuring Ds Luban Tape 7.5M LB7|Hand Tools||LB7
+3959|SWI-SOC-ULT-M012MG|PCS|Ultra 16A 1 GANG 2 Way-matte Grey (M012MG)|Electrical||M012MG
+3914|FAS-SCR-DRY-WHI-6#1.1/2"BOX|BOX|Hunter/wh - Drywall Screw 6 X1-1/2|Fasteners & Fixings||X1-1/2
+2643|X-ELE-BUL-D/L-HOME-25W|PCS|Hermanns Ens Spiral 25W|Power Tools||6500K
+3272|PLA-BAG-RUB-30X40|PCK|30 X 40 X PE (B1KG)|Packaging||B1KG
+2734|HAR-BON-NAIL-RS880-75G|PCS|Bonding Nail:hardex 75G|Fasteners & Fixings||RS880
+1719|PAI-SPR-PMT-004|CAN|Paint Master Spray Paint - No. 4 Matt Black|Paint & Sundries||NO.4
+2925|PAI-ROL-FRA-7"|PCS|Smr F380 Paint Roller Frame 7|Paint & Sundries||F380
+3825|SHH-FROG-STFM-55MM|PCS|Huangxin/huizhu Frog W/spiner 3.0CM|Fishing & Tackle||10898H
+3034|HOS-CON-EG4111-40200017|PCS|Ecogreen - Hose Quick Connector / 1/2|Outdoor & Garden||EG4111
+5068|FIT-HDPE-TEE-MAL-25MMX1/2"|PCS|HDPE Tee Male 25MMX1/2|Plumbing||25MMX1/2
+5365|FIT-YG237-SOC-1/4"-BRA|PCS|Brass Equal Socket 1/4|Electrical||YG237
+3832|BNW-BOL-SS304-M12-40MM|PCS|SS 304 Bolt - M12 X 40MM|Fasteners & Fixings||M12
+4447|FAS-RIV-PAT-5/32X5/8-PCK|PCK|Blind Rivet: Jaguar 5/32 X 5/8 (20PCS/PCK)|Fasteners & Fixings||20PCS/PCK
+6226|DRI-HSS-TWI-05MM|PCS|Blimax Hss Twist Drill BIT-3/16|Power Tool Accessories||BIT-3/16
+2673|CUT-DIS-ARC06|PCS|Aracut Glass & Tile Grinding|Abrasives & Cutting||A-505A
+3781|ELE-D/L-HOME-HGD604-18W-6500K|PCS|Hms Downlite Hgd 604/18W 6500K|Electrical||604/18W
+3747|TAP-SIN-BOL-PVC-1-1/4"+1-1/2"|PCS|Otosani 1-1/4"+1-1/2 2IN1 PVC Flexible Bottle Trap (anti-odor)|Plumbing||2IN1
+3830|VAL-ANG-CVL-CA9008|PCS|Cavallo Angle Valve CA9008 304SS 2-WAY|Plumbing||CA9008
+3998|ELE-D/L-HSP-301-18W-6500K|PCS|Hms Downlite Hsp 301-18W 6500K|Electrical||301-18W
+3054|IND-CAS-SWI-INS-2"|PCS|2 DL5 Tpe Insertion Rod Swivel Caster|Fishing & Tackle||DL5
+4121|SWI-SOC-ULT-M0813BMG|PCS|Ultra 13A Flat Pin Swi Sock (large ROCKER)(M0813BMG)|Electrical||M0813BMG

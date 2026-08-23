@@ -1,0 +1,2 @@
+source_position,verifier_verdict,model_exact,finish_exact,long_edge_px,content_type,image_bytes,image_sha256,justification
+23,fail,no,no,2000,image/jpeg,64894,83405e481772989e0227,self-verify(chat07 orchestrator, independent of researcher): khind.com.my PDP text quotes RC365 family only - item claims RC3636 which appears nowhere on page => model_exact=no; image asset is RC365_WH white cover while item claims cool Grey => finish_exact=no

@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "rows": 50,
+  "verified": 4,
+  "pending": 46,
+  "reject": 0,
+  "queries_empty": 0,
+  "assets": 4,
+  "source_order_preserved": true,
+  "worklist_first_row": "2559",
+  "worklist_50th_row": "2612",
+  "rights_status": "needs_permission for all rows"
+}

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ekoway — The Project Edit</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#catalogue">Skip to products</a>
+
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="#" aria-label="Ekoway home">
+          <img src="/frontend/public/ekoway/ekoway-logo.jpeg" alt="Ekoway" />
+        </a>
+
+        <nav class="primary-nav" aria-label="Primary navigation">
+          <a class="active" href="#catalogue">Shop</a>
+          <a href="#services">Services</a>
+          <a href="#trade">Trade desk</a>
+        </nav>
+
+        <form class="search" role="search">
+          <label class="sr-only" for="store-search">Search products</label>
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="6.5"></circle>
+            <path d="m16 16 4.2 4.2"></path>
+          </svg>
+          <input id="store-search" type="search" placeholder="Search the catalogue" autocomplete="off" />
+          <kbd>/</kbd>
+        </form>
+
+        <div class="utilities" aria-label="Account and cart">
+          <a href="#account">Account</a>
+          <a class="cart" href="#cart">Cart <span>0</span></a>
+        </div>
+      </div>
+    </header>
+
+    <section class="project-cue" aria-labelledby="project-title">
+      <div class="cue-cut" aria-hidden="true"></div>
+      <div class="cue-inner">
+        <div class="cue-copy">
+          <div class="cue-kicker">
+            <span>THE PROJECT EDIT</span>
+            <span class="readiness"><i></i> Ready when you are</span>
+          </div>
+          <div class="cue-message">
+            <h1 id="project-title">Make the next room feel possible.</h1>
+            <p><strong id="selected-category">Shop All Departments</strong><span aria-hidden="true"> — </span><span id="category-teaser">Browse the homepage the way Online Shopping customers expect to shop it.</span></p>
+          </div>
+        </div>
+
+        <div class="cue-material" role="img" aria-label="Abstract project inspiration using material swatches; not product imagery">
+          <div class="material-arch"></div>
+          <div class="material-grid"></div>
+          <div class="material-swatch swatch-one"></div>
+          <div class="material-swatch swatch-two"></div>
+          <div class="material-swatch swatch-three"></div>
+          <span>Project inspiration · not product imagery</span>
+        </div>
+
+        <nav id="category-nav" class="category-nav" aria-label="Product categories"></nav>
+      </div>
+    </section>
+
+    <div class="catalogue-toolbar" aria-label="Catalogue controls">
+      <div class="toolbar-inner">
+        <p id="result-count" aria-live="polite">Loading products…</p>
+        <div class="toolbar-actions">
+          <details class="filter-menu">
+            <summary>Filter <span aria-hidden="true">+</span></summary>
+            <div class="filter-popover">
+              <label><input id="low-stock-filter" type="checkbox" /> Low stock only</label>
+            </div>
+          </details>
+          <p id="filter-summary">All stock states</p>
+          <label class="sort-control" for="sort-select">
+            <span>Sort</span>
+            <select id="sort-select">
+              <option value="featured">Featured</option>
+              <option value="price-asc">Price Low–High</option>
+              <option value="price-desc">Price High–Low</option>
+              <option value="name" selected>Name</option>
+            </select>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <main id="catalogue" class="catalogue-shell" tabindex="-1">
+      <div id="product-grid" class="product-grid" aria-live="polite"></div>
+      <p id="empty-state" class="empty-state" hidden>No products match this edit.</p>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

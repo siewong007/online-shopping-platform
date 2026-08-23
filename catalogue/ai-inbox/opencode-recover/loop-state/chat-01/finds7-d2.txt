@@ -1,0 +1,99 @@
+### jllsearch-yta60z1.html bytes=300355
+
+  CTX: ical Sdn Bhd - Search result of Search Result, JLL Electrical Sdn Bhd is a lighting and electrical supplier company. Our main office is located in Kuala Lumpur (KL)."/> <meta property="og:url" content="https://www.jllelectrical.com.my/search/keyword/yta60z1/"/> <meta property="og:ttl" content="2419200"> <meta property="og:image" content="https://www.newpages.com.my/customer/images/17394579254ab7b51a3e9e8e9a6e360d1acc93a878.jpg"/> <meta name="theme-color" content="#fed130"> <m
+
+  CTX: "> <div class="w-100 mb-3 text-left p-0"> <div class="npnavbar_languagebar"> <span><small>Language:</small></span> <a class="col p-0 footer_langbar_item" href="/search/keyword/yta60z1/">EN</a> <span class="mx-2 languagebar_divider">|</span> <a class="col p-0 footer_langbar_item" href="/bm/search/keyword/yta60z1/">BM</a> <span class="mx-2 languagebar_divider">|</span>
+
+  CTX: <a class="col p-0 footer_langbar_item" href="/search/keyword/yta60z1/">EN</a> <span class="mx-2 languagebar_divider">|</span> <a class="col p-0 footer_langbar_item" href="/bm/search/keyword/yta60z1/">BM</a> <span class="mx-2 languagebar_divider">|</span> </div> </div> </div> </div> <div class="side_menu_background" onclick="show_sideMenu()"></div> <script> function show_sid
+
+  CTX: age pageitem status is active,other just blank --> <li class="page-item active"> <a class="page-link" href="/search/keyword/yta60z1/pn/1/"> 1 </a> </li> <li class="pa
+
+  CTX: </a> </li> <li class="page-item "> <a class="page-link" href="/search/keyword/yta60z1/pn/2/"> 2 </a> </li> <li class="pa
+
+  CTX: </a> </li> <li class="page-item "> <a class="page-link" href="/search/keyword/yta60z1/pn/3/"> 3 </a> </li> <li class="pa
+
+### api-ish strings (68):
+  A ).val();
+            $.ajax({
+                type: 
+  A );
+
+  
+
+    searchIcon.addEventListener(
+  A );
+
+    const boxSearch = document.getElementById(
+  A );
+
+    const searchBar = document.getElementById(
+  A , () => {
+
+      searchIcon.style.display = 
+  A , () => {
+
+    const searchIcon = document.getElementById(
+  A , (event) => {
+
+      const isClickInsideSearchBar = searchBar.contains(event.target);
+
+      const isClickInsideBoxSearch = boxSearch.contains(event.
+  A .servicenews_searchresultlist
+  A />
+</noscript>
+    
+
+    
+
+    
+    
+    <script>
+        var cartTotal = JSON.parse(localStorage.getItem(
+  A /bm/search/keyword/yta60z1/
+  A /ex_ajax/ex_ajaxGetPlatinumVisitor.php
+  A /ex_ajax/ex_subscribeMailAjax.php
+  A /ex_contactlink_ajax.php
+  A /ex_js/formSearch.js?v=1.5
+  A /ex_manifest.json?v=1787124122
+  A /search/keyword/yta60z1/
+  A /search/keyword/yta60z1/pn/1/
+  A /search/keyword/yta60z1/pn/2/
+  A /search/keyword/yta60z1/pn/3/
+  A /search/keyword/yta60z1/pn/4/
+  A /search/keyword/yta60z1/pn/5/
+  A /search/search_name//pn/1/snonly/1/
+  A /showproducts/productid/6660648/philips-sfl3121-led-rechargeable-strong-search-torchlight/
+  A ;
+
+        boxSearch.style.display = 
+  A ;
+
+      boxSearch.style.display = 
+  A ;
+        }
+        $.ajax({
+            type: 
+  A >
+
+<title>Search Result | JLL Electrical Sdn Bhd</title>
+<meta name=
+  A >
+    
+
+    
+    //get visitor by ajax
+    $.ajax({
+            type: 
+  A >
+    <b>
+        Search Result
+    </b>
+</h1>
+          </div>
+      </div></div></div></div></div></div><div class=
+  A JLL Electrical Sdn Bhd - Search result of Search Result, JLL Electrical Sdn Bhd is a lighting and electrical supplier company. Our main office is loca
+
+### mrmark-search-12300 ids(&amp;-safe)=[]
+  CTX: :500%; padding:30px 0; } } </style> <div id="switch-mobile"><i class="fa fa-mobile"></i> <a href="http://m.mrmarks.com?ws=showsearch&keyword=12300">Switch to Mobile Version</a></div> <a href="#" id="back-to-top"><i class="fa fa-arrow-circle-up"></i></a> <a href="https://wa.me/60127388018?text=He
+  CTX: erested%20to%20our%20product.%20May%20i%20help%20you%3F%20%0A%0AClick%20from: https%3A%2F%2Fwww.mrmarks.com%2Findex.php%3Fws%3Dshowsearch%26keyword%3D12300" id="whatsapp-float-icon" class="contactRecordBtn" data-type="1" target="_blank"><i class="fa fa-whatsapp"></i></a> <script src="https://ajax.go
+  CTX: $(this).data('type'); $.post("np_contactlink_ajax.php",{ type:type, url:'https://www.mrmarks.com/index.php?ws=showsearch&keyword=12300' }) }); /* Shopping Cart */ function cart(){ var action = $(this).attr('action'); var withOption = $(this).attr('with-option');

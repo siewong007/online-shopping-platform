@@ -1,0 +1,80 @@
+{
+ "5116": {
+  "page_status": 200,
+  "page_final_url": "https://sonichardware.com.my/product/product/1574-swallow-abrasive-sand-paper",
+  "image_status": 200,
+  "image_final_url": "https://sonichardware.com.my/images/com_hikashop/upload/02_1548695577.jpg",
+  "image_content_type": "image/jpeg",
+  "image_bytes_len": 188434,
+  "px_w": 550,
+  "px_h": 473,
+  "image_sha256": "a3ca0400d559bd6d9ab00613c271fdf674366a865a23a52ab22e5cb37a6e6bd6",
+  "asset_file": "C:\\Users\\DELL\\OneDrive\\Desktop\\ekoway hardware website\\online-shopping-platform\\catalogue\\ai-inbox\\assets\\5116.jpg",
+  "fetched_round": 1
+ },
+ "5158": {
+  "page_status": 200,
+  "page_final_url": "https://www.cheongseng.com.my/?ws=showproducts&products_id=3504187",
+  "image_status": 200,
+  "image_final_url": "https://cdn1.npcdn.net/image/163230874531ddf97cb5e0aa10484005dcb2e573b5.jpg?md5id=8c9ce62eb00bfc39549c0b3cbe197ceb&new_width=1000&new_height=1000&w=-62170009200",
+  "image_content_type": "image/jpeg",
+  "image_bytes_len": 311208,
+  "px_w": 1000,
+  "px_h": 990,
+  "image_sha256": "26dc9d74407d93e1919d8acd83986a4e19f0eeb9a18a2fec53d024e6cb471f7a",
+  "asset_file": "C:\\Users\\DELL\\OneDrive\\Desktop\\ekoway hardware website\\online-shopping-platform\\catalogue\\ai-inbox\\assets\\5158.jpg",
+  "fetched_round": 1
+ },
+ "5468": {
+  "page_status": 200,
+  "page_final_url": "https://innovestengineering.com/product/swallow/abrasive-tools/swallow-abrasive-sand-paper",
+  "image_status": 200,
+  "image_final_url": "https://api.innovestengineering.com/storage/v1/object/public/media/Swallow/2026-06-20T08-37-21-012Z-Swallow-Abrasive-Sand-Paper-xtf800",
+  "image_content_type": "image/webp",
+  "image_bytes_len": 25758,
+  "px_w": 500,
+  "px_h": 500,
+  "image_sha256": "0b27b97af4b0199e7094ed3e305edcd551bfdf09b3fddda63160d91d089a5461",
+  "asset_file": "C:\\Users\\DELL\\OneDrive\\Desktop\\ekoway hardware website\\online-shopping-platform\\catalogue\\ai-inbox\\assets\\5468.webp",
+  "fetched_round": 1
+ },
+ "5501": {
+  "page_status": 200,
+  "page_final_url": "https://hengweihardware.com/sand-paper/swallow-brand-sand-paper",
+  "image_status": 200,
+  "image_final_url": "https://hengweihardware.com/image/hengweimarketing/image/data/all_product_images/product-165/sandpaper-s1.jpg",
+  "image_content_type": "image/jpeg",
+  "image_bytes_len": 166821,
+  "px_w": 600,
+  "px_h": 598,
+  "image_sha256": "03cdbd943c6c7fc80d40f8db4e67ba94bac53bdd74a5ec84fe1d388140e1d898",
+  "asset_file": "C:\\Users\\DELL\\OneDrive\\Desktop\\ekoway hardware website\\online-shopping-platform\\catalogue\\ai-inbox\\assets\\5501.jpg",
+  "fetched_round": 1
+ },
+ "6185": {
+  "page_status": 200,
+  "page_final_url": "https://www.megatrane.com.my/showproducts/productid/1475755/cid/133497/riken-sandpaper/",
+  "image_status": null,
+  "image_final_url": null,
+  "image_content_type": null,
+  "image_bytes_len": null,
+  "px_w": null,
+  "px_h": null,
+  "image_sha256": null,
+  "asset_file": null,
+  "fetched_round": 1
+ },
+ "5469": {
+  "page_status": 200,
+  "page_final_url": "https://www.easternunity.com.my/showproducts/productid/6377551/cid/643495/swallow-sand-paper/",
+  "image_status": null,
+  "image_final_url": null,
+  "image_content_type": null,
+  "image_bytes_len": null,
+  "px_w": null,
+  "px_h": null,
+  "image_sha256": null,
+  "asset_file": null,
+  "fetched_round": 1
+ }
+}

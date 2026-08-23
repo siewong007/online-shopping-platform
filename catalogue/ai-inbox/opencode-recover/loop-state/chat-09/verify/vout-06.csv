@@ -1,0 +1,10 @@
+row_id,item_code,uom,verifier_verdict,finish_exact,model_exact,justification
+1,NIP-SPO-LES-5L-T,CAN,pass,n/a,no,"Official nipponpaint.com.my page H1 'Spot-Less Plus Matt' confirms the SPO-LES product identity; image spot-less-plus-matt-best-in-class.webp is this product's own hero can shot; 5L/tint-base pack suffix not printed on page"
+2,VAC-DEC-ROB-BRVA425B00-B1,UNIT,pass,yes,yes,"Leeden product page spec table states 'Model: BRVA425B00-B1' and title ends 'ROBOT VACUUM - BLACK'; sourced ...BRVA425B00-B1...ROBOT-VAC-BLACK-PHOTO-1.jpg is the page's own gallery photo"
+3,DC-JZ2060iEK,SET,pass,n/a,yes,"dongchengtool.com detail page titled 'DCJZ2060i(TYPE ADM/AM/EM/Z)' confirms DCJZ2060i with Type EM 4.0Ahx2 matching display '(4.0AH X2)'; image DCJZ2060i.jpg is the exact photo displayed on that page"
+4,DC-DCPL208EK-20V,SET,pass,n/a,yes,"dongchengtool.com detail page titled 'DCPL208(TYPE ADM/EM/Z)' confirms DCPL208 impact driver with Type EM 4.0Ahx2; sourced DCPB208-2.jpg is the exact hero photo shown on this official DCPL208 page"
+5,BATH-CBFAL66633-WHI,PCS,pass,yes,yes,"Cabana detail page H1 'CBFAL66633' with spec 'COLOR WHITE'; image /images/virtuemart/product/CBFAL66633-01.jpg is the model-named product shot on its own page"
+6,BATH-CBFAL66634-BLK,PCS,pass,yes,yes,"Cabana detail page H1 'CBFAL66634' with spec 'COLOR BLACK'; image /images/virtuemart/product/CBFAL66634-01.jpg is the model-named product shot on its own page"
+7,TOI-TRP-WC-CWC7603-S-SH(250MM),PCS,pass,n/a,yes,"Cabana page 'Water Closet: CWC7603-SH' lists ONE PIECE WATER CLOSET / TWISTER FLUSHING / BOTTOM OUTLET S-150 200 250 300mm / Soft Close matching -S-SH(250MM); image CWC7603-01.jpg is model-named"
+8,BATH-CBFAL66627-BLK,PCS,pass,yes,yes,"Cabana detail page H1 'CBFAL66627' with spec 'COLOR BLACK'; image /images/virtuemart/product/CBFAL66627-01.jpg is the model-named product shot on its own page"
+9,TOI-TRP-WC-CWC7601-RL-S(250MM),PCS,pass,n/a,yes,"Cabana page 'Water Closet: CWC7601-S-RL' states One Piece Wc / Washdown with Rimless / S-Trap Bottom Outlet 250mm / Soft Close matching display; image CWC7601-01.jpg is model-named"

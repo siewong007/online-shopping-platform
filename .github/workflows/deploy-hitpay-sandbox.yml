@@ -1,0 +1,174 @@
+name: Deploy HitPay sandbox
+
+# Stable, isolated UAT endpoint. This workflow never changes the production stack and never
+# receives production HitPay credentials.
+on:
+  workflow_dispatch:
+  push:
+    branches: [hitpay-sandbox-deployment]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: online-shopping-hitpay-sandbox
+  cancel-in-progress: false
+
+env:
+  VPS_HOST: 13.251.162.88
+  VPS_USER: ubuntu
+  VPS_HOST_KEY: "13.251.162.88 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGxQLowecYMuChjSX+ePbEKdDq0m8NfT8kfKaSw0Z3sF"
+
+jobs:
+  deploy:
+    name: Build and deploy isolated sandbox
+    if: >-
+      github.ref == 'refs/heads/main' ||
+      github.ref == 'refs/heads/hitpay-sandbox-deployment'
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    environment: hitpay-sandbox
+
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Validate protected sandbox inputs
+        shell: bash
+        env:
+          LIGHTSAIL_SSH_PRIVATE_KEY: ${{ secrets.LIGHTSAIL_SSH_PRIVATE_KEY }}
+          HITPAY_SANDBOX_API_KEY: ${{ secrets.HITPAY_SANDBOX_API_KEY }}
+          HITPAY_SANDBOX_WEBHOOK_SALT: ${{ secrets.HITPAY_SANDBOX_WEBHOOK_SALT }}
+        run: |
+          set -euo pipefail
+          test -n "$LIGHTSAIL_SSH_PRIVATE_KEY"
+          test -n "$HITPAY_SANDBOX_API_KEY"
+          test -n "$HITPAY_SANDBOX_WEBHOOK_SALT"
+
+      - name: Build linux/amd64 backend image
+        shell: bash
+        run: |
+          set -euo pipefail
+          revision=$(git rev-parse HEAD)
+          [[ "$revision" =~ ^[0-9a-f]{40}$ ]]
+          docker build \
+            --platform linux/amd64 \
+            --pull \
+            --label "org.opencontainers.image.revision=$revision" \
+            --tag "online-shopping-backend:$revision" \
+            --file backend/Dockerfile \
+            backend
+          test "$(docker image inspect --format '{{.Os}}/{{.Architecture}}' \
+            "online-shopping-backend:$revision")" = "linux/amd64"
+
+      - name: Create checksummed sandbox release
+        shell: bash
+        run: |
+          set -euo pipefail
+          revision=$(git rev-parse HEAD)
+          bundle_dir="$RUNNER_TEMP/hitpay-sandbox-release"
+          bundle_path="$RUNNER_TEMP/hitpay-sandbox-$revision.tar.gz"
+          mkdir -p "$bundle_dir/images" "$bundle_dir/initdb"
+
+          docker save "online-shopping-backend:$revision" | gzip -1 > "$bundle_dir/images/backend.tar.gz"
+          cp deploy/deploy-hitpay-sandbox.sh "$bundle_dir/"
+          cp deploy/hitpay-sandbox-uat.sh "$bundle_dir/"
+          cp deploy/docker-compose.hitpay-sandbox.yml "$bundle_dir/"
+          cp backend/migrations/*.sql "$bundle_dir/initdb/"
+          cp deploy/hitpay-sandbox-seed.sql "$bundle_dir/initdb/9000_hitpay_sandbox_seed.sql"
+
+          (
+            cd "$bundle_dir"
+            find . -type f ! -name SHA256SUMS -print0 \
+              | sort -z \
+              | xargs -0 sha256sum > SHA256SUMS
+          )
+          tar -C "$bundle_dir" -czf "$bundle_path" .
+
+      - name: Configure pinned SSH and credential transfer
+        shell: bash
+        env:
+          LIGHTSAIL_SSH_PRIVATE_KEY: ${{ secrets.LIGHTSAIL_SSH_PRIVATE_KEY }}
+          HITPAY_SANDBOX_API_KEY: ${{ secrets.HITPAY_SANDBOX_API_KEY }}
+          HITPAY_SANDBOX_WEBHOOK_SALT: ${{ secrets.HITPAY_SANDBOX_WEBHOOK_SALT }}
+        run: |
+          set -euo pipefail
+          install -m 0600 /dev/null "$RUNNER_TEMP/lightsail-key"
+          printf '%s\n' "$LIGHTSAIL_SSH_PRIVATE_KEY" > "$RUNNER_TEMP/lightsail-key"
+          install -m 0600 /dev/null "$RUNNER_TEMP/lightsail-known-hosts"
+          printf '%s\n' "$VPS_HOST_KEY" > "$RUNNER_TEMP/lightsail-known-hosts"
+          ssh-keygen -lf "$RUNNER_TEMP/lightsail-known-hosts" \
+            | grep -Fq 'SHA256:EvysNdkRZEdS5wOyNFI+lZs2dH589gW9ycQGAiVImsE'
+
+          install -m 0600 /dev/null "$RUNNER_TEMP/hitpay-sandbox-credentials.env"
+          {
+            printf 'HITPAY_SANDBOX_API_KEY=%q\n' "$HITPAY_SANDBOX_API_KEY"
+            printf 'HITPAY_SANDBOX_WEBHOOK_SALT=%q\n' "$HITPAY_SANDBOX_WEBHOOK_SALT"
+          } > "$RUNNER_TEMP/hitpay-sandbox-credentials.env"
+
+      - name: Upload and deploy without touching production
+        shell: bash
+        run: |
+          set -euo pipefail
+          revision=$(git rev-parse HEAD)
+          ssh_options=(
+            -i "$RUNNER_TEMP/lightsail-key"
+            -o BatchMode=yes
+            -o ConnectTimeout=15
+            -o IdentitiesOnly=yes
+            -o StrictHostKeyChecking=yes
+            -o "UserKnownHostsFile=$RUNNER_TEMP/lightsail-known-hosts"
+          )
+          scp "${ssh_options[@]}" \
+            "$RUNNER_TEMP/hitpay-sandbox-$revision.tar.gz" \
+            "$VPS_USER@$VPS_HOST:/tmp/hitpay-sandbox-$revision.tar.gz.part"
+          scp "${ssh_options[@]}" \
+            "$RUNNER_TEMP/hitpay-sandbox-credentials.env" \
+            "$VPS_USER@$VPS_HOST:/tmp/hitpay-sandbox-credentials.env.part"
+
+          ssh "${ssh_options[@]}" "$VPS_USER@$VPS_HOST" \
+            "set -euo pipefail
+             trap 'rm -f /tmp/hitpay-sandbox-$revision.tar.gz.part /tmp/hitpay-sandbox-$revision.tar.gz /tmp/hitpay-sandbox-credentials.env.part /tmp/hitpay-sandbox-credentials.env' EXIT
+             mv /tmp/hitpay-sandbox-$revision.tar.gz.part /tmp/hitpay-sandbox-$revision.tar.gz
+             mv /tmp/hitpay-sandbox-credentials.env.part /tmp/hitpay-sandbox-credentials.env
+             chmod 0600 /tmp/hitpay-sandbox-credentials.env
+             sudo rm -rf -- /opt/online-shopping-hitpay-sandbox/releases/$revision.incoming
+             sudo install -d -m 0750 /opt/online-shopping-hitpay-sandbox/releases/$revision.incoming
+             sudo tar -xzf /tmp/hitpay-sandbox-$revision.tar.gz -C /opt/online-shopping-hitpay-sandbox/releases/$revision.incoming
+             sudo rm -rf -- /opt/online-shopping-hitpay-sandbox/releases/$revision
+             sudo mv /opt/online-shopping-hitpay-sandbox/releases/$revision.incoming /opt/online-shopping-hitpay-sandbox/releases/$revision
+             sudo /bin/bash /opt/online-shopping-hitpay-sandbox/releases/$revision/deploy-hitpay-sandbox.sh \
+               $revision /opt/online-shopping-hitpay-sandbox/releases/$revision /tmp/hitpay-sandbox-credentials.env"
+
+      - name: Verify isolated route on existing production HTTPS
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            https://ekowayhardware.com/shop)" = "200"
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            https://ekowayhardware.com/api/health)" = "200"
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            https://ekowayhardware.com/api/payments/hitpay-sandbox/webhook)" = "405"
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            -X POST https://ekowayhardware.com/api/payments/hitpay-sandbox/webhook)" = "401"
+
+      - name: Remove all ephemeral credentials and transfers
+        if: always()
+        shell: bash
+        run: |
+          if [[ -s "$RUNNER_TEMP/lightsail-key" && -s "$RUNNER_TEMP/lightsail-known-hosts" ]]; then
+            revision=$(git rev-parse HEAD 2>/dev/null || true)
+            if [[ "$revision" =~ ^[0-9a-f]{40}$ ]]; then
+              ssh -i "$RUNNER_TEMP/lightsail-key" -o BatchMode=yes -o ConnectTimeout=15 \
+                -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+                -o "UserKnownHostsFile=$RUNNER_TEMP/lightsail-known-hosts" \
+                "$VPS_USER@$VPS_HOST" \
+                "rm -f -- /tmp/hitpay-sandbox-$revision.tar.gz.part /tmp/hitpay-sandbox-$revision.tar.gz /tmp/hitpay-sandbox-credentials.env.part /tmp/hitpay-sandbox-credentials.env" \
+                || true
+            fi
+          fi
+          rm -f "$RUNNER_TEMP/lightsail-key" "$RUNNER_TEMP/lightsail-known-hosts" \
+            "$RUNNER_TEMP/hitpay-sandbox-credentials.env"
