@@ -91,7 +91,13 @@ async fn start_payment(
 
     let response = app
         .oneshot(
+            // Handlers behind `ConnectInfo` extraction (client-IP throttling) need the
+            // extension the real server injects; oneshot requests bypass that layer.
             builder
+                .extension(axum::extract::ConnectInfo(std::net::SocketAddr::from((
+                    [127, 0, 0, 1],
+                    41_042,
+                ))))
                 .body(Body::from(checkout_body(product_id).to_string()))
                 .expect("request should build"),
         )
