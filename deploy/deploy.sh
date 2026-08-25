@@ -90,20 +90,6 @@ install_release_files() {
   # postgres user, so this read-only directory must be traversable by it.
   install -d -m 0755 "$APP_DIR/initdb"
   install -m 0644 "$RELEASE_DIR"/initdb/*.sql "$APP_DIR/initdb/"
-
-  cat > /etc/logrotate.d/online-shopping <<'LOGROTATE'
-/opt/online-shopping/logs/*.log {
-    daily
-    maxsize 10M
-    rotate 7
-    missingok
-    notifempty
-    compress
-    delaycompress
-    copytruncate
-}
-LOGROTATE
-  chmod 0644 /etc/logrotate.d/online-shopping
 }
 
 install_backup_components() {
@@ -179,6 +165,33 @@ install_backup_components() {
   fi
 }
 
+install_disk_usage_monitor() {
+  # Installs the daily disk-usage monitor (check-disk-usage.sh + systemd service/timer pair)
+  # shipped in the release bundle. Same H3 failure policy as the backup components: an install or
+  # enable failure is reported prominently and never aborts the application deployment. Unlike
+  # the backup timer this monitor has no external dependencies (no backup.env required), so it is
+  # enabled unconditionally; alerting degrades to marker + journal when no BACKUP_NOTIFY_HOOK is
+  # configured.
+  log "Installing disk-usage monitor"
+  if ! install -m 0750 "$RELEASE_DIR/check-disk-usage.sh" "$APP_DIR/check-disk-usage.sh" \
+    || ! install -m 0644 "$RELEASE_DIR/online-shopping-disk-usage.service" "$SYSTEMD_DIR/online-shopping-disk-usage.service" \
+    || ! install -m 0644 "$RELEASE_DIR/online-shopping-disk-usage.timer" "$SYSTEMD_DIR/online-shopping-disk-usage.timer"; then
+    log "WARNING: failed to install the disk-usage monitor under $APP_DIR / $SYSTEMD_DIR"
+    log "         disk usage will NOT be monitored; the application deployment continues"
+    return 0
+  fi
+  if ! systemctl daemon-reload; then
+    log "WARNING: systemctl daemon-reload failed; disk-usage monitoring is NOT ACTIVE"
+    return 0
+  fi
+  if systemctl enable --now online-shopping-disk-usage.timer >/dev/null 2>&1; then
+    log "Disk-usage monitoring timer ACTIVE (daily check of the root filesystem)"
+  else
+    log "WARNING: online-shopping-disk-usage.timer failed to enable; disk usage will not be monitored"
+    log "         activate manually once systemd is healthy: systemctl enable --now online-shopping-disk-usage.timer"
+  fi
+}
+
 verify_backup_components() {
   # H5: "timer enabled" is NOT "protection proven". After the stack is healthy, run the real
   # installed pipeline once. Only a fresh status=="ok" with a non-null remote destination lets us
@@ -216,9 +229,9 @@ load_release_images() {
   [[ $(docker image inspect --format '{{.Architecture}}' "online-shopping-frontend:$TAG") == amd64 ]] \
     || die "frontend image architecture is not amd64"
 
-  if ! docker image inspect postgres:19beta1 >/dev/null 2>&1; then
-    log "Pulling postgres:19beta1 (first deployment only)"
-    docker pull postgres:19beta1 >/dev/null
+  if ! docker image inspect postgres:19beta3 >/dev/null 2>&1; then
+    log "Pulling postgres:19beta3 (first deployment only)"
+    docker pull postgres:19beta3 >/dev/null
   fi
 }
 
@@ -577,7 +590,8 @@ readonly RELEASE_HARD_MIN_COMPONENTS="deploy.sh docker-compose.prod.yml ekowayha
 backup.sh backup-capacity.sh backup-env-parser.sh restore.sh backup.env.example \
 online-shopping-backup.service online-shopping-backup.timer online-shopping-backup-health.service \
 online-shopping-backup-health.timer online-shopping-backup-notify.service notify-backup-failure.sh \
-preflight-backup.sh check-backup-health.sh"
+preflight-backup.sh check-backup-health.sh check-disk-usage.sh \
+online-shopping-disk-usage.service online-shopping-disk-usage.timer"
 read -ra RELEASE_HARD_MIN_ARRAY <<< "$RELEASE_HARD_MIN_COMPONENTS"
 readonly RELEASE_HARD_MIN_ARRAY
 readonly MIN_RELEASE_COMPONENT_COUNT=${#RELEASE_HARD_MIN_ARRAY[@]}
@@ -655,6 +669,7 @@ main_deploy() {
   backup_existing_database
   install_release_files
   install_backup_components
+  install_disk_usage_monitor
   load_release_images
 
   previous_tag=""

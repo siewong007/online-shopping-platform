@@ -1,0 +1,12 @@
+[Unit]
+Description=Run the online-shopping disk-usage check periodically
+
+[Timer]
+# Daily at 02:45 UTC. Persistent=true runs a missed job soon after boot or wake. Deliberately
+# offset from the 02:30 encrypted-backup timer so the two never start in the same window.
+OnCalendar=*-*-* 02:45:00 UTC
+Persistent=true
+Unit=online-shopping-disk-usage.service
+
+[Install]
+WantedBy=timers.target

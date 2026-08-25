@@ -26,7 +26,7 @@ TARGET_CONTAINER="${TARGET_CONTAINER:-online-shopping-atomicity}"
 TARGET_USER="${TARGET_USER:-restore}"
 TARGET_PASSWORD="${TARGET_PASSWORD:-restore}"
 TARGET_DB="${TARGET_DB:-restore_proof}"
-POSTGRES_IMAGE="${POSTGRES_IMAGE:-postgres:19beta1}"
+POSTGRES_IMAGE="${POSTGRES_IMAGE:-postgres:19beta3}"
 # D5: the canonical production container identity, overridable ONLY by tests to prove the
 # fail-closed refusal when production cannot be resolved (the override never widens safety).
 RP_PROD_CONTAINER="${RP_PROD_CONTAINER:-online-shopping-db}"

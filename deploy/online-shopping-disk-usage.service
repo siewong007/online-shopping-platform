@@ -1,0 +1,12 @@
+[Unit]
+Description=Check the online-shopping root filesystem disk usage (df -P)
+After=network.target
+# N4-style wiring: on any non-zero exit, systemd starts the shared failure notifier (persistent
+# marker + CRITICAL journal entry + optional BACKUP_NOTIFY_HOOK, see notify-backup-failure.sh).
+# The notifier is backup-worded; check-disk-usage.sh additionally writes its own disk-specific
+# marker and user.warning journal entry so the precise signal is never lost.
+OnFailure=online-shopping-backup-notify.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/online-shopping/check-disk-usage.sh

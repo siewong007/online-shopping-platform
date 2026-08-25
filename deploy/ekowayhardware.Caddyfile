@@ -5,10 +5,13 @@ ekowayhardware.com {
 
     # Keep the proven HitPay sandbox isolated from production. This exact route is evaluated
     # before the general /api matcher and is the only sandbox endpoint exposed publicly.
-    handle /api/payments/hitpay-sandbox/webhook {
-        rewrite * /api/payments/hitpay/webhook
-        reverse_proxy 127.0.0.1:4001
-    }
+    # PARKED: nothing in the stack listens on 127.0.0.1:4001 yet (prod compose exposes only 4000),
+    # so the route is commented out until a local sandbox upstream actually exists — kept here to
+    # document intent.
+    # handle /api/payments/hitpay-sandbox/webhook {
+    #     rewrite * /api/payments/hitpay/webhook
+    #     reverse_proxy 127.0.0.1:4001
+    # }
 
     # The currently deployed legacy frontend posts directly to /api/checkout without taking
     # payment. Keep that route closed until provider-backed production checkout is deployed.

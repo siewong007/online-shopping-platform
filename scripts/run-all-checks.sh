@@ -14,6 +14,7 @@ SCRIPTS=(
   deploy/notify-backup-failure.sh
   scripts/preflight-backup.sh
   scripts/check-backup-health.sh
+  scripts/check-disk-usage.sh
   scripts/restore-proof.sh
   scripts/run-all-checks.sh
   scripts/test-backup-env-parser.sh

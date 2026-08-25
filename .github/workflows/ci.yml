@@ -19,7 +19,7 @@ jobs:
         working-directory: backend
     services:
       postgres:
-        image: postgres:19beta1
+        image: postgres:19beta3
         env:
           POSTGRES_USER: project_depot
           POSTGRES_PASSWORD: project_depot
@@ -67,9 +67,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
           bun: 1.3.14
+
+      # setup-bun only caches the Bun binary itself; package caching is keyed on the lockfile.
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('frontend/bun.lock') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
 
       - name: Install dependencies
         run: bun install
@@ -96,6 +105,7 @@ jobs:
         deploy/notify-backup-failure.sh
         scripts/preflight-backup.sh
         scripts/check-backup-health.sh
+        scripts/check-disk-usage.sh
         scripts/restore-proof.sh
         scripts/run-all-checks.sh
         scripts/test-backup-env-parser.sh
@@ -153,7 +163,8 @@ jobs:
                      deploy/online-shopping-backup.service deploy/online-shopping-backup.timer \
                      deploy/online-shopping-backup-health.service deploy/online-shopping-backup-health.timer \
                      deploy/online-shopping-backup-notify.service scripts/preflight-backup.sh \
-                     scripts/check-backup-health.sh; do
+                     scripts/check-backup-health.sh scripts/check-disk-usage.sh \
+                     deploy/online-shopping-disk-usage.service deploy/online-shopping-disk-usage.timer; do
             grep -qxF "$(printf '%s\t%s' "$dep" "$(basename "$dep")")" deploy/release-components.txt \
               || { echo "release-components.txt missing dependency: $dep" >&2; exit 1; }
             echo "  ok: $dep in manifest"
@@ -201,7 +212,7 @@ jobs:
             -e POSTGRES_USER=project_depot \
             -e POSTGRES_PASSWORD=project_depot \
             -e POSTGRES_DB=project_depot \
-            postgres:19beta1
+            postgres:19beta3
           ready=0
           for _ in $(seq 1 60); do
             if docker exec online-shopping-db pg_isready -U project_depot -d project_depot >/dev/null 2>&1; then

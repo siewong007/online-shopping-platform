@@ -14,3 +14,6 @@ deploy/online-shopping-backup-notify.service	online-shopping-backup-notify.servi
 deploy/notify-backup-failure.sh	notify-backup-failure.sh
 scripts/preflight-backup.sh	preflight-backup.sh
 scripts/check-backup-health.sh	check-backup-health.sh
+scripts/check-disk-usage.sh	check-disk-usage.sh
+deploy/online-shopping-disk-usage.service	online-shopping-disk-usage.service
+deploy/online-shopping-disk-usage.timer	online-shopping-disk-usage.timer

@@ -24,7 +24,7 @@ x-logging: &default-logging
 
 services:
   postgres:
-    image: postgres:19beta1
+    image: postgres:19beta3
     container_name: online-shopping-db
     restart: unless-stopped
     command:
@@ -85,6 +85,17 @@ services:
       HITPAY_PRODUCTION_WEBHOOK_SALT: "${HITPAY_PRODUCTION_WEBHOOK_SALT:-}"
       HITPAY_PRODUCTION_API_URL: "https://api.hit-pay.com"
       HITPAY_REDIRECT_URL: "https://ekowayhardware.com/shop?payment_return=hitpay"
+      # Optional operator capabilities are forwarded from the environment/secrets.env when set.
+      # Blank values preserve the current disabled behavior (email off, MFA key absent, payments
+      # in their default activation mode). TRUST_PROXY and RATE_LIMIT_PER_MINUTE fall back to the
+      # same defaults the backend applies when unset (true / 120).
+      SMTP_HOST: "${SMTP_HOST:-}"
+      SMTP_FROM_ADDRESS: "${SMTP_FROM_ADDRESS:-}"
+      SMTP_PASSWORD: "${SMTP_PASSWORD:-}"
+      MFA_ENCRYPTION_KEY: "${MFA_ENCRYPTION_KEY:-}"
+      PAYMENT_ACTIVATION_MODE: "${PAYMENT_ACTIVATION_MODE:-}"
+      TRUST_PROXY: "${TRUST_PROXY:-true}"
+      RATE_LIMIT_PER_MINUTE: "${RATE_LIMIT_PER_MINUTE:-120}"
       RUST_LOG: warn
     depends_on:
       postgres:

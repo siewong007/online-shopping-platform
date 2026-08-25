@@ -21,7 +21,7 @@
 #   - the restore.sh readiness schema check.
 #
 # - Source: the local development database (default container online-shopping-db, db project_depot).
-# - Target: a disposable container named online-shopping-restore-proof (postgres:19beta1).
+# - Target: a disposable container named online-shopping-restore-proof (postgres:19beta3).
 # - Generates a disposable age keypair and a local-type rclone remote; touches no production data.
 # - Cleans up the container, volume and all temporary state even on failure (traps).
 #
@@ -46,7 +46,7 @@ TARGET_CONTAINER="${TARGET_CONTAINER:-online-shopping-restore-proof}"
 TARGET_USER="${TARGET_USER:-restore}"
 TARGET_PASSWORD="${TARGET_PASSWORD:-restore}"
 TARGET_DB="${TARGET_DB:-restore_proof}"
-POSTGRES_IMAGE="${POSTGRES_IMAGE:-postgres:19beta1}"
+POSTGRES_IMAGE="${POSTGRES_IMAGE:-postgres:19beta3}"
 # D5: the canonical production container identity, overridable ONLY by tests to prove the
 # fail-closed refusal when production cannot be resolved (the override never widens safety).
 RP_PROD_CONTAINER="${RP_PROD_CONTAINER:-online-shopping-db}"

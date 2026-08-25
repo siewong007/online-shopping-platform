@@ -21,7 +21,7 @@ SOURCE_PASSWORD="${SOURCE_PASSWORD:-project_depot}"
 TARGET_USER="${TARGET_USER:-restore}"
 TARGET_PASSWORD="${TARGET_PASSWORD:-restore}"
 TARGET_DB="${TARGET_DB:-restore_proof}"
-POSTGRES_IMAGE="${POSTGRES_IMAGE:-postgres:19beta1}"
+POSTGRES_IMAGE="${POSTGRES_IMAGE:-postgres:19beta3}"
 TARGET_CONTAINER="${TARGET_CONTAINER:-online-shopping-restore-proof-neg}"
 # D5: the canonical production container identity, overridable ONLY by tests to prove the
 # fail-closed refusal when production cannot be resolved (the override never widens safety).
