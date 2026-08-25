@@ -590,7 +590,7 @@ readonly RELEASE_HARD_MIN_COMPONENTS="deploy.sh docker-compose.prod.yml ekowayha
 backup.sh backup-capacity.sh backup-env-parser.sh restore.sh backup.env.example \
 online-shopping-backup.service online-shopping-backup.timer online-shopping-backup-health.service \
 online-shopping-backup-health.timer online-shopping-backup-notify.service notify-backup-failure.sh \
-preflight-backup.sh check-backup-health.sh check-disk-usage.sh \
+preflight-backup.sh check-backup-health.sh check-disk-usage.sh upgrade-postgres-cluster.sh \
 online-shopping-disk-usage.service online-shopping-disk-usage.timer"
 read -ra RELEASE_HARD_MIN_ARRAY <<< "$RELEASE_HARD_MIN_COMPONENTS"
 readonly RELEASE_HARD_MIN_ARRAY

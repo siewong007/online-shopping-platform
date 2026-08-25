@@ -15,6 +15,7 @@ SCRIPTS=(
   scripts/preflight-backup.sh
   scripts/check-backup-health.sh
   scripts/check-disk-usage.sh
+  scripts/upgrade-postgres-cluster.sh
   scripts/restore-proof.sh
   scripts/run-all-checks.sh
   scripts/test-backup-env-parser.sh
