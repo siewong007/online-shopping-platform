@@ -1,4 +1,5 @@
 import { deleteJson, fetchJson, postJson, putJson } from "../../../shared/api/http";
+import { fallbackPromotions, fallbackPublicOffers, fallbackVouchers } from "../../../data/fallback";
 import type {
   CreatePromotionInput,
   CreateVoucherInput,
@@ -8,10 +9,6 @@ import type {
   UpdateVoucherInput,
   Voucher
 } from "../types";
-
-const fallbackPromotions: Promotion[] = [];
-const fallbackVouchers: Voucher[] = [];
-const fallbackPublicOffers: PublicOffersPayload = { promotions: [], vouchers: [] };
 
 export function fetchPublicOffers(): Promise<PublicOffersPayload> {
   return fetchJson("/api/offers", fallbackPublicOffers, "customer");

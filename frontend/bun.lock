@@ -5,15 +5,15 @@
     "": {
       "name": "online-shopping-web",
       "dependencies": {
-        "react": "latest",
-        "react-dom": "latest",
+        "react": "^19.2.7",
+        "react-dom": "^19.2.7",
       },
       "devDependencies": {
-        "@types/react": "latest",
-        "@types/react-dom": "latest",
-        "@vitejs/plugin-react": "latest",
+        "@types/react": "^19.2.17",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^6.0.3",
         "typescript": "^7.0.2",
-        "vite": "latest",
+        "vite": "^8.1.4",
       },
     },
   },

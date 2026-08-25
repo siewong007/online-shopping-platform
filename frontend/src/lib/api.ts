@@ -95,7 +95,9 @@ export {
   updateSystemSetting
 } from "../modules/settings/api/settingsApi";
 export {
-  fetchStorefront
+  fetchStorefront,
+  findInitialProductById,
+  initialProductDirectory
 } from "../modules/storefront/api/storefrontApi";
 export {
   createProductReview,

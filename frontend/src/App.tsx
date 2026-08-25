@@ -47,6 +47,8 @@ import {
   fetchSales,
   fetchSalesSummary,
   fetchStorefront,
+  findInitialProductById,
+  initialProductDirectory,
   fetchCustomerMe,
   fetchSystemSettings,
   login as loginRequest,
@@ -148,7 +150,7 @@ import type {
 import { quoteCheckout } from "./modules/orders/api/orderApi";
 import type { CheckoutQuote } from "./modules/orders/types";
 import { SupportChatWidget } from "./modules/support/components/SupportChatWidget";
-import { fallbackPermissions, fallbackStorefront } from "./data/fallback";
+import { PAGE_REGISTRY } from "./data/pageRegistry";
 import {
   ApiError,
   getAuthToken,
@@ -505,7 +507,7 @@ function getRolePermission(
 function permissionsFromAuth(auth: AdminAuthSnapshot): PermissionsPayload {
   return {
     roles: [auth.role],
-    pages: fallbackPermissions.pages,
+    pages: PAGE_REGISTRY,
     permissions: auth.permissions
   };
 }
@@ -1370,13 +1372,13 @@ export default function App() {
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const isInitialStorefrontFilter = useRef(true);
   const latestProductsById = useRef(
-    new Map(fallbackStorefront.products.map((product) => [product.id, product]))
+    new Map(initialProductDirectory().map((product) => [product.id, product]))
   );
   const productReturnFocusRef = useRef<number | null>(null);
   const storefrontRequestGeneration = useRef(0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const { t } = useI18n();
-  const { notify } = useNotifications();
+  const { notify, notifyError } = useNotifications();
 
   // A hosted gateway redirects the shopper back after showing its payment result. The signed
   // server-to-server webhook remains the source of truth, so do not promise success here.
@@ -1430,18 +1432,26 @@ export default function App() {
 
   useEffect(() => {
     const requestGeneration = ++storefrontRequestGeneration.current;
-    void fetchStorefront().then(({ isFallback, payload }) => {
-      if (storefrontRequestGeneration.current === requestGeneration) {
-        payload.products.forEach((product) => latestProductsById.current.set(product.id, product));
-        setCart((current) => reconcileCartStock(current, payload.products));
-        setStorefront(payload);
-        setIsStorefrontFallback(isFallback);
-      }
-    });
+    void fetchStorefront()
+      .then(({ isFallback, payload }) => {
+        if (storefrontRequestGeneration.current === requestGeneration) {
+          payload.products.forEach((product) => latestProductsById.current.set(product.id, product));
+          setCart((current) => reconcileCartStock(current, payload.products));
+          setStorefront(payload);
+          setIsStorefrontFallback(isFallback);
+        }
+      })
+      .catch((error) => {
+        notifyError(error, { operation: "load storefront catalogue", scope: "storefront", dedupeKey: "storefront:catalogue:error" });
+      });
   }, []);
 
   useEffect(() => {
-    void fetchPublicOffers().then(setPublicOffers);
+    void fetchPublicOffers()
+      .then(setPublicOffers)
+      .catch((error) => {
+        notifyError(error, { operation: "load offers", scope: "offers", dedupeKey: "storefront:offers:error" });
+      });
   }, []);
 
   // The API pages the catalogue; this appends the next page rather than replacing, so the
@@ -1470,6 +1480,8 @@ export default function App() {
           products: [...current.products, ...payload.products.filter((p) => !seen.has(p.id))]
         };
       });
+    } catch (error) {
+      notifyError(error, { operation: "load more products", scope: "storefront", dedupeKey: "storefront:load-more:error" });
     } finally {
       setIsLoadingMoreProducts(false);
     }
@@ -1506,6 +1518,11 @@ export default function App() {
             setCart((current) => reconcileCartStock(current, payload.products));
             setStorefront(payload);
             setIsStorefrontFallback(isFallback);
+          }
+        })
+        .catch((error) => {
+          if (!cancelled) {
+            notifyError(error, { operation: "filter storefront catalogue", scope: "storefront", dedupeKey: "storefront:filter:error" });
           }
         })
         .finally(() => {
@@ -1715,7 +1732,8 @@ export default function App() {
       invoicesData,
       systemSettingsData,
       customerProfileData,
-      vouchersData
+      vouchersData,
+      permissionsData
     ] = await Promise.all([
       fetchAdminUsers(),
       fetchAuditEvents(),
@@ -1729,7 +1747,8 @@ export default function App() {
       fetchInvoices(),
       fetchSystemSettings(),
       fetchCustomerPortalProfiles(),
-      fetchVouchers()
+      fetchVouchers(),
+      fetchPermissions()
     ]);
 
     setCurrentAdmin(null);
@@ -1748,7 +1767,7 @@ export default function App() {
       systemSettingsData,
       customerProfileData,
       vouchersData,
-      permissionsData: fallbackPermissions
+      permissionsData
     });
   };
 
@@ -2847,7 +2866,7 @@ export default function App() {
               }
               fallbackProduct={
                 isShowingFallbackStorefront && productDetailId != null
-                  ? fallbackStorefront.products.find((product) => product.id === productDetailId) ?? null
+                  ? findInitialProductById(productDetailId)
                   : null
               }
               isCatalogueLoaded={storefront !== null}
@@ -3235,7 +3254,7 @@ function JobContextRail({
   }, new Map());
   const departments = job.departmentSlugs
     .map((slug) => ({ category: categories.find((category) => category.slug === slug), count: counts.get(slug) ?? 0 }))
-    .filter((item) => item.category && item.count > 0);
+    .filter((item): item is { category: Category; count: number } => item.category !== undefined && item.count > 0);
 
   return (
     <aside className="worklist-context-rail" aria-label={t("shop.jobs.context")}>
@@ -3277,7 +3296,7 @@ function JobContextDisclosure({
   }, new Map());
   const departments = job.departmentSlugs
     .map((slug) => ({ category: categories.find((category) => category.slug === slug), count: counts.get(slug) ?? 0 }))
-    .filter((item) => item.category && item.count > 0);
+    .filter((item): item is { category: Category; count: number } => item.category !== undefined && item.count > 0);
 
   return (
     <section className="worklist-context-mobile" aria-label={t("shop.jobs.context")}>
@@ -3533,7 +3552,6 @@ function StorefrontView({
 
       <main
         className={`worklist-catalogue-shell${activeJob ? "" : " worklist-catalogue-shell--all"}`}
-        data-fallback={isShowingFallbackData || undefined}
       >
         {activeJob ? (
           <>

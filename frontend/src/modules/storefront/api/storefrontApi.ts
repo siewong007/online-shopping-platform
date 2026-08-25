@@ -98,6 +98,15 @@ export type StorefrontResult = {
   payload: StorefrontPayload;
 };
 
+/** Offline/demo catalogue seed for component-local caches that must work before any API response arrives. */
+export function initialProductDirectory(): Product[] {
+  return fallbackStorefront.products;
+}
+
+export function findInitialProductById(productId: number): Product | null {
+  return fallbackStorefront.products.find((product) => product.id === productId) ?? null;
+}
+
 export async function fetchStorefront(params?: StorefrontQueryParams): Promise<StorefrontResult> {
   const { data: payload, isFallback } = await fetchJsonResult(
     `/api/storefront${buildQueryString(params)}`,

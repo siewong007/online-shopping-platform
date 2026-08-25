@@ -328,9 +328,15 @@ export async function fetchJsonResult<T>(
 
     return { data: (await response.json()) as T, isFallback: false };
   } catch (error) {
-    if (!(error instanceof ApiError) || error.isNetworkError) onApiUnavailable?.();
+    if (!isTransportLevelFailure(error)) throw error;
+    onApiUnavailable?.();
     return { data: fallback, isFallback: true };
   }
+}
+
+function isTransportLevelFailure(error: unknown): boolean {
+  if (error instanceof ApiError) return error.isNetworkError;
+  return error instanceof TypeError || error instanceof DOMException;
 }
 
 export async function requestJson<TResponse>(
