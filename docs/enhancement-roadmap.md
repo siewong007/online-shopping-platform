@@ -20,10 +20,11 @@ Status snapshot for the current tree:
 | Transactional email | Shipped | SMTP relay (`lettre`): order/payment/refund emails, fire-and-forget with audit trail |
 | Catalogue sitemap | Shipped | `/api/storefront/sitemap.xml` generated from published catalogue |
 | AutoCount export | Shipped on feature branch | `/api/admin/invoices/autocount-export`, invoice CSV download UI |
+| Launch hardening | Shipped | `0038_email_outbox.sql`, `0039_orders_customer_account_index.sql`, per-IP rate limiting with `TRUST_PROXY`, cart-item cap, input bounds, Postgres 19beta3, disk-usage watchdog |
 
 Current recommended PR themes:
 
-1. Ship the controlled production release: migrations through 0037, HitPay business
+1. Ship the controlled production release: migrations through 0039, HitPay business
    verification, owner-approved catalogue publish — then remove the Caddy checkout guard in
    that same release.
 2. Point an external uptime watcher at `/api/health` (deployment decision, no code left).
