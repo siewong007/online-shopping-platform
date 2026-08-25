@@ -131,6 +131,7 @@ Then watch: docker inspect -f '{{.State.Health.Status}}' $CONTAINER
 RESCUE
 }
 
+rc=0
 trap 'rc=$?; (( rc == 0 )) || [[ "$STAGE" == "preflight" || "$STAGE" == "dump" ]] || rollback; exit $rc' EXIT
 
 # ---------------------------------------------------------------- preflight --
