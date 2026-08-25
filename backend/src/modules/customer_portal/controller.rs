@@ -54,7 +54,7 @@ pub async fn lookup_customer_portal(
         &state.pool,
         email,
         order_id,
-        &client_ip::client_ip(&headers, peer),
+        &client_ip::client_ip(&headers, peer, state.trust_proxy),
     )
     .await
     .map(Json)

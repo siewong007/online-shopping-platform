@@ -1,6 +1,7 @@
 use crate::models::*;
 use anyhow::{Result, bail};
 use sqlx::PgPool;
+use std::collections::HashMap;
 
 pub async fn fetch_payments(pool: &PgPool) -> Result<Vec<Payment>> {
     sqlx::query_as::<_, Payment>(
@@ -1063,18 +1064,31 @@ async fn resolve_late_paid_stock(
     .bind(order_id)
     .fetch_all(&mut **tx)
     .await?;
-    let mut sufficient = true;
-    for (product_id, quantity) in &quantities {
-        let stock = sqlx::query_scalar::<_, i32>(
-            "SELECT stock_quantity FROM products WHERE id = $1 FOR UPDATE",
-        )
-        .bind(product_id)
-        .fetch_one(&mut **tx)
-        .await?;
-        if i64::from(stock) < *quantity {
-            sufficient = false;
-        }
+    let product_ids: Vec<i32> = quantities
+        .iter()
+        .map(|(product_id, _)| *product_id)
+        .collect();
+    // One lock acquisition for every product instead of a per-row loop. `ORDER BY id` keeps
+    // concurrent stock re-acquisitions deadlock-free.
+    let locked = sqlx::query_as::<_, (i32, i32)>(
+        r#"
+        SELECT id, stock_quantity
+        FROM products
+        WHERE id = ANY($1)
+        ORDER BY id
+        FOR UPDATE
+        "#,
+    )
+    .bind(&product_ids)
+    .fetch_all(&mut **tx)
+    .await?;
+    if locked.len() != product_ids.len() {
+        bail!("A product in this order no longer exists.");
     }
+    let stock_by_product: HashMap<i32, i32> = locked.into_iter().collect();
+    let sufficient = quantities
+        .iter()
+        .all(|(product_id, quantity)| i64::from(stock_by_product[product_id]) >= *quantity);
     if sufficient {
         for (product_id, quantity) in quantities {
             let quantity = i32::try_from(quantity)

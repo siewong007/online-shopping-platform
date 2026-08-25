@@ -6,6 +6,7 @@ use sqlx::PgPool;
 use crate::modules::reviews::model::ProductReview;
 
 const VERIFIED_PURCHASE_STATUSES: &[&str] = &["completed", "delivered"];
+const REVIEW_BODY_MAX_CHARS: usize = 2000;
 
 async fn fetch_product(pool: &PgPool, product_id: i32) -> Result<Option<Product>> {
     let product = sqlx::query_as::<_, Product>(
@@ -136,6 +137,9 @@ pub async fn create_product_review(
     let body = input.body.trim();
     if body.is_empty() {
         bail!("Review text is required.");
+    }
+    if body.chars().count() > REVIEW_BODY_MAX_CHARS {
+        bail!("Review text must be 2000 characters or fewer.");
     }
 
     if has_reviewed(pool, product_id, customer_account_id).await? {

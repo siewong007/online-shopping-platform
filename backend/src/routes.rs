@@ -2,6 +2,7 @@ use axum::{
     Router,
     extract::DefaultBodyLimit,
     http::{HeaderName, HeaderValue, Method, header::AUTHORIZATION, header::CONTENT_TYPE},
+    middleware,
     routing::{delete, get, post, put},
 };
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
@@ -13,6 +14,7 @@ use crate::{
         invoices, mfa, offers, orders, payments, permissions, reviews, sales, settings, storefront,
         support,
     },
+    rate_limit,
 };
 
 pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
@@ -28,8 +30,9 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
             HeaderName::from_static(payments::activation::ACTIVATION_HEADER),
         ]);
 
-    Router::new()
-        .route("/api/health", get(health::controller::health))
+    // Unauthenticated surfaces a bot can hammer cheaply sit behind the fixed-window per-IP
+    // limiter. Admin routes, provider webhooks and `/api/health` stay outside it.
+    let public = Router::new()
         .route("/api/storefront", get(storefront::controller::storefront))
         .route(
             "/api/storefront/sitemap.xml",
@@ -39,7 +42,6 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
             "/api/storefront/products/{product_id}",
             get(reviews::controller::product_detail),
         )
-        .route("/api/offers", get(offers::controller::public_offers))
         .route(
             "/api/support/conversations",
             post(support::controller::create_conversation),
@@ -58,6 +60,47 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
             "/api/customer-portal/lookup",
             get(customer_portal::controller::lookup_customer_portal),
         )
+        .route("/api/checkout", post(orders::controller::checkout))
+        .route(
+            "/api/checkout/payment",
+            post(payments::controller::checkout_with_gateway),
+        )
+        .route("/api/checkout/quote", post(orders::controller::quote))
+        .route(
+            "/api/account/register",
+            post(customer_auth::controller::register),
+        )
+        .route("/api/account/login", post(customer_auth::controller::login))
+        .route(
+            "/api/account/logout",
+            post(customer_auth::controller::logout),
+        )
+        .route("/api/account/me", get(customer_auth::controller::me))
+        .route(
+            "/api/account/sessions",
+            get(customer_auth::controller::sessions),
+        )
+        .route(
+            "/api/account/sessions/others",
+            delete(customer_auth::controller::logout_other_sessions),
+        )
+        .route(
+            "/api/account/sessions/{session_id}",
+            delete(customer_auth::controller::logout_session),
+        )
+        .route(
+            "/api/account/products/{product_id}/reviews",
+            post(reviews::controller::create_review),
+        )
+        .route_layer(middleware::from_fn_with_state(
+            state.clone(),
+            rate_limit::limit,
+        ));
+
+    Router::new()
+        .merge(public)
+        .route("/api/health", get(health::controller::health))
+        .route("/api/offers", get(offers::controller::public_offers))
         .route(
             "/api/customer-portal/me/membership",
             get(customer_portal::controller::membership),
@@ -288,12 +331,6 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
             post(catalog::controller::import_product_image_manifest)
                 .layer(DefaultBodyLimit::max(16 * 1024 * 1024)),
         )
-        .route("/api/checkout", post(orders::controller::checkout))
-        .route(
-            "/api/checkout/payment",
-            post(payments::controller::checkout_with_gateway),
-        )
-        .route("/api/checkout/quote", post(orders::controller::quote))
         .route(
             "/api/payments/senangpay/callback",
             post(payments::controller::senangpay_callback),
@@ -301,32 +338,6 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
         .route(
             "/api/payments/hitpay/webhook",
             post(payments::controller::hitpay_webhook),
-        )
-        .route(
-            "/api/account/register",
-            post(customer_auth::controller::register),
-        )
-        .route("/api/account/login", post(customer_auth::controller::login))
-        .route(
-            "/api/account/logout",
-            post(customer_auth::controller::logout),
-        )
-        .route("/api/account/me", get(customer_auth::controller::me))
-        .route(
-            "/api/account/sessions",
-            get(customer_auth::controller::sessions),
-        )
-        .route(
-            "/api/account/sessions/others",
-            delete(customer_auth::controller::logout_other_sessions),
-        )
-        .route(
-            "/api/account/sessions/{session_id}",
-            delete(customer_auth::controller::logout_session),
-        )
-        .route(
-            "/api/account/products/{product_id}/reviews",
-            post(reviews::controller::create_review),
         )
         .with_state(state)
         .layer(TraceLayer::new_for_http())

@@ -859,9 +859,17 @@ fn validate_order_input(input: &CreateOrderInput) -> Result<(&str, &str, &str)> 
     Ok((customer_name, customer_email, customer_phone))
 }
 
+/// Checkout carts are capped well below any realistic order: the stock-update loop runs one
+/// statement per line item inside a single transaction, and unbounded carts would hold it open.
+pub const MAX_ORDER_ITEMS: usize = 50;
+
 fn validate_order_items(items: &[CreateOrderItemInput]) -> Result<()> {
     if items.is_empty() {
         bail!("An order must contain at least one item.");
+    }
+
+    if items.len() > MAX_ORDER_ITEMS {
+        bail!("Too many items in cart.");
     }
 
     Ok(())

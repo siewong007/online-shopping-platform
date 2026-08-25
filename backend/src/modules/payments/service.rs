@@ -45,7 +45,9 @@ pub async fn reconcile_gateway_payment(
         && result.status == "Captured"
         && let Some(emailer) = emailer
     {
-        emailer.spawn_payment_captured(pool.clone(), payment.order_id);
+        emailer
+            .enqueue_payment_captured(pool, payment.order_id)
+            .await;
     }
     Ok(result)
 }
@@ -82,7 +84,9 @@ pub async fn refund_gateway_payment(
     if result.status == "Succeeded"
         && let Some(emailer) = emailer
     {
-        emailer.spawn_refund_notice(pool.clone(), payment.order_id, result.amount_cents);
+        emailer
+            .enqueue_refund_notice(pool, payment.order_id, result.amount_cents)
+            .await;
     }
     Ok(result)
 }
@@ -162,7 +166,9 @@ pub async fn start_gateway_checkout(
         // can no longer describe an order that is about to be cleaned up.
         Ok(checkout) => {
             if let Some(emailer) = emailer {
-                emailer.spawn_order_confirmation(pool.clone(), &checkout.order);
+                emailer
+                    .enqueue_order_confirmation(pool, &checkout.order)
+                    .await;
             }
             Ok(checkout)
         }

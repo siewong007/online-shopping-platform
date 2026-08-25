@@ -21,6 +21,8 @@ use super::{
 };
 
 const MIN_PASSWORD_LENGTH: usize = 8;
+const MAX_PASSWORD_LENGTH: usize = 128;
+const MAX_DISPLAY_NAME_CHARS: usize = 80;
 const INVALID_CREDENTIALS: &str = "Invalid email or password.";
 
 /// Matches both the pre-check in `db::create_customer_account` (bails with this exact
@@ -71,10 +73,24 @@ pub async fn register(
         ));
     }
 
+    if display_name.chars().count() > MAX_DISPLAY_NAME_CHARS {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            format!("Display name must be {MAX_DISPLAY_NAME_CHARS} characters or fewer."),
+        ));
+    }
+
     if input.password.len() < MIN_PASSWORD_LENGTH {
         return Err((
             StatusCode::BAD_REQUEST,
             format!("Password must be at least {MIN_PASSWORD_LENGTH} characters."),
+        ));
+    }
+
+    if input.password.len() > MAX_PASSWORD_LENGTH {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            format!("Password must be at most {MAX_PASSWORD_LENGTH} characters."),
         ));
     }
 

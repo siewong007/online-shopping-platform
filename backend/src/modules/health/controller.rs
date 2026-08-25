@@ -4,6 +4,14 @@ use crate::{app_state::AppState, error};
 
 use super::dto::HealthResponse;
 
+// Version targets surfaced by the readiness probe. REACT_TARGET must mirror the version pinned
+// in frontend/package.json — bump both together so drift is visible in review.
+const RUST_TARGET: &str = match option_env!("CARGO_PKG_RUST_VERSION") {
+    Some(version) => version,
+    None => "1.95.0",
+};
+const REACT_TARGET: &str = "19.2.7";
+
 pub async fn health(
     State(state): State<AppState>,
 ) -> Result<Json<HealthResponse>, error::HttpError> {
@@ -57,8 +65,8 @@ pub async fn health(
 
     Ok(Json(HealthResponse {
         status: "ok",
-        rust_target: "1.95.0",
-        react_target: "19.2.7",
+        rust_target: RUST_TARGET,
+        react_target: REACT_TARGET,
         postgres_target: "19beta1",
     }))
 }

@@ -8,9 +8,9 @@ use lettre::{
 };
 use sqlx::PgPool;
 
-use crate::modules::audit;
+use crate::{db, modules::audit};
 
-const RETRY_BACKOFFS: [Duration; 2] = [Duration::from_secs(2), Duration::from_secs(8)];
+const OUTBOX_POLL_INTERVAL: Duration = Duration::from_secs(30);
 const COMPANY_NAME: &str = "Ekoway Hardware";
 
 /// Transactional email over the operator's SMTP relay. Disabled unless both `SMTP_HOST` and
@@ -90,44 +90,73 @@ impl Emailer {
         self.enabled
     }
 
-    /// Fire-and-forget send. The spawned task owns its retries; a permanently undeliverable
-    /// message is logged and recorded as an audit event so the operator's team log shows it.
+    /// Durable send path: a single awaited INSERT into `email_outbox`, so the caller stays
+    /// non-blocking and an SMTP blip can never lose the message — the outbox worker retries.
     /// It must never block or fail the business mutation that triggered it.
-    pub fn spawn_send(
-        &self,
-        pool: PgPool,
-        entity_type: &'static str,
-        entity_id: String,
-        to: String,
-        subject: String,
-        body: String,
-    ) {
-        if !self.enabled || to.trim().is_empty() {
+    async fn enqueue(&self, pool: &PgPool, recipient: &str, subject: String, body: String) {
+        if !self.enabled || recipient.trim().is_empty() {
+            return;
+        }
+        if let Err(error) = db::enqueue_email(pool, recipient, &subject, &body).await {
+            tracing::warn!(%error, to = %recipient, subject = %subject, "failed to queue transactional email");
+        }
+    }
+
+    /// Background delivery loop over `email_outbox`. Spawned once at startup; every 30 seconds
+    /// it claims due rows and sends each through the SMTP relay. Failures back off
+    /// exponentially in the database and surface as warnings plus an audit event once the row
+    /// exhausts its attempts.
+    pub fn spawn_outbox_worker(&self, pool: PgPool) {
+        if !self.enabled {
             return;
         }
         let emailer = self.clone();
         tokio::spawn(async move {
-            if let Err(error) = emailer.deliver_with_retries(&to, &subject, &body).await {
-                tracing::warn!(
-                    %error,
-                    to = %to,
-                    subject = %subject,
-                    "transactional email was not delivered after retries"
-                );
-                audit::service::record_event(
-                    &pool,
-                    "system",
-                    "email_failed",
-                    entity_type,
-                    &entity_id,
-                    &format!("{subject}: {error:#}"),
-                )
-                .await;
+            let mut ticker = tokio::time::interval(OUTBOX_POLL_INTERVAL);
+            ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+            loop {
+                ticker.tick().await;
+                if let Err(error) = emailer.process_outbox_batch(&pool).await {
+                    tracing::warn!(%error, "email outbox pass failed");
+                }
             }
         });
     }
 
-    pub fn spawn_order_confirmation(&self, pool: PgPool, order: &crate::models::Order) {
+    async fn process_outbox_batch(&self, pool: &PgPool) -> Result<()> {
+        for email in db::claim_due_emails(pool).await? {
+            match self
+                .deliver_once(&email.recipient, &email.subject, &email.body)
+                .await
+            {
+                Ok(()) => db::mark_email_sent(pool, email.id).await?,
+                Err(error) => {
+                    let error = format!("{error:#}");
+                    tracing::warn!(
+                        id = email.id,
+                        to = %email.recipient,
+                        subject = %email.subject,
+                        %error,
+                        "transactional email delivery failed"
+                    );
+                    if db::mark_email_failed(pool, email.id, &error).await? == "failed" {
+                        audit::service::record_event(
+                            pool,
+                            "system",
+                            "email_failed",
+                            "email_outbox",
+                            &email.id.to_string(),
+                            &format!("{}: {error}", email.subject),
+                        )
+                        .await;
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub async fn enqueue_order_confirmation(&self, pool: &PgPool, order: &crate::models::Order) {
         let subject = format!("{} order #{} received", COMPANY_NAME, order.id);
         let body = format!(
             "Hi {},\n\nThank you for your order #{} placed on {}.\n\n{}\n\nTotal: {}\n\nWe will contact you at {} when your order is ready.\n\n{}\n",
@@ -139,94 +168,54 @@ impl Emailer {
             order.customer_phone.trim(),
             COMPANY_NAME,
         );
-        self.spawn_send(
-            pool,
-            "order",
-            order.id.to_string(),
-            order.customer_email.clone(),
-            subject,
-            body,
+        self.enqueue(pool, &order.customer_email, subject, body)
+            .await;
+    }
+
+    pub async fn enqueue_payment_captured(&self, pool: &PgPool, order_id: i32) {
+        if !self.enabled {
+            return;
+        }
+        let Some(contact) = fetch_order_contact(pool, order_id).await else {
+            tracing::warn!(order_id, "captured payment email skipped: order not found");
+            return;
+        };
+        let subject = format!(
+            "{} payment received for order #{}",
+            COMPANY_NAME, contact.order_id
         );
+        let body = format!(
+            "Hi {},\n\nWe have received your payment of {} for order #{}. Thank you.\n\n{}\n",
+            contact.customer_name,
+            format_cents(contact.total_cents),
+            contact.order_id,
+            COMPANY_NAME,
+        );
+        self.enqueue(pool, &contact.customer_email, subject, body)
+            .await;
     }
 
-    pub fn spawn_payment_captured(&self, pool: PgPool, order_id: i32) {
+    pub async fn enqueue_refund_notice(&self, pool: &PgPool, order_id: i32, amount_cents: i32) {
         if !self.enabled {
             return;
         }
-        let emailer = self.clone();
-        tokio::spawn(async move {
-            let Some(contact) = fetch_order_contact(&pool, order_id).await else {
-                tracing::warn!(order_id, "captured payment email skipped: order not found");
-                return;
-            };
-            let subject = format!(
-                "{} payment received for order #{}",
-                COMPANY_NAME, contact.order_id
-            );
-            let body = format!(
-                "Hi {},\n\nWe have received your payment of {} for order #{}. Thank you.\n\n{}\n",
-                contact.customer_name,
-                format_cents(contact.total_cents),
-                contact.order_id,
-                COMPANY_NAME,
-            );
-            emailer.spawn_send(
-                pool.clone(),
-                "payment",
-                contact.order_id.to_string(),
-                contact.customer_email,
-                subject,
-                body,
-            );
-        });
-    }
-
-    pub fn spawn_refund_notice(&self, pool: PgPool, order_id: i32, amount_cents: i32) {
-        if !self.enabled {
+        let Some(contact) = fetch_order_contact(pool, order_id).await else {
+            tracing::warn!(order_id, "refund email skipped: order not found");
             return;
-        }
-        let emailer = self.clone();
-        tokio::spawn(async move {
-            let Some(contact) = fetch_order_contact(&pool, order_id).await else {
-                tracing::warn!(order_id, "refund email skipped: order not found");
-                return;
-            };
-            let subject = format!(
-                "{} refund processed for order #{}",
-                COMPANY_NAME, contact.order_id
-            );
-            let body = format!(
-                "Hi {},\n\nA refund of {} for order #{} has been processed. It may take a few business days to appear on your statement.\n\n{}\n",
-                contact.customer_name,
-                format_cents(amount_cents),
-                contact.order_id,
-                COMPANY_NAME,
-            );
-            emailer.spawn_send(
-                pool.clone(),
-                "refund",
-                contact.order_id.to_string(),
-                contact.customer_email,
-                subject,
-                body,
-            );
-        });
-    }
-
-    async fn deliver_with_retries(&self, to: &str, subject: &str, body: &str) -> Result<()> {
-        let mut last_error = None;
-        for backoff in [None, Some(RETRY_BACKOFFS[0]), Some(RETRY_BACKOFFS[1])] {
-            match self.deliver_once(to, subject, body).await {
-                Ok(()) => return Ok(()),
-                Err(error) => {
-                    last_error = Some(error);
-                    if let Some(delay) = backoff {
-                        tokio::time::sleep(delay).await;
-                    }
-                }
-            }
-        }
-        Err(last_error.unwrap_or_else(|| anyhow::anyhow!("email delivery made no attempts")))
+        };
+        let subject = format!(
+            "{} refund processed for order #{}",
+            COMPANY_NAME, contact.order_id
+        );
+        let body = format!(
+            "Hi {},\n\nA refund of {} for order #{} has been processed. It may take a few business days to appear on your statement.\n\n{}\n",
+            contact.customer_name,
+            format_cents(amount_cents),
+            contact.order_id,
+            COMPANY_NAME,
+        );
+        self.enqueue(pool, &contact.customer_email, subject, body)
+            .await;
     }
 
     async fn deliver_once(&self, to: &str, subject: &str, body: &str) -> Result<()> {

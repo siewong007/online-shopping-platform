@@ -20,9 +20,13 @@ pub async fn login(
     headers: HeaderMap,
     Json(input): Json<AdminLoginInput>,
 ) -> Result<Json<crate::models::AdminLoginResponse>, error::HttpError> {
-    service::login(&state.pool, &input, &client_ip::client_ip(&headers, peer))
-        .await
-        .map(Json)
+    service::login(
+        &state.pool,
+        &input,
+        &client_ip::client_ip(&headers, peer, state.trust_proxy),
+    )
+    .await
+    .map(Json)
 }
 
 pub async fn logout(

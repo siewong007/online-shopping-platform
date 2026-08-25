@@ -8,6 +8,7 @@ const SUPER_ADMIN_MANAGEMENT_DENIED: &str = "Only a Super Admin can manage a Sup
 const SUPER_ADMIN_ASSIGNMENT_DENIED: &str = "Only a Super Admin can assign the Super Admin role.";
 const ADMIN_MANAGEMENT_PERMISSION_REVOKED: &str =
     "This admin role does not have enough admin user privileges.";
+const MAX_DISPLAY_NAME_CHARS: usize = 80;
 
 pub async fn count_admin_users(pool: &PgPool) -> Result<i64> {
     sqlx::query_scalar::<_, i64>(
@@ -33,6 +34,9 @@ pub async fn create_admin_user(
 
     if username.is_empty() || display_name.is_empty() {
         bail!("Username and display name are required.");
+    }
+    if display_name.chars().count() > MAX_DISPLAY_NAME_CHARS {
+        bail!("Display name must be 80 characters or fewer.");
     }
 
     sqlx::query_as::<_, AdminUser>(
@@ -198,6 +202,9 @@ pub async fn update_admin_user_profile(
 
     if display_name.is_empty() {
         bail!("Display name is required.");
+    }
+    if display_name.chars().count() > MAX_DISPLAY_NAME_CHARS {
+        bail!("Display name must be 80 characters or fewer.");
     }
 
     let mut tx = pool.begin().await?;

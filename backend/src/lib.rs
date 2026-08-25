@@ -5,5 +5,6 @@ pub mod emailer;
 pub mod error;
 pub mod models;
 pub mod modules;
+pub mod rate_limit;
 pub mod routes;
 pub mod security;

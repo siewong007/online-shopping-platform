@@ -3,6 +3,7 @@ use sqlx::PgPool;
 use crate::{
     emailer::Emailer,
     modules::{mfa::service::MfaConfig, payments::activation::PaymentActivationMode},
+    rate_limit::RateLimiter,
 };
 
 #[derive(Clone)]
@@ -11,6 +12,9 @@ pub struct AppState {
     pub payment_activation_mode: PaymentActivationMode,
     pub emailer: Emailer,
     pub mfa: MfaConfig,
+    pub trust_proxy: bool,
+    pub app_is_production: bool,
+    pub rate_limiter: RateLimiter,
 }
 
 impl AppState {
@@ -23,6 +27,9 @@ impl AppState {
             payment_activation_mode: PaymentActivationMode::Disabled,
             emailer: Emailer::disabled(),
             mfa: MfaConfig::disabled(),
+            trust_proxy: true,
+            app_is_production: false,
+            rate_limiter: RateLimiter::disabled(),
         }
     }
 
@@ -35,6 +42,9 @@ impl AppState {
             payment_activation_mode,
             emailer: Emailer::disabled(),
             mfa: MfaConfig::disabled(),
+            trust_proxy: true,
+            app_is_production: false,
+            rate_limiter: RateLimiter::disabled(),
         }
     }
 
@@ -45,6 +55,21 @@ impl AppState {
 
     pub fn with_mfa(mut self, mfa: MfaConfig) -> Self {
         self.mfa = mfa;
+        self
+    }
+
+    pub fn with_trust_proxy(mut self, trust_proxy: bool) -> Self {
+        self.trust_proxy = trust_proxy;
+        self
+    }
+
+    pub fn with_app_is_production(mut self, app_is_production: bool) -> Self {
+        self.app_is_production = app_is_production;
+        self
+    }
+
+    pub fn with_rate_limiter(mut self, rate_limiter: RateLimiter) -> Self {
+        self.rate_limiter = rate_limiter;
         self
     }
 }

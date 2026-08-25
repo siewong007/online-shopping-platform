@@ -37,6 +37,13 @@ async fn main() -> anyhow::Result<()> {
         .context("transactional email configuration is invalid")?;
     let mfa = online_shopping_api::modules::mfa::service::MfaConfig::from_environment()
         .context("MFA_ENCRYPTION_KEY is invalid")?;
+    let trust_proxy = online_shopping_api::client_ip::trust_proxy_from_environment();
+    let rate_limiter = online_shopping_api::rate_limit::RateLimiter::from_environment();
+    // APP_ENV only ever gates the legacy checkout route; resolving it once keeps that gate
+    // from depending on per-request environment lookups.
+    let app_is_production = env::var("APP_ENV")
+        .map(|value| value.eq_ignore_ascii_case("production"))
+        .unwrap_or(false);
 
     let pool = PgPoolOptions::new()
         .max_connections(10)
@@ -49,6 +56,7 @@ async fn main() -> anyhow::Result<()> {
         .context("failed to ensure seed admin user")?;
 
     spawn_abandoned_stock_sweep(pool.clone());
+    emailer.spawn_outbox_worker(pool.clone());
 
     tracing::info!(
         mode = payment_activation_mode.as_str(),
@@ -62,10 +70,19 @@ async fn main() -> anyhow::Result<()> {
         enabled = mfa.is_enabled(),
         "admin multi-factor authentication resolved"
     );
+    tracing::info!(trust_proxy, "proxy trust resolved");
+    tracing::info!(
+        requests_per_minute = rate_limiter.requests_per_minute,
+        app_is_production,
+        "public route configuration resolved"
+    );
     let app = routes::build_router(
         AppState::with_payment_activation_mode(pool, payment_activation_mode)
             .with_emailer(emailer)
-            .with_mfa(mfa),
+            .with_mfa(mfa)
+            .with_trust_proxy(trust_proxy)
+            .with_app_is_production(app_is_production)
+            .with_rate_limiter(rate_limiter),
         frontend_origin,
     );
 

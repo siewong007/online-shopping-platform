@@ -1,5 +1,3 @@
-use std::env;
-
 use axum::{
     Json,
     extract::{Path, Query, State},
@@ -59,17 +57,16 @@ pub async fn admin_create_order(
     )
     .await?;
 
-    service::create_order(&state.pool, &identity.username, &input, None)
+    let order = service::create_order(&state.pool, &identity.username, &input, None)
         .await
-        .map(|order| {
-            // Fire-and-forget: a confirmation email that cannot be sent must never fail the
-            // order it confirms.
-            state
-                .emailer
-                .spawn_order_confirmation(state.pool.clone(), &order);
-            (StatusCode::CREATED, Json(order))
-        })
-        .map_err(error::map_admin_error)
+        .map_err(error::map_admin_error)?;
+    // Durable outbox: a confirmation email that cannot be sent must never fail the order it
+    // confirms.
+    state
+        .emailer
+        .enqueue_order_confirmation(&state.pool, &order)
+        .await;
+    Ok((StatusCode::CREATED, Json(order)))
 }
 
 pub async fn admin_update_order(
@@ -156,11 +153,9 @@ pub async fn checkout(
 
     // The shopper UI uses the gateway-backed checkout route. Keep this compatibility route
     // available for local development and integration tests, but never let a public production
-    // deployment reserve stock without collecting payment.
-    if env::var("APP_ENV")
-        .map(|value| value.eq_ignore_ascii_case("production"))
-        .unwrap_or(false)
-    {
+    // deployment reserve stock without collecting payment. `APP_ENV` is resolved once at
+    // startup instead of per request.
+    if state.app_is_production {
         return Err((
             StatusCode::GONE,
             "This checkout route is unavailable. Please use the secure checkout.".to_string(),
@@ -168,15 +163,14 @@ pub async fn checkout(
     }
 
     let customer_account_id = identity.map(|identity| identity.customer_account_id);
-    service::create_order(&state.pool, "customer", &input, customer_account_id)
+    let order = service::create_order(&state.pool, "customer", &input, customer_account_id)
         .await
-        .map(|order| {
-            state
-                .emailer
-                .spawn_order_confirmation(state.pool.clone(), &order);
-            (StatusCode::CREATED, Json(order))
-        })
-        .map_err(error::map_admin_error)
+        .map_err(error::map_admin_error)?;
+    state
+        .emailer
+        .enqueue_order_confirmation(&state.pool, &order)
+        .await;
+    Ok((StatusCode::CREATED, Json(order)))
 }
 
 pub async fn quote(

@@ -71,7 +71,7 @@ pub async fn hitpay_webhook(
             )
         })?;
 
-    super::hitpay::process_webhook(
+    let outcome = super::hitpay::process_webhook(
         &state.pool,
         &config,
         signature,
@@ -80,21 +80,20 @@ pub async fn hitpay_webhook(
         &body,
     )
     .await
-    .map(|outcome| {
-        if let Some(order_id) = outcome.newly_captured_order_id {
-            state
-                .emailer
-                .spawn_payment_captured(state.pool.clone(), order_id);
-        }
-        "OK"
-    })
     .map_err(|webhook_error| {
         tracing::warn!(%webhook_error, "HitPay webhook rejected");
         (
             StatusCode::BAD_REQUEST,
             "Payment webhook rejected.".to_string(),
         )
-    })
+    })?;
+    if let Some(order_id) = outcome.newly_captured_order_id {
+        state
+            .emailer
+            .enqueue_payment_captured(&state.pool, order_id)
+            .await;
+    }
+    Ok("OK")
 }
 
 pub async fn checkout_with_gateway(
@@ -165,17 +164,17 @@ pub async fn senangpay_callback(
             )
         })?;
 
-    super::senangpay::process_callback(&state.pool, &config, &callback)
-        .await
-        .map(|newly_captured_order_id| {
-            if let Some(order_id) = newly_captured_order_id {
-                state
-                    .emailer
-                    .spawn_payment_captured(state.pool.clone(), order_id);
-            }
-            "OK"
-        })
-        .map_err(error::map_admin_error)
+    let newly_captured_order_id =
+        super::senangpay::process_callback(&state.pool, &config, &callback)
+            .await
+            .map_err(error::map_admin_error)?;
+    if let Some(order_id) = newly_captured_order_id {
+        state
+            .emailer
+            .enqueue_payment_captured(&state.pool, order_id)
+            .await;
+    }
+    Ok("OK")
 }
 
 pub async fn admin_payments(
