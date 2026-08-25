@@ -4,7 +4,7 @@ db:
 	docker compose up -d db
 
 migrate:
-	psql postgres://project_depot:project_depot@localhost:5433/project_depot -f backend/migrations/0001_initial.sql
+	for migration in backend/migrations/*.sql; do psql postgres://project_depot:project_depot@localhost:5433/project_depot -f "$$migration"; done
 
 backend:
 	cd backend && cargo run
