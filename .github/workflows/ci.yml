@@ -19,7 +19,7 @@ jobs:
         working-directory: backend
     services:
       postgres:
-        image: postgres:19beta3
+        image: postgres:19beta1
         env:
           POSTGRES_USER: project_depot
           POSTGRES_PASSWORD: project_depot
@@ -212,7 +212,7 @@ jobs:
             -e POSTGRES_USER=project_depot \
             -e POSTGRES_PASSWORD=project_depot \
             -e POSTGRES_DB=project_depot \
-            postgres:19beta3
+            postgres:19beta1
           ready=0
           for _ in $(seq 1 60); do
             if docker exec online-shopping-db pg_isready -U project_depot -d project_depot >/dev/null 2>&1; then

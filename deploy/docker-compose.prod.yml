@@ -24,7 +24,7 @@ x-logging: &default-logging
 
 services:
   postgres:
-    image: postgres:19beta3
+    image: postgres:19beta1
     container_name: online-shopping-db
     restart: unless-stopped
     command:

@@ -20,7 +20,7 @@ Status snapshot for the current tree:
 | Transactional email | Shipped | SMTP relay (`lettre`): order/payment/refund emails, fire-and-forget with audit trail |
 | Catalogue sitemap | Shipped | `/api/storefront/sitemap.xml` generated from published catalogue |
 | AutoCount export | Shipped on feature branch | `/api/admin/invoices/autocount-export`, invoice CSV download UI |
-| Launch hardening | Shipped | `0038_email_outbox.sql`, `0039_orders_customer_account_index.sql`, per-IP rate limiting with `TRUST_PROXY`, cart-item cap, input bounds, Postgres 19beta3, disk-usage watchdog |
+| Launch hardening | Shipped | `0038_email_outbox.sql`, `0039_orders_customer_account_index.sql`, per-IP rate limiting with `TRUST_PROXY`, cart-item cap, input bounds, disk-usage watchdog. Postgres 19beta3 **blocked**: beta1→beta3 bumps CATALOG_VERSION_NO (202605131→202607272); needs dump/re-init/restore on the VPS before the image tag can move |
 
 Current recommended PR themes:
 

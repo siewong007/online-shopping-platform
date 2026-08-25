@@ -35,7 +35,7 @@ Online Shopping Platform — a home-improvement storefront + admin console.
 
 - `backend/` — Rust 1.95, Axum 0.8, SQLx 0.8, PostgreSQL
 - `frontend/` — React 19.2.7, TypeScript, Vite 8.x
-- `docker-compose.yml` — PostgreSQL 19beta3 (exposed on `localhost:5433`)
+- `docker-compose.yml` — PostgreSQL 19beta1 (exposed on `localhost:5433`)
 
 ## Running locally
 

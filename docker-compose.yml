@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:19beta3
+    image: postgres:19beta1
     container_name: online-shopping-db
     restart: unless-stopped
     environment:

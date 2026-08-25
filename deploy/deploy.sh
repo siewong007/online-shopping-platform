@@ -229,9 +229,9 @@ load_release_images() {
   [[ $(docker image inspect --format '{{.Architecture}}' "online-shopping-frontend:$TAG") == amd64 ]] \
     || die "frontend image architecture is not amd64"
 
-  if ! docker image inspect postgres:19beta3 >/dev/null 2>&1; then
-    log "Pulling postgres:19beta3 (first deployment only)"
-    docker pull postgres:19beta3 >/dev/null
+  if ! docker image inspect postgres:19beta1 >/dev/null 2>&1; then
+    log "Pulling postgres:19beta1 (first deployment only)"
+    docker pull postgres:19beta1 >/dev/null
   fi
 }
 
