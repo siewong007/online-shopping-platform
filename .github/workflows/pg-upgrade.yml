@@ -53,6 +53,9 @@ jobs:
     name: Dry-run preflight on the VPS
     needs: guard
     runs-on: ubuntu-latest
+    # The LIGHTSAIL_SSH_PRIVATE_KEY secret is scoped to the "production"
+    # environment; without this declaration it resolves empty.
+    environment: production
     steps:
       - name: Configure pinned SSH access
         shell: bash
@@ -88,6 +91,7 @@ jobs:
     name: Upgrade cluster (brief downtime)
     needs: preflight
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - name: Configure pinned SSH access
         shell: bash
