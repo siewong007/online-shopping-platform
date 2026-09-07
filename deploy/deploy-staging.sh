@@ -93,130 +93,36 @@ install_release_files() {
 }
 
 install_backup_components() {
-  # Installs the encrypted off-server backup suite (backup.sh, backup-capacity.sh, restore.sh,
-  # backup-env-parser.sh, preflight-backup.sh, check-backup-health.sh, notify-backup-failure.sh,
-  # systemd service/timer units, config template) shipped in the release bundle (enforced by
-  # verify_release_payload via release-components.txt).
-  #
-  # H3 failure policy (documented): a backup-component INSTALL failure is never allowed to turn a
-  # safe application deployment into an uncontrolled shell abort. Each failure is caught, reported
-  # prominently, and the deployment continues with the protection state made explicit. This is
-  # different from bundle validation (verify_release_payload FAILS CLOSED if the release is
-  # missing the components) and different from the pre-deploy backup (which aborts the deploy).
-  #
-  # The backup timer is only ENABLED once a root-only, mode-0600 /opt/online-shopping/backup.env
-  # actually supplies the recipient, remote and path; otherwise the units are installed disabled.
-  # H5: merely enabling the timer is reported as "timer ACTIVE; verification pending" — the
-  # ACTIVE/VERIFIED claim is only made after a fresh, verified off-server backup in
-  # verify_backup_components(). The backup-HEALTH timer is enabled whenever the backup timer is.
-  log "Installing encrypted backup components"
-  if ! install -m 0750 "$RELEASE_DIR/backup.sh" "$APP_DIR/backup.sh" \
-    || ! install -m 0750 "$RELEASE_DIR/restore.sh" "$APP_DIR/restore.sh" \
-    || ! install -m 0644 "$RELEASE_DIR/backup-capacity.sh" "$APP_DIR/backup-capacity.sh" \
-    || ! install -m 0644 "$RELEASE_DIR/backup-env-parser.sh" "$APP_DIR/backup-env-parser.sh" \
-    || ! install -m 0750 "$RELEASE_DIR/preflight-backup.sh" "$APP_DIR/preflight-backup.sh" \
-    || ! install -m 0750 "$RELEASE_DIR/check-backup-health.sh" "$APP_DIR/check-backup-health.sh" \
-    || ! install -m 0750 "$RELEASE_DIR/notify-backup-failure.sh" "$APP_DIR/notify-backup-failure.sh" \
-    || ! install -m 0644 "$RELEASE_DIR/backup.env.example" "$APP_DIR/backup.env.example"; then
-    log "WARNING: failed to install the encrypted backup scripts under $APP_DIR"
-    log "         scheduled encrypted backups are NOT AVAILABLE; the application deployment continues"
-    log "         investigate permissions/disk space, then reinstall the backup components manually"
-    return 0
-  fi
-  if ! install -m 0644 "$RELEASE_DIR/online-shopping-backup.service" "$SYSTEMD_DIR/online-shopping-backup.service" \
-    || ! install -m 0644 "$RELEASE_DIR/online-shopping-backup.timer" "$SYSTEMD_DIR/online-shopping-backup.timer" \
-    || ! install -m 0644 "$RELEASE_DIR/online-shopping-backup-health.service" "$SYSTEMD_DIR/online-shopping-backup-health.service" \
-    || ! install -m 0644 "$RELEASE_DIR/online-shopping-backup-health.timer" "$SYSTEMD_DIR/online-shopping-backup-health.timer" \
-    || ! install -m 0644 "$RELEASE_DIR/online-shopping-backup-notify.service" "$SYSTEMD_DIR/online-shopping-backup-notify.service"; then
-    log "WARNING: failed to install the backup systemd units into $SYSTEMD_DIR"
-    log "         scheduled encrypted backups are NOT ACTIVE; the application deployment continues"
-    return 0
-  fi
-  if ! systemctl daemon-reload; then
-    log "WARNING: systemctl daemon-reload failed; scheduled encrypted backups are NOT ACTIVE"
-    log "         the application deployment continues"
-    return 0
-  fi
-
-  # M4: only consider activation when a valid root-owned, mode-0600 backup.env exists. The strict
-  # parser never evaluates the file as shell code.
-  if [[ -f "$APP_DIR/backup.env" ]] \
-    && parse_backup_env "$APP_DIR/backup.env" enforce_perms \
-    && [[ -n "${BACKUP_AGE_RECIPIENT:-}" && -n "${BACKUP_RCLONE_REMOTE:-}" && -n "${BACKUP_RCLONE_PATH:-}" ]]; then
-    if systemctl enable --now online-shopping-backup.timer >/dev/null 2>&1; then
-      log "Scheduled encrypted backups timer ACTIVE; off-server VERIFICATION pending (runs after the stack is healthy)"
-      if systemctl enable --now online-shopping-backup-health.timer >/dev/null 2>&1; then
-        log "Backup health monitoring timer ACTIVE"
-      else
-        log "WARNING: online-shopping-backup-health.timer failed to enable; backup freshness will not be monitored"
-      fi
-    else
-      log "WARNING: scheduled encrypted backups are NOT ACTIVE"
-      log "         failed to enable online-shopping-backup.timer; the application deployment continues"
-      log "         activate manually once systemd is healthy: systemctl enable --now online-shopping-backup.timer"
-    fi
-  else
-    systemctl disable online-shopping-backup.timer >/dev/null 2>&1 || true
-    systemctl stop online-shopping-backup.timer >/dev/null 2>&1 || true
-    systemctl disable online-shopping-backup-health.timer >/dev/null 2>&1 || true
-    systemctl stop online-shopping-backup-health.timer >/dev/null 2>&1 || true
-    log "Scheduled encrypted backups installed but DISABLED: provision $APP_DIR/backup.env (root-owned, mode 0600)"
-    log "with BACKUP_AGE_RECIPIENT, BACKUP_RCLONE_REMOTE and BACKUP_RCLONE_PATH to activate"
-  fi
+  # STAGING: never install/overwrite host systemd units shared with production
+  # (online-shopping-backup*.service/timer). Copy scripts under APP_DIR only.
+  log "Staging: installing backup scripts under $APP_DIR only (no systemd units)"
+  install -m 0750 "$RELEASE_DIR/backup.sh" "$APP_DIR/backup.sh" 2>/dev/null || true
+  install -m 0750 "$RELEASE_DIR/restore.sh" "$APP_DIR/restore.sh" 2>/dev/null || true
+  install -m 0644 "$RELEASE_DIR/backup-capacity.sh" "$APP_DIR/backup-capacity.sh" 2>/dev/null || true
+  install -m 0644 "$RELEASE_DIR/backup-env-parser.sh" "$APP_DIR/backup-env-parser.sh" 2>/dev/null || true
+  install -m 0750 "$RELEASE_DIR/preflight-backup.sh" "$APP_DIR/preflight-backup.sh" 2>/dev/null || true
+  install -m 0750 "$RELEASE_DIR/check-backup-health.sh" "$APP_DIR/check-backup-health.sh" 2>/dev/null || true
+  install -m 0750 "$RELEASE_DIR/notify-backup-failure.sh" "$APP_DIR/notify-backup-failure.sh" 2>/dev/null || true
+  install -m 0644 "$RELEASE_DIR/backup.env.example" "$APP_DIR/backup.env.example" 2>/dev/null || true
+  log "Staging: encrypted backup systemd units intentionally NOT installed"
+  return 0
 }
+
 
 install_disk_usage_monitor() {
-  # Installs the daily disk-usage monitor (check-disk-usage.sh + systemd service/timer pair)
-  # shipped in the release bundle. Same H3 failure policy as the backup components: an install or
-  # enable failure is reported prominently and never aborts the application deployment. Unlike
-  # the backup timer this monitor has no external dependencies (no backup.env required), so it is
-  # enabled unconditionally; alerting degrades to marker + journal when no BACKUP_NOTIFY_HOOK is
-  # configured.
-  log "Installing disk-usage monitor"
-  if ! install -m 0750 "$RELEASE_DIR/check-disk-usage.sh" "$APP_DIR/check-disk-usage.sh" \
-    || ! install -m 0644 "$RELEASE_DIR/online-shopping-disk-usage.service" "$SYSTEMD_DIR/online-shopping-disk-usage.service" \
-    || ! install -m 0644 "$RELEASE_DIR/online-shopping-disk-usage.timer" "$SYSTEMD_DIR/online-shopping-disk-usage.timer"; then
-    log "WARNING: failed to install the disk-usage monitor under $APP_DIR / $SYSTEMD_DIR"
-    log "         disk usage will NOT be monitored; the application deployment continues"
-    return 0
-  fi
-  if ! systemctl daemon-reload; then
-    log "WARNING: systemctl daemon-reload failed; disk-usage monitoring is NOT ACTIVE"
-    return 0
-  fi
-  if systemctl enable --now online-shopping-disk-usage.timer >/dev/null 2>&1; then
-    log "Disk-usage monitoring timer ACTIVE (daily check of the root filesystem)"
-  else
-    log "WARNING: online-shopping-disk-usage.timer failed to enable; disk usage will not be monitored"
-    log "         activate manually once systemd is healthy: systemctl enable --now online-shopping-disk-usage.timer"
-  fi
+  # STAGING: do not overwrite production online-shopping-disk-usage.* units
+  log "Staging: disk-usage systemd monitor intentionally NOT installed"
+  install -m 0750 "$RELEASE_DIR/check-disk-usage.sh" "$APP_DIR/check-disk-usage.sh" 2>/dev/null || true
+  return 0
 }
 
+
 verify_backup_components() {
-  # H5: "timer enabled" is NOT "protection proven". After the stack is healthy, run the real
-  # installed pipeline once. Only a fresh status=="ok" with a non-null remote destination lets us
-  # log ACTIVE/VERIFIED; anything else is a prominent, actionable warning (never a deploy failure).
-  local rc status_file
-  if [[ ! -x "$APP_DIR/backup.sh" ]]; then
-    log "WARNING: no installed backup.sh to verify; scheduled encrypted backups are NOT VERIFIED"
-    return 0
-  fi
-  set +e
-  "$APP_DIR/backup.sh" >"$APP_DIR/backup-verify.log" 2>&1
-  rc=$?
-  set -e
-  status_file="$APP_DIR/backup-status.json"
-  if (( rc == 0 )) && [[ -f "$status_file" ]] \
-    && grep -q '"status": "ok"' "$status_file" \
-    && grep -q '"remote_destination_identifier": "' "$status_file"; then
-    log "Scheduled encrypted backups ACTIVE and VERIFIED: a fresh backup succeeded to the off-server destination"
-  else
-    log "WARNING: scheduled encrypted backups are NOT VERIFIED"
-    log "         the verification backup run failed; see $APP_DIR/backup-verify.log"
-    log "         the timer may be enabled, but no fresh off-server backup has been proven yet"
-    log "         investigate before relying on scheduled backups: /opt/online-shopping/backup.sh"
-  fi
+  # STAGING: no off-server backup verification (no backup.env / timers)
+  log "Staging: skipping off-server backup verification"
+  return 0
 }
+
 
 load_release_images() {
   log "Loading application images for $TAG"
@@ -351,168 +257,12 @@ show_diagnostics() {
 }
 
 backup_existing_database() {
-  # H4: distinguish "container absent" (normal on the very first deploy) from a docker/daemon
-  # inspection failure. A daemon problem must NEVER silently skip the required pre-deploy backup.
-  # The inspect exit status (not a merged stdout+stderr text) drives the classification: success
-  # yields the running state on stdout; failure routes stderr separately.
-  #
-  # N6: docker inspect's stderr is captured into a mktemp file (0600, unpredictable name) inside
-  # a self-cleaning subshell. The FIXED path /tmp/.deploy-inspect.err no longer exists, so a
-  # pre-existing symlink or file at that path can never be followed or overwritten by the deploy.
-  local running inspect_rc inspect_err inspect_result inspect_lines i
-  set +e
-  inspect_result=$({
-    set +e
-    err_tmp=$(mktemp "${TMPDIR:-/tmp}/deploy-inspect.XXXXXX")
-    running=$(docker inspect --format '{{.State.Running}}' online-shopping-staging-db 2>"$err_tmp")
-    inspect_rc=$?
-    inspect_err=$(cat "$err_tmp" 2>/dev/null || true)
-    rm -f -- "$err_tmp"
-    printf '%s\n%s\n%s' "$inspect_rc" "$running" "$inspect_err"
-  }) || true
-  set -e
-  mapfile -t inspect_lines <<<"${inspect_result:-}"$'\n'
-  inspect_rc="${inspect_lines[0]:-}"
-  running="${inspect_lines[1]:-}"
-  # D4/M4: the inspect result is framed as THREE sections — line 0 is the exit code, line 1 the
-  # stdout running-state, and every LATER line is stderr (0, 1 or N lines). stderr is rebuilt
-  # ONLY from array indices >= 2 (the final element is the empty artifact of the extra newline
-  # appended before mapfile; command substitution strips trailing newlines, so the last stderr
-  # line would otherwise be unterminated), meaning exit-code/stdout framing can NEVER be mistaken
-  # for stderr and a completely empty stderr stays empty (a daemon error often spans several
-  # lines; all of them are preserved).
-  inspect_err=""
-  if (( ${#inspect_lines[@]} > 2 )); then
-    for (( i = 2; i < ${#inspect_lines[@]} - 1; i++ )); do
-      inspect_err+="${inspect_lines[$i]}"$'\n'
-    done
-    inspect_err="${inspect_err%$'\n'}"
-  fi
-  if (( inspect_rc != 0 )); then
-    if grep -qiE 'no such (object|container)' <<<"$inspect_err"; then
-      log "no database container present yet; skipping pre-deploy backup"
-      return 0
-    fi
-    if grep -qiE 'cannot connect to the docker daemon|is the docker daemon running|permission denied|got permission denied' <<<"$inspect_err"; then
-      die "pre-deploy backup failed: cannot reach the docker daemon ($inspect_err)"
-    fi
-    die "pre-deploy backup failed: docker inspect online-shopping-staging-db reported: ${inspect_err:-<no stderr output>}"
-  fi
-  [[ -n "$running" ]] || die "pre-deploy backup failed: docker inspect online-shopping-staging-db returned no running state"
-  [[ "$running" == "true" ]] || { log "database container not running; skipping pre-deploy backup"; return 0; }
-
-  install -d -m 0700 "$BACKUP_DIR"
-  # Mutual exclusion with the scheduled/manual encrypted backup (backup.sh). Block so a deploy
-  # never overlaps a running backup and never skips its pre-deploy safety dump. H2: the wait is
-  # BOUNDED — a stuck/long-running backup must fail the deploy clearly, not hang it forever.
-  exec 8>"$APP_DIR/backup.lock"
-  if ! flock -w "${DEPLOY_BACKUP_LOCK_TIMEOUT:-300}" 8; then
-    die "pre-deploy backup could not acquire the backup lock within ${DEPLOY_BACKUP_LOCK_TIMEOUT:-300}s; a scheduled or manual backup may be stuck. Retry the deployment after it finishes or investigate."
-  fi
-
-  # Secure pre-deploy backup is LOCAL ENCRYPTION ONLY: pg_dump piped through age, no rclone and no
-  # network. It must stay available even when the off-server provider is down, and it must never
-  # leave a plaintext dump on disk. FAIL CLOSED: without age and BACKUP_AGE_RECIPIENT the deploy
-  # aborts instead of writing plaintext.
-  local recipient timestamp backup_tmp backup_path
-  command -v age >/dev/null 2>&1 \
-    || die "secure pre-deploy backup requires 'age' (install age first); refusing to write a plaintext dump"
-  # M4: the config must be a valid root-owned, mode-0600 file, parsed by the strict parser (never
-  # `source`d as shell code).
-  if ! parse_backup_env "$APP_DIR/backup.env" enforce_perms; then
-    die "secure pre-deploy backup requires a valid root-only (mode 0600) $APP_DIR/backup.env; refusing to write a plaintext dump"
-  fi
-  [[ -n "${BACKUP_AGE_RECIPIENT:-}" ]] \
-    || die "BACKUP_AGE_RECIPIENT is not set in $APP_DIR/backup.env; refusing to write a plaintext dump"
-  recipient="$BACKUP_AGE_RECIPIENT"
-
-  timestamp=$(date -u +%Y%m%dT%H%M%SZ)
-  backup_path="$BACKUP_DIR/predeploy-$timestamp.dump.age"
-  backup_tmp=$(mktemp "$BACKUP_DIR/.predeploy.XXXXXX")
-  log "Creating encrypted local pre-deploy database backup (age only; no remote required)"
-  log "Backing up database online_shopping"
-
-  local -a pipeline_status predeploy_env=()
-  # M3: forward BACKUP_DB_PASSWORD (if configured) by NAME only; never in the host argv.
-  if [[ -n "${BACKUP_DB_PASSWORD:-}" ]]; then
-    export PGPASSWORD="$BACKUP_DB_PASSWORD"
-    predeploy_env=(-e PGPASSWORD)
-  fi
-  set +e
-  docker exec "${predeploy_env[@]}" online-shopping-db \
-    pg_dump --format=custom --no-owner --no-acl -U shop_admin online_shopping \
-    | age --encrypt --recipient "$recipient" --output "$backup_tmp"
-  pipeline_status=("${PIPESTATUS[@]}")
-  set -e
-
-  # N14: classify the ROOT CAUSE. age exits 141 (SIGPIPE) when the dump dies mid-stream — that is
-  # a SYMPTOM of the dump failing, not an encryption failure. An age exit other than 141 means age
-  # itself failed and is the root cause even when the dump also died on the broken pipe.
-  if (( pipeline_status[1] != 0 && pipeline_status[1] != 141 )); then
-    rm -f "$backup_tmp"
-    exec 8>&-
-    die "pre-deploy backup failed: age encryption failed (exit ${pipeline_status[1]}); deployment aborted"
-  fi
-  if (( pipeline_status[0] != 0 )); then
-    rm -f "$backup_tmp"
-    exec 8>&-
-    die "pre-deploy backup failed: pg_dump failed (exit ${pipeline_status[0]}); deployment aborted"
-  fi
-  if (( pipeline_status[1] != 0 )); then
-    rm -f "$backup_tmp"
-    exec 8>&-
-    die "pre-deploy backup failed: age encryption failed (exit ${pipeline_status[1]}); deployment aborted"
-  fi
-  if [[ ! -s "$backup_tmp" ]]; then
-    rm -f "$backup_tmp"
-    exec 8>&-
-    die "pre-deploy backup failed: encrypted output is empty; deployment aborted"
-  fi
-  if ! head -c 100 "$backup_tmp" | grep -q '^age-encryption.org/v1'; then
-    rm -f "$backup_tmp"
-    exec 8>&-
-    die "pre-deploy backup failed: encrypted output has no age header; deployment aborted"
-  fi
-  # age >= 1.0 addresses archives with an EPHEMERAL X25519 stanza (`-> X25519 <ephemeral key>`);
-  # the bech32 "age1..." recipient string NEVER appears in the file and the stanza changes per
-  # encryption, so it cannot name the recipient; validate the stanza STRUCTURE so a non-age or
-  # mis-addressed output is caught (the DR suite proves actual addressing by identity-decrypt).
-  # D2/D6: the shared helper (backup-capacity.sh) is set -e-safe and scans only the bounded
-  # header area; the OLD standalone `stanza_count=$(... | grep -c ...)` assignment aborted the
-  # script BEFORE this cleanup and diagnostics ran when zero lines matched (grep -c exits 1).
-  if ! age_header_has_recipient_stanza "$backup_tmp"; then
-    rm -f "$backup_tmp"
-    exec 8>&-
-    die "pre-deploy backup failed: encrypted output does not contain a valid age X25519 recipient stanza; deployment aborted"
-  fi
-
-  chmod 0600 "$backup_tmp"
-  mv -f "$backup_tmp" "$backup_path"   # atomic rename only after the archive is known valid
-  log "Encrypted pre-deploy backup ready: $backup_path"
-
-  # Legacy plaintext pre-deploy dumps must not persist on disk once an encrypted one exists.
-  if compgen -G "$BACKUP_DIR/predeploy-*.dump" >/dev/null 2>&1; then
-    log "Removing legacy plaintext pre-deploy dumps from $BACKUP_DIR"
-    rm -f -- "$BACKUP_DIR"/predeploy-*.dump
-  fi
-
-  # M5: retention is ordered by the ISO timestamp embedded in the name (never mtime), so the
-  # newest 3 are always kept deterministically.
-  local backups=() index
-  mapfile -t backups < <(
-    find "$BACKUP_DIR" -maxdepth 1 -type f \
-      -name 'predeploy-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]T[0-9][0-9][0-9][0-9][0-9][0-9]Z.dump.age' \
-      -printf '%f\n' | sort -r
-  )
-  for ((index = 3; index < ${#backups[@]}; index++)); do
-    rm -f -- "$BACKUP_DIR/${backups[$index]}"
-    log "pruned pre-deploy backup ${backups[$index]}"
-  done
-
-  # N-H7: release the backup lock BEFORE returning, so verify_backup_components() (which runs a
-  # real backup.sh in the same deploy process and needs the same lock file) can acquire it.
-  exec 8>&-
+  # STAGING: skip encrypted pre-deploy dumps (no backup.env / age recipient on staging).
+  # Staging DB is disposable seed data; production backups are untouched.
+  log "Staging: skipping pre-deploy database backup"
+  return 0
 }
+
 
 configure_caddy() {
   local site_tmp main_backup site_backup=""
