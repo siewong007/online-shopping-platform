@@ -1,0 +1,31 @@
+staging.ekowayhardware.com {
+    encode zstd gzip
+
+    header ?Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+    # Staging gate — hash from /opt/online-shopping-staging/basic-auth.hash
+    basic_auth {
+        staging __STAGING_BASIC_AUTH_HASH__
+    }
+
+    @legacy_unpaid_checkout {
+        path /api/checkout
+        method POST
+    }
+    handle @legacy_unpaid_checkout {
+        respond "Online checkout is temporarily unavailable on staging." 503
+    }
+
+    @backend path /api /api/*
+    handle @backend {
+        reverse_proxy 127.0.0.1:4002
+    }
+
+    handle {
+        reverse_proxy 127.0.0.1:8084
+    }
+}
+
+www.staging.ekowayhardware.com {
+    redir https://staging.ekowayhardware.com{uri} permanent
+}
