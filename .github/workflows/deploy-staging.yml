@@ -165,6 +165,9 @@ jobs:
               || { echo "Release bundle is missing required component: $target (source: $src)" >&2; exit 1; }
           done < deploy/release-components.staging.txt
 
+          # deploy.sh validates release-components.txt inside the bundle
+          cp deploy/release-components.staging.txt "$bundle_dir/release-components.txt"
+
           (
             cd "$bundle_dir"
             find . -type f ! -name SHA256SUMS -print0 \
