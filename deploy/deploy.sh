@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy online-shopping-platform on the shared payroll/saliminn Lightsail VPS.
+# Deploy online-shopping-platform on the AIC cloud VPS.
 #
 # Usage (as root):
 #   deploy.sh <7-to-40-char-hex-git-ref> <extracted-release-directory>

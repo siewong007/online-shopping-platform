@@ -1,5 +1,5 @@
-# Production stack for ekowayhardware.com on the shared Lightsail VPS that
-# already runs payroll (native, :8080) and saliminn.my (Docker, :3030/:8081).
+# Production stack for ekowayhardware.com on the AIC cloud VPS that
+# already runs payroll (Docker, :8080) and saliminn.my (Docker, :3030/:8081).
 #
 # The host-level Caddy process owns ports 80/443. Every port here is bound to
 # loopback, so only Caddy (or an administrator on the VPS) can reach it. This
@@ -7,7 +7,7 @@
 # PostgreSQL port is not published at all; maintenance uses
 # `docker exec online-shopping-db`.
 #
-# The box has ~1GB total RAM shared across three applications, so every
+# The box has ~2GB RAM shared across four Compose projects, so every
 # service below sets a hard mem_limit: it protects payroll and saliminn from
 # this stack rather than letting the kernel OOM-killer pick an arbitrary
 # victim if this app misbehaves.
