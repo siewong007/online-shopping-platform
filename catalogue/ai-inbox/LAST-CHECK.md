@@ -1,4 +1,4 @@
-# AI inbox check — 2026-08-22 19:14 UTC
+# AI inbox check — 2026-09-10 02:16 UTC
 
 Pickup cart is on. Card pay stays off. Do not import images yet.
 
