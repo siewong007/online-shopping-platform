@@ -20,6 +20,7 @@ function Read-PlaintextPassword {
 }
 
 $token = $null
+$tokenHash = $null
 $newPassword = $null
 $confirmation = $null
 $body = $null
@@ -50,7 +51,18 @@ try {
     $random.GetBytes($bytes)
     $token = ([BitConverter]::ToString($bytes)).Replace('-', '').ToLowerInvariant()
 
-    $insertSession = "INSERT INTO admin_sessions(token, admin_user_id, expires_at, mfa_verified_at) VALUES ('$token', $adminId, now() + interval '5 minutes', now());"
+    # Sessions store only the SHA-256 hex digest (see security::hash_session_token);
+    # the bearer token itself is presented to the API and never persisted.
+    $sha256 = [Security.Cryptography.SHA256]::Create()
+    try {
+        $hashBytes = $sha256.ComputeHash([Text.Encoding]::UTF8.GetBytes($token))
+        $tokenHash = ([BitConverter]::ToString($hashBytes)).Replace('-', '').ToLowerInvariant()
+    }
+    finally {
+        $sha256.Dispose()
+    }
+
+    $insertSession = "INSERT INTO admin_sessions(token, admin_user_id, expires_at, mfa_verified_at) VALUES ('$tokenHash', $adminId, now() + interval '5 minutes', now());"
     & docker exec $DatabaseContainer psql -U project_depot -d project_depot -v ON_ERROR_STOP=1 -c $insertSession | Out-Null
     if ($LASTEXITCODE -ne 0) {
         throw "Could not create the short-lived local recovery session."
@@ -66,8 +78,8 @@ try {
     Write-Host "Admin password reset successfully. Sign in with username: admin" -ForegroundColor Green
 }
 finally {
-    if ($token) {
-        $deleteSession = "DELETE FROM admin_sessions WHERE token = '$token';"
+    if ($tokenHash) {
+        $deleteSession = "DELETE FROM admin_sessions WHERE token = '$tokenHash';"
         & docker exec $DatabaseContainer psql -U project_depot -d project_depot -c $deleteSession 2>$null | Out-Null
     }
 
@@ -79,4 +91,5 @@ finally {
     $confirmation = $null
     $newPassword = $null
     $token = $null
+    $tokenHash = $null
 }

@@ -5,6 +5,7 @@ use axum::{
     http::{Method, StatusCode},
 };
 use online_shopping_api::db;
+use online_shopping_api::security::hash_session_token;
 use serde_json::{Value, json};
 use sqlx::PgPool;
 
@@ -595,7 +596,8 @@ async fn customer_admin_and_support_tokens_cannot_cross_authentication_boundarie
     sqlx::query(
         "UPDATE support_sessions SET expires_at = now() - interval '1 second' WHERE token = $1",
     )
-    .bind(&support_token)
+    // Sessions store only the token digest, never the bearer token itself.
+    .bind(hash_session_token(&support_token))
     .execute(&pool)
     .await
     .expect("support session should expire");

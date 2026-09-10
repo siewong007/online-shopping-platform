@@ -2,6 +2,7 @@ use anyhow::Result;
 use sqlx::PgPool;
 
 use crate::models::{SupportConversation, SupportIdentity, SupportInboxItem, SupportMessage};
+use crate::security::hash_session_token;
 
 pub async fn create_support_conversation(
     pool: &PgPool,
@@ -61,7 +62,8 @@ pub async fn create_support_conversation(
         VALUES ($1, $2, now() + interval '30 days')
         "#,
     )
-    .bind(token)
+    // Store only the digest: a database read must never yield a usable bearer token.
+    .bind(hash_session_token(token))
     .bind(conversation_id)
     .execute(&mut *transaction)
     .await?;
@@ -107,7 +109,7 @@ pub async fn authenticate_support_session(
           AND support_sessions.expires_at > now()
         "#,
     )
-    .bind(token)
+    .bind(hash_session_token(token))
     .fetch_optional(pool)
     .await
     .map_err(Into::into)

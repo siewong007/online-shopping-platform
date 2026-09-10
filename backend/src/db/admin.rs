@@ -1,4 +1,5 @@
 use crate::models::*;
+use crate::security::hash_session_token;
 use anyhow::{Result, anyhow, bail};
 use sqlx::{PgPool, Postgres, Transaction};
 
@@ -147,6 +148,23 @@ pub async fn record_admin_login_attempt(
     Ok(())
 }
 
+/// Opportunistic retention sweep: the throttle only counts the trailing
+/// window, so rows older than `retention_hours` are dead weight with no
+/// security value. Returns pruned row count for observability.
+pub async fn prune_old_admin_login_attempts(pool: &PgPool, retention_hours: i32) -> Result<u64> {
+    let result = sqlx::query(
+        r#"
+        DELETE FROM admin_login_attempts
+        WHERE created_at < now() - ($1::text || ' hours')::interval
+        "#,
+    )
+    .bind(retention_hours.to_string())
+    .execute(pool)
+    .await?;
+
+    Ok(result.rows_affected())
+}
+
 pub async fn insert_admin_session(pool: &PgPool, admin_user_id: i32, token: &str) -> Result<()> {
     sqlx::query(
         r#"
@@ -154,7 +172,8 @@ pub async fn insert_admin_session(pool: &PgPool, admin_user_id: i32, token: &str
         VALUES ($1, $2, now() + interval '7 days')
         "#,
     )
-    .bind(token)
+    // Store only the digest: a database read must never yield a usable bearer token.
+    .bind(hash_session_token(token))
     .bind(admin_user_id)
     .execute(pool)
     .await?;
@@ -169,7 +188,7 @@ pub async fn delete_admin_session(pool: &PgPool, token: &str) -> Result<()> {
         WHERE token = $1
         "#,
     )
-    .bind(token)
+    .bind(hash_session_token(token))
     .execute(pool)
     .await?;
 
@@ -200,7 +219,7 @@ pub async fn authenticate_admin_session(
           AND admin_users.is_active = TRUE
         "#,
     )
-    .bind(token)
+    .bind(hash_session_token(token))
     .fetch_optional(pool)
     .await
     .map_err(Into::into)

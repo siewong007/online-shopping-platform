@@ -82,3 +82,7 @@ pub async fn record_admin_login_attempt(
 ) -> Result<()> {
     crate::db::record_admin_login_attempt(pool, username_key, client_key, succeeded).await
 }
+
+pub async fn prune_old_admin_login_attempts(pool: &PgPool, retention_hours: i32) -> Result<u64> {
+    crate::db::prune_old_admin_login_attempts(pool, retention_hours).await
+}

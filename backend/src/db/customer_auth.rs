@@ -1,4 +1,5 @@
 use crate::models::*;
+use crate::security::hash_session_token;
 use anyhow::{Result, bail};
 use sqlx::PgPool;
 use std::collections::HashMap;
@@ -74,7 +75,8 @@ pub async fn insert_customer_session(
         VALUES ($1, $2, $3, now() + interval '30 days')
         "#,
     )
-    .bind(token)
+    // Store only the digest: a database read must never yield a usable bearer token.
+    .bind(hash_session_token(token))
     .bind(customer_account_id)
     .bind(user_agent)
     .execute(pool)
@@ -90,7 +92,7 @@ pub async fn delete_customer_session(pool: &PgPool, token: &str) -> Result<()> {
         WHERE token = $1
         "#,
     )
-    .bind(token)
+    .bind(hash_session_token(token))
     .execute(pool)
     .await?;
 
@@ -113,7 +115,7 @@ pub async fn authenticate_customer_session(
           AND customer_sessions.expires_at > now()
         "#,
     )
-    .bind(token)
+    .bind(hash_session_token(token))
     .fetch_optional(pool)
     .await
     .map_err(Into::into)

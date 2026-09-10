@@ -4,6 +4,7 @@ use std::sync::OnceLock;
 use anyhow::{Result, anyhow, bail};
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier, password_hash::SaltString};
 use rand::{RngCore, rngs::OsRng};
+use sha2::{Digest, Sha256};
 
 pub fn hash_password(password: &str) -> Result<String> {
     if password.trim().is_empty() {
@@ -63,4 +64,35 @@ pub fn generate_session_token() -> String {
     }
 
     token
+}
+
+/// SHA-256 hex digest of a bearer token for storage. Session tables must
+/// hold only this digest: any read of the database (backup, dump, restore
+/// rehearsal) must never yield directly usable sessions. The bearer token
+/// itself is shown to the caller exactly once at login and never persisted.
+pub fn hash_session_token(token: &str) -> String {
+    let bytes = Sha256::digest(token.as_bytes());
+
+    let mut digest = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        let _ = write!(&mut digest, "{byte:02x}");
+    }
+
+    digest
+}
+
+#[cfg(test)]
+mod tests {
+    use super::hash_session_token;
+
+    #[test]
+    fn session_token_digest_is_stable_hex_and_irreversible() {
+        let first = hash_session_token("bearer-token-a");
+        let second = hash_session_token("bearer-token-a");
+        assert_eq!(first, second);
+        assert_eq!(first.len(), 64);
+        assert!(first.chars().all(|c| c.is_ascii_hexdigit()));
+        assert_ne!(first, "bearer-token-a");
+        assert_ne!(first, hash_session_token("bearer-token-b"));
+    }
 }

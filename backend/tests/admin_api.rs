@@ -71,6 +71,23 @@ async fn login_returns_token_bad_password_fails_and_me_reports_role(pool: PgPool
 }
 
 #[sqlx::test]
+async fn stored_admin_session_holds_digest_never_bearer_token(pool: PgPool) {
+    common::create_admin(&pool, "Super Admin", "digest-admin", "secret123").await;
+    let app = common::app(pool.clone());
+
+    let token = common::login(app, "digest-admin", "secret123").await;
+
+    let stored: String = sqlx::query_scalar("SELECT token FROM admin_sessions")
+        .fetch_one(&pool)
+        .await
+        .expect("session row should exist");
+    assert_ne!(
+        stored, token,
+        "database must never hold a usable bearer token"
+    );
+}
+
+#[sqlx::test]
 async fn admin_login_is_throttled_after_repeated_failures(pool: PgPool) {
     common::create_admin(&pool, "Super Admin", "throttle-admin", "secret123").await;
     let app = common::app(pool);
