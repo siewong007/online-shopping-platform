@@ -1,4 +1,4 @@
-import { requestJson, setAuthToken } from "../../../shared/api/http";
+import { requestJson, setAuthToken, turnstileHeaders } from "../../../shared/api/http";
 import type {
   AdminAuthPayload,
   AdminLoginInput,
@@ -12,10 +12,13 @@ function hasToken(payload: AdminLoginResponse): payload is AdminAuthPayload {
   return "token" in payload;
 }
 
-export async function login(input: AdminLoginInput): Promise<AdminLoginResponse> {
+export async function login(
+  input: AdminLoginInput,
+  turnstileToken?: string | null
+): Promise<AdminLoginResponse> {
   const payload = await requestJson<AdminLoginResponse>("/api/admin/login", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...turnstileHeaders(turnstileToken) },
     body: JSON.stringify(input)
   });
 

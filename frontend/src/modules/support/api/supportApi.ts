@@ -5,6 +5,7 @@ import {
   putJson,
   requestJson,
   setCustomerAuthToken,
+  turnstileHeaders,
   type AuthScope
 } from "../../../shared/api/http";
 import type {
@@ -64,29 +65,32 @@ export function normalizeSupportConversationPage(
 
 async function createSupportConversationWithScope(
   input: CreateSupportConversationInput,
-  scope: AuthScope
+  scope: AuthScope,
+  turnstileToken?: string | null
 ): Promise<CreateSupportConversationResponse> {
   return postJson<CreateSupportConversationInput, CreateSupportConversationResponse>(
     "/api/support/conversations",
     input,
-    scope
+    scope,
+    turnstileHeaders(turnstileToken)
   );
 }
 
 export async function createSupportConversation(
-  input: CreateSupportConversationInput
+  input: CreateSupportConversationInput,
+  turnstileToken?: string | null
 ): Promise<CreateSupportConversationResponse> {
   const scope = createConversationScope();
 
   try {
-    return await createSupportConversationWithScope(input, scope);
+    return await createSupportConversationWithScope(input, scope, turnstileToken);
   } catch (error) {
     if (scope !== "customer" || !(error instanceof ApiError) || error.status !== 401) {
       throw error;
     }
 
     setCustomerAuthToken(null);
-    return createSupportConversationWithScope(input, "public");
+    return createSupportConversationWithScope(input, "public", turnstileToken);
   }
 }
 
@@ -107,8 +111,16 @@ export async function fetchSupportMessages(
   return normalizeSupportMessages(payload);
 }
 
-export function sendSupportMessage(body: string): Promise<SupportMessage> {
-  return postJson<{ body: string }, SupportMessage>("/api/support/messages", { body }, "support");
+export function sendSupportMessage(
+  body: string,
+  turnstileToken?: string | null
+): Promise<SupportMessage> {
+  return postJson<{ body: string }, SupportMessage>(
+    "/api/support/messages",
+    { body },
+    "support",
+    turnstileHeaders(turnstileToken)
+  );
 }
 
 export function closeSupportConversation(): Promise<SupportConversation> {

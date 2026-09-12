@@ -1,4 +1,4 @@
-import { requestJson, setCustomerAuthToken } from "../../../shared/api/http";
+import { requestJson, setCustomerAuthToken, turnstileHeaders } from "../../../shared/api/http";
 import type {
   CustomerAuthPayload,
   CustomerLoginInput,
@@ -7,12 +7,15 @@ import type {
   CustomerSession
 } from "../types";
 
-export async function register(input: CustomerRegisterInput): Promise<CustomerAuthPayload> {
+export async function register(
+  input: CustomerRegisterInput,
+  turnstileToken?: string | null
+): Promise<CustomerAuthPayload> {
   const payload = await requestJson<CustomerAuthPayload>(
     "/api/account/register",
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...turnstileHeaders(turnstileToken) },
       body: JSON.stringify(input)
     },
     "customer"
@@ -22,12 +25,15 @@ export async function register(input: CustomerRegisterInput): Promise<CustomerAu
   return payload;
 }
 
-export async function login(input: CustomerLoginInput): Promise<CustomerAuthPayload> {
+export async function login(
+  input: CustomerLoginInput,
+  turnstileToken?: string | null
+): Promise<CustomerAuthPayload> {
   const payload = await requestJson<CustomerAuthPayload>(
     "/api/account/login",
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...turnstileHeaders(turnstileToken) },
       body: JSON.stringify(input)
     },
     "customer"

@@ -1,5 +1,11 @@
 import { fallbackOrders } from "../../../data/fallback";
-import { deleteJson, fetchJson, postJson, putJson } from "../../../shared/api/http";
+import {
+  deleteJson,
+  fetchJson,
+  postJson,
+  putJson,
+  turnstileHeaders
+} from "../../../shared/api/http";
 import {
   adminListPath,
   normalizePagedResponse,
@@ -22,12 +28,25 @@ export function fetchOrders(params: AdminListParams = {}): Promise<PagedResponse
   ).then(normalizePagedResponse);
 }
 
-export function checkout(input: CreateOrderInput): Promise<Order> {
-  return postJson<CreateOrderInput, Order>("/api/checkout", input, "customer");
+export function checkout(input: CreateOrderInput, turnstileToken?: string | null): Promise<Order> {
+  return postJson<CreateOrderInput, Order>(
+    "/api/checkout",
+    input,
+    "customer",
+    turnstileHeaders(turnstileToken)
+  );
 }
 
-export function startPaymentCheckout(input: CreateOrderInput): Promise<PaymentCheckout> {
-  return postJson<CreateOrderInput, PaymentCheckout>("/api/checkout/payment", input, "customer");
+export function startPaymentCheckout(
+  input: CreateOrderInput,
+  turnstileToken?: string | null
+): Promise<PaymentCheckout> {
+  return postJson<CreateOrderInput, PaymentCheckout>(
+    "/api/checkout/payment",
+    input,
+    "customer",
+    turnstileHeaders(turnstileToken)
+  );
 }
 
 export function quoteCheckout(input: CheckoutQuoteInput): Promise<CheckoutQuote> {

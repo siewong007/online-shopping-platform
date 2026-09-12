@@ -378,16 +378,21 @@ export async function requestBlob(
   return response.blob();
 }
 
+export function turnstileHeaders(token: string | null | undefined): Record<string, string> {
+  return token ? { "cf-turnstile-token": token } : {};
+}
+
 export async function postJson<TBody, TResponse>(
   path: string,
   body: TBody,
-  scope: AuthScope = "admin"
+  scope: AuthScope = "admin",
+  headers?: HeadersInit
 ): Promise<TResponse> {
   return requestJson<TResponse>(
     path,
     {
       method: "POST",
-      headers: requestHeaders(true, undefined, scope),
+      headers: requestHeaders(true, headers, scope),
       body: JSON.stringify(body)
     },
     scope
