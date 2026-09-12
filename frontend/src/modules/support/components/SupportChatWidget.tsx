@@ -8,6 +8,7 @@ import {
 } from "react";
 
 import { useI18n } from "../../../i18n/LanguageContext";
+import { TurnstileSlot, useTurnstile } from "../../../shared/components/TurnstileSlot";
 import { fetchMe as fetchCustomerMe } from "../../customer_auth/api/customerAuthApi";
 import {
   ApiError,
@@ -65,6 +66,7 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
   const [isSending, setIsSending] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
+  const turnstile = useTurnstile();
 
   const launcherRef = useRef<HTMLButtonElement>(null);
   const guestNameRef = useRef<HTMLInputElement>(null);
@@ -402,11 +404,14 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
     setError("");
 
     try {
-      const response = await createSupportConversation({
-        guest_name: name,
-        guest_email: email,
-        message: orderNumber ? `Guest order #${orderNumber}\n\n${message}` : message
-      });
+      const response = await createSupportConversation(
+        {
+          guest_name: name,
+          guest_email: email,
+          message: orderNumber ? `Guest order #${orderNumber}\n\n${message}` : message
+        },
+        turnstile.token
+      );
 
       if (!mountedRef.current) {
         return;
@@ -420,6 +425,7 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
       setDraft("");
       setLoadState("ready");
     } catch (caught) {
+      turnstile.reset();
       if (!mountedRef.current) {
         return;
       }
@@ -434,7 +440,7 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
   const sendMessage = async () => {
     const body = draft.trim();
 
-    if (!body) {
+    if (!body || (turnstile.isConfigured && !turnstile.token)) {
       setError(t("support.error.required"));
       return;
     }
@@ -448,13 +454,16 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
     setError("");
 
     try {
-      const message = await sendSupportMessage(body);
+      const message = await sendSupportMessage(body, turnstile.token);
       if (!mountedRef.current) {
         return;
       }
       appendMessages([message]);
       setDraft("");
+      // Each send consumes the token; reset so the widget issues a fresh one for the next.
+      turnstile.reset();
     } catch (caught) {
+      turnstile.reset();
       if (!mountedRef.current) {
         return;
       }
@@ -616,7 +625,13 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
                   />
                   <div className="support-chat-composer__actions">
                     <span id="support-chat-message-hint">{t("support.sendHint")}</span>
-                    <button disabled={isSending || !draft.trim()} onClick={() => void sendMessage()} type="button">
+                    <button
+                      disabled={
+                        isSending || !draft.trim() || (turnstile.isConfigured && !turnstile.token)
+                      }
+                      onClick={() => void sendMessage()}
+                      type="button"
+                    >
                       {isSending ? t("support.sending") : t("support.send")}
                     </button>
                   </div>
@@ -682,11 +697,17 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
                   value={initialMessage}
                 />
               </label>
-              <button className="support-chat-start-form__submit" disabled={isStarting} type="submit">
+              <button
+                className="support-chat-start-form__submit"
+                disabled={isStarting || (turnstile.isConfigured && !turnstile.token)}
+                type="submit"
+              >
                 {isStarting ? t("support.starting") : t("support.start")}
               </button>
             </form>
           )}
+
+          <TurnstileSlot turnstile={turnstile} />
         </section>
       ) : null}
 
