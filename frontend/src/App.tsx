@@ -876,8 +876,11 @@ export default function App() {
     setIsCartOpen(true);
   };
 
-  const submitCheckout = async (input: CreateOrderInput): Promise<PaymentCheckout> => {
-    const checkout = await startPaymentCheckoutRequest(input);
+  const submitCheckout = async (
+    input: CreateOrderInput,
+    turnstileToken: string | null
+  ): Promise<PaymentCheckout> => {
+    const checkout = await startPaymentCheckoutRequest(input, turnstileToken);
     const order = checkout.order;
     const checkoutEmail = order.customer_email.trim().toLowerCase();
 

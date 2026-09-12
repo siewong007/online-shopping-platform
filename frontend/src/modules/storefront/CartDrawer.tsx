@@ -4,6 +4,7 @@ import { useI18n } from "../../i18n/LanguageContext";
 import { quoteCheckout } from "../orders/api/orderApi";
 import type { CheckoutQuote } from "../orders/types";
 import { rememberPendingPayment } from "../payments/paymentReturn";
+import { TurnstileSlot, useTurnstile } from "../../shared/components/TurnstileSlot";
 import { currencyFromCents } from "../../shared/formatters";
 import { normalizeError } from "../../shared/notifications";
 import type {
@@ -53,7 +54,7 @@ type CartDrawerProps = {
   cart: CartItem[];
   customerAccountEmail: string;
   open: boolean;
-  onCheckout: (input: CreateOrderInput) => Promise<PaymentCheckout>;
+  onCheckout: (input: CreateOrderInput, turnstileToken: string | null) => Promise<PaymentCheckout>;
   onClose: () => void;
   onCompleted: () => void;
   onPromotionChange: (promotionId: number | null) => void;
@@ -105,6 +106,7 @@ export function CartDrawer({
   const [isQuoting, setIsQuoting] = useState(false);
   const drawerRef = useRef<HTMLElement | null>(null);
   const openerRef = useRef<HTMLElement | null>(null);
+  const turnstile = useTurnstile();
 
   const close = () => {
     setStage("cart");
@@ -305,17 +307,20 @@ export function CartDrawer({
     }
 
     try {
-      const checkout = await onCheckout({
-        customer_name: form.customer_name,
-        customer_email: form.customer_email,
-        customer_phone: form.customer_phone,
-        fulfillment_method: DELIVERY_CHECKOUT_ENABLED ? form.fulfillment_method : "pickup",
-        items: cart.map((item) => ({ product_id: item.product.id, quantity: item.quantity })),
-        promotion_id: selectedPromotionId ?? undefined,
-        voucher_code: voucherCode.trim() || undefined,
-        shipping_address: isDelivery ? form.shipping_address : undefined,
-        shipping_service_code: isDelivery ? form.shipping_service_code || undefined : undefined
-      });
+      const checkout = await onCheckout(
+        {
+          customer_name: form.customer_name,
+          customer_email: form.customer_email,
+          customer_phone: form.customer_phone,
+          fulfillment_method: DELIVERY_CHECKOUT_ENABLED ? form.fulfillment_method : "pickup",
+          items: cart.map((item) => ({ product_id: item.product.id, quantity: item.quantity })),
+          promotion_id: selectedPromotionId ?? undefined,
+          voucher_code: voucherCode.trim() || undefined,
+          shipping_address: isDelivery ? form.shipping_address : undefined,
+          shipping_service_code: isDelivery ? form.shipping_service_code || undefined : undefined
+        },
+        turnstile.token
+      );
       try {
         rememberPendingPayment(window.sessionStorage, {
           orderId: checkout.order.id,
@@ -328,6 +333,7 @@ export function CartDrawer({
       setRedirectingToPayment(true);
       window.location.assign(checkout.payment_url);
     } catch (error) {
+      turnstile.reset();
       setFeedback(normalizeError(error, { operation: "checkout", scope: "checkout" }).userMessage);
     } finally {
       setIsSubmitting(false);
@@ -740,6 +746,7 @@ export function CartDrawer({
                 {t("shop.cartd.buyingPaused")}
               </p>
             ) : null}
+            <TurnstileSlot turnstile={turnstile} />
             <div className="cart-checkout-actions">
               <button type="button" className="outline-button" onClick={() => setStage("cart")}>
                 Back to cart
@@ -748,7 +755,10 @@ export function CartDrawer({
                 type="submit"
                 className="solid-button"
                 disabled={
-                  isSubmitting || isQuoting || (isDelivery && (!addressReady || !form.shipping_service_code))
+                  isSubmitting ||
+                  isQuoting ||
+                  (isDelivery && (!addressReady || !form.shipping_service_code)) ||
+                  (turnstile.isConfigured && !turnstile.token)
                 }
               >
                 {CARD_PAY_ENABLED

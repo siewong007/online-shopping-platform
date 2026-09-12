@@ -13,6 +13,7 @@ import {
   registerCustomer
 } from "../../lib/api";
 import { ApiError, getCustomerAuthToken, setCustomerAuthToken } from "../../shared/api/http";
+import { TurnstileSlot, useTurnstile } from "../../shared/components/TurnstileSlot";
 import { currencyFromCents, formatOrderDate, formatRelativeTime } from "../../shared/formatters";
 import { normalizeError } from "../../shared/notifications";
 import type {
@@ -102,6 +103,7 @@ export function AccountDrawer({
   const [customerSessionsStatus, setCustomerSessionsStatus] = useState<PortalLoadStatus>("idle");
   const [customerSessionsError, setCustomerSessionsError] = useState("");
   const [sessionActionId, setSessionActionId] = useState<number | "others" | null>(null);
+  const turnstile = useTurnstile();
 
   useEffect(() => {
     if (session) {
@@ -288,12 +290,13 @@ export function AccountDrawer({
 
     try {
       const input: CustomerLoginInput = { email: authForm.email, password: authForm.password };
-      await loginCustomer(input);
+      await loginCustomer(input, turnstile.token);
       const payload = await fetchCustomerMe();
       setSession(payload);
       setAuthForm(emptyCustomerAuthForm);
       setAuthStatus("idle");
     } catch (error) {
+      turnstile.reset();
       setAuthStatus("error");
       setAuthError(normalizeError(error, { operation: "customer sign in", scope: "customer-auth" }).userMessage);
     }
@@ -305,12 +308,13 @@ export function AccountDrawer({
     setAuthError("");
 
     try {
-      await registerCustomer(authForm);
+      await registerCustomer(authForm, turnstile.token);
       const payload = await fetchCustomerMe();
       setSession(payload);
       setAuthForm(emptyCustomerAuthForm);
       setAuthStatus("idle");
     } catch (error) {
+      turnstile.reset();
       setAuthStatus("error");
       setAuthError(normalizeError(error, { operation: "customer registration", scope: "customer-auth" }).userMessage);
     }
@@ -801,6 +805,8 @@ export function AccountDrawer({
           </button>
         </div>
 
+        <TurnstileSlot turnstile={turnstile} />
+
         {authView === "login" ? (
           <form className="account-lookup-form" onSubmit={(event) => void submitLogin(event)}>
             <label>
@@ -824,7 +830,10 @@ export function AccountDrawer({
                 required
               />
             </label>
-            <button className="solid-button" disabled={authStatus === "loading"}>
+            <button
+              className="solid-button"
+              disabled={authStatus === "loading" || (turnstile.isConfigured && !turnstile.token)}
+            >
               {authStatus === "loading" ? "Signing in..." : "Sign in"}
             </button>
             {authStatus === "error" ? <p className="cart-feedback">{authError}</p> : null}
@@ -864,7 +873,10 @@ export function AccountDrawer({
                 required
               />
             </label>
-            <button className="solid-button" disabled={authStatus === "loading"}>
+            <button
+              className="solid-button"
+              disabled={authStatus === "loading" || (turnstile.isConfigured && !turnstile.token)}
+            >
               {authStatus === "loading" ? "Creating account..." : "Create account"}
             </button>
             {authStatus === "error" ? <p className="cart-feedback">{authError}</p> : null}
