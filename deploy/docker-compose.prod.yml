@@ -94,6 +94,8 @@ services:
       SMTP_PASSWORD: "${SMTP_PASSWORD:-}"
       MFA_ENCRYPTION_KEY: "${MFA_ENCRYPTION_KEY:-}"
       PAYMENT_ACTIVATION_MODE: "${PAYMENT_ACTIVATION_MODE:-}"
+      # Cloudflare Turnstile secret from secrets.env; blank keeps the bot gate fail-open.
+      TURNSTILE_SECRET_KEY: "${TURNSTILE_SECRET_KEY:-}"
       TRUST_PROXY: "${TRUST_PROXY:-true}"
       RATE_LIMIT_PER_MINUTE: "${RATE_LIMIT_PER_MINUTE:-120}"
       RUST_LOG: warn

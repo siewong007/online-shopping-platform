@@ -15,6 +15,10 @@ ARG VITE_API_URL=
 ENV VITE_API_URL=$VITE_API_URL
 ARG VITE_ENABLE_DELIVERY=false
 ENV VITE_ENABLE_DELIVERY=$VITE_ENABLE_DELIVERY
+# Public Cloudflare Turnstile site key — safe to bake into the bundle; the paired secret
+# stays server-side. Empty = widgets render nothing and the backend's fail-open applies.
+ARG VITE_TURNSTILE_SITE_KEY=
+ENV VITE_TURNSTILE_SITE_KEY=$VITE_TURNSTILE_SITE_KEY
 
 RUN bun run build
 

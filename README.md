@@ -90,6 +90,14 @@ cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
+Optional: Cloudflare Turnstile protects the public POST surfaces (login, register,
+checkout, reviews, support). Create a widget in the Cloudflare dashboard
+(**Turnstile → Add widget**, registering `localhost` and your production
+hostname), then set `VITE_TURNSTILE_SITE_KEY` in `frontend/.env` and
+`TURNSTILE_SECRET_KEY` in `backend/.env`. Both unset = protection disabled and
+every form works as before. Cloudflare publishes always-pass test keys if you
+only need to exercise the flow.
+
 ### 3. Apply migrations
 
 ```bash

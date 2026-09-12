@@ -102,5 +102,7 @@ Short, imperative subject; explain the *why* in the body when non-obvious.
 ## External dependencies
 
 - PostgreSQL runs in Docker at `localhost:5433`, user/pass/db all `project_depot`.
+- Cloudflare Turnstile gates public POSTs — `TURNSTILE_SECRET_KEY` (backend) +
+  `VITE_TURNSTILE_SITE_KEY` (frontend); disabled when unset.
 - The health endpoint at `/api/health` reports the expected stack versions
   (`backend/src/modules/health/controller.rs`) — keep it accurate if versions change.
