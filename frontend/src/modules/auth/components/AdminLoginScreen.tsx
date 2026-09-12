@@ -1,12 +1,13 @@
 import { type FormEvent, useState } from "react";
 
+import { TurnstileSlot, useTurnstile } from "../../../shared/components/TurnstileSlot";
 import { normalizeError } from "../../../shared/notifications";
 import type { AdminAuthPayload, AdminLoginInput, AdminLoginResponse } from "../types";
 
 type AdminLoginScreenProps = {
   challengeToken: string | null;
   onBackToStore: () => void;
-  onLogin: (input: AdminLoginInput) => Promise<AdminLoginResponse>;
+  onLogin: (input: AdminLoginInput, turnstileToken: string | null) => Promise<AdminLoginResponse>;
   onVerify: (input: { code?: string; recovery_code?: string }) => Promise<AdminAuthPayload>;
 };
 
@@ -20,6 +21,7 @@ export function AdminLoginScreen({
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [useRecoveryCode, setUseRecoveryCode] = useState(false);
+  const turnstile = useTurnstile();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -27,11 +29,15 @@ export function AdminLoginScreen({
     setIsSubmitting(true);
 
     try {
-      await onLogin({
-        username: form.username.trim(),
-        password: form.password
-      });
+      await onLogin(
+        {
+          username: form.username.trim(),
+          password: form.password
+        },
+        turnstile.token
+      );
     } catch (error) {
+      turnstile.reset();
       setFeedback(normalizeError(error, { operation: "admin sign in", scope: "admin-auth" }).userMessage);
     } finally {
       setIsSubmitting(false);
@@ -132,10 +138,16 @@ export function AdminLoginScreen({
               />
             </label>
 
+            <TurnstileSlot turnstile={turnstile} />
+
             {feedback ? <p className="catalog-feedback error">{feedback}</p> : null}
 
             <div className="form-actions split-actions">
-              <button className="solid-button" disabled={isSubmitting} type="submit">
+              <button
+                className="solid-button"
+                disabled={isSubmitting || (turnstile.isConfigured && !turnstile.token)}
+                type="submit"
+              >
                 {isSubmitting ? "Signing in..." : "Sign In"}
               </button>
               <button className="outline-button" onClick={onBackToStore} type="button">

@@ -765,8 +765,11 @@ export default function App() {
     }
   };
 
-  const handleAdminLogin = async (input: AdminLoginInput): Promise<AdminLoginResponse> => {
-    const response = await loginRequest(input);
+  const handleAdminLogin = async (
+    input: AdminLoginInput,
+    turnstileToken: string | null
+  ): Promise<AdminLoginResponse> => {
+    const response = await loginRequest(input, turnstileToken);
     if ("mfa_required" in response) {
       setAdminMfaChallengeToken(response.challenge_token);
       setAdminAuth("mfa-challenge");
