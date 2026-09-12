@@ -135,6 +135,7 @@ jobs:
             --load \
             --build-arg VITE_API_URL= \
             --build-arg VITE_ENABLE_DELIVERY=false \
+            --build-arg VITE_TURNSTILE_SITE_KEY=0x4AAAAAAExJ1ddYQ-cmc9DX \
             --label "org.opencontainers.image.revision=$DEPLOY_SHA" \
             --tag "online-shopping-frontend:$DEPLOY_SHA" \
             --file frontend/Dockerfile \
