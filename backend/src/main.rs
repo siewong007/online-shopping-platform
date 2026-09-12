@@ -39,6 +39,7 @@ async fn main() -> anyhow::Result<()> {
         .context("MFA_ENCRYPTION_KEY is invalid")?;
     let trust_proxy = online_shopping_api::client_ip::trust_proxy_from_environment();
     let rate_limiter = online_shopping_api::rate_limit::RateLimiter::from_environment();
+    let turnstile = online_shopping_api::turnstile::TurnstileConfig::from_environment();
     // APP_ENV only ever gates the legacy checkout route; resolving it once keeps that gate
     // from depending on per-request environment lookups.
     let app_is_production = env::var("APP_ENV")
@@ -76,13 +77,18 @@ async fn main() -> anyhow::Result<()> {
         app_is_production,
         "public route configuration resolved"
     );
+    tracing::info!(
+        enabled = turnstile.is_enabled(),
+        "turnstile bot protection resolved"
+    );
     let app = routes::build_router(
         AppState::with_payment_activation_mode(pool, payment_activation_mode)
             .with_emailer(emailer)
             .with_mfa(mfa)
             .with_trust_proxy(trust_proxy)
             .with_app_is_production(app_is_production)
-            .with_rate_limiter(rate_limiter),
+            .with_rate_limiter(rate_limiter)
+            .with_turnstile(turnstile),
         frontend_origin,
     );
 

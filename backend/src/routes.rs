@@ -14,7 +14,7 @@ use crate::{
         invoices, mfa, offers, orders, payments, permissions, reviews, sales, settings, storefront,
         support,
     },
-    rate_limit,
+    rate_limit, turnstile,
 };
 
 pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
@@ -24,11 +24,16 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
         // Allowing the activation header only lets an operator present a secret they were
         // separately issued; it grants nothing on its own, and preflighting it is what makes a
         // controlled-mode UAT executable through the real storefront rather than a side channel.
+        // The Turnstile header carries a one-shot bot-check token the widget issued; it
+        // authorizes nothing beyond letting the middleware verify the submission.
         .allow_headers([
             CONTENT_TYPE,
             AUTHORIZATION,
             HeaderName::from_static(payments::activation::ACTIVATION_HEADER),
+            HeaderName::from_static("cf-turnstile-token"),
         ]);
+
+    let turnstile_layer = middleware::from_fn_with_state(state.clone(), turnstile::verify);
 
     // Unauthenticated surfaces a bot can hammer cheaply sit behind the fixed-window per-IP
     // limiter. Admin routes, provider webhooks and `/api/health` stay outside it.
@@ -44,7 +49,7 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
         )
         .route(
             "/api/support/conversations",
-            post(support::controller::create_conversation),
+            post(support::controller::create_conversation).route_layer(turnstile_layer.clone()),
         )
         .route(
             "/api/support/conversation",
@@ -54,23 +59,32 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
         .route(
             "/api/support/messages",
             get(support::controller::support_messages)
-                .post(support::controller::post_guest_message),
+                .post(support::controller::post_guest_message)
+                .route_layer(turnstile_layer.clone()),
         )
         .route(
             "/api/customer-portal/lookup",
             get(customer_portal::controller::lookup_customer_portal),
         )
-        .route("/api/checkout", post(orders::controller::checkout))
+        .route(
+            "/api/checkout",
+            post(orders::controller::checkout).route_layer(turnstile_layer.clone()),
+        )
         .route(
             "/api/checkout/payment",
-            post(payments::controller::checkout_with_gateway),
+            post(payments::controller::checkout_with_gateway).route_layer(turnstile_layer.clone()),
         )
+        // Deliberately unprotected: the storefront re-quotes automatically on every cart change
+        // and Turnstile tokens are single-use; the rate limiter stays this route's only gate.
         .route("/api/checkout/quote", post(orders::controller::quote))
         .route(
             "/api/account/register",
-            post(customer_auth::controller::register),
+            post(customer_auth::controller::register).route_layer(turnstile_layer.clone()),
         )
-        .route("/api/account/login", post(customer_auth::controller::login))
+        .route(
+            "/api/account/login",
+            post(customer_auth::controller::login).route_layer(turnstile_layer.clone()),
+        )
         .route(
             "/api/account/logout",
             post(customer_auth::controller::logout),
@@ -90,7 +104,7 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
         )
         .route(
             "/api/account/products/{product_id}/reviews",
-            post(reviews::controller::create_review),
+            post(reviews::controller::create_review).route_layer(turnstile_layer.clone()),
         )
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
@@ -113,7 +127,10 @@ pub fn build_router(state: AppState, frontend_origin: HeaderValue) -> Router {
             "/api/customer-portal/me/transactions",
             get(customer_portal::controller::transactions),
         )
-        .route("/api/admin/login", post(auth::controller::login))
+        .route(
+            "/api/admin/login",
+            post(auth::controller::login).route_layer(turnstile_layer.clone()),
+        )
         .route(
             "/api/admin/login/verify",
             post(mfa::controller::login_verify),
