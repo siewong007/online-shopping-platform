@@ -59,9 +59,15 @@ conventions:
 
 Inside the `public` router (alongside the existing rate-limit layer):
 - `POST /api/account/register`, `POST /api/account/login`
-- `POST /api/checkout`, `POST /api/checkout/payment`, `POST /api/checkout/quote`
+- `POST /api/checkout`, `POST /api/checkout/payment`
 - `POST /api/account/products/{product_id}/reviews`
 - `POST /api/support/conversations`, `POST /api/support/messages`
+
+`POST /api/checkout/quote` is deliberately excluded: the storefront calls it
+automatically on every cart/address change (debounced `useEffect`), and
+Turnstile tokens are single-use — gating it would break live price quoting.
+The existing per-IP rate limiter still covers it; actual order placement is
+protected.
 
 Outside the public router (its own `route_layer`):
 - `POST /api/admin/login`
