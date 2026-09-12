@@ -4,6 +4,7 @@ use crate::{
     emailer::Emailer,
     modules::{mfa::service::MfaConfig, payments::activation::PaymentActivationMode},
     rate_limit::RateLimiter,
+    turnstile::TurnstileConfig,
 };
 
 #[derive(Clone)]
@@ -15,6 +16,7 @@ pub struct AppState {
     pub trust_proxy: bool,
     pub app_is_production: bool,
     pub rate_limiter: RateLimiter,
+    pub turnstile: TurnstileConfig,
 }
 
 impl AppState {
@@ -30,6 +32,7 @@ impl AppState {
             trust_proxy: true,
             app_is_production: false,
             rate_limiter: RateLimiter::disabled(),
+            turnstile: TurnstileConfig::disabled(),
         }
     }
 
@@ -45,6 +48,7 @@ impl AppState {
             trust_proxy: true,
             app_is_production: false,
             rate_limiter: RateLimiter::disabled(),
+            turnstile: TurnstileConfig::disabled(),
         }
     }
 
@@ -70,6 +74,11 @@ impl AppState {
 
     pub fn with_rate_limiter(mut self, rate_limiter: RateLimiter) -> Self {
         self.rate_limiter = rate_limiter;
+        self
+    }
+
+    pub fn with_turnstile(mut self, turnstile: TurnstileConfig) -> Self {
+        self.turnstile = turnstile;
         self
     }
 }

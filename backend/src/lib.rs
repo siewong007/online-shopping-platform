@@ -8,3 +8,4 @@ pub mod modules;
 pub mod rate_limit;
 pub mod routes;
 pub mod security;
+pub mod turnstile;
