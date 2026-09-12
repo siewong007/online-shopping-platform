@@ -12,6 +12,7 @@ use online_shopping_api::{
     modules::{mfa::service::MfaConfig, payments::activation::PaymentActivationMode},
     routes,
     security::hash_password,
+    turnstile::TurnstileConfig,
 };
 
 pub const TEST_MFA_KEY: [u8; 32] = [42_u8; 32];
@@ -34,6 +35,16 @@ pub fn app_with_mfa(pool: PgPool) -> Router {
     routes::build_router(
         AppState::with_payment_activation_mode(pool, PaymentActivationMode::Public)
             .with_mfa(MfaConfig::from_raw_key(TEST_MFA_KEY)),
+        HeaderValue::from_static("http://localhost:5173"),
+    )
+}
+
+/// App state with Turnstile verification pointed at a stub siteverify server.
+pub fn app_with_turnstile(pool: PgPool, siteverify_url: &str) -> Router {
+    routes::build_router(
+        AppState::with_payment_activation_mode(pool, PaymentActivationMode::Public).with_turnstile(
+            TurnstileConfig::resolve(Some("test-secret"), Some(siteverify_url)),
+        ),
         HeaderValue::from_static("http://localhost:5173"),
     )
 }
