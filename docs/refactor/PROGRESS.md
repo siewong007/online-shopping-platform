@@ -4,10 +4,10 @@
 - [x] Phase 0: Understand the project & Audit
 - [x] Phase 1: Tooling and standards
 - [x] Phase 2: Structure and naming
-- [ ] Phase 3: Code quality
-- [ ] Phase 4: Security, privacy and performance
-- [ ] Phase 5: Fill the gaps
-- [ ] Phase 6: Final check
+- [x] Phase 3: Code quality
+- [x] Phase 4: Security, privacy and performance
+- [x] Phase 5: Fill the gaps
+- [x] Phase 6: Final check
 
 ## Log
 - 2026-11-18: Initialised project audit, stashed pre-existing working-tree edits (`stash@{0}`), created `refactor/standards` branch, and added `.editorconfig`.
@@ -21,6 +21,19 @@
 - 2026-11-18: Completed Phase 2 (Structure & Naming):
   - Extracted non-component helpers out of TSX component modules into pure TS modules (`frontend/src/modules/storefront/helpers.ts` and `frontend/src/shared/components/recordFormValidation.ts`), removed unused `isOnSale` helper, and tightened `"lint"` to `eslint . --max-warnings 0` (0 errors, 0 warnings).
   - Routed `AccountDrawer.tsx` through domain API clients (`customerAuthApi`, `customerPortalApi`) instead of the global barrel, completed `frontend/src/lib/api.ts` exports (`offersApi`, `quoteCheckout`), and removed empty placeholder directories.
+- 2026-11-18: Completed Phase 3 (Code Quality):
+  - Extracted storefront catalog synchronization, inventory clamping, and category hint resolution out of `frontend/src/App.tsx` into `frontend/src/app/storefrontSync.ts` with dedicated characterization unit tests (`frontend/tests/storefront/storefrontSync.test.ts`).
+  - Replaced non-test `.unwrap()` panics in `backend/src/db/catalogue_import.rs` with safe error-returning `ok_or_else` expressions.
+- 2026-11-18: Completed Phase 4 (Security, Privacy & Performance):
+  - Documented missing operational environment variables in `backend/.env.example` (`ADMIN_SEED_PASSWORD`, `RATE_LIMIT_PER_MINUTE`, `TRUST_PROXY`, `RUST_LOG`) and `frontend/.env.example` (`VITE_API_URL`).
+  - Fully typed `ImportMetaEnv` in `frontend/src/vite-env.d.ts`.
+- 2026-11-18: Completed Phase 5 (Fill the Gaps):
+  - Added Keep a Changelog document (`CHANGELOG.md`).
+  - Added multi-environment infrastructure and runtime deployment documentation (`docs/environments.md`).
+  - Enforced `bun run format:check`, `bun run lint`, and `bun run typecheck` in the CI pipeline (`.github/workflows/ci.yml`).
+- 2026-11-18: Completed Phase 6 (Final Check):
+  - Executed full end-to-end verification gates (backend `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo test`; frontend `bun run format:check`, `bun run lint`, `bun run typecheck`, `bun test`, `bun run build`).
+  - Synced documentation in `README.md` and `CLAUDE.md`.
 
 ## Decisions Made
 - Keep `typescript@^7.0.2` (native Go compiler) for `tsc` and upgrade frontend packages (`react` 19.3.1, `vite` 8.3.8, `@vitejs/plugin-react` 6.3.0), bridging `typescript-eslint` to Microsoft's `@typescript/typescript6` inside `eslint.config.js` via `node:module` hooks so neither tool requires a downgrade.

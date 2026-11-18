@@ -89,12 +89,12 @@ pub fn parse_catalogue_csv(body: &str) -> Result<(Vec<CatalogueImportRow>, Vec<S
     }
 
     let (i_code, i_name, i_cat, i_uom, i_qty, i_price) = (
-        index_of("item_code").unwrap(),
-        index_of("display_name").unwrap(),
-        index_of("category").unwrap(),
-        index_of("uom").unwrap(),
-        index_of("stock_qty").unwrap(),
-        index_of("price_myr").unwrap(),
+        index_of("item_code").ok_or_else(|| anyhow::anyhow!("Missing item_code column"))?,
+        index_of("display_name").ok_or_else(|| anyhow::anyhow!("Missing display_name column"))?,
+        index_of("category").ok_or_else(|| anyhow::anyhow!("Missing category column"))?,
+        index_of("uom").ok_or_else(|| anyhow::anyhow!("Missing uom column"))?,
+        index_of("stock_qty").ok_or_else(|| anyhow::anyhow!("Missing stock_qty column"))?,
+        index_of("price_myr").ok_or_else(|| anyhow::anyhow!("Missing price_myr column"))?,
     );
 
     let mut rows = Vec::new();

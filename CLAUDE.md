@@ -34,7 +34,7 @@ basics — details live in the linked files. Load a linked file only when its tr
 Online Shopping Platform — a home-improvement storefront + admin console.
 
 - `backend/` — Rust 1.95, Axum 0.8, SQLx 0.8, PostgreSQL
-- `frontend/` — React 19.2.7, TypeScript, Vite 8.x
+- `frontend/` — React 19.3.1, TypeScript 7.0.2, Vite 8.3.8
 - `docker-compose.yml` — PostgreSQL 19beta1 (exposed on `localhost:5433`)
 
 ## Running locally
@@ -59,8 +59,9 @@ A `Makefile` wraps the same commands.
 
 ## Verifying changes
 
-- Backend: `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo build`
-- Frontend: `bun run build` (runs `tsc -b && vite build`)
+- Backend: `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo test`
+- Frontend: `bun run format:check`, `bun run lint`, `bun run typecheck`, `bun run test`, `bun run build`
+- Guardrails & Shell: `bash scripts/run-all-checks.sh`
 - For UI work, exercise the flow in the browser — type-checking verifies code, not features.
 - Backend integration tests need the docker db up and
   `DATABASE_URL=postgres://project_depot:project_depot@localhost:5433/project_depot cargo test`.

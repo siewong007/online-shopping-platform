@@ -3,8 +3,8 @@
 A full-stack home-improvement storefront and operations console, built with a Rust Axum API, a React 19 SPA, and PostgreSQL 19beta1.
 
 ![Rust](https://img.shields.io/badge/Rust-1.95-orange)
-![React](https://img.shields.io/badge/React-19.2-61dafb)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6)
+![React](https://img.shields.io/badge/React-19.3.1-61dafb)
+![TypeScript](https://img.shields.io/badge/TypeScript-7.0.2-3178c6)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-19beta1-336791)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
@@ -36,7 +36,7 @@ A full-stack home-improvement storefront and operations console, built with a Ru
 
 | Layer      | Technology                                      |
 | ---------- | ----------------------------------------------- |
-| Frontend   | React 19.2, TypeScript 5, Vite 8.x              |
+| Frontend   | React 19.3.1, TypeScript 7.0.2, Vite 8.3.8, ESLint 10, Prettier |
 | Backend    | Rust 1.95, Axum 0.8, SQLx 0.8, Tokio            |
 | Database   | PostgreSQL 19beta1                              |
 | Infra      | Docker Compose for local Postgres               |
