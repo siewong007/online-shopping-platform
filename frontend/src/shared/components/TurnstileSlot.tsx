@@ -18,7 +18,7 @@ declare global {
 }
 
 export type TurnstileController = {
-  ref: (element: HTMLDivElement | null) => void;
+  mountSlot: (element: HTMLDivElement | null) => void;
   token: string | null;
   isConfigured: boolean;
   hasError: boolean;
@@ -66,10 +66,10 @@ function loadTurnstile(): Promise<void> {
 }
 
 /**
- * Binds a Turnstile widget to whatever div `ref` is attached to. Using a callback ref (rather
- * than useRef + deps) means the widget is (re)created exactly when the slot mounts — forms
- * that render it conditionally need no extra wiring. Unconfigured site key = inert: nothing
- * renders, token stays null, and the backend's fail-open applies.
+ * Binds a Turnstile widget to whatever div `mountSlot` is attached to. Using a callback ref
+ * means the widget is (re)created-and-cleaned-up exactly when the slot mounts — forms that
+ * render it conditionally need no extra wiring. Unconfigured site key = inert: nothing renders,
+ * token stays null, and the backend's fail-open applies.
  */
 export function useTurnstile(): TurnstileController {
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
@@ -79,12 +79,18 @@ export function useTurnstile(): TurnstileController {
   const [retryCount, setRetryCount] = useState(0);
   const isConfigured = SITE_KEY.length > 0;
 
+  const mountSlot = useCallback((element: HTMLDivElement | null) => {
+    setContainer(element);
+    if (!element) {
+      setHasError(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!isConfigured || !container) return;
 
     let cancelled = false;
     let loadListenerAttached = false;
-    setHasError(false);
 
     const mountWidget = () => {
       if (cancelled) return;
@@ -154,20 +160,24 @@ export function useTurnstile(): TurnstileController {
     setRetryCount((count) => count + 1);
   }, []);
 
-  return { ref: setContainer, token, isConfigured, hasError, reset };
+  return { mountSlot, token, isConfigured, hasError, reset };
 }
 
 /** Mount point for the widget; renders nothing when Turnstile isn't configured. */
-export function TurnstileSlot({ turnstile }: { turnstile: TurnstileController }) {
+export function TurnstileSlot({
+  turnstile: { hasError, isConfigured, mountSlot, reset }
+}: {
+  turnstile: TurnstileController;
+}) {
   const { t } = useI18n();
-  if (!turnstile.isConfigured) return null;
+  if (!isConfigured) return null;
   return (
     <div className="turnstile-slot">
-      <div ref={turnstile.ref} />
-      {turnstile.hasError ? (
+      <div ref={mountSlot} />
+      {hasError ? (
         <div className="turnstile-slot__error" role="alert">
           <span>{t("turnstile.error")}</span>
-          <button className="text-link" onClick={turnstile.reset} type="button">
+          <button className="text-link" onClick={reset} type="button">
             {t("turnstile.retry")}
           </button>
         </div>

@@ -10,10 +10,7 @@ export function createPayment(input: CreatePaymentInput): Promise<Payment> {
   return postJson<CreatePaymentInput, Payment>("/api/admin/payments", input);
 }
 
-export function updatePayment(
-  paymentId: number,
-  input: UpdatePaymentInput
-): Promise<Payment> {
+export function updatePayment(paymentId: number, input: UpdatePaymentInput): Promise<Payment> {
   return putJson<UpdatePaymentInput, Payment>(`/api/admin/payments/${paymentId}`, input);
 }
 

@@ -3,12 +3,13 @@ import {
   startTransition,
   Suspense,
   useEffect,
+  useEffectEvent,
   useRef,
   useState
 } from "react";
 
 import { useI18n } from "./i18n/LanguageContext";
-import { LEGAL_DOCUMENTS, type LegalSlug } from "./modules/legal/content";
+import { type LegalSlug } from "./modules/legal/content";
 import { fetchPublicOffers } from "./modules/offers/api/offersApi";
 import type {
   CreatePromotionInput,
@@ -37,16 +38,8 @@ import {
   writeRecentlyViewed
 } from "./modules/storefront/recentlyViewed";
 import { ShopFooter, ShopHeader } from "./modules/storefront/ShopChrome";
-import {
-  consumePaymentReturn,
-  takePendingPayment
-} from "./modules/payments/paymentReturn";
-import {
-  ApiError,
-  getAuthToken,
-  setAuthToken,
-  setOnUnauthorized
-} from "./shared/api/http";
+import { consumePaymentReturn, takePendingPayment } from "./modules/payments/paymentReturn";
+import { ApiError, getAuthToken, setAuthToken, setOnUnauthorized } from "./shared/api/http";
 import type { PagedResponse } from "./shared/api/pagination";
 import { StatusPage } from "./shared/components/StatusPage";
 import { currencyFromCents } from "./shared/formatters";
@@ -144,27 +137,18 @@ const preloadStorefrontView = () => import("./modules/storefront/StorefrontView"
 const preloadProductDetailView = () => import("./modules/storefront/ProductDetailView");
 const preloadCartDrawer = () => import("./modules/storefront/CartDrawer");
 const preloadAccountDrawer = () => import("./modules/customer_auth/AccountDrawer");
-const preloadSupportChatWidget = () =>
-  import("./modules/support/components/SupportChatWidget");
+const preloadSupportChatWidget = () => import("./modules/support/components/SupportChatWidget");
 
-const LandingView = lazy(() =>
-  preloadLandingView().then((m) => ({ default: m.LandingView }))
-);
-const LegalPage = lazy(() =>
-  preloadLegalPage().then((m) => ({ default: m.LegalPage }))
-);
-const AdminView = lazy(() =>
-  preloadAdminView().then((m) => ({ default: m.AdminView }))
-);
+const LandingView = lazy(() => preloadLandingView().then((m) => ({ default: m.LandingView })));
+const LegalPage = lazy(() => preloadLegalPage().then((m) => ({ default: m.LegalPage })));
+const AdminView = lazy(() => preloadAdminView().then((m) => ({ default: m.AdminView })));
 const StorefrontView = lazy(() =>
   preloadStorefrontView().then((m) => ({ default: m.StorefrontView }))
 );
 const ProductDetailView = lazy(() =>
   preloadProductDetailView().then((m) => ({ default: m.ProductDetailView }))
 );
-const CartDrawer = lazy(() =>
-  preloadCartDrawer().then((m) => ({ default: m.CartDrawer }))
-);
+const CartDrawer = lazy(() => preloadCartDrawer().then((m) => ({ default: m.CartDrawer })));
 const AccountDrawer = lazy(() =>
   preloadAccountDrawer().then((m) => ({ default: m.AccountDrawer }))
 );
@@ -172,8 +156,30 @@ const SupportChatWidget = lazy(() =>
   preloadSupportChatWidget().then((m) => ({ default: m.SupportChatWidget }))
 );
 const AdminLoginScreen = lazy(() =>
-  import("./modules/auth/components/AdminLoginScreen").then((m) => ({ default: m.AdminLoginScreen }))
+  import("./modules/auth/components/AdminLoginScreen").then((m) => ({
+    default: m.AdminLoginScreen
+  }))
 );
+
+function resolveCategoryHint(categories: Category[], hint: string): string {
+  const candidates = hint
+    .split("|")
+    .map((part) => part.trim().toLowerCase())
+    .filter(Boolean);
+  for (const candidate of candidates) {
+    const exact = categories.find((cat) => cat.slug.toLowerCase() === candidate);
+    if (exact) return exact.slug;
+  }
+  for (const candidate of candidates) {
+    const partial = categories.find(
+      (cat) =>
+        cat.slug !== "all" &&
+        (cat.slug.toLowerCase().includes(candidate) || cat.name.toLowerCase().includes(candidate))
+    );
+    if (partial) return partial.slug;
+  }
+  return "all";
+}
 
 export default function App() {
   const initialView = viewFromPath(window.location.pathname);
@@ -323,14 +329,14 @@ export default function App() {
   useEffect(() => {
     const activeProduct =
       view === "product" && productDetailId != null
-        ? (loadedProduct?.id === productDetailId ? loadedProduct : null) ??
+        ? ((loadedProduct?.id === productDetailId ? loadedProduct : null) ??
           storefront?.products.find((product) => product.id === productDetailId) ??
           latestProductsById.current.get(productDetailId) ??
-          null
+          null)
         : null;
     const categoryName = activeProduct
-      ? storefront?.categories.find((category) => category.slug === activeProduct.category_slug)?.name ??
-        activeProduct.category_slug
+      ? (storefront?.categories.find((category) => category.slug === activeProduct.category_slug)
+          ?.name ?? activeProduct.category_slug)
       : null;
     applyRouteSeo(buildRouteSeo({ view, legalSlug, product: activeProduct, categoryName }));
   }, [legalSlug, loadedProduct, productDetailId, storefront, view]);
@@ -343,33 +349,17 @@ export default function App() {
     writeRecentlyViewed(recentlyViewed);
   }, [recentlyViewed]);
 
-  const resolveCategoryHint = (categories: Category[], hint: string): string => {
-    const candidates = hint
-      .split("|")
-      .map((part) => part.trim().toLowerCase())
-      .filter(Boolean);
-    for (const candidate of candidates) {
-      const exact = categories.find((cat) => cat.slug.toLowerCase() === candidate);
-      if (exact) return exact.slug;
-    }
-    for (const candidate of candidates) {
-      const partial = categories.find(
-        (cat) =>
-          cat.slug !== "all" &&
-          (cat.slug.toLowerCase().includes(candidate) || cat.name.toLowerCase().includes(candidate))
-      );
-      if (partial) return partial.slug;
-    }
-    return "all";
-  };
-
   const refreshPublicOffers = () => {
     hasStartedOffersFetchRef.current = true;
     void fetchPublicOffers()
       .then(setPublicOffers)
       .catch((error) => {
         hasStartedOffersFetchRef.current = false;
-        notifyError(error, { operation: "load offers", scope: "offers", dedupeKey: "storefront:offers:error" });
+        notifyError(error, {
+          operation: "load offers",
+          scope: "offers",
+          dedupeKey: "storefront:offers:error"
+        });
       });
   };
 
@@ -398,12 +388,17 @@ export default function App() {
       })
         .then(({ isFallback, payload }) => {
           if (storefrontRequestGeneration.current === requestGeneration) {
-            payload.products.forEach((product) => latestProductsById.current.set(product.id, product));
+            payload.products.forEach((product) =>
+              latestProductsById.current.set(product.id, product)
+            );
             setCart((current) => reconcileCartStock(current, payload.products));
             setStorefront(payload);
             setIsStorefrontFallback(isFallback);
             if (pendingCategoryHintRef.current) {
-              const matchedSlug = resolveCategoryHint(payload.categories, pendingCategoryHintRef.current);
+              const matchedSlug = resolveCategoryHint(
+                payload.categories,
+                pendingCategoryHintRef.current
+              );
               pendingCategoryHintRef.current = null;
               if (matchedSlug !== "all") {
                 setSelectedCategory(matchedSlug);
@@ -413,7 +408,11 @@ export default function App() {
         })
         .catch((error) => {
           hasStartedStorefrontFetchRef.current = false;
-          notifyError(error, { operation: "load storefront catalogue", scope: "storefront", dedupeKey: "storefront:catalogue:error" });
+          notifyError(error, {
+            operation: "load storefront catalogue",
+            scope: "storefront",
+            dedupeKey: "storefront:catalogue:error"
+          });
         });
     }
     if (!hasStartedOffersFetchRef.current) {
@@ -429,9 +428,13 @@ export default function App() {
     ensureStorefrontLoaded();
   };
 
+  const onEnsureStorefrontLoaded = useEffectEvent(() => {
+    ensureStorefrontLoaded();
+  });
+
   useEffect(() => {
     if (view === "store" || view === "product") {
-      ensureStorefrontLoaded();
+      onEnsureStorefrontLoaded();
     }
   }, [view]);
 
@@ -462,11 +465,19 @@ export default function App() {
         };
       });
     } catch (error) {
-      notifyError(error, { operation: "load more products", scope: "storefront", dedupeKey: "storefront:load-more:error" });
+      notifyError(error, {
+        operation: "load more products",
+        scope: "storefront",
+        dedupeKey: "storefront:load-more:error"
+      });
     } finally {
       setIsLoadingMoreProducts(false);
     }
   };
+
+  if (view !== "store" && isStorefrontRefetching) {
+    setIsStorefrontRefetching(false);
+  }
 
   useEffect(() => {
     if (isInitialStorefrontFilter.current) {
@@ -475,7 +486,6 @@ export default function App() {
     }
 
     if (view !== "store") {
-      setIsStorefrontRefetching(false);
       return;
     }
 
@@ -490,7 +500,6 @@ export default function App() {
     });
 
     if (!hasStartedStorefrontFetchRef.current || lastFetchedFilterKeyRef.current === filterKey) {
-      setIsStorefrontRefetching(false);
       return;
     }
 
@@ -511,12 +520,17 @@ export default function App() {
         .then(({ isFallback, payload }) => {
           if (!cancelled && storefrontRequestGeneration.current === requestGeneration) {
             lastFetchedFilterKeyRef.current = filterKey;
-            payload.products.forEach((product) => latestProductsById.current.set(product.id, product));
+            payload.products.forEach((product) =>
+              latestProductsById.current.set(product.id, product)
+            );
             setCart((current) => reconcileCartStock(current, payload.products));
             setStorefront(payload);
             setIsStorefrontFallback(isFallback);
             if (pendingCategoryHintRef.current) {
-              const matchedSlug = resolveCategoryHint(payload.categories, pendingCategoryHintRef.current);
+              const matchedSlug = resolveCategoryHint(
+                payload.categories,
+                pendingCategoryHintRef.current
+              );
               pendingCategoryHintRef.current = null;
               if (matchedSlug !== selectedCategory) {
                 setSelectedCategory(matchedSlug);
@@ -526,7 +540,11 @@ export default function App() {
         })
         .catch((error) => {
           if (!cancelled) {
-            notifyError(error, { operation: "filter storefront catalogue", scope: "storefront", dedupeKey: "storefront:filter:error" });
+            notifyError(error, {
+              operation: "filter storefront catalogue",
+              scope: "storefront",
+              dedupeKey: "storefront:filter:error"
+            });
           }
         })
         .finally(() => {
@@ -540,7 +558,17 @@ export default function App() {
       cancelled = true;
       window.clearTimeout(timeout);
     };
-  }, [searchTerm, selectedCategory, minPriceCents, maxPriceCents, sortOption, inStockOnly, onSaleOnly, view]);
+  }, [
+    inStockOnly,
+    maxPriceCents,
+    minPriceCents,
+    notifyError,
+    onSaleOnly,
+    searchTerm,
+    selectedCategory,
+    sortOption,
+    view
+  ]);
 
   useEffect(() => {
     if (view !== "store") return;
@@ -612,11 +640,9 @@ export default function App() {
   const filteredProducts = storefront?.products ?? [];
   const isShowingFallbackStorefront = storefront != null && isStorefrontFallback;
 
-  useEffect(() => {
-    if (isShowingFallbackStorefront) {
-      setActiveJobId(null);
-    }
-  }, [isShowingFallbackStorefront]);
+  if (isShowingFallbackStorefront && activeJobId !== null) {
+    setActiveJobId(null);
+  }
 
   const openView = (nextView: Extract<View, "landing" | "store" | "admin">) => {
     startTransition(() => {
@@ -708,9 +734,7 @@ export default function App() {
     setVouchers(vouchersData);
     setActivityFeed(auditEventsData.map(auditEventToActivityItem));
     setOldestAuditEventId(
-      auditEventsData.length > 0
-        ? auditEventsData[auditEventsData.length - 1].id
-        : null
+      auditEventsData.length > 0 ? auditEventsData[auditEventsData.length - 1].id : null
     );
     setHasMoreActivity(auditEventsData.length >= auditPageSize);
     setOrders(ordersData.items);
@@ -740,12 +764,7 @@ export default function App() {
     const canReadInvoices = canAccess(ownPermissions, roleId, "admin-invoices", "read");
     const canReadSettings = canAccess(ownPermissions, roleId, "admin-settings", "read");
     const canReadCustomers = canAccess(ownPermissions, roleId, "admin-customers", "read");
-    const canReadPermissionMatrix = canAccess(
-      ownPermissions,
-      roleId,
-      "admin-permissions",
-      "read"
-    );
+    const canReadPermissionMatrix = canAccess(ownPermissions, roleId, "admin-permissions", "read");
 
     const emptyDashboard: AdminDashboardPayload = {
       metrics: [],
@@ -777,15 +796,19 @@ export default function App() {
     setPermissions(ownPermissions);
     setActiveRoleId(roleId);
 
-    const currentTabConfig = adminTabs.find((item) => item.tab === adminTab);
-    if (!currentTabConfig || !canAccess(ownPermissions, roleId, currentTabConfig.pageSlug, "read")) {
+    setAdminTab((currentTab) => {
+      const currentTabConfig = adminTabs.find((item) => item.tab === currentTab);
+      if (
+        currentTabConfig &&
+        canAccess(ownPermissions, roleId, currentTabConfig.pageSlug, "read")
+      ) {
+        return currentTab;
+      }
       const nextTab = adminTabs.find((item) =>
         canAccess(ownPermissions, roleId, item.pageSlug, "read")
       );
-      if (nextTab) {
-        setAdminTab(nextTab.tab);
-      }
-    }
+      return nextTab ? nextTab.tab : currentTab;
+    });
 
     const [
       adminUsersData,
@@ -805,16 +828,22 @@ export default function App() {
     ] = await Promise.all([
       canReadPermissionMatrix ? adminApi.fetchAdminUsers() : Promise.resolve([]),
       canReadOverview ? adminApi.fetchAuditEvents() : Promise.resolve([]),
-      canReadCatalog ? adminApi.fetchAdminCatalog() : Promise.resolve({ categories: [], products: [] }),
+      canReadCatalog
+        ? adminApi.fetchAdminCatalog()
+        : Promise.resolve({ categories: [], products: [] }),
       canReadOverview ? adminApi.fetchAdminDashboard() : Promise.resolve(emptyDashboard),
       canReadOrders ? adminApi.fetchOrders() : Promise.resolve({ items: [], next_cursor: null }),
       canReadPayments ? adminApi.fetchPayments() : Promise.resolve([]),
       canReadCampaigns ? adminApi.fetchPromotions() : Promise.resolve([]),
       canReadSales ? adminApi.fetchSales() : Promise.resolve({ items: [], next_cursor: null }),
       canReadSales ? adminApi.fetchSalesSummary() : Promise.resolve(emptySalesSummary),
-      canReadInvoices ? adminApi.fetchInvoices() : Promise.resolve({ items: [], next_cursor: null }),
+      canReadInvoices
+        ? adminApi.fetchInvoices()
+        : Promise.resolve({ items: [], next_cursor: null }),
       canReadSettings ? adminApi.fetchSystemSettings() : Promise.resolve([]),
-      canReadCustomers ? adminApi.fetchCustomerPortalProfiles() : Promise.resolve({ items: [], next_cursor: null }),
+      canReadCustomers
+        ? adminApi.fetchCustomerPortalProfiles()
+        : Promise.resolve({ items: [], next_cursor: null }),
       canReadCampaigns ? adminApi.fetchVouchers() : Promise.resolve([]),
       canReadPermissionMatrix ? adminApi.fetchPermissions() : Promise.resolve(ownPermissions)
     ]);
@@ -905,7 +934,11 @@ export default function App() {
       setOrders((current) => appendUniqueByKey(current, page.items, (order) => order.id));
       setOrdersNextCursor(page.next_cursor);
     } catch (error) {
-      notifyError(error, { operation: "load more orders", scope: "admin", dedupeKey: "admin:orders:more:error" });
+      notifyError(error, {
+        operation: "load more orders",
+        scope: "admin",
+        dedupeKey: "admin:orders:more:error"
+      });
     } finally {
       setIsLoadingMoreOrders(false);
     }
@@ -923,7 +956,11 @@ export default function App() {
       setSales((current) => appendUniqueByKey(current, page.items, (sale) => sale.order_id));
       setSalesNextCursor(page.next_cursor);
     } catch (error) {
-      notifyError(error, { operation: "load more sales", scope: "admin", dedupeKey: "admin:sales:more:error" });
+      notifyError(error, {
+        operation: "load more sales",
+        scope: "admin",
+        dedupeKey: "admin:sales:more:error"
+      });
     } finally {
       setIsLoadingMoreSales(false);
     }
@@ -941,7 +978,11 @@ export default function App() {
       setInvoices((current) => appendUniqueByKey(current, page.items, (invoice) => invoice.id));
       setInvoicesNextCursor(page.next_cursor);
     } catch (error) {
-      notifyError(error, { operation: "load more invoices", scope: "admin", dedupeKey: "admin:invoices:more:error" });
+      notifyError(error, {
+        operation: "load more invoices",
+        scope: "admin",
+        dedupeKey: "admin:invoices:more:error"
+      });
     } finally {
       setIsLoadingMoreInvoices(false);
     }
@@ -961,7 +1002,11 @@ export default function App() {
       );
       setCustomerProfilesNextCursor(page.next_cursor);
     } catch (error) {
-      notifyError(error, { operation: "load more customer profiles", scope: "admin", dedupeKey: "admin:customers:more:error" });
+      notifyError(error, {
+        operation: "load more customer profiles",
+        scope: "admin",
+        dedupeKey: "admin:customers:more:error"
+      });
     } finally {
       setIsLoadingMoreCustomerProfiles(false);
     }
@@ -972,37 +1017,6 @@ export default function App() {
     setCurrentAdmin(null);
     setActiveRoleId(null);
     setAdminAuth("unauthenticated");
-  };
-
-  const restoreAdminSession = async () => {
-    if (!getAuthToken()) {
-      resetAdminSession();
-      return;
-    }
-
-    setAdminAuth("checking");
-
-    try {
-      const { fetchMe } = await loadAdminApi();
-      const me = await fetchMe();
-      await loadAdminData(me);
-      setAdminAuth("authenticated");
-    } catch (error) {
-      if (error instanceof ApiError && error.isNetworkError && import.meta.env.DEV) {
-        await loadDemoAdminData();
-        setAdminAuth("demo");
-        return;
-      }
-
-      if (error instanceof ApiError && error.isNetworkError) {
-        setCurrentAdmin(null);
-        setActiveRoleId(null);
-        setAdminAuth("unauthenticated");
-        return;
-      }
-
-      resetAdminSession();
-    }
   };
 
   const handleAdminLogin = async (
@@ -1044,9 +1058,43 @@ export default function App() {
     }
   };
 
+  const onResetAdminSession = useEffectEvent(() => {
+    resetAdminSession();
+  });
+
+  const onRestoreAdminSession = useEffectEvent(async (isCancelled: () => boolean) => {
+    try {
+      const { fetchMe } = await loadAdminApi();
+      const me = await fetchMe();
+      if (isCancelled()) return;
+      await loadAdminData(me);
+      if (!isCancelled()) {
+        setAdminAuth("authenticated");
+      }
+    } catch (error) {
+      if (isCancelled()) return;
+      if (error instanceof ApiError && error.isNetworkError && import.meta.env.DEV) {
+        await loadDemoAdminData();
+        if (!isCancelled()) {
+          setAdminAuth("demo");
+        }
+        return;
+      }
+
+      if (error instanceof ApiError && error.isNetworkError) {
+        setCurrentAdmin(null);
+        setActiveRoleId(null);
+        setAdminAuth("unauthenticated");
+        return;
+      }
+
+      resetAdminSession();
+    }
+  });
+
   useEffect(() => {
     setOnUnauthorized(() => {
-      resetAdminSession();
+      onResetAdminSession();
     });
 
     return () => {
@@ -1055,9 +1103,16 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (getAuthToken()) {
-      void restoreAdminSession();
+    if (!getAuthToken()) {
+      return;
     }
+
+    let cancelled = false;
+    void Promise.resolve().then(() => onRestoreAdminSession(() => cancelled));
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const addToCart = (product: Product, quantity = 1) => {
@@ -1078,7 +1133,11 @@ export default function App() {
       if (existing) {
         return current.map((item) =>
           item.product.id === product.id
-            ? { ...item, product: currentProduct, quantity: Math.min(item.quantity + delta, stockLimit) }
+            ? {
+                ...item,
+                product: currentProduct,
+                quantity: Math.min(item.quantity + delta, stockLimit)
+              }
             : item
         );
       }
@@ -1109,7 +1168,8 @@ export default function App() {
 
       const currentProduct = latestProductsById.current.get(productId) ?? item.product;
       const stockLimit = Math.max(0, Math.floor(currentProduct.stock_quantity));
-      if (stockLimit === 0) return current.filter((candidate) => candidate.product.id !== productId);
+      if (stockLimit === 0)
+        return current.filter((candidate) => candidate.product.id !== productId);
 
       return current.map((candidate) =>
         candidate.product.id === productId
@@ -1230,7 +1290,9 @@ export default function App() {
           setSalesNextCursor(page.next_cursor);
         })
         .catch(() => {});
-      void fetchSalesSummary().then(setSalesSummary).catch(() => {});
+      void fetchSalesSummary()
+        .then(setSalesSummary)
+        .catch(() => {});
     }
     setActivityFeed((current) => [
       {
@@ -1279,10 +1341,7 @@ export default function App() {
     return payment;
   };
 
-  const updatePayment = async (
-    paymentId: number,
-    input: UpdatePaymentInput
-  ): Promise<Payment> => {
+  const updatePayment = async (paymentId: number, input: UpdatePaymentInput): Promise<Payment> => {
     const { updatePayment: updatePaymentRequest } = await loadAdminApi();
     const payment = await updatePaymentRequest(paymentId, input);
 
@@ -1330,8 +1389,7 @@ export default function App() {
     orderId: number,
     input: UpdateSalesStatusInput
   ): Promise<SalesRecord> => {
-    const { fetchSalesSummary, updateSalesStatus: updateSalesStatusRequest } =
-      await loadAdminApi();
+    const { fetchSalesSummary, updateSalesStatus: updateSalesStatusRequest } = await loadAdminApi();
     const sale = await updateSalesStatusRequest(orderId, input);
 
     setSales((current) => current.map((item) => (item.order_id === sale.order_id ? sale : item)));
@@ -1599,7 +1657,10 @@ export default function App() {
 
     setPromotions((current) => current.filter((item) => item.id !== promotionId));
     setActivityFeed((current) => [
-      { happened_at: "Now", detail: `Promotion deleted: ${promotion?.title ?? `#${promotionId}`}.` },
+      {
+        happened_at: "Now",
+        detail: `Promotion deleted: ${promotion?.title ?? `#${promotionId}`}.`
+      },
       ...current
     ]);
   };
@@ -1660,12 +1721,20 @@ export default function App() {
       const catalogData = await fetchAdminCatalog();
       const productsById = new Map(catalogData.products.map((product) => [product.id, product]));
       setAdminCatalog(catalogData);
-      setStorefront((current) => current ? {
-        ...current,
-        products: current.products.map((product) => productsById.get(product.id) ?? product)
-      } : current);
+      setStorefront((current) =>
+        current
+          ? {
+              ...current,
+              products: current.products.map((product) => productsById.get(product.id) ?? product)
+            }
+          : current
+      );
     } catch (error) {
-      notifyError(error, { operation: "refresh catalogue", scope: "admin", dedupeKey: "admin:catalog:refresh:error" });
+      notifyError(error, {
+        operation: "refresh catalogue",
+        scope: "admin",
+        dedupeKey: "admin:catalog:refresh:error"
+      });
     }
   };
 
@@ -1682,7 +1751,11 @@ export default function App() {
       setOldestAuditEventId(events.length > 0 ? events[events.length - 1].id : null);
       setHasMoreActivity(events.length >= AUDIT_EVENTS_PAGE_SIZE);
     } catch (error) {
-      notifyError(error, { operation: "load more activity", scope: "admin", dedupeKey: "admin:activity:more:error" });
+      notifyError(error, {
+        operation: "load more activity",
+        scope: "admin",
+        dedupeKey: "admin:activity:more:error"
+      });
     } finally {
       setIsLoadingMoreActivity(false);
     }
@@ -1724,10 +1797,7 @@ export default function App() {
     return category;
   };
 
-  const updateCategory = async (
-    slug: string,
-    input: UpdateCategoryInput
-  ): Promise<Category> => {
+  const updateCategory = async (slug: string, input: UpdateCategoryInput): Promise<Category> => {
     const { updateCategory: updateCategoryRequest } = await loadAdminApi();
     const category = await updateCategoryRequest(slug, input);
 
@@ -1832,10 +1902,7 @@ export default function App() {
     return product;
   };
 
-  const updateProduct = async (
-    productId: number,
-    input: UpdateProductInput
-  ): Promise<Product> => {
+  const updateProduct = async (productId: number, input: UpdateProductInput): Promise<Product> => {
     const { updateProduct: updateProductRequest } = await loadAdminApi();
     const product = await updateProductRequest(productId, input);
 
@@ -2059,7 +2126,11 @@ export default function App() {
     return (
       <div className="app-shell admin-shell">
         {adminAuth === "unauthenticated" || adminAuth === "mfa-challenge" ? (
-          <Suspense fallback={<main className="loading-shell admin-loading-shell">Loading admin console...</main>}>
+          <Suspense
+            fallback={
+              <main className="loading-shell admin-loading-shell">Loading admin console...</main>
+            }
+          >
             <AdminLoginScreen
               challengeToken={adminAuth === "mfa-challenge" ? adminMfaChallengeToken : null}
               onBackToStore={() => openShop()}
@@ -2074,7 +2145,11 @@ export default function App() {
         ) : adminAuth === "checking" || !dashboard || !adminCatalog ? (
           <main className="loading-shell admin-loading-shell">Loading admin console...</main>
         ) : (
-          <Suspense fallback={<main className="loading-shell admin-loading-shell">Loading admin console...</main>}>
+          <Suspense
+            fallback={
+              <main className="loading-shell admin-loading-shell">Loading admin console...</main>
+            }
+          >
             <AdminView
               activityFeed={activityFeed}
               activeRoleId={activeRoleId}
@@ -2208,7 +2283,8 @@ export default function App() {
           searchTerm={searchTerm}
           selectedCategory={
             view === "product" && productDetailId != null
-              ? storefront.products.find((product) => product.id === productDetailId)?.category_slug ?? selectedCategory
+              ? (storefront.products.find((product) => product.id === productDetailId)
+                  ?.category_slug ?? selectedCategory)
               : selectedCategory
           }
         />
@@ -2264,7 +2340,8 @@ export default function App() {
             <ProductDetailView
               activeJobName={
                 activeJobId
-                  ? JOB_LENSES.find((job) => job.id === activeJobId && job.approvedForProduction)?.name ?? null
+                  ? (JOB_LENSES.find((job) => job.id === activeJobId && job.approvedForProduction)
+                      ?.name ?? null)
                   : null
               }
               fallbackProduct={

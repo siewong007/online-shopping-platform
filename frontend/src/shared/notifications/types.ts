@@ -37,7 +37,14 @@ export type AppNotification = {
 
 export type NotificationInput = Omit<
   AppNotification,
-  "id" | "timestamp" | "duration" | "persistent" | "occurrenceCount" | "presentation" | "scope" | "dismissible"
+  | "id"
+  | "timestamp"
+  | "duration"
+  | "persistent"
+  | "occurrenceCount"
+  | "presentation"
+  | "scope"
+  | "dismissible"
 > & {
   id?: string;
   timestamp?: number;
@@ -72,4 +79,7 @@ export type ErrorContext = {
   metadata?: Readonly<Record<string, unknown>>;
 };
 
-export type ErrorReporter = (error: NormalizedError, context?: ErrorContext) => void | Promise<void>;
+export type ErrorReporter = (
+  error: NormalizedError,
+  context?: ErrorContext
+) => void | Promise<void>;

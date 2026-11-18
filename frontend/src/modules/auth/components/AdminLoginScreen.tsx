@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useState } from "react";
 
 import { TurnstileSlot, useTurnstile } from "../../../shared/components/TurnstileSlot";
 import { normalizeError } from "../../../shared/notifications";
@@ -27,11 +27,13 @@ export function AdminLoginScreen({
   const [useRecoveryCode, setUseRecoveryCode] = useState(false);
   const turnstile = useTurnstile();
 
-  useEffect(() => {
+  const [prevChallengeToken, setPrevChallengeToken] = useState(challengeToken);
+  if (prevChallengeToken !== challengeToken) {
+    setPrevChallengeToken(challengeToken);
     setCodeInput("");
     setUseRecoveryCode(false);
     setFeedback(null);
-  }, [challengeToken]);
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -48,7 +50,9 @@ export function AdminLoginScreen({
       );
     } catch (error) {
       turnstile.reset();
-      setFeedback(normalizeError(error, { operation: "admin sign in", scope: "admin-auth" }).userMessage);
+      setFeedback(
+        normalizeError(error, { operation: "admin sign in", scope: "admin-auth" }).userMessage
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -64,13 +68,12 @@ export function AdminLoginScreen({
     setFeedback(null);
     setIsSubmitting(true);
     try {
-      const input = useRecoveryCode
-        ? { recovery_code: verification }
-        : { code: verification };
+      const input = useRecoveryCode ? { recovery_code: verification } : { code: verification };
       await onVerify(input);
     } catch (error) {
       setFeedback(
-        normalizeError(error, { operation: "two-factor verification", scope: "admin-auth" }).userMessage
+        normalizeError(error, { operation: "two-factor verification", scope: "admin-auth" })
+          .userMessage
       );
     } finally {
       setIsSubmitting(false);
@@ -106,7 +109,9 @@ export function AdminLoginScreen({
         {challengeToken ? (
           <form className="admin-form" onSubmit={handleVerify}>
             <div className="admin-mfa-header">
-              <span className="status-pill admin-mfa-badge">Step 2 of 2 · Two-Factor Verification</span>
+              <span className="status-pill admin-mfa-badge">
+                Step 2 of 2 · Two-Factor Verification
+              </span>
               <p className="admin-mfa-helper">
                 {useRecoveryCode
                   ? "Enter one of your saved single-use recovery codes to complete sign-in."
@@ -133,7 +138,9 @@ export function AdminLoginScreen({
             </label>
 
             <button className="text-link" onClick={handleToggleRecoveryCode} type="button">
-              {useRecoveryCode ? "Use an authenticator code instead" : "Use a recovery code instead"}
+              {useRecoveryCode
+                ? "Use an authenticator code instead"
+                : "Use a recovery code instead"}
             </button>
 
             {feedback ? (
@@ -143,10 +150,18 @@ export function AdminLoginScreen({
             ) : null}
 
             <div className="admin-login-actions">
-              <button className="solid-button admin-login-submit" disabled={isSubmitting} type="submit">
+              <button
+                className="solid-button admin-login-submit"
+                disabled={isSubmitting}
+                type="submit"
+              >
                 {isSubmitting ? "Verifying..." : "Verify"}
               </button>
-              <button className="text-link admin-login-switch" onClick={handleSwitchAccount} type="button">
+              <button
+                className="text-link admin-login-switch"
+                onClick={handleSwitchAccount}
+                type="button"
+              >
                 Sign in with a different account
               </button>
               <button className="text-link admin-login-back" onClick={onBackToStore} type="button">

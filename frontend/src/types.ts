@@ -14,7 +14,11 @@ export type {
   UpdateProductStockInput
 } from "./modules/storefront/types";
 
-export type { CreateReviewInput, ProductDetailPayload, ProductReview } from "./modules/reviews/types";
+export type {
+  CreateReviewInput,
+  ProductDetailPayload,
+  ProductReview
+} from "./modules/reviews/types";
 
 export type { AdminCatalogPayload, UpdateCategoryInput } from "./modules/catalog/types";
 

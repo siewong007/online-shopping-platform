@@ -17,7 +17,6 @@ import type {
   SupportConversationPageResponse,
   SupportConversationStatus,
   SupportConversationUpdateInput,
-  SupportInboxConversation,
   SupportMessage,
   SupportMessageListResponse
 } from "../types";

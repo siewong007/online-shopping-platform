@@ -20,7 +20,10 @@ export function rememberPendingPayment(
   if (!Number.isInteger(reference.orderId) || reference.orderId <= 0) return;
   storage.setItem(
     PENDING_PAYMENT_KEY,
-    JSON.stringify({ orderId: reference.orderId, provider: reference.provider.trim().toLowerCase() })
+    JSON.stringify({
+      orderId: reference.orderId,
+      provider: reference.provider.trim().toLowerCase()
+    })
   );
 }
 

@@ -10,7 +10,11 @@ import type { AdminMfaEnrollmentStart } from "../../auth/types";
 import type { Role } from "../../permissions/types";
 import { ConfirmModal } from "../../../shared/components/ConfirmModal";
 import { ManagementTable } from "../../../shared/components/ManagementTable";
-import { RecordForm, type RecordFormField, RecordModal } from "../../../shared/components/RecordModal";
+import {
+  RecordForm,
+  type RecordFormField,
+  RecordModal
+} from "../../../shared/components/RecordModal";
 import { useNotifications } from "../../../shared/notifications";
 import type {
   AdminResetPasswordInput,
@@ -126,7 +130,6 @@ const resetPasswordFields: RecordFormField<ResetPasswordFormState>[] = [
   }
 ];
 
-
 type MfaCardProps = { onChanged: () => void };
 
 /// Self-contained "my account security" card: enrollment, recovery codes and disable all act on
@@ -154,7 +157,7 @@ function MfaCard({ onChanged }: MfaCardProps) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [notifyError]);
 
   const handleStartEnrollment = async () => {
     setIsBusy(true);
@@ -177,7 +180,12 @@ function MfaCard({ onChanged }: MfaCardProps) {
       setRecoveryCodes(result.recovery_codes);
       setEnabled(true);
       setCode("");
-      notify({ severity: "success", title: "Authenticator enabled", message: "Save your recovery codes somewhere safe.", scope: "team-mfa" });
+      notify({
+        severity: "success",
+        title: "Authenticator enabled",
+        message: "Save your recovery codes somewhere safe.",
+        scope: "team-mfa"
+      });
       onChanged();
     } catch (error) {
       notifyError(error, { operation: "mfa-confirm", scope: "team-mfa" });
@@ -193,7 +201,12 @@ function MfaCard({ onChanged }: MfaCardProps) {
       setEnabled(false);
       setPassword("");
       setCode("");
-      notify({ severity: "success", title: "Authenticator disabled", message: "Sign-ins now need only the password.", scope: "team-mfa" });
+      notify({
+        severity: "success",
+        title: "Authenticator disabled",
+        message: "Sign-ins now need only the password.",
+        scope: "team-mfa"
+      });
       onChanged();
     } catch (error) {
       notifyError(error, { operation: "mfa-disable", scope: "team-mfa" });
@@ -292,7 +305,12 @@ function MfaCard({ onChanged }: MfaCardProps) {
             />
           </label>
           <div className="form-actions">
-            <button className="solid-button" disabled={isBusy} onClick={() => void handleConfirm()} type="button">
+            <button
+              className="solid-button"
+              disabled={isBusy}
+              onClick={() => void handleConfirm()}
+              type="button"
+            >
               Confirm and enable
             </button>
           </div>
@@ -302,14 +320,28 @@ function MfaCard({ onChanged }: MfaCardProps) {
           <p>Your account requires an authenticator code at every sign-in.</p>
           <label className="admin-field">
             Current password
-            <input autoComplete="current-password" onChange={(event) => setPassword(event.target.value)} type="password" value={password} />
+            <input
+              autoComplete="current-password"
+              onChange={(event) => setPassword(event.target.value)}
+              type="password"
+              value={password}
+            />
           </label>
           <label className="admin-field">
             Authenticator code
-            <input inputMode="numeric" onChange={(event) => setCode(event.target.value)} value={code} />
+            <input
+              inputMode="numeric"
+              onChange={(event) => setCode(event.target.value)}
+              value={code}
+            />
           </label>
           <div className="form-actions">
-            <button className="solid-button" disabled={isBusy || !password || !code} onClick={() => void handleDisable()} type="button">
+            <button
+              className="solid-button"
+              disabled={isBusy || !password || !code}
+              onClick={() => void handleDisable()}
+              type="button"
+            >
               Disable two-factor authentication
             </button>
           </div>
@@ -318,7 +350,12 @@ function MfaCard({ onChanged }: MfaCardProps) {
         <>
           <p>Add an authenticator app so sign-ins need a rotating six-digit code.</p>
           <div className="form-actions">
-            <button className="solid-button" disabled={isBusy} onClick={() => void handleStartEnrollment()} type="button">
+            <button
+              className="solid-button"
+              disabled={isBusy}
+              onClick={() => void handleStartEnrollment()}
+              type="button"
+            >
               Set up authenticator
             </button>
           </div>
@@ -340,7 +377,9 @@ export function TeamPanel({
   users
 }: TeamPanelProps) {
   const { notify, notifyError } = useNotifications();
-  const [createForm, setCreateForm] = useState<CreateUserFormState>(() => emptyCreateUserForm(roles));
+  const [createForm, setCreateForm] = useState<CreateUserFormState>(() =>
+    emptyCreateUserForm(roles)
+  );
   const [editForm, setEditForm] = useState<EditProfileFormState>({ display_name: "", role_id: "" });
   const [resetForm, setResetForm] = useState<ResetPasswordFormState>({ new_password: "" });
   const [editingUserId, setEditingUserId] = useState<number | null>(null);
@@ -356,9 +395,9 @@ export function TeamPanel({
 
   const roleNameById = useMemo(() => new Map(roles.map((role) => [role.id, role.name])), [roles]);
   const editingUser =
-    editingUserId === null ? null : users.find((user) => user.id === editingUserId) ?? null;
+    editingUserId === null ? null : (users.find((user) => user.id === editingUserId) ?? null);
   const resettingUser =
-    resettingUserId === null ? null : users.find((user) => user.id === resettingUserId) ?? null;
+    resettingUserId === null ? null : (users.find((user) => user.id === resettingUserId) ?? null);
 
   const openCreate = () => {
     setCreateForm(emptyCreateUserForm(roles));
@@ -393,7 +432,13 @@ export function TeamPanel({
 
   const handleCreateUser = async () => {
     if (!canCreate) {
-      notify({ severity: "error", title: "Admin user not created", message: "The active role cannot create admin users.", scope: "admin-users", dedupeKey: "admin-users:create:permission" });
+      notify({
+        severity: "error",
+        title: "Admin user not created",
+        message: "The active role cannot create admin users.",
+        scope: "admin-users",
+        dedupeKey: "admin-users:create:permission"
+      });
       return;
     }
 
@@ -408,9 +453,19 @@ export function TeamPanel({
       });
 
       closeCreate();
-      notify({ severity: "success", title: "Admin user created", message: `${user.display_name} was created successfully.`, scope: "admin-users", dedupeKey: `admin-users:${user.id}:create:success` });
+      notify({
+        severity: "success",
+        title: "Admin user created",
+        message: `${user.display_name} was created successfully.`,
+        scope: "admin-users",
+        dedupeKey: `admin-users:${user.id}:create:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: "create admin user", scope: "admin-users", dedupeKey: "admin-users:create:error" });
+      notifyError(error, {
+        operation: "create admin user",
+        scope: "admin-users",
+        dedupeKey: "admin-users:create:error"
+      });
     } finally {
       setIsSavingCreate(false);
     }
@@ -418,7 +473,13 @@ export function TeamPanel({
 
   const handleUpdateProfile = async () => {
     if (!editingUserId || !canUpdate) {
-      notify({ severity: "error", title: "Admin user not updated", message: "The active role cannot update admin users.", scope: "admin-users", dedupeKey: "admin-users:update:permission" });
+      notify({
+        severity: "error",
+        title: "Admin user not updated",
+        message: "The active role cannot update admin users.",
+        scope: "admin-users",
+        dedupeKey: "admin-users:update:permission"
+      });
       return;
     }
 
@@ -430,9 +491,19 @@ export function TeamPanel({
         role_id: Number(editForm.role_id)
       });
       closeEdit();
-      notify({ severity: "success", title: "Admin user updated", message: `${user.display_name} was updated successfully.`, scope: "admin-users", dedupeKey: `admin-users:${user.id}:update:success` });
+      notify({
+        severity: "success",
+        title: "Admin user updated",
+        message: `${user.display_name} was updated successfully.`,
+        scope: "admin-users",
+        dedupeKey: `admin-users:${user.id}:update:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: "update admin user", scope: "admin-users", dedupeKey: `admin-users:${editingUserId}:update:error` });
+      notifyError(error, {
+        operation: "update admin user",
+        scope: "admin-users",
+        dedupeKey: `admin-users:${editingUserId}:update:error`
+      });
     } finally {
       setIsSavingEdit(false);
     }
@@ -440,7 +511,13 @@ export function TeamPanel({
 
   const handleResetPassword = async () => {
     if (!resettingUserId || !canUpdate) {
-      notify({ severity: "error", title: "Password not reset", message: "The active role cannot reset admin passwords.", scope: "admin-users", dedupeKey: "admin-users:password:permission" });
+      notify({
+        severity: "error",
+        title: "Password not reset",
+        message: "The active role cannot reset admin passwords.",
+        scope: "admin-users",
+        dedupeKey: "admin-users:password:permission"
+      });
       return;
     }
 
@@ -450,9 +527,19 @@ export function TeamPanel({
       await onResetUserPassword(resettingUserId, { new_password: resetForm.new_password });
       const name = resettingUser?.display_name ?? "The user";
       closeReset();
-      notify({ severity: "success", title: "Password reset", message: `${name}'s password was reset successfully.`, scope: "admin-users", dedupeKey: `admin-users:${resettingUserId}:password:success` });
+      notify({
+        severity: "success",
+        title: "Password reset",
+        message: `${name}'s password was reset successfully.`,
+        scope: "admin-users",
+        dedupeKey: `admin-users:${resettingUserId}:password:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: "reset admin password", scope: "admin-users", dedupeKey: `admin-users:${resettingUserId}:password:error` });
+      notifyError(error, {
+        operation: "reset admin password",
+        scope: "admin-users",
+        dedupeKey: `admin-users:${resettingUserId}:password:error`
+      });
     } finally {
       setIsSavingReset(false);
     }
@@ -478,9 +565,19 @@ export function TeamPanel({
     try {
       await onSetUserActive(user.id, { is_active: nextActive });
       setPendingToggleUser(null);
-      notify({ severity: "success", title: nextActive ? "Admin user reactivated" : "Admin user deactivated", message: `${user.display_name} was ${nextActive ? "reactivated" : "deactivated"} successfully.`, scope: "admin-users", dedupeKey: `admin-users:${user.id}:active:success` });
+      notify({
+        severity: "success",
+        title: nextActive ? "Admin user reactivated" : "Admin user deactivated",
+        message: `${user.display_name} was ${nextActive ? "reactivated" : "deactivated"} successfully.`,
+        scope: "admin-users",
+        dedupeKey: `admin-users:${user.id}:active:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: "change admin user status", scope: "admin-users", dedupeKey: `admin-users:${user.id}:active:error` });
+      notifyError(error, {
+        operation: "change admin user status",
+        scope: "admin-users",
+        dedupeKey: `admin-users:${user.id}:active:error`
+      });
     } finally {
       setTogglingUserId(null);
     }
@@ -659,9 +756,7 @@ export function TeamPanel({
       <ConfirmModal
         confirmLabel={pendingToggleUser?.is_active ? "Deactivate user" : "Reactivate user"}
         eyebrow="Team access"
-        isConfirming={
-          pendingToggleUser !== null && togglingUserId === pendingToggleUser.id
-        }
+        isConfirming={pendingToggleUser !== null && togglingUserId === pendingToggleUser.id}
         isOpen={pendingToggleUser !== null}
         message={
           pendingToggleUser

@@ -21,8 +21,6 @@ export function adminListPath(path: string, params: AdminListParams): string {
   return queryString ? `${path}?${queryString}` : path;
 }
 
-export function normalizePagedResponse<T>(
-  payload: T[] | PagedResponse<T>
-): PagedResponse<T> {
+export function normalizePagedResponse<T>(payload: T[] | PagedResponse<T>): PagedResponse<T> {
   return Array.isArray(payload) ? { items: payload, next_cursor: null } : payload;
 }

@@ -13,7 +13,12 @@ export function askPriceHref(productName: string): string {
   )}`;
 }
 
-export function pickupWhatsAppHref(cart: CartItem[], customerName: string, customerPhone: string, customerEmail: string): string {
+export function pickupWhatsAppHref(
+  cart: CartItem[],
+  customerName: string,
+  customerPhone: string,
+  customerEmail: string
+): string {
   const lines = cart.map(
     (item) =>
       `- ${item.quantity} x ${item.product.name} (${formatWorklistPrice(item.product.price_cents)} each)`

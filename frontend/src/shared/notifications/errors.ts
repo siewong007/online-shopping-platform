@@ -8,50 +8,195 @@ type ErrorCopy = {
 };
 
 export const ERROR_MESSAGE_MAP: Readonly<Record<string, ErrorCopy>> = Object.freeze({
-  BAD_REQUEST: { severity: "warning", title: "Check your request", message: "Some information was not accepted. Review it and try again." },
-  UNAUTHORIZED: { severity: "warning", title: "Session expired", message: "Sign in again to continue." },
-  AUTH_SESSION_EXPIRED: { severity: "warning", title: "Session expired", message: "Sign in again to continue." },
-  METHOD_NOT_ALLOWED: { severity: "warning", title: "Action not available", message: "This action is not available here. Return to the page and try again." },
-  REQUEST_TIMEOUT: { severity: "error", title: "Request timed out", message: "The service took too long to respond. Try again.", retryable: true },
-  PAYLOAD_TOO_LARGE: { severity: "warning", title: "File is too large", message: "Choose a smaller file and try again." },
-  UNSUPPORTED_MEDIA_TYPE: { severity: "warning", title: "File type not supported", message: "Choose a supported file format." },
-  FORBIDDEN: { severity: "error", title: "Access denied", message: "You do not have permission to complete this action." },
-  PERMISSION_DENIED: { severity: "error", title: "Access denied", message: "You do not have permission to complete this action." },
-  NOT_FOUND: { severity: "warning", title: "Not found", message: "The requested item could not be found." },
-  GONE: { severity: "warning", title: "No longer available", message: "This feature or resource is no longer available." },
-  CONFLICT: { severity: "warning", title: "Changes conflict", message: "This item has changed. Refresh and try again." },
-  VALIDATION_ERROR: { severity: "warning", title: "Check the highlighted fields", message: "Some information needs your attention." },
-  RATE_LIMITED: { severity: "warning", title: "Too many attempts", message: "Wait a moment before trying again.", retryable: true },
-  TURNSTILE_REQUIRED: { severity: "warning", title: "Verification needed", message: "Complete the bot check and try again.", retryable: true },
-  TURNSTILE_FAILED: { severity: "warning", title: "Verification failed", message: "The bot check did not pass. Try again.", retryable: true },
-  TURNSTILE_UNAVAILABLE: { severity: "error", title: "Verification unavailable", message: "The verification service is temporarily down. Try again shortly.", retryable: true },
-  SERVER_ERROR: { severity: "critical", title: "Service unavailable", message: "The service could not complete the request. Try again later.", retryable: true },
-  BAD_GATEWAY: { severity: "critical", title: "Service unavailable", message: "The service is temporarily unavailable. Try again later.", retryable: true },
-  SERVER_UNAVAILABLE: { severity: "critical", title: "Service unavailable", message: "The service is temporarily unavailable. Try again later.", retryable: true },
-  GATEWAY_TIMEOUT: { severity: "critical", title: "Request timed out", message: "The service took too long to respond. Try again later.", retryable: true },
-  NETWORK_ERROR: { severity: "error", title: "Service connection problem", message: "The service could not be reached. Check that it is running, then try again.", retryable: true },
-  NETWORK_UNAVAILABLE: { severity: "error", title: "Service connection problem", message: "The service could not be reached. Check that it is running, then try again.", retryable: true },
-  TIMEOUT: { severity: "error", title: "Request timed out", message: "The service took too long to respond. Try again.", retryable: true },
-  REQUEST_CANCELLED: { severity: "warning", title: "Request cancelled", message: "The request was cancelled." },
-  FILE_TOO_LARGE: { severity: "warning", title: "File is too large", message: "Choose a smaller file and try again." },
-  UNSUPPORTED_FILE_TYPE: { severity: "warning", title: "File type not supported", message: "Choose a supported file format." },
-  OUT_OF_STOCK: { severity: "warning", title: "Item unavailable", message: "This item is currently out of stock." },
-  PAYMENT_FAILED: { severity: "error", title: "Payment unsuccessful", message: "Your payment could not be completed. Check the details and try again." },
-  UNKNOWN_ERROR: { severity: "error", title: "Something went wrong", message: "We could not complete that action. Try again.", retryable: true }
+  BAD_REQUEST: {
+    severity: "warning",
+    title: "Check your request",
+    message: "Some information was not accepted. Review it and try again."
+  },
+  UNAUTHORIZED: {
+    severity: "warning",
+    title: "Session expired",
+    message: "Sign in again to continue."
+  },
+  AUTH_SESSION_EXPIRED: {
+    severity: "warning",
+    title: "Session expired",
+    message: "Sign in again to continue."
+  },
+  METHOD_NOT_ALLOWED: {
+    severity: "warning",
+    title: "Action not available",
+    message: "This action is not available here. Return to the page and try again."
+  },
+  REQUEST_TIMEOUT: {
+    severity: "error",
+    title: "Request timed out",
+    message: "The service took too long to respond. Try again.",
+    retryable: true
+  },
+  PAYLOAD_TOO_LARGE: {
+    severity: "warning",
+    title: "File is too large",
+    message: "Choose a smaller file and try again."
+  },
+  UNSUPPORTED_MEDIA_TYPE: {
+    severity: "warning",
+    title: "File type not supported",
+    message: "Choose a supported file format."
+  },
+  FORBIDDEN: {
+    severity: "error",
+    title: "Access denied",
+    message: "You do not have permission to complete this action."
+  },
+  PERMISSION_DENIED: {
+    severity: "error",
+    title: "Access denied",
+    message: "You do not have permission to complete this action."
+  },
+  NOT_FOUND: {
+    severity: "warning",
+    title: "Not found",
+    message: "The requested item could not be found."
+  },
+  GONE: {
+    severity: "warning",
+    title: "No longer available",
+    message: "This feature or resource is no longer available."
+  },
+  CONFLICT: {
+    severity: "warning",
+    title: "Changes conflict",
+    message: "This item has changed. Refresh and try again."
+  },
+  VALIDATION_ERROR: {
+    severity: "warning",
+    title: "Check the highlighted fields",
+    message: "Some information needs your attention."
+  },
+  RATE_LIMITED: {
+    severity: "warning",
+    title: "Too many attempts",
+    message: "Wait a moment before trying again.",
+    retryable: true
+  },
+  TURNSTILE_REQUIRED: {
+    severity: "warning",
+    title: "Verification needed",
+    message: "Complete the bot check and try again.",
+    retryable: true
+  },
+  TURNSTILE_FAILED: {
+    severity: "warning",
+    title: "Verification failed",
+    message: "The bot check did not pass. Try again.",
+    retryable: true
+  },
+  TURNSTILE_UNAVAILABLE: {
+    severity: "error",
+    title: "Verification unavailable",
+    message: "The verification service is temporarily down. Try again shortly.",
+    retryable: true
+  },
+  SERVER_ERROR: {
+    severity: "critical",
+    title: "Service unavailable",
+    message: "The service could not complete the request. Try again later.",
+    retryable: true
+  },
+  BAD_GATEWAY: {
+    severity: "critical",
+    title: "Service unavailable",
+    message: "The service is temporarily unavailable. Try again later.",
+    retryable: true
+  },
+  SERVER_UNAVAILABLE: {
+    severity: "critical",
+    title: "Service unavailable",
+    message: "The service is temporarily unavailable. Try again later.",
+    retryable: true
+  },
+  GATEWAY_TIMEOUT: {
+    severity: "critical",
+    title: "Request timed out",
+    message: "The service took too long to respond. Try again later.",
+    retryable: true
+  },
+  NETWORK_ERROR: {
+    severity: "error",
+    title: "Service connection problem",
+    message: "The service could not be reached. Check that it is running, then try again.",
+    retryable: true
+  },
+  NETWORK_UNAVAILABLE: {
+    severity: "error",
+    title: "Service connection problem",
+    message: "The service could not be reached. Check that it is running, then try again.",
+    retryable: true
+  },
+  TIMEOUT: {
+    severity: "error",
+    title: "Request timed out",
+    message: "The service took too long to respond. Try again.",
+    retryable: true
+  },
+  REQUEST_CANCELLED: {
+    severity: "warning",
+    title: "Request cancelled",
+    message: "The request was cancelled."
+  },
+  FILE_TOO_LARGE: {
+    severity: "warning",
+    title: "File is too large",
+    message: "Choose a smaller file and try again."
+  },
+  UNSUPPORTED_FILE_TYPE: {
+    severity: "warning",
+    title: "File type not supported",
+    message: "Choose a supported file format."
+  },
+  OUT_OF_STOCK: {
+    severity: "warning",
+    title: "Item unavailable",
+    message: "This item is currently out of stock."
+  },
+  PAYMENT_FAILED: {
+    severity: "error",
+    title: "Payment unsuccessful",
+    message: "Your payment could not be completed. Check the details and try again."
+  },
+  UNKNOWN_ERROR: {
+    severity: "error",
+    title: "Something went wrong",
+    message: "We could not complete that action. Try again.",
+    retryable: true
+  }
 });
 
 const STATUS_CODES: Readonly<Record<number, string>> = Object.freeze({
-  400: "BAD_REQUEST", 401: "UNAUTHORIZED", 403: "FORBIDDEN", 404: "NOT_FOUND",
-  405: "METHOD_NOT_ALLOWED", 408: "REQUEST_TIMEOUT", 409: "CONFLICT", 410: "GONE", 413: "PAYLOAD_TOO_LARGE",
-  415: "UNSUPPORTED_MEDIA_TYPE", 422: "VALIDATION_ERROR", 429: "RATE_LIMITED",
-  500: "SERVER_ERROR", 502: "BAD_GATEWAY", 503: "SERVER_UNAVAILABLE", 504: "GATEWAY_TIMEOUT"
+  400: "BAD_REQUEST",
+  401: "UNAUTHORIZED",
+  403: "FORBIDDEN",
+  404: "NOT_FOUND",
+  405: "METHOD_NOT_ALLOWED",
+  408: "REQUEST_TIMEOUT",
+  409: "CONFLICT",
+  410: "GONE",
+  413: "PAYLOAD_TOO_LARGE",
+  415: "UNSUPPORTED_MEDIA_TYPE",
+  422: "VALIDATION_ERROR",
+  429: "RATE_LIMITED",
+  500: "SERVER_ERROR",
+  502: "BAD_GATEWAY",
+  503: "SERVER_UNAVAILABLE",
+  504: "GATEWAY_TIMEOUT"
 });
 
 type ErrorShape = Record<string, unknown>;
 let reporter: ErrorReporter | undefined;
 
 function asShape(value: unknown): ErrorShape | undefined {
-  return typeof value === "object" && value !== null ? value as ErrorShape : undefined;
+  return typeof value === "object" && value !== null ? (value as ErrorShape) : undefined;
 }
 
 function readString(shape: ErrorShape | undefined, ...keys: string[]): string | undefined {
@@ -85,21 +230,36 @@ function validationErrors(shape: ErrorShape | undefined): ValidationFieldError[]
 
 function safeFieldMessage(message: string | undefined): string | undefined {
   if (!message) return undefined;
-  if (/(?:bearer\s+|authorization|cookie|set-cookie|https?:\/\/|\btoken\b|password|stack|sql|database|select\s+.+\s+from)/i.test(message)) {
+  if (
+    /(?:bearer\s+|authorization|cookie|set-cookie|https?:\/\/|\btoken\b|password|stack|sql|database|select\s+.+\s+from)/i.test(
+      message
+    )
+  ) {
     return "Review this field.";
   }
   return message.slice(0, 240);
 }
 
 function referenceId(): string {
-  const random = globalThis.crypto?.getRandomValues?.(new Uint32Array(1))[0] ?? Math.floor(Math.random() * 0xffffffff);
+  const random =
+    globalThis.crypto?.getRandomValues?.(new Uint32Array(1))[0] ??
+    Math.floor(Math.random() * 0xffffffff);
   return `ERR-${Date.now().toString(36).toUpperCase()}-${random.toString(36).toUpperCase().padStart(6, "0").slice(-6)}`;
 }
 
-function inferCode(error: unknown, shape: ErrorShape | undefined, status: number | undefined, context?: ErrorContext): string {
+function inferCode(
+  error: unknown,
+  shape: ErrorShape | undefined,
+  status: number | undefined,
+  context?: ErrorContext
+): string {
   const explicit = context?.code ?? readString(shape, "code", "errorCode")?.toUpperCase();
   if (explicit && ERROR_MESSAGE_MAP[explicit]) return explicit;
-  if (shape?.isNetworkError === true || (error instanceof TypeError && /fetch|network/i.test(error.message))) return "NETWORK_ERROR";
+  if (
+    shape?.isNetworkError === true ||
+    (error instanceof TypeError && /fetch|network/i.test(error.message))
+  )
+    return "NETWORK_ERROR";
   const name = readString(shape, "name");
   const technicalMessage = readString(shape, "message") ?? "";
   if (name === "AbortError" || /timed?\s*out|timeout/i.test(technicalMessage)) return "TIMEOUT";
@@ -132,12 +292,15 @@ export function configureErrorReporter(nextReporter?: ErrorReporter): void {
   reporter = nextReporter;
 }
 
-const SENSITIVE_KEY = /authorization|cookie|password|passcode|secret|token|endpoint|url|uri|operation|connectionstring|query|sql|database|stack/i;
-const SENSITIVE_TEXT = /(?:bearer\s+|authorization|cookie|password|token|https?:\/\/|\b\/api\/|\bsql\b|\bdatabase\b|\bselect\b.+\bfrom\b|\binsert\s+into\b|\bupdate\b.+\bset\b|\bdelete\s+from\b)/i;
+const SENSITIVE_KEY =
+  /authorization|cookie|password|passcode|secret|token|endpoint|url|uri|operation|connectionstring|query|sql|database|stack/i;
+const SENSITIVE_TEXT =
+  /(?:bearer\s+|authorization|cookie|password|token|https?:\/\/|\b\/api\/|\bsql\b|\bdatabase\b|\bselect\b.+\bfrom\b|\binsert\s+into\b|\bupdate\b.+\bset\b|\bdelete\s+from\b)/i;
 
 function sanitizeDiagnostic(value: unknown, key = "", seen = new WeakSet<object>()): unknown {
   if (SENSITIVE_KEY.test(key)) return "[REDACTED]";
-  if (typeof value === "string") return SENSITIVE_TEXT.test(value) ? "[REDACTED]" : value.slice(0, 500);
+  if (typeof value === "string")
+    return SENSITIVE_TEXT.test(value) ? "[REDACTED]" : value.slice(0, 500);
   if (value === null || typeof value !== "object") return value;
   if (seen.has(value)) return "[CIRCULAR]";
   seen.add(value);
@@ -145,19 +308,25 @@ function sanitizeDiagnostic(value: unknown, key = "", seen = new WeakSet<object>
     return { name: value.name, message: sanitizeDiagnostic(value.message, "message") };
   }
   if (Array.isArray(value)) return value.map((item) => sanitizeDiagnostic(item, "", seen));
-  return Object.fromEntries(Object.entries(value).map(([entryKey, entryValue]) => [
-    entryKey,
-    sanitizeDiagnostic(entryValue, entryKey, seen)
-  ]));
+  return Object.fromEntries(
+    Object.entries(value).map(([entryKey, entryValue]) => [
+      entryKey,
+      sanitizeDiagnostic(entryValue, entryKey, seen)
+    ])
+  );
 }
 
 /** Reports normalized diagnostics without exposing technical details as user-facing copy. */
 export function reportError(error: unknown, context?: ErrorContext): NormalizedError {
   const normalized = normalizeError(error, context);
-  if (import.meta.env.DEV) console.error(`[${normalized.referenceId}]`, normalized.technicalDetails);
+  if (import.meta.env.DEV)
+    console.error(`[${normalized.referenceId}]`, normalized.technicalDetails);
   else if (reporter) {
     const sanitizedContext = sanitizeDiagnostic(context) as ErrorContext | undefined;
-    void reporter({ ...normalized, technicalDetails: sanitizeDiagnostic(normalized.technicalDetails) }, sanitizedContext);
+    void reporter(
+      { ...normalized, technicalDetails: sanitizeDiagnostic(normalized.technicalDetails) },
+      sanitizedContext
+    );
   }
   return normalized;
 }

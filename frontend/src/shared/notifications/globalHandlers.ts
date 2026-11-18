@@ -1,6 +1,9 @@
 import type { NotificationInput, NotificationRetry, NotificationSeverity } from "./types";
 
-export type RuntimeErrorOptions = Pick<NotificationInput, "presentation" | "scope" | "dedupeKey" | "persistent" | "dismissible"> & {
+export type RuntimeErrorOptions = Pick<
+  NotificationInput,
+  "presentation" | "scope" | "dedupeKey" | "persistent" | "dismissible"
+> & {
   retry?: NotificationRetry;
   severity?: NotificationSeverity;
 };
@@ -27,10 +30,14 @@ type RuntimeErrorEvent = Event & { error?: unknown; message?: string };
 type PromiseRejectionEventLike = Event & { reason?: unknown };
 
 function isSlowConnection(connection: NetworkInformationLike): boolean {
-  return connection.saveData === true
-    || connection.effectiveType === "slow-2g"
-    || connection.effectiveType === "2g"
-    || (typeof connection.downlink === "number" && connection.downlink > 0 && connection.downlink < 0.5);
+  return (
+    connection.saveData === true ||
+    connection.effectiveType === "slow-2g" ||
+    connection.effectiveType === "2g" ||
+    (typeof connection.downlink === "number" &&
+      connection.downlink > 0 &&
+      connection.downlink < 0.5)
+  );
 }
 
 /** Registers browser-wide failure and connectivity coverage through testable EventTarget seams. */
@@ -41,10 +48,13 @@ export function registerGlobalNotificationHandlers(
   const target = options.target ?? (typeof window === "undefined" ? undefined : window);
   if (!target) return () => undefined;
 
-  const connection = options.connection ?? (typeof navigator === "undefined"
-    ? undefined
-    : (navigator as Navigator & { connection?: NetworkInformationLike }).connection);
-  const isOnline = options.isOnline ?? (() => typeof navigator === "undefined" || navigator.onLine !== false);
+  const connection =
+    options.connection ??
+    (typeof navigator === "undefined"
+      ? undefined
+      : (navigator as Navigator & { connection?: NetworkInformationLike }).connection);
+  const isOnline =
+    options.isOnline ?? (() => typeof navigator === "undefined" || navigator.onLine !== false);
   let offlineId: string | undefined;
   let slowId: string | undefined;
 
@@ -94,14 +104,17 @@ export function registerGlobalNotificationHandlers(
 
   const reportRuntimeError = (event: Event) => {
     const runtimeEvent = event as RuntimeErrorEvent;
-    api.notifyError(runtimeEvent.error ?? new Error(runtimeEvent.message || "Unexpected runtime failure"), {
-      severity: "critical",
-      presentation: "banner",
-      scope: "global",
-      persistent: true,
-      dismissible: true,
-      dedupeKey: "unexpected-runtime-failure"
-    });
+    api.notifyError(
+      runtimeEvent.error ?? new Error(runtimeEvent.message || "Unexpected runtime failure"),
+      {
+        severity: "critical",
+        presentation: "banner",
+        scope: "global",
+        persistent: true,
+        dismissible: true,
+        dedupeKey: "unexpected-runtime-failure"
+      }
+    );
   };
 
   const reportUnhandledRejection = (event: Event) => {

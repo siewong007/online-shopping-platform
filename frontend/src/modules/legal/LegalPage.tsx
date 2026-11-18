@@ -22,23 +22,11 @@ const LEGAL_SLUGS: { slug: LegalSlug; labelKey: TranslationKey }[] = [
 ];
 
 function isPlainLeftClick(event: MouseEvent<HTMLAnchorElement>): boolean {
-  return (
-    event.button === 0 &&
-    !event.metaKey &&
-    !event.ctrlKey &&
-    !event.shiftKey &&
-    !event.altKey
-  );
+  return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
 }
 
 /** Static policy page. Content lives in ./content.ts so the prose is editable in one place. */
-export function LegalPage({
-  onBack,
-  onHome,
-  onOpenLegal,
-  onPrefetchShop,
-  slug
-}: LegalPageProps) {
+export function LegalPage({ onBack, onHome, onOpenLegal, onPrefetchShop, slug }: LegalPageProps) {
   const { t } = useI18n();
   const document = LEGAL_DOCUMENTS[slug];
 

@@ -100,31 +100,33 @@ function clearCheckoutDraft(): void {
 function isShippingAddressComplete(address: ShippingAddressInput): boolean {
   return Boolean(
     address.recipient_name.trim() &&
-      address.phone.trim() &&
-      address.address_line1.trim() &&
-      address.city.trim() &&
-      address.state.trim() &&
-      address.postal_code.trim()
+    address.phone.trim() &&
+    address.address_line1.trim() &&
+    address.city.trim() &&
+    address.state.trim() &&
+    address.postal_code.trim()
   );
 }
 
 function getFocusableElements(container: HTMLElement): HTMLElement[] {
-  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter((element) => {
-    if (element.closest('[hidden], [aria-hidden="true"]')) {
-      return false;
-    }
-
-    const closedDetails = element.closest("details:not([open])");
-    if (closedDetails) {
-      const summary = closedDetails.querySelector(":scope > summary");
-      if (!summary || !summary.contains(element)) {
+  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+    (element) => {
+      if (element.closest('[hidden], [aria-hidden="true"]')) {
         return false;
       }
-    }
 
-    const style = window.getComputedStyle(element);
-    return style.display !== "none" && style.visibility !== "hidden";
-  });
+      const closedDetails = element.closest("details:not([open])");
+      if (closedDetails) {
+        const summary = closedDetails.querySelector(":scope > summary");
+        if (!summary || !summary.contains(element)) {
+          return false;
+        }
+      }
+
+      const style = window.getComputedStyle(element);
+      return style.display !== "none" && style.visibility !== "hidden";
+    }
+  );
 }
 
 type CartDrawerProps = {
@@ -189,18 +191,47 @@ export function CartDrawer({
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const openerRef = useRef<HTMLElement | null>(null);
   const onCloseRef = useRef(onClose);
-  const didAutoExpandOffersRef = useRef(hasPublicOffers);
+  const [didAutoExpandOffers, setDidAutoExpandOffers] = useState(hasPublicOffers);
   const turnstile = useTurnstile();
 
-  onCloseRef.current = onClose;
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   const close = () => {
     onClose();
   };
 
-  useEffect(() => {
+  const [prevVoucherCode, setPrevVoucherCode] = useState(voucherCode);
+  if (prevVoucherCode !== voucherCode) {
+    setPrevVoucherCode(voucherCode);
     setVoucherDraft(voucherCode);
-  }, [voucherCode]);
+    if (voucherCode.trim()) {
+      setOffersOpen(true);
+    }
+  }
+
+  const [prevSelectedPromotionId, setPrevSelectedPromotionId] = useState(selectedPromotionId);
+  if (prevSelectedPromotionId !== selectedPromotionId) {
+    setPrevSelectedPromotionId(selectedPromotionId);
+    if (selectedPromotionId) {
+      setOffersOpen(true);
+    }
+  }
+
+  if (hasPublicOffers && !didAutoExpandOffers) {
+    setDidAutoExpandOffers(true);
+    setOffersOpen(true);
+  }
+
+  const prefillEmailKey = open ? customerAccountEmail.trim() : "";
+  const [prevPrefillEmailKey, setPrevPrefillEmailKey] = useState(prefillEmailKey);
+  if (prevPrefillEmailKey !== prefillEmailKey) {
+    setPrevPrefillEmailKey(prefillEmailKey);
+    if (prefillEmailKey && !form.customer_email.trim()) {
+      setForm((current) => ({ ...current, customer_email: prefillEmailKey }));
+    }
+  }
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -212,43 +243,12 @@ export function CartDrawer({
   }, [form]);
 
   useEffect(() => {
-    if (selectedPromotionId || voucherCode.trim()) {
-      setOffersOpen(true);
-    }
-  }, [selectedPromotionId, voucherCode]);
-
-  useEffect(() => {
-    if (hasPublicOffers && !didAutoExpandOffersRef.current) {
-      didAutoExpandOffersRef.current = true;
-      setOffersOpen(true);
-    }
-  }, [hasPublicOffers]);
-
-  useEffect(() => {
     if (!open) {
       return;
     }
 
-    const email = customerAccountEmail.trim();
-    if (!email) {
-      return;
-    }
-
-    setForm((current) => {
-      if (current.customer_email.trim()) {
-        return current;
-      }
-
-      return { ...current, customer_email: email };
-    });
-  }, [customerAccountEmail, open]);
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    openerRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
@@ -337,7 +337,10 @@ export function CartDrawer({
     }
   }, [open, stage]);
 
-  const subtotalCents = cart.reduce((sum, item) => sum + item.product.price_cents * item.quantity, 0);
+  const subtotalCents = cart.reduce(
+    (sum, item) => sum + item.product.price_cents * item.quantity,
+    0
+  );
 
   useEffect(() => {
     if (selectedPromotionId === null || !publicOffers) {
@@ -356,17 +359,37 @@ export function CartDrawer({
   const addressReady = !isDelivery || isShippingAddressComplete(form.shipping_address);
   const canQuoteDelivery = isDelivery && addressReady;
 
-  useEffect(() => {
-    if (!open || cart.length === 0) {
+  const canQuote = open && cart.length > 0;
+  const quoteRequestKey = canQuote
+    ? JSON.stringify({
+        items: cart.map((item) => [item.product.id, item.quantity]),
+        canQuoteDelivery,
+        selectedPromotionId,
+        voucherCode: voucherCode.trim(),
+        shippingAddress: canQuoteDelivery ? form.shipping_address : null,
+        shippingServiceCode: canQuoteDelivery ? form.shipping_service_code : null,
+        quoteRetryNonce
+      })
+    : "inactive";
+  const [prevQuoteRequestKey, setPrevQuoteRequestKey] = useState(quoteRequestKey);
+  if (prevQuoteRequestKey !== quoteRequestKey) {
+    setPrevQuoteRequestKey(quoteRequestKey);
+    if (!canQuote) {
       setQuote(null);
       setQuoteFeedback(null);
       setIsQuoting(false);
+    } else {
+      setQuoteFeedback(null);
+      setIsQuoting(true);
+    }
+  }
+
+  useEffect(() => {
+    if (!open || cart.length === 0) {
       return;
     }
 
     let cancelled = false;
-    setQuoteFeedback(null);
-    setIsQuoting(true);
 
     const timeout = window.setTimeout(() => {
       void quoteCheckout({
@@ -378,7 +401,9 @@ export function CartDrawer({
         promotion_id: selectedPromotionId ?? undefined,
         voucher_code: voucherCode.trim() || undefined,
         shipping_address: canQuoteDelivery ? form.shipping_address : undefined,
-        shipping_service_code: canQuoteDelivery ? form.shipping_service_code || undefined : undefined
+        shipping_service_code: canQuoteDelivery
+          ? form.shipping_service_code || undefined
+          : undefined
       })
         .then((nextQuote) => {
           if (cancelled) return;
@@ -438,7 +463,8 @@ export function CartDrawer({
       (promotion) => subtotalCents >= promotion.minimum_subtotal_cents
     ) ?? [];
   const eligibleVouchers =
-    publicOffers?.vouchers.filter((voucher) => subtotalCents >= voucher.minimum_subtotal_cents) ?? [];
+    publicOffers?.vouchers.filter((voucher) => subtotalCents >= voucher.minimum_subtotal_cents) ??
+    [];
 
   const applyVoucherDraft = () => {
     onVoucherCodeChange(voucherDraft.trim());
@@ -617,11 +643,7 @@ export function CartDrawer({
         <div className="cart-recent__head">
           <h3>{t("shop.recent.title")}</h3>
           {onClearRecentlyViewed ? (
-            <button
-              className="cart-recent__clear"
-              onClick={onClearRecentlyViewed}
-              type="button"
-            >
+            <button className="cart-recent__clear" onClick={onClearRecentlyViewed} type="button">
               {t("shop.recent.clear")}
             </button>
           ) : null}
@@ -644,7 +666,10 @@ export function CartDrawer({
                     src={product.image_url}
                   />
                 ) : (
-                  <div className="cart-recent__thumb cart-recent__thumb--missing" aria-hidden="true">
+                  <div
+                    className="cart-recent__thumb cart-recent__thumb--missing"
+                    aria-hidden="true"
+                  >
                     <span className="cart-line-missing-mark" />
                   </div>
                 )}
@@ -746,7 +771,10 @@ export function CartDrawer({
                           />
                         </div>
                       ) : (
-                        <div className="cart-line-visual cart-line-visual--missing" aria-hidden="true">
+                        <div
+                          className="cart-line-visual cart-line-visual--missing"
+                          aria-hidden="true"
+                        >
                           <span className="cart-line-missing-mark" />
                         </div>
                       )}
@@ -784,7 +812,9 @@ export function CartDrawer({
                               +
                             </button>
                           </div>
-                          <strong>{currencyFromCents(item.product.price_cents * item.quantity)}</strong>
+                          <strong>
+                            {currencyFromCents(item.product.price_cents * item.quantity)}
+                          </strong>
                           <button
                             className="cart-remove"
                             onClick={() => onRemoveFromCart(item.product.id)}
@@ -1129,7 +1159,8 @@ export function CartDrawer({
                       >
                         {quote.shipping_options.map((option: ShippingOption) => (
                           <option key={option.code} value={option.code}>
-                            {option.name} &middot; {currencyFromCents(option.shipping_cents)} &middot;{" "}
+                            {option.name} &middot; {currencyFromCents(option.shipping_cents)}{" "}
+                            &middot;{" "}
                             {t("shop.cartd.daysEstimate", {
                               min: option.min_delivery_days,
                               max: option.max_delivery_days
@@ -1188,11 +1219,7 @@ export function CartDrawer({
               )
             ) : (
               <div className="cart-checkout-actions">
-                <button
-                  className="outline-button"
-                  onClick={() => setStage("cart")}
-                  type="button"
-                >
+                <button className="outline-button" onClick={() => setStage("cart")} type="button">
                   {t("shop.cartd.backToCart")}
                 </button>
                 <button
@@ -1200,7 +1227,9 @@ export function CartDrawer({
                   disabled={
                     isSubmitting ||
                     (CARD_PAY_ENABLED && isQuoting) ||
-                    (CARD_PAY_ENABLED && isDelivery && (!addressReady || !form.shipping_service_code)) ||
+                    (CARD_PAY_ENABLED &&
+                      isDelivery &&
+                      (!addressReady || !form.shipping_service_code)) ||
                     (CARD_PAY_ENABLED && turnstile.isConfigured && !turnstile.token)
                   }
                   form={checkoutFormId}

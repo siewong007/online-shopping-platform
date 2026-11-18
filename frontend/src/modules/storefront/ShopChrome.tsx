@@ -5,13 +5,7 @@ import type { Category, StorefrontPayload } from "../../types";
 import type { LegalSlug } from "../legal/content";
 
 function isPlainLeftClick(event: MouseEvent<HTMLAnchorElement>): boolean {
-  return (
-    event.button === 0 &&
-    !event.metaKey &&
-    !event.ctrlKey &&
-    !event.shiftKey &&
-    !event.altKey
-  );
+  return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
 }
 
 export function EkowayMark({ compact = false }: { compact?: boolean }) {
@@ -57,7 +51,13 @@ export function ShopHeader({
 
   useEffect(() => {
     const onGlobalKeyDown = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) {
+      if (
+        event.defaultPrevented ||
+        event.key !== "/" ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey
+      ) {
         return;
       }
       if (
@@ -185,7 +185,12 @@ export function ShopHeader({
             </button>
           ))}
         </div>
-        <a className="dept-whatsapp" href="https://wa.me/60174056993" target="_blank" rel="noopener">
+        <a
+          className="dept-whatsapp"
+          href="https://wa.me/60174056993"
+          target="_blank"
+          rel="noopener"
+        >
           <i aria-hidden="true" />
           {t("shop.whatsapp")}
         </a>

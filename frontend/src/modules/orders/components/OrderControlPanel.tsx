@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useMemo, useState } from "react";
 
 import { ConfirmModal } from "../../../shared/components/ConfirmModal";
 import { ManagementTable } from "../../../shared/components/ManagementTable";
@@ -37,10 +37,7 @@ type OrderControlPanelProps = {
   onDeleteOrder: (orderId: number) => Promise<void>;
   onLoadMore: () => void;
   onUpdateOrder: (orderId: number, input: CreateOrderInput) => Promise<Order>;
-  onUpdateFulfillment: (
-    orderId: number,
-    input: UpdateOrderFulfillmentInput
-  ) => Promise<Order>;
+  onUpdateFulfillment: (orderId: number, input: UpdateOrderFulfillmentInput) => Promise<Order>;
   orders: Order[];
   products: Product[];
   variant?: "orders" | "fulfillment";
@@ -99,12 +96,7 @@ function fulfillmentTone(status: FulfillmentStatus): "danger" | "live" | "warnin
 }
 
 type OrderStatusFilter =
-  | "all"
-  | "received"
-  | "picking"
-  | "packed"
-  | "ready_or_delivery"
-  | "completed";
+  "all" | "received" | "picking" | "packed" | "ready_or_delivery" | "completed";
 
 const orderStatusFilters: { key: OrderStatusFilter; label: string }[] = [
   { key: "all", label: "All" },
@@ -124,9 +116,7 @@ function matchesOrderStatusFilter(order: Order, filter: OrderStatusFilter): bool
     );
   }
   if (filter === "completed") {
-    return (
-      order.fulfillment_status === "completed" || order.fulfillment_status === "delivered"
-    );
+    return order.fulfillment_status === "completed" || order.fulfillment_status === "delivered";
   }
   return order.fulfillment_status === filter;
 }
@@ -220,12 +210,10 @@ export function OrderControlPanel({
   const fulfillmentOrder =
     fulfillmentOrderId === null
       ? null
-      : orders.find((order) => order.id === fulfillmentOrderId) ?? null;
-  const fulfillmentNextStatuses = fulfillmentOrder
-    ? nextFulfillmentStatuses(fulfillmentOrder)
-    : [];
+      : (orders.find((order) => order.id === fulfillmentOrderId) ?? null);
+  const fulfillmentNextStatuses = fulfillmentOrder ? nextFulfillmentStatuses(fulfillmentOrder) : [];
   const historyOrder =
-    historyOrderId === null ? null : orders.find((order) => order.id === historyOrderId) ?? null;
+    historyOrderId === null ? null : (orders.find((order) => order.id === historyOrderId) ?? null);
   const filteredOrders = useMemo(
     () => orders.filter((order) => matchesOrderStatusFilter(order, statusFilter)),
     [orders, statusFilter]
@@ -250,23 +238,18 @@ export function OrderControlPanel({
     return product && Number.isFinite(quantity) ? sum + product.price_cents * quantity : sum;
   }, 0);
 
-  useEffect(() => {
-    if (products.length === 0) {
-      return;
+  const [prevProducts, setPrevProducts] = useState(products);
+  if (prevProducts !== products) {
+    setPrevProducts(products);
+    if (products.length > 0 && form.items.some((item) => item.product_id === "")) {
+      setForm((current) => ({
+        ...current,
+        items: current.items.map((item) =>
+          item.product_id === "" ? { ...item, product_id: String(products[0].id) } : item
+        )
+      }));
     }
-
-    setForm((current) => {
-      const hasMissingProduct = current.items.some((item) => item.product_id === "");
-      return hasMissingProduct
-        ? {
-            ...current,
-            items: current.items.map((item) =>
-              item.product_id === "" ? { ...item, product_id: String(products[0].id) } : item
-            )
-          }
-        : current;
-    });
-  }, [products]);
+  }
 
   const resetForm = () => {
     setEditingOrderId(null);
@@ -307,7 +290,13 @@ export function OrderControlPanel({
     const nextStatuses = nextFulfillmentStatuses(order);
 
     if (nextStatuses.length === 0) {
-      notify({ severity: "info", title: "Order already final", message: `Order #${order.id} is already in a final state, so no fulfillment change is needed.`, scope: "orders", dedupeKey: `orders:${order.id}:final` });
+      notify({
+        severity: "info",
+        title: "Order already final",
+        message: `Order #${order.id} is already in a final state, so no fulfillment change is needed.`,
+        scope: "orders",
+        dedupeKey: `orders:${order.id}:final`
+      });
       return;
     }
 
@@ -324,7 +313,13 @@ export function OrderControlPanel({
     event.preventDefault();
 
     if (!canSave) {
-      notify({ severity: "error", title: "Order not saved", message: "The active role cannot save this order change.", scope: "orders", dedupeKey: "orders:save:permission" });
+      notify({
+        severity: "error",
+        title: "Order not saved",
+        message: "The active role cannot save this order change.",
+        scope: "orders",
+        dedupeKey: "orders:save:permission"
+      });
       return;
     }
 
@@ -346,9 +341,19 @@ export function OrderControlPanel({
 
       setIsEditorOpen(false);
       setEditingOrderId(null);
-      notify({ severity: "success", title: wasCreating ? "Order created" : "Order updated", message: `Order #${order.id} was ${wasCreating ? "created" : "updated"} successfully.`, scope: "orders", dedupeKey: `orders:${order.id}:${wasCreating ? "create" : "update"}:success` });
+      notify({
+        severity: "success",
+        title: wasCreating ? "Order created" : "Order updated",
+        message: `Order #${order.id} was ${wasCreating ? "created" : "updated"} successfully.`,
+        scope: "orders",
+        dedupeKey: `orders:${order.id}:${wasCreating ? "create" : "update"}:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: wasCreating ? "create order" : "update order", scope: "orders", dedupeKey: `orders:${editingOrderId ?? "new"}:save:error` });
+      notifyError(error, {
+        operation: wasCreating ? "create order" : "update order",
+        scope: "orders",
+        dedupeKey: `orders:${editingOrderId ?? "new"}:save:error`
+      });
     } finally {
       setIsSaving(false);
     }
@@ -358,7 +363,13 @@ export function OrderControlPanel({
     event.preventDefault();
 
     if (!fulfillmentOrder || !canUpdate) {
-      notify({ severity: "error", title: "Fulfillment not changed", message: "The active role cannot change fulfillment status.", scope: "orders", dedupeKey: "orders:fulfillment:permission" });
+      notify({
+        severity: "error",
+        title: "Fulfillment not changed",
+        message: "The active role cannot change fulfillment status.",
+        scope: "orders",
+        dedupeKey: "orders:fulfillment:permission"
+      });
       return;
     }
 
@@ -372,9 +383,19 @@ export function OrderControlPanel({
 
       setHistoryOrderId(updated.id);
       setFulfillmentOrderId(null);
-      notify({ severity: "success", title: "Fulfillment updated", message: `Order #${updated.id} was moved to ${fulfillmentLabel(updated.fulfillment_status)} successfully.`, scope: "orders", dedupeKey: `orders:${updated.id}:fulfillment:success` });
+      notify({
+        severity: "success",
+        title: "Fulfillment updated",
+        message: `Order #${updated.id} was moved to ${fulfillmentLabel(updated.fulfillment_status)} successfully.`,
+        scope: "orders",
+        dedupeKey: `orders:${updated.id}:fulfillment:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: "update order fulfillment", scope: "orders", dedupeKey: `orders:${fulfillmentOrder.id}:fulfillment:error` });
+      notifyError(error, {
+        operation: "update order fulfillment",
+        scope: "orders",
+        dedupeKey: `orders:${fulfillmentOrder.id}:fulfillment:error`
+      });
     } finally {
       setSavingFulfillmentId(null);
     }
@@ -382,7 +403,13 @@ export function OrderControlPanel({
 
   const requestDeleteOrder = (order: Order) => {
     if (!canDelete) {
-      notify({ severity: "error", title: "Order not deleted", message: "The active role cannot delete orders.", scope: "orders", dedupeKey: "orders:delete:permission" });
+      notify({
+        severity: "error",
+        title: "Order not deleted",
+        message: "The active role cannot delete orders.",
+        scope: "orders",
+        dedupeKey: "orders:delete:permission"
+      });
       return;
     }
 
@@ -406,9 +433,19 @@ export function OrderControlPanel({
       if (historyOrderId === order.id) {
         setHistoryOrderId(null);
       }
-      notify({ severity: "success", title: "Order deleted", message: `Order #${order.id} was deleted successfully.`, scope: "orders", dedupeKey: `orders:${order.id}:delete:success` });
+      notify({
+        severity: "success",
+        title: "Order deleted",
+        message: `Order #${order.id} was deleted successfully.`,
+        scope: "orders",
+        dedupeKey: `orders:${order.id}:delete:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: "delete order", scope: "orders", dedupeKey: `orders:${order.id}:delete:error` });
+      notifyError(error, {
+        operation: "delete order",
+        scope: "orders",
+        dedupeKey: `orders:${order.id}:delete:error`
+      });
     } finally {
       setDeletingOrderId(null);
       setConfirmDeleteOrder(null);
@@ -437,8 +474,7 @@ export function OrderControlPanel({
     {
       key: "items",
       label: "Items",
-      sortValue: (order: Order) =>
-        order.items.reduce((sum, item) => sum + item.quantity, 0),
+      sortValue: (order: Order) => order.items.reduce((sum, item) => sum + item.quantity, 0),
       render: (order: Order) => (
         <div className="table-cell-list">
           {order.items.map((item, index) => (
@@ -521,15 +557,26 @@ export function OrderControlPanel({
       <article className="dashboard-panel">
         <div className="panel-header">
           <div>
-            <p className="eyebrow">{variant === "fulfillment" ? "Fulfillment queue" : "Order book"}</p>
-            <h3>{variant === "fulfillment" ? "Manage orders and their fulfillment flow" : "Create, edit and remove checkout orders"}</h3>
+            <p className="eyebrow">
+              {variant === "fulfillment" ? "Fulfillment queue" : "Order book"}
+            </p>
+            <h3>
+              {variant === "fulfillment"
+                ? "Manage orders and their fulfillment flow"
+                : "Create, edit and remove checkout orders"}
+            </h3>
           </div>
           <div className="admin-actions">
             <span className={`status-pill ${canCreate || canUpdate || canDelete ? "live" : ""}`}>
               {orders.length} {orders.length === 1 ? "order" : "orders"}
             </span>
             {variant !== "fulfillment" ? (
-              <button className="solid-button" disabled={!canCreate} onClick={createOrder} type="button">
+              <button
+                className="solid-button"
+                disabled={!canCreate}
+                onClick={createOrder}
+                type="button"
+              >
                 Create Order
               </button>
             ) : null}
@@ -543,7 +590,11 @@ export function OrderControlPanel({
             columns={orderColumns}
             emptyMessage="No orders match the current filter."
             filterSlot={
-              <div className="management-filter-pills" role="group" aria-label="Filter by fulfillment status">
+              <div
+                className="management-filter-pills"
+                role="group"
+                aria-label="Filter by fulfillment status"
+              >
                 {orderStatusFilters.map((pill) => (
                   <button
                     aria-pressed={statusFilter === pill.key}
@@ -573,7 +624,9 @@ export function OrderControlPanel({
             searchPlaceholder="Search order #, customer, or item..."
             searchValue={orderSearch}
             summaryText={`${searchedOrderCount} of ${orders.length} ${orders.length === 1 ? "order" : "orders"}`}
-            tableLabel={variant === "fulfillment" ? "Fulfillment management table" : "Order management table"}
+            tableLabel={
+              variant === "fulfillment" ? "Fulfillment management table" : "Order management table"
+            }
           />
         )}
       </article>
@@ -646,7 +699,8 @@ export function OrderControlPanel({
                   >
                     {products.map((product) => (
                       <option key={product.id} value={product.id}>
-                        {product.name} · {currencyFromCents(product.price_cents)} ({product.stock_quantity} left)
+                        {product.name} · {currencyFromCents(product.price_cents)} (
+                        {product.stock_quantity} left)
                       </option>
                     ))}
                   </select>
@@ -701,7 +755,12 @@ export function OrderControlPanel({
             <button className="solid-button" disabled={!canSave || isSaving} type="submit">
               {isSaving ? "Saving..." : editingOrderId === null ? "Create Order" : "Save Order"}
             </button>
-            <button className="outline-button" disabled={isSaving} onClick={resetForm} type="button">
+            <button
+              className="outline-button"
+              disabled={isSaving}
+              onClick={resetForm}
+              type="button"
+            >
               Cancel
             </button>
           </div>
@@ -720,7 +779,9 @@ export function OrderControlPanel({
         {fulfillmentOrder ? (
           <form className="admin-form" onSubmit={handleSubmitFulfillment}>
             <div className="order-status-summary">
-              <span className={`status-pill ${fulfillmentTone(fulfillmentOrder.fulfillment_status) ?? ""}`}>
+              <span
+                className={`status-pill ${fulfillmentTone(fulfillmentOrder.fulfillment_status) ?? ""}`}
+              >
                 {fulfillmentLabel(fulfillmentOrder.fulfillment_status)}
               </span>
               <strong>{fulfillmentLabel(fulfillmentOrder.fulfillment_method)}</strong>
@@ -790,7 +851,11 @@ export function OrderControlPanel({
         onClose={() => setHistoryOrderId(null)}
         statusLabel={historyOrder ? fulfillmentLabel(historyOrder.fulfillment_status) : undefined}
         statusTone={historyOrder ? fulfillmentTone(historyOrder.fulfillment_status) : undefined}
-        title={historyOrder ? `Order #${historyOrder.id} · ${historyOrder.customer_name}` : "Fulfillment history"}
+        title={
+          historyOrder
+            ? `Order #${historyOrder.id} · ${historyOrder.customer_name}`
+            : "Fulfillment history"
+        }
       >
         {historyOrder ? (
           historyOrder.fulfillment_history.length === 0 ? (

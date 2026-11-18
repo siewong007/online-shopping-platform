@@ -66,7 +66,11 @@ function paymentStatusClass(status: PaymentStatus): string {
   return "";
 }
 
-function capturedTotalForOrder(payments: Payment[], orderId: number, excludedPaymentId?: number): number {
+function capturedTotalForOrder(
+  payments: Payment[],
+  orderId: number,
+  excludedPaymentId?: number
+): number {
   return payments
     .filter(
       (payment) =>
@@ -220,7 +224,13 @@ export function PaymentManagementPanel({
     event.preventDefault();
 
     if (!canSave) {
-      notify({ severity: "error", title: "Payment not saved", message: "The active role cannot save this payment change.", scope: "payments", dedupeKey: "payments:save:permission" });
+      notify({
+        severity: "error",
+        title: "Payment not saved",
+        message: "The active role cannot save this payment change.",
+        scope: "payments",
+        dedupeKey: "payments:save:permission"
+      });
       return;
     }
 
@@ -241,9 +251,19 @@ export function PaymentManagementPanel({
 
       setIsEditorOpen(false);
       setEditingPaymentId(null);
-      notify({ severity: "success", title: wasCreating ? "Payment recorded" : "Payment updated", message: `Payment #${payment.id} was ${wasCreating ? "recorded" : "updated"} successfully.`, scope: "payments", dedupeKey: `payments:${payment.id}:${wasCreating ? "create" : "update"}:success` });
+      notify({
+        severity: "success",
+        title: wasCreating ? "Payment recorded" : "Payment updated",
+        message: `Payment #${payment.id} was ${wasCreating ? "recorded" : "updated"} successfully.`,
+        scope: "payments",
+        dedupeKey: `payments:${payment.id}:${wasCreating ? "create" : "update"}:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: wasCreating ? "record payment" : "update payment", scope: "payments", dedupeKey: `payments:${editingPaymentId ?? "new"}:save:error` });
+      notifyError(error, {
+        operation: wasCreating ? "record payment" : "update payment",
+        scope: "payments",
+        dedupeKey: `payments:${editingPaymentId ?? "new"}:save:error`
+      });
     } finally {
       setIsSaving(false);
     }
@@ -251,7 +271,13 @@ export function PaymentManagementPanel({
 
   const requestDeletePayment = (payment: Payment) => {
     if (!canDelete) {
-      notify({ severity: "error", title: "Payment not deleted", message: "The active role cannot delete payments.", scope: "payments", dedupeKey: "payments:delete:permission" });
+      notify({
+        severity: "error",
+        title: "Payment not deleted",
+        message: "The active role cannot delete payments.",
+        scope: "payments",
+        dedupeKey: "payments:delete:permission"
+      });
       return;
     }
 
@@ -272,9 +298,19 @@ export function PaymentManagementPanel({
         resetForm();
       }
       setPendingDeletePayment(null);
-      notify({ severity: "success", title: "Payment deleted", message: `Payment #${payment.id} was deleted successfully.`, scope: "payments", dedupeKey: `payments:${payment.id}:delete:success` });
+      notify({
+        severity: "success",
+        title: "Payment deleted",
+        message: `Payment #${payment.id} was deleted successfully.`,
+        scope: "payments",
+        dedupeKey: `payments:${payment.id}:delete:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: "delete payment", scope: "payments", dedupeKey: `payments:${payment.id}:delete:error` });
+      notifyError(error, {
+        operation: "delete payment",
+        scope: "payments",
+        dedupeKey: `payments:${payment.id}:delete:error`
+      });
     } finally {
       setDeletingPaymentId(null);
     }
@@ -416,12 +452,16 @@ export function PaymentManagementPanel({
         <article className="metric-card">
           <p>Captured</p>
           <strong>{currencyFromCents(paymentTotals.captured)}</strong>
-          <span>{payments.filter((payment) => payment.status === "Captured").length} transactions</span>
+          <span>
+            {payments.filter((payment) => payment.status === "Captured").length} transactions
+          </span>
         </article>
         <article className="metric-card">
           <p>Pending</p>
           <strong>{currencyFromCents(paymentTotals.pending)}</strong>
-          <span>{payments.filter((payment) => payment.status === "Pending").length} transactions</span>
+          <span>
+            {payments.filter((payment) => payment.status === "Pending").length} transactions
+          </span>
         </article>
         <article className="metric-card">
           <p>Orders</p>
@@ -438,7 +478,12 @@ export function PaymentManagementPanel({
           </div>
           <div className="admin-actions">
             <span className="status-pill">{payments.length} rows</span>
-            <button className="solid-button" disabled={!canCreate} onClick={createPayment} type="button">
+            <button
+              className="solid-button"
+              disabled={!canCreate}
+              onClick={createPayment}
+              type="button"
+            >
               Record Payment
             </button>
           </div>
@@ -641,7 +686,12 @@ export function PaymentManagementPanel({
                   ? "Record Payment"
                   : "Save Payment"}
             </button>
-            <button className="outline-button" disabled={isSaving} onClick={resetForm} type="button">
+            <button
+              className="outline-button"
+              disabled={isSaving}
+              onClick={resetForm}
+              type="button"
+            >
               Cancel
             </button>
           </div>

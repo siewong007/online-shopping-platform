@@ -21,9 +21,17 @@ export const translations = {
   "hero.browse": { en: "Browse categories", bm: "Lihat kategori", zh: "浏览分类" },
 
   /* ---- landing ticker ---- */
-  "tick.1": { en: "Tools · materials · everyday hardware", bm: "Alatan · bahan · perkakasan harian", zh: "工具 · 材料 · 日常五金" },
+  "tick.1": {
+    en: "Tools · materials · everyday hardware",
+    bm: "Alatan · bahan · perkakasan harian",
+    zh: "工具 · 材料 · 日常五金"
+  },
   "tick.2": { en: "New arrivals in store", bm: "Stok baharu di kedai", zh: "新货到店" },
-  "tick.3": { en: "WhatsApp 017-405 6993", bm: "WhatsApp 017-405 6993", zh: "WhatsApp 017-405 6993" },
+  "tick.3": {
+    en: "WhatsApp 017-405 6993",
+    bm: "WhatsApp 017-405 6993",
+    zh: "WhatsApp 017-405 6993"
+  },
   "tick.4": {
     en: "Call or WhatsApp to confirm today's hours",
     bm: "Telefon atau WhatsApp untuk sahkan waktu hari ini",
@@ -31,8 +39,16 @@ export const translations = {
   },
 
   /* ---- landing about ---- */
-  "about.label": { en: "Your Sibu hardware store", bm: "Kedai perkakasan anda di Sibu", zh: "您的诗巫五金店" },
-  "about.head.1": { en: "We are Ekoway Hardware, ", bm: "Kami Ekoway Hardware, ", zh: "我们是 Ekoway Hardware，" },
+  "about.label": {
+    en: "Your Sibu hardware store",
+    bm: "Kedai perkakasan anda di Sibu",
+    zh: "您的诗巫五金店"
+  },
+  "about.head.1": {
+    en: "We are Ekoway Hardware, ",
+    bm: "Kami Ekoway Hardware, ",
+    zh: "我们是 Ekoway Hardware，"
+  },
   "about.head.serif": {
     en: "永光五金 — hardware supplies in Sibu.",
     bm: "永光五金 — bekalan perkakasan di Sibu.",
@@ -51,19 +67,39 @@ export const translations = {
 
   /* ---- landing categories ---- */
   "sec.cat.title": { en: "What we stock", bm: "Apa yang kami simpan", zh: "我们的商品" },
-  "sec.cat.more": { en: "Visit or WhatsApp ↗", bm: "Kunjungi atau WhatsApp ↗", zh: "到店或 WhatsApp ↗" },
+  "sec.cat.more": {
+    en: "Visit or WhatsApp ↗",
+    bm: "Kunjungi atau WhatsApp ↗",
+    zh: "到店或 WhatsApp ↗"
+  },
   "cat.01.name": { en: "Power Tools", bm: "Alatan Kuasa", zh: "电动工具" },
-  "cat.01.sub": { en: "drills · grinders · saws", bm: "gerudi · pengisar · gergaji", zh: "钻机 · 砂轮机 · 锯" },
+  "cat.01.sub": {
+    en: "drills · grinders · saws",
+    bm: "gerudi · pengisar · gergaji",
+    zh: "钻机 · 砂轮机 · 锯"
+  },
   "cat.02.name": { en: "Paint", bm: "Cat", zh: "油漆" },
-  "cat.02.sub": { en: "interior · exterior · primers", bm: "dalaman · luaran · primer", zh: "内墙 · 外墙 · 底漆" },
+  "cat.02.sub": {
+    en: "interior · exterior · primers",
+    bm: "dalaman · luaran · primer",
+    zh: "内墙 · 外墙 · 底漆"
+  },
   "cat.03.name": { en: "Building Materials", bm: "Bahan Binaan", zh: "建筑材料" },
-  "cat.03.sub": { en: "cement · sand · fixings", bm: "simen · pasir · pengikat", zh: "水泥 · 沙 · 紧固件" },
+  "cat.03.sub": {
+    en: "cement · sand · fixings",
+    bm: "simen · pasir · pengikat",
+    zh: "水泥 · 沙 · 紧固件"
+  },
   "cat.04.name": { en: "Bathroom Accessories", bm: "Barangan Bilik Air", zh: "浴室配件" },
   "cat.04.sub": { en: "fittings · fixtures", bm: "kelengkapan · pemasangan", zh: "配件 · 装置" },
   "cat.05.name": { en: "Kitchen Accessories", bm: "Barangan Dapur", zh: "厨房用品" },
   "cat.05.sub": { en: "cookware · utensils", bm: "periuk belanga · perkakas", zh: "炊具 · 器皿" },
   "cat.06.name": { en: "Electrical Appliances", bm: "Barangan Elektrik", zh: "电器" },
-  "cat.06.sub": { en: "wiring · fans · lighting", bm: "pendawaian · kipas · lampu", zh: "布线 · 风扇 · 照明" },
+  "cat.06.sub": {
+    en: "wiring · fans · lighting",
+    bm: "pendawaian · kipas · lampu",
+    zh: "布线 · 风扇 · 照明"
+  },
 
   /* ---- landing this month ---- */
   "sec.month.title": { en: "This month at Ekoway", bm: "Bulan ini di Ekoway", zh: "本月精选" },
@@ -92,7 +128,11 @@ export const translations = {
     bm: "Kelengkapan, pemasangan, paip dan injap.",
     zh: "配件、装置、水管与阀门。"
   },
-  "month.wa": { en: "WhatsApp for promotions", bm: "WhatsApp untuk promosi", zh: "WhatsApp 询问促销" },
+  "month.wa": {
+    en: "WhatsApp for promotions",
+    bm: "WhatsApp untuk promosi",
+    zh: "WhatsApp 询问促销"
+  },
 
   /* ---- landing stats ---- */
   "stat.1": { en: "Years in Sibu", bm: "Tahun di Sibu", zh: "在诗巫的年数" },
@@ -112,11 +152,31 @@ export const translations = {
     bm: "Maklumat jelas. Bantuan praktikal. Ambil di kedai.",
     zh: "资料清楚。实用协助。门市自取。"
   },
-  "why.cap": { en: "Your projects, supplied.", bm: "Projek anda, dibekalkan.", zh: "供应您的每个项目。" },
-  "why.1.title": { en: "Useful product details.", bm: "Butiran produk berguna.", zh: "实用产品资料。" },
-  "why.1.a": { en: "Product details taken from our stock records", bm: "Butiran produk daripada rekod stok kami", zh: "产品资料来自我们的库存记录" },
-  "why.1.b": { en: "Ask our team about the item before buying", bm: "Tanya pasukan kami tentang barangan sebelum membeli", zh: "购买前可向我们的团队查询产品" },
-  "why.1.c": { en: "Practical ranges for home and trade work", bm: "Pilihan praktikal untuk kerja rumah dan perdagangan", zh: "适合家居与专业工作的实用选择" },
+  "why.cap": {
+    en: "Your projects, supplied.",
+    bm: "Projek anda, dibekalkan.",
+    zh: "供应您的每个项目。"
+  },
+  "why.1.title": {
+    en: "Useful product details.",
+    bm: "Butiran produk berguna.",
+    zh: "实用产品资料。"
+  },
+  "why.1.a": {
+    en: "Product details taken from our stock records",
+    bm: "Butiran produk daripada rekod stok kami",
+    zh: "产品资料来自我们的库存记录"
+  },
+  "why.1.b": {
+    en: "Ask our team about the item before buying",
+    bm: "Tanya pasukan kami tentang barangan sebelum membeli",
+    zh: "购买前可向我们的团队查询产品"
+  },
+  "why.1.c": {
+    en: "Practical ranges for home and trade work",
+    bm: "Pilihan praktikal untuk kerja rumah dan perdagangan",
+    zh: "适合家居与专业工作的实用选择"
+  },
   "why.1.d": {
     en: "Bosch · DONGCHENG · Nippon Paint · Panasonic",
     bm: "Bosch · DONGCHENG · Nippon Paint · Panasonic",
@@ -124,9 +184,21 @@ export const translations = {
   },
   "why.1.learn": { en: "See the brands", bm: "Lihat jenama", zh: "查看品牌" },
   "why.2.title": { en: "Fair, honest pricing.", bm: "Harga yang jujur.", zh: "公道诚实的价格。" },
-  "why.2.a": { en: "Prices shown clearly in Malaysian Ringgit", bm: "Harga dipaparkan dengan jelas dalam Ringgit Malaysia", zh: "价格以马来西亚令吉清楚显示" },
-  "why.2.b": { en: "The checkout total is shown before payment", bm: "Jumlah bayaran dipaparkan sebelum pembayaran", zh: "付款前会显示结账总额" },
-  "why.2.c": { en: "Tell us your budget — we’ll help", bm: "Beritahu bajet anda — kami bantu", zh: "告诉我们您的预算 — 我们帮您" },
+  "why.2.a": {
+    en: "Prices shown clearly in Malaysian Ringgit",
+    bm: "Harga dipaparkan dengan jelas dalam Ringgit Malaysia",
+    zh: "价格以马来西亚令吉清楚显示"
+  },
+  "why.2.b": {
+    en: "The checkout total is shown before payment",
+    bm: "Jumlah bayaran dipaparkan sebelum pembayaran",
+    zh: "付款前会显示结账总额"
+  },
+  "why.2.c": {
+    en: "Tell us your budget — we’ll help",
+    bm: "Beritahu bajet anda — kami bantu",
+    zh: "告诉我们您的预算 — 我们帮您"
+  },
   "why.2.learn": { en: "Ask us", bm: "Tanya kami", zh: "咨询我们" },
   "why.3.title": { en: "Advice that’s useful.", bm: "Nasihat yang berguna.", zh: "实用的建议。" },
   "why.3.a": {
@@ -139,7 +211,11 @@ export const translations = {
     bm: "DIY atau kontraktor — tanya kakitangan kami",
     zh: "DIY 或承包商 — 请咨询门市人员"
   },
-  "why.3.c": { en: "Ask about delivery options", bm: "Tanya tentang pilihan penghantaran", zh: "欢迎询问送货选项" },
+  "why.3.c": {
+    en: "Ask about delivery options",
+    bm: "Tanya tentang pilihan penghantaran",
+    zh: "欢迎询问送货选项"
+  },
   "why.3.learn": { en: "Visit us", bm: "Kunjungi kami", zh: "到店参观" },
 
   /* ---- landing brands ---- */
@@ -164,12 +240,20 @@ export const translations = {
     zh: "关注 @ekowayhardware"
   },
   "proof.g.k": { en: "On the map", bm: "Di peta", zh: "地图上" },
-  "proof.g.v": { en: "Find us on Google Maps", bm: "Cari kami di Google Maps", zh: "在 Google 地图找到我们" },
+  "proof.g.v": {
+    en: "Find us on Google Maps",
+    bm: "Cari kami di Google Maps",
+    zh: "在 Google 地图找到我们"
+  },
 
   /* ---- landing store gallery ---- */
   "store.label": { en: "Inside the store", bm: "Dalam kedai", zh: "走进门市" },
   "store.head.1": { en: "Every aisle,", bm: "Setiap lorong,", zh: "每条走道," },
-  "store.head.serif": { en: "floor to ceiling.", bm: "dari lantai ke siling.", zh: "从地板到天花。" },
+  "store.head.serif": {
+    en: "floor to ceiling.",
+    bm: "dari lantai ke siling.",
+    zh: "从地板到天花。"
+  },
   "store.lede": {
     en: "Genuine-brand power tools, paints, lighting, hardware and abrasives — all under one roof in Salim. Walk in and we'll point you straight to it.",
     bm: "Alatan kuasa jenama tulen, cat, lampu, perkakasan dan pelelas — semua di bawah satu bumbung di Salim. Masuk sahaja, kami tunjukkan terus.",
@@ -185,14 +269,42 @@ export const translations = {
     bm: "Tatal untuk menyusuri lorong · ketik gambar untuk besarkan",
     zh: "滚动浏览走道 · 点按任意照片放大"
   },
-  "store.cap.1": { en: "Power tools — Bosch & Dong Cheng", bm: "Alatan kuasa — Bosch & Dong Cheng", zh: "电动工具 — Bosch & Dong Cheng" },
-  "store.cap.2": { en: "Pressure washers & generators", bm: "Pencuci tekanan & penjana", zh: "高压清洗机与发电机" },
-  "store.cap.3": { en: "Cutting discs & abrasives", bm: "Cakera pemotong & pelelas", zh: "切割片与砂磨用品" },
-  "store.cap.4": { en: "Hand tools & fasteners", bm: "Alatan tangan & pengikat", zh: "手动工具与五金扣件" },
-  "store.cap.5": { en: "Adhesives, epoxy & sealants", bm: "Pelekat, epoksi & pengedap", zh: "胶黏剂、环氧与密封胶" },
-  "store.cap.6": { en: "Paints, rollers & brushes", bm: "Cat, roler & berus", zh: "油漆、滚筒与刷子" },
+  "store.cap.1": {
+    en: "Power tools — Bosch & Dong Cheng",
+    bm: "Alatan kuasa — Bosch & Dong Cheng",
+    zh: "电动工具 — Bosch & Dong Cheng"
+  },
+  "store.cap.2": {
+    en: "Pressure washers & generators",
+    bm: "Pencuci tekanan & penjana",
+    zh: "高压清洗机与发电机"
+  },
+  "store.cap.3": {
+    en: "Cutting discs & abrasives",
+    bm: "Cakera pemotong & pelelas",
+    zh: "切割片与砂磨用品"
+  },
+  "store.cap.4": {
+    en: "Hand tools & fasteners",
+    bm: "Alatan tangan & pengikat",
+    zh: "手动工具与五金扣件"
+  },
+  "store.cap.5": {
+    en: "Adhesives, epoxy & sealants",
+    bm: "Pelekat, epoksi & pengedap",
+    zh: "胶黏剂、环氧与密封胶"
+  },
+  "store.cap.6": {
+    en: "Paints, rollers & brushes",
+    bm: "Cat, roler & berus",
+    zh: "油漆、滚筒与刷子"
+  },
   "store.cap.7": { en: "The Nippon Paint range", bm: "Rangkaian Nippon Paint", zh: "立邦漆系列" },
-  "store.cap.8": { en: "Emulsion paint by the stack", bm: "Cat emulsi bertimbun", zh: "乳胶漆整叠现货" },
+  "store.cap.8": {
+    en: "Emulsion paint by the stack",
+    bm: "Cat emulsi bertimbun",
+    zh: "乳胶漆整叠现货"
+  },
   "store.cap.9": { en: "Lighting & electrical", bm: "Lampu & elektrik", zh: "灯具与电器" },
   "store.cap.10": { en: "Walk the aisles", bm: "Susuri lorong", zh: "走进货架之间" },
 
@@ -201,17 +313,33 @@ export const translations = {
   "cta.head.outline": { en: "We stock it.", bm: "Kami ada.", zh: "我们有货。" },
   "cta.wa": { en: "WhatsApp the counter", bm: "WhatsApp kaunter", zh: "WhatsApp 门市" },
   "cta.visit": { en: "Visit the store", bm: "Lawati kedai", zh: "到店参观" },
-  "cta.join.k": { en: "Get updates the easy way", bm: "Dapatkan kemas kini dengan mudah", zh: "轻松获取最新消息" },
-  "cta.join.v": { en: "Join our WhatsApp updates", bm: "Sertai kemas kini WhatsApp", zh: "加入我们的 WhatsApp 更新" },
+  "cta.join.k": {
+    en: "Get updates the easy way",
+    bm: "Dapatkan kemas kini dengan mudah",
+    zh: "轻松获取最新消息"
+  },
+  "cta.join.v": {
+    en: "Join our WhatsApp updates",
+    bm: "Sertai kemas kini WhatsApp",
+    zh: "加入我们的 WhatsApp 更新"
+  },
 
   /* ---- landing contact ---- */
   "sec.contact.title": { en: "Visit Us", bm: "Lawati Kami", zh: "到店参观" },
   "contact.addr.k": { en: "Address", bm: "Alamat", zh: "地址" },
   "contact.hours.k": { en: "Hours", bm: "Waktu", zh: "营业时间" },
   "contact.hours.wk": { en: "Current hours", bm: "Waktu semasa", zh: "当前营业时间" },
-  "contact.hours.wkt": { en: "Please call to confirm", bm: "Sila telefon untuk sahkan", zh: "请致电确认" },
+  "contact.hours.wkt": {
+    en: "Please call to confirm",
+    bm: "Sila telefon untuk sahkan",
+    zh: "请致电确认"
+  },
   "contact.hours.sun": { en: "Before travelling", bm: "Sebelum datang", zh: "到访之前" },
-  "contact.hours.sunt": { en: "Call or WhatsApp us", bm: "Telefon atau WhatsApp kami", zh: "请致电或 WhatsApp" },
+  "contact.hours.sunt": {
+    en: "Call or WhatsApp us",
+    bm: "Telefon atau WhatsApp kami",
+    zh: "请致电或 WhatsApp"
+  },
   "contact.wa": { en: "WhatsApp us", bm: "WhatsApp kami", zh: "WhatsApp 我们" },
   "contact.call": { en: "Call 084-253883", bm: "Telefon 084-253883", zh: "致电 084-253883" },
   "contact.email": { en: "Email us", bm: "E-mel kami", zh: "电邮我们" },
@@ -223,7 +351,11 @@ export const translations = {
     bm: "Ekoway Hardware · 永光五金 · Sibu",
     zh: "Ekoway Hardware · 永光五金 · 诗巫"
   },
-  "foot.tag.2": { en: "Sibu’s hardware counter.", bm: "Kedai perkakasan Sibu.", zh: "诗巫的五金店。" },
+  "foot.tag.2": {
+    en: "Sibu’s hardware counter.",
+    bm: "Kedai perkakasan Sibu.",
+    zh: "诗巫的五金店。"
+  },
   "foot.shop": { en: "Shop", bm: "Produk", zh: "商品" },
   "foot.co": { en: "Company", bm: "Syarikat", zh: "公司" },
   "foot.follow": { en: "Follow", bm: "Ikuti", zh: "关注" },
@@ -272,7 +404,11 @@ export const translations = {
   "shop.whatsapp": { en: "WhatsApp the store", bm: "WhatsApp kedai", zh: "WhatsApp 联系门店" },
   "shop.nav.admin": { en: "Admin", bm: "Admin", zh: "管理" },
   "shop.nav.home": { en: "Home", bm: "Utama", zh: "首页" },
-  "shop.loading": { en: "Loading the Ekoway storefront...", bm: "Memuatkan kedai Ekoway...", zh: "正在加载 Ekoway 商店..." },
+  "shop.loading": {
+    en: "Loading the Ekoway storefront...",
+    bm: "Memuatkan kedai Ekoway...",
+    zh: "正在加载 Ekoway 商店..."
+  },
 
   "shop.hero.eyebrow": {
     en: "Order online, collect in Salim",
@@ -298,12 +434,24 @@ export const translations = {
     zh: "诗巫自取地点"
   },
   "shop.hero.m2.v": { en: "WhatsApp", bm: "WhatsApp", zh: "WhatsApp" },
-  "shop.hero.m2.k": { en: "help choosing an item", bm: "bantuan memilih barangan", zh: "协助选择商品" },
+  "shop.hero.m2.k": {
+    en: "help choosing an item",
+    bm: "bantuan memilih barangan",
+    zh: "协助选择商品"
+  },
   "shop.hero.m3.v": { en: "Live stock", bm: "Stok langsung", zh: "实时库存" },
-  "shop.hero.m3.k": { en: "checked again at checkout", bm: "disemak semula semasa pembayaran", zh: "结账时再次检查" },
+  "shop.hero.m3.k": {
+    en: "checked again at checkout",
+    bm: "disemak semula semasa pembayaran",
+    zh: "结账时再次检查"
+  },
 
   "shop.panel2.eyebrow": { en: "This month’s picks", bm: "Pilihan bulan ini", zh: "本月推荐" },
-  "shop.panel2.title": { en: "Deals stacked for real projects.", bm: "Tawaran untuk projek sebenar.", zh: "为真实项目准备的优惠。" },
+  "shop.panel2.title": {
+    en: "Deals stacked for real projects.",
+    bm: "Tawaran untuk projek sebenar.",
+    zh: "为真实项目准备的优惠。"
+  },
   "shop.panel2.body": {
     en: "Category-led offers across tools, paint and appliances — ask the counter about promotions.",
     bm: "Tawaran mengikut kategori untuk alatan, cat dan perkakas — tanya kaunter tentang promosi.",
@@ -314,7 +462,11 @@ export const translations = {
     bm: "Kit alatan tanpa wayar Bosch dan DONGCHENG",
     zh: "Bosch 与 DONGCHENG 无线工具套装"
   },
-  "shop.panel2.p2": { en: "Nippon Paint tinted in store", bm: "Nippon Paint ditona di kedai", zh: "立邦漆店内调色" },
+  "shop.panel2.p2": {
+    en: "Nippon Paint tinted in store",
+    bm: "Nippon Paint ditona di kedai",
+    zh: "立邦漆店内调色"
+  },
   "shop.panel2.p3": {
     en: "Fans and water heaters for the home",
     bm: "Kipas dan pemanas air untuk rumah",
@@ -363,8 +515,16 @@ export const translations = {
   "shop.filter.max": { en: "Max price", bm: "Harga maksimum", zh: "最高价" },
   "shop.filter.sort": { en: "Sort by", bm: "Susun ikut", zh: "排序" },
   "shop.sort.featured": { en: "Featured", bm: "Pilihan", zh: "精选" },
-  "shop.sort.priceAsc": { en: "Price: Low to High", bm: "Harga: Rendah ke Tinggi", zh: "价格：从低到高" },
-  "shop.sort.priceDesc": { en: "Price: High to Low", bm: "Harga: Tinggi ke Rendah", zh: "价格：从高到低" },
+  "shop.sort.priceAsc": {
+    en: "Price: Low to High",
+    bm: "Harga: Rendah ke Tinggi",
+    zh: "价格：从低到高"
+  },
+  "shop.sort.priceDesc": {
+    en: "Price: High to Low",
+    bm: "Harga: Tinggi ke Rendah",
+    zh: "价格：从高到低"
+  },
   "shop.sort.name": { en: "Name A-Z", bm: "Nama A-Z", zh: "名称 A-Z" },
 
   "shop.savings.eyebrow": { en: "Savings snapshot", bm: "Ringkasan tawaran", zh: "优惠一览" },
@@ -396,7 +556,11 @@ export const translations = {
     bm: "Ambilan di Salim sahaja. Tambah ke troli, kemudian WhatsApp kaunter untuk sahkan. Bayaran kad dalam talian belum dibuka.",
     zh: "仅限 Salim 门市自取。加入购物车后请 WhatsApp 门市确认。线上银行卡付款尚未开通。"
   },
-  "shop.purchase.askPrice": { en: "WhatsApp the counter", bm: "WhatsApp kaunter", zh: "WhatsApp 门市" },
+  "shop.purchase.askPrice": {
+    en: "WhatsApp the counter",
+    bm: "WhatsApp kaunter",
+    zh: "WhatsApp 门市"
+  },
   "shop.purchase.priceNote": {
     en: "Price as listed. Collect at Lorong Salim 17. Online card payment is not open yet.",
     bm: "Harga seperti dipaparkan. Ambil di Lorong Salim 17. Bayaran kad dalam talian belum dibuka.",
@@ -413,7 +577,11 @@ export const translations = {
     zh: "通过 WhatsApp 发送自取清单"
   },
 
-  "shop.services.eyebrow": { en: "More ways to get it done", bm: "Lebih banyak cara siapkan kerja", zh: "更多完成工作的方式" },
+  "shop.services.eyebrow": {
+    en: "More ways to get it done",
+    bm: "Lebih banyak cara siapkan kerja",
+    zh: "更多完成工作的方式"
+  },
   "shop.services.title": {
     en: "Services next to the shelves, not outside them",
     bm: "Perkhidmatan di sebelah rak, bukan di luar",
@@ -470,7 +638,11 @@ export const translations = {
     bm: "{rating} / 5 daripada {n} ulasan disahkan",
     zh: "{n} 条已验证评价，平均 {rating} / 5"
   },
-  "shop.reviews.verifiedTag": { en: "Verified purchase", bm: "Pembelian disahkan", zh: "已验证购买" },
+  "shop.reviews.verifiedTag": {
+    en: "Verified purchase",
+    bm: "Pembelian disahkan",
+    zh: "已验证购买"
+  },
   "shop.reviews.writeAction": { en: "Write a review", bm: "Tulis ulasan", zh: "撰写评价" },
   "shop.reviews.cancelAction": { en: "Cancel", bm: "Batal", zh: "取消" },
   "shop.reviews.submitAction": { en: "Submit review", bm: "Hantar ulasan", zh: "提交评价" },
@@ -504,7 +676,11 @@ export const translations = {
     bm: "Tinggalkan mesej dan pasukan kami akan membalas di sini. Kami tidak memaparkan ketersediaan langsung.",
     zh: "请留言，我们的团队会在这里回复。我们不会显示在线状态。"
   },
-  "support.welcome": { en: "How can we help?", bm: "Bagaimana kami boleh membantu?", zh: "我们怎样帮您？" },
+  "support.welcome": {
+    en: "How can we help?",
+    bm: "Bagaimana kami boleh membantu?",
+    zh: "我们怎样帮您？"
+  },
   "support.name": { en: "Your name", bm: "Nama anda", zh: "您的姓名" },
   "support.email": { en: "Email address", bm: "Alamat e-mel", zh: "电子邮箱" },
   "support.firstMessage": { en: "Your message", bm: "Mesej anda", zh: "您的留言" },
@@ -515,7 +691,11 @@ export const translations = {
   },
   "support.start": { en: "Start conversation", bm: "Mulakan perbualan", zh: "开始对话" },
   "support.starting": { en: "Starting…", bm: "Sedang bermula…", zh: "正在开始…" },
-  "support.loading": { en: "Loading your conversation…", bm: "Memuatkan perbualan anda…", zh: "正在加载您的对话…" },
+  "support.loading": {
+    en: "Loading your conversation…",
+    bm: "Memuatkan perbualan anda…",
+    zh: "正在加载您的对话…"
+  },
   "support.retry": { en: "Try again", bm: "Cuba lagi", zh: "重试" },
   "support.status.open": { en: "Open", bm: "Terbuka", zh: "进行中" },
   "support.status.pending": { en: "Pending", bm: "Menunggu", zh: "待处理" },
@@ -615,7 +795,11 @@ export const translations = {
     bm: "Inspirasi projek — bukan imej produk sebenar.",
     zh: "项目灵感展示，并非准确商品图片。"
   },
-  "shop.jobs.departments": { en: "Departments in this job", bm: "Jabatan dalam kerja ini", zh: "此项目包含的部门" },
+  "shop.jobs.departments": {
+    en: "Departments in this job",
+    bm: "Jabatan dalam kerja ini",
+    zh: "此项目包含的部门"
+  },
 
   /* ---- shop: product card / detail ---- */
   "shop.product.view": { en: "View product", bm: "Lihat produk", zh: "查看商品" },
@@ -624,8 +808,16 @@ export const translations = {
   "shop.product.stock.in": { en: "In stock", bm: "Ada stok", zh: "现货充足" },
   "shop.product.stock.low": { en: "Low stock", bm: "Stok terhad", zh: "库存紧张" },
   "shop.product.stock.out": { en: "Out of stock", bm: "Stok habis", zh: "缺货" },
-  "shop.product.stock.inCount": { en: "In stock — {n} avail.", bm: "Ada stok — baki {n}", zh: "现货——剩 {n} 件" },
-  "shop.product.stock.lowCount": { en: "Low stock — {n} left", bm: "Stok terhad — baki {n}", zh: "库存紧张——剩 {n} 件" },
+  "shop.product.stock.inCount": {
+    en: "In stock — {n} avail.",
+    bm: "Ada stok — baki {n}",
+    zh: "现货——剩 {n} 件"
+  },
+  "shop.product.stock.lowCount": {
+    en: "Low stock — {n} left",
+    bm: "Stok terhad — baki {n}",
+    zh: "库存紧张——剩 {n} 件"
+  },
   "shop.product.stock.outSoon": {
     en: "Out of stock — check back soon",
     bm: "Stok habis — sila semak semula",
@@ -660,7 +852,11 @@ export const translations = {
     zh: "没有商品符合目前的筛选条件。"
   },
   "shop.listing.empty.clearSearch": { en: "Clear search", bm: "Kosongkan carian", zh: "清除搜索" },
-  "shop.listing.empty.browseAll": { en: "Browse all departments", bm: "Lihat semua jabatan", zh: "浏览所有部门" },
+  "shop.listing.empty.browseAll": {
+    en: "Browse all departments",
+    bm: "Lihat semua jabatan",
+    zh: "浏览所有部门"
+  },
   "shop.offline.banner": {
     en: "Showing recently saved catalogue data — live prices and stock may be a little out of date.",
     bm: "Memaparkan data katalog yang disimpan baru-baru ini — harga dan stok mungkin sedikit lapuk.",
@@ -694,7 +890,11 @@ export const translations = {
     bm: "Belum ada ulasan — jadilah yang pertama berkongsi pengalaman anda.",
     zh: "暂无评价 — 快来分享您的第一条评价吧。"
   },
-  "shop.detail.notFound": { en: "Product not found.", bm: "Produk tidak dijumpai.", zh: "找不到该商品。" },
+  "shop.detail.notFound": {
+    en: "Product not found.",
+    bm: "Produk tidak dijumpai.",
+    zh: "找不到该商品。"
+  },
   "shop.detail.backProducts": { en: "Back to products", bm: "Kembali ke produk", zh: "返回商品" },
   "shop.detail.allDepartment": {
     en: "All {department}",
@@ -795,7 +995,11 @@ export const translations = {
   "shop.footer.shop": { en: "Shop", bm: "Beli-belah", zh: "商店" },
   "shop.footer.services": { en: "Services", bm: "Perkhidmatan", zh: "服务" },
   "shop.footer.contact": { en: "Contact", bm: "Hubungi", zh: "联系我们" },
-  "shop.footer.hours": { en: "Call to confirm current hours", bm: "Telefon untuk sahkan waktu semasa", zh: "请致电确认营业时间" },
+  "shop.footer.hours": {
+    en: "Call to confirm current hours",
+    bm: "Telefon untuk sahkan waktu semasa",
+    zh: "请致电确认营业时间"
+  },
   "shop.footer.copy": {
     en: "© 2026 Ekoway Hardware Sdn Bhd",
     bm: "© 2026 Ekoway Hardware Sdn Bhd",
@@ -827,18 +1031,34 @@ export const translations = {
   "shop.checkout.city": { en: "City", bm: "Bandar", zh: "城市" },
   "shop.checkout.state": { en: "State", bm: "Negeri", zh: "州属" },
   "shop.checkout.postalCode": { en: "Postal code", bm: "Poskod", zh: "邮编" },
-  "shop.checkout.deliveryService": { en: "Delivery service", bm: "Perkhidmatan penghantaran", zh: "配送方式" },
+  "shop.checkout.deliveryService": {
+    en: "Delivery service",
+    bm: "Perkhidmatan penghantaran",
+    zh: "配送方式"
+  },
 
   /* ---- shop: footer policy links ---- */
   "shop.footer.legal": { en: "Policies", bm: "Polisi", zh: "条款政策" },
   "shop.footer.link.privacy": { en: "Privacy Notice", bm: "Notis Privasi", zh: "隐私声明" },
   "shop.footer.link.terms": { en: "Terms & Conditions", bm: "Terma & Syarat", zh: "条款与细则" },
-  "shop.footer.link.returns": { en: "Returns & Refunds", bm: "Pemulangan & Bayaran Balik", zh: "退换与退款" },
-  "shop.footer.link.delivery": { en: "Delivery & Collection", bm: "Penghantaran & Ambilan", zh: "配送与自取" },
+  "shop.footer.link.returns": {
+    en: "Returns & Refunds",
+    bm: "Pemulangan & Bayaran Balik",
+    zh: "退换与退款"
+  },
+  "shop.footer.link.delivery": {
+    en: "Delivery & Collection",
+    bm: "Penghantaran & Ambilan",
+    zh: "配送与自取"
+  },
   "shop.footer.link.contact": { en: "Contact us", bm: "Hubungi kami", zh: "联系我们" },
 
   /* ---- shop: catalogue paging ---- */
-  "shop.listing.loadMore": { en: "Load more products", bm: "Muatkan lagi produk", zh: "加载更多商品" },
+  "shop.listing.loadMore": {
+    en: "Load more products",
+    bm: "Muatkan lagi produk",
+    zh: "加载更多商品"
+  },
   "shop.listing.shownOfTotal": {
     en: "Showing {shown} of {total} products",
     bm: "Memaparkan {shown} daripada {total} produk",
@@ -906,16 +1126,44 @@ export const translations = {
   },
   "shop.cartd.browseProducts": { en: "Browse products", bm: "Layari produk", zh: "浏览商品" },
   "shop.cartd.each": { en: "{price} each", bm: "{price} setiap satu", zh: "每件 {price}" },
-  "shop.cartd.stockLimit": { en: "Max {n} in stock", bm: "Maksimum {n} dalam stok", zh: "库存上限 {n} 件" },
-  "shop.cartd.dealsVouchers": { en: "Deals & vouchers", bm: "Tawaran & baucar", zh: "优惠与优惠券" },
-  "shop.cartd.noPromotion": { en: "No promotion selected", bm: "Tiada promosi dipilih", zh: "未选择促销" },
+  "shop.cartd.stockLimit": {
+    en: "Max {n} in stock",
+    bm: "Maksimum {n} dalam stok",
+    zh: "库存上限 {n} 件"
+  },
+  "shop.cartd.dealsVouchers": {
+    en: "Deals & vouchers",
+    bm: "Tawaran & baucar",
+    zh: "优惠与优惠券"
+  },
+  "shop.cartd.noPromotion": {
+    en: "No promotion selected",
+    bm: "Tiada promosi dipilih",
+    zh: "未选择促销"
+  },
   "shop.cartd.removePromotion": { en: "Clear", bm: "Kosongkan", zh: "清除" },
-  "shop.cartd.voucherPlaceholder": { en: "Enter voucher code", bm: "Masukkan kod baucar", zh: "输入优惠码" },
+  "shop.cartd.voucherPlaceholder": {
+    en: "Enter voucher code",
+    bm: "Masukkan kod baucar",
+    zh: "输入优惠码"
+  },
   "shop.cartd.applyVoucher": { en: "Apply", bm: "Guna", zh: "应用" },
   "shop.cartd.removeVoucher": { en: "Remove", bm: "Buang", zh: "移除" },
-  "shop.cartd.publicVouchers": { en: "Available vouchers", bm: "Baucar tersedia", zh: "可用优惠券" },
-  "shop.cartd.updatingTotal": { en: "Updating checkout total…", bm: "Mengemas kini jumlah…", zh: "正在更新总额…" },
-  "shop.cartd.proceedCheckout": { en: "Proceed to Checkout", bm: "Teruskan ke Pembayaran", zh: "去结账" },
+  "shop.cartd.publicVouchers": {
+    en: "Available vouchers",
+    bm: "Baucar tersedia",
+    zh: "可用优惠券"
+  },
+  "shop.cartd.updatingTotal": {
+    en: "Updating checkout total…",
+    bm: "Mengemas kini jumlah…",
+    zh: "正在更新总额…"
+  },
+  "shop.cartd.proceedCheckout": {
+    en: "Proceed to Checkout",
+    bm: "Teruskan ke Pembayaran",
+    zh: "去结账"
+  },
   "shop.cartd.pickupStoreNote": {
     en: "Free collection at Lorong Salim 17, Sibu.",
     bm: "Ambilan percuma di Lorong Salim 17, Sibu.",
@@ -927,21 +1175,37 @@ export const translations = {
     zh: "请填写完整收件人及砂拉越收货地址以计算运费选项。"
   },
   "shop.cartd.retryQuote": { en: "Retry quote", bm: "Cuba kira semula", zh: "重新报价" },
-  "shop.cartd.daysEstimate": { en: "{min}-{max} days", bm: "{min}-{max} hari", zh: "{min}-{max} 天" },
+  "shop.cartd.daysEstimate": {
+    en: "{min}-{max} days",
+    bm: "{min}-{max} hari",
+    zh: "{min}-{max} 天"
+  },
   "shop.cartd.backToCart": { en: "Back to cart", bm: "Kembali ke troli", zh: "返回购物车" },
-  "shop.cartd.placingOrder": { en: "Placing order…", bm: "Memproses pesanan…", zh: "正在提交订单…" },
+  "shop.cartd.placingOrder": {
+    en: "Placing order…",
+    bm: "Memproses pesanan…",
+    zh: "正在提交订单…"
+  },
   "shop.cartd.placeOrder": { en: "Place Order", bm: "Buat Pesanan", zh: "提交订单" },
   "shop.cartd.discount": { en: "Discount", bm: "Diskaun", zh: "折扣" },
   "shop.cartd.tax": { en: "Tax", bm: "Cukai", zh: "税费" },
   "shop.cartd.shipping": { en: "Shipping", bm: "Penghantaran", zh: "运费" },
   "shop.cartd.total": { en: "Total", bm: "Jumlah", zh: "总计" },
-  "shop.cartd.orderItems": { en: "Order items ({n})", bm: "Item pesanan ({n})", zh: "订单商品 ({n})" },
+  "shop.cartd.orderItems": {
+    en: "Order items ({n})",
+    bm: "Item pesanan ({n})",
+    zh: "订单商品 ({n})"
+  },
 
   /* ---- account drawer ---- */
   "account.dialogLabel": { en: "My account", bm: "Akaun saya", zh: "我的账户" },
   "account.title": { en: "My Account", bm: "Akaun Saya", zh: "我的账户" },
   "account.close": { en: "Close account drawer", bm: "Tutup panel akaun", zh: "关闭账户面板" },
-  "account.restoring": { en: "Checking your session…", bm: "Menyemak sesi anda…", zh: "正在验证您的登录状态…" },
+  "account.restoring": {
+    en: "Checking your session…",
+    bm: "Menyemak sesi anda…",
+    zh: "正在验证您的登录状态…"
+  },
   "account.signIn": { en: "Sign in", bm: "Log masuk", zh: "登录" },
   "account.register": { en: "Create account", bm: "Daftar akaun", zh: "注册账户" },
   "account.email": { en: "Email", bm: "E-mel", zh: "电子邮箱" },
@@ -956,7 +1220,11 @@ export const translations = {
   "account.showPassword": { en: "Show", bm: "Tunjuk", zh: "显示" },
   "account.hidePassword": { en: "Hide", bm: "Sembunyi", zh: "隐藏" },
   "account.signingIn": { en: "Signing in…", bm: "Sedang log masuk…", zh: "正在登录…" },
-  "account.creatingAccount": { en: "Creating account…", bm: "Mencipta akaun…", zh: "正在创建账户…" },
+  "account.creatingAccount": {
+    en: "Creating account…",
+    bm: "Mencipta akaun…",
+    zh: "正在创建账户…"
+  },
   "account.createAccount": { en: "Create account", bm: "Daftar akaun", zh: "创建账户" },
   "account.signOut": { en: "Log out", bm: "Log keluar", zh: "退出登录" },
   "account.memberLabel": { en: "{tier} member", bm: "Ahli {tier}", zh: "{tier} 会员" },
@@ -979,7 +1247,11 @@ export const translations = {
   "account.tab.membership": { en: "Membership", bm: "Keahlian", zh: "会员" },
   "account.tab.benefits": { en: "Benefits", bm: "Manfaat", zh: "礼遇" },
   "account.tab.sessions": { en: "Sessions", bm: "Sesi", zh: "登录设备" },
-  "account.loadingTransactions": { en: "Loading your orders…", bm: "Memuatkan pesanan anda…", zh: "正在加载订单…" },
+  "account.loadingTransactions": {
+    en: "Loading your orders…",
+    bm: "Memuatkan pesanan anda…",
+    zh: "正在加载订单…"
+  },
   "account.errorTransactions": {
     en: "Unable to load your orders right now.",
     bm: "Tidak dapat memuatkan pesanan anda buat masa ini.",
@@ -997,7 +1269,11 @@ export const translations = {
   "account.offerLabel": { en: "Offer", bm: "Tawaran", zh: "优惠" },
   "account.prevPage": { en: "Previous", bm: "Sebelumnya", zh: "上一页" },
   "account.nextPage": { en: "Next", bm: "Seterusnya", zh: "下一页" },
-  "account.loadingMembership": { en: "Loading membership…", bm: "Memuatkan keahlian…", zh: "正在加载会员信息…" },
+  "account.loadingMembership": {
+    en: "Loading membership…",
+    bm: "Memuatkan keahlian…",
+    zh: "正在加载会员信息…"
+  },
   "account.errorMembership": {
     en: "Unable to load membership details right now.",
     bm: "Tidak dapat memuatkan butiran keahlian buat masa ini.",
@@ -1008,13 +1284,21 @@ export const translations = {
   "account.tierSince": { en: "Tier updated", bm: "Dikemas kini", zh: "等级更新时间" },
   "account.tierProgress": { en: "Tier progress", bm: "Kemajuan tahap", zh: "升级进度" },
   "account.maxTierBadge": { en: "Top tier", bm: "Tahap tertinggi", zh: "最高等级" },
-  "account.loadingBenefits": { en: "Loading benefits…", bm: "Memuatkan manfaat…", zh: "正在加载礼遇…" },
+  "account.loadingBenefits": {
+    en: "Loading benefits…",
+    bm: "Memuatkan manfaat…",
+    zh: "正在加载礼遇…"
+  },
   "account.errorBenefits": {
     en: "Unable to load benefits right now.",
     bm: "Tidak dapat memuatkan manfaat buat masa ini.",
     zh: "暂时无法加载礼遇信息。"
   },
-  "account.availableOffers": { en: "Available vouchers & promos", bm: "Baucar & promosi tersedia", zh: "可用优惠券与促销" },
+  "account.availableOffers": {
+    en: "Available vouchers & promos",
+    bm: "Baucar & promosi tersedia",
+    zh: "可用优惠券与促销"
+  },
   "account.noActiveOffers": {
     en: "No public vouchers are active right now.",
     bm: "Tiada baucar awam yang aktif buat masa ini.",
@@ -1025,28 +1309,48 @@ export const translations = {
   "account.applyInCart": { en: "Use in cart", bm: "Guna di troli", zh: "用于购物车" },
   "account.tierLadder": { en: "Membership tiers", bm: "Tahap keahlian", zh: "会员等级阶梯" },
   "account.currentTierBadge": { en: "Current", bm: "Semasa", zh: "当前" },
-  "account.minSpend": { en: "Min. spend {amount}", bm: "Belanja min. {amount}", zh: "最低消费 {amount}" },
+  "account.minSpend": {
+    en: "Min. spend {amount}",
+    bm: "Belanja min. {amount}",
+    zh: "最低消费 {amount}"
+  },
   "account.discountPct": { en: "{pct}% off", bm: "Diskaun {pct}%", zh: "享 {pct}% 折扣" },
-  "account.loadingSessions": { en: "Loading active sessions…", bm: "Memuatkan sesi aktif…", zh: "正在加载活跃设备…" },
+  "account.loadingSessions": {
+    en: "Loading active sessions…",
+    bm: "Memuatkan sesi aktif…",
+    zh: "正在加载活跃设备…"
+  },
   "account.errorSessions": {
     en: "Unable to load your sessions right now.",
     bm: "Tidak dapat memuatkan sesi anda buat masa ini.",
     zh: "暂时无法加载登录设备。"
   },
-  "account.noSessions": { en: "No active sessions found.", bm: "Tiada sesi aktif ditemui.", zh: "未找到活跃会话。" },
+  "account.noSessions": {
+    en: "No active sessions found.",
+    bm: "Tiada sesi aktif ditemui.",
+    zh: "未找到活跃会话。"
+  },
   "account.sessionsHint": {
     en: "Signed-in browsers and devices for this account.",
     bm: "Pelayar dan peranti yang sedang log masuk untuk akaun ini.",
     zh: "当前登录此账户的浏览器和设备。"
   },
-  "account.revokeOthers": { en: "Sign out other devices", bm: "Log keluar peranti lain", zh: "退出其他设备" },
+  "account.revokeOthers": {
+    en: "Sign out other devices",
+    bm: "Log keluar peranti lain",
+    zh: "退出其他设备"
+  },
   "account.revoking": { en: "Signing out…", bm: "Melog keluar…", zh: "正在退出…" },
   "account.confirmRevokeTitle": {
     en: "Sign out all other active sessions?",
     bm: "Log keluar semua sesi aktif yang lain?",
     zh: "确定退出所有其他活跃设备吗？"
   },
-  "account.confirmRevokeAction": { en: "Confirm sign out", bm: "Sahkan log keluar", zh: "确认退出" },
+  "account.confirmRevokeAction": {
+    en: "Confirm sign out",
+    bm: "Sahkan log keluar",
+    zh: "确认退出"
+  },
   "account.cancel": { en: "Cancel", bm: "Batal", zh: "取消" },
   "account.currentDevice": { en: "This device", bm: "Peranti ini", zh: "当前设备" },
   "account.lastSeen": { en: "Active {time}", bm: "Aktif {time}", zh: "活跃于 {time}" },
@@ -1054,7 +1358,11 @@ export const translations = {
   "account.unknownDevice": { en: "Unknown device", bm: "Peranti tidak dikenali", zh: "未知设备" },
 
   /* ---- legal & status pages ---- */
-  "legal.lastUpdated": { en: "Last updated {date}", bm: "Dikemas kini {date}", zh: "最后更新：{date}" },
+  "legal.lastUpdated": {
+    en: "Last updated {date}",
+    bm: "Dikemas kini {date}",
+    zh: "最后更新：{date}"
+  },
   "legal.backToStore": { en: "Back to the store", bm: "Kembali ke kedai", zh: "返回商店" },
   "legal.goHome": { en: "Go to home", bm: "Ke halaman utama", zh: "返回首页" },
   "legal.navLabel": { en: "Store policies", bm: "Polisi kedai", zh: "门店条款与政策" },
@@ -1085,7 +1393,11 @@ export const translations = {
 
   /* ---- support chat additions ---- */
   "support.guestDetails": { en: "Guest details", bm: "Maklumat tetamu", zh: "访客资料" },
-  "support.orderLookup": { en: "Guest order lookup", bm: "Semakan pesanan tetamu", zh: "访客订单查询" },
+  "support.orderLookup": {
+    en: "Guest order lookup",
+    bm: "Semakan pesanan tetamu",
+    zh: "访客订单查询"
+  },
   "support.orderNumberOptional": {
     en: "Order number (optional)",
     bm: "Nombor pesanan (pilihan)",
@@ -1108,12 +1420,24 @@ export const translations = {
   "landing.shopOnlineCta": { en: "Shop online", bm: "Beli online", zh: "线上选购" },
   "landing.browseInShop": { en: "Browse in shop", bm: "Lihat di kedai", zh: "进入商店浏览" },
   "landing.menuOpen": { en: "Open navigation menu", bm: "Buka menu navigasi", zh: "打开导航菜单" },
-  "landing.menuClose": { en: "Close navigation menu", bm: "Tutup menu navigasi", zh: "关闭导航菜单" },
-  "landing.lightboxClose": { en: "Close photo viewer", bm: "Tutup paparan foto", zh: "关闭图片查看" },
+  "landing.menuClose": {
+    en: "Close navigation menu",
+    bm: "Tutup menu navigasi",
+    zh: "关闭导航菜单"
+  },
+  "landing.lightboxClose": {
+    en: "Close photo viewer",
+    bm: "Tutup paparan foto",
+    zh: "关闭图片查看"
+  },
   "landing.lightboxPrev": { en: "Previous photo", bm: "Foto sebelumnya", zh: "上一张照片" },
   "landing.lightboxNext": { en: "Next photo", bm: "Foto seterusnya", zh: "下一张照片" },
   "landing.enlargePhoto": { en: "Enlarge photo", bm: "Besarkan foto", zh: "放大查看" },
-  "landing.mapTitle": { en: "Ekoway Hardware Map — Sibu", bm: "Peta Ekoway Hardware — Sibu", zh: "Ekoway 永光五金地图 — 诗巫" }
+  "landing.mapTitle": {
+    en: "Ekoway Hardware Map — Sibu",
+    bm: "Peta Ekoway Hardware — Sibu",
+    zh: "Ekoway 永光五金地图 — 诗巫"
+  }
 } as const satisfies Record<string, Entry>;
 
 export type TranslationKey = keyof typeof translations;

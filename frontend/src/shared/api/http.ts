@@ -69,7 +69,11 @@ function readStoredToken(key: string): string | null {
   }
 }
 
-function requestHeaders(includeJson: boolean, extra?: HeadersInit, scope: AuthScope = "admin"): Headers {
+function requestHeaders(
+  includeJson: boolean,
+  extra?: HeadersInit,
+  scope: AuthScope = "admin"
+): Headers {
   const headers = new Headers(extra);
 
   if (includeJson && !headers.has("Content-Type")) {
@@ -118,10 +122,15 @@ function createTimedSignal(inputSignal?: AbortSignal | null): TimedSignal {
 }
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
-  return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : undefined;
+  return typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)
+    : undefined;
 }
 
-function readString(record: Record<string, unknown> | undefined, ...keys: string[]): string | undefined {
+function readString(
+  record: Record<string, unknown> | undefined,
+  ...keys: string[]
+): string | undefined {
   for (const key of keys) {
     if (typeof record?.[key] === "string") return record[key] as string;
   }
@@ -129,7 +138,8 @@ function readString(record: Record<string, unknown> | undefined, ...keys: string
 }
 
 async function readErrorPayload(response: Response): Promise<ErrorPayload> {
-  const requestId = response.headers.get("x-request-id") ?? response.headers.get("x-correlation-id") ?? undefined;
+  const requestId =
+    response.headers.get("x-request-id") ?? response.headers.get("x-correlation-id") ?? undefined;
   const contentType = response.headers.get("content-type") ?? "";
 
   if (contentType.includes("json")) {
@@ -139,7 +149,9 @@ async function readErrorPayload(response: Response): Promise<ErrorPayload> {
         code: readString(body, "code", "errorCode"),
         message: readString(body, "message", "error"),
         fieldErrors: body?.fieldErrors ?? body?.errors,
-        requestId: readString(body, "requestId", "request_id", "correlationId", "correlation_id") ?? requestId
+        requestId:
+          readString(body, "requestId", "request_id", "correlationId", "correlation_id") ??
+          requestId
       };
     } catch {
       return { requestId };
@@ -178,7 +190,12 @@ function safeApiError(options: ApiErrorOptions & { cause?: unknown }): ApiError 
 async function errorFromResponse(response: Response, path: string): Promise<ApiError> {
   const payload = await readErrorPayload(response);
   const normalized = normalizeError(
-    { code: payload.code, errors: payload.fieldErrors, message: payload.message, status: response.status },
+    {
+      code: payload.code,
+      errors: payload.fieldErrors,
+      message: payload.message,
+      status: response.status
+    },
     { operation: path }
   );
 
@@ -302,7 +319,11 @@ function handleUnauthorized(response: Response, scope: AuthScope): void {
   if (scope === "customer") setCustomerAuthToken(null);
 }
 
-export async function fetchJson<T>(path: string, fallback: T, scope: AuthScope = "admin"): Promise<T> {
+export async function fetchJson<T>(
+  path: string,
+  fallback: T,
+  scope: AuthScope = "admin"
+): Promise<T> {
   const { data, isFallback } = await fetchJsonResult(path, fallback, scope);
   if (isFallback && scope === "admin" && !import.meta.env.DEV) {
     throw safeApiError({

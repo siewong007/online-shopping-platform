@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { useI18n } from "../../i18n/LanguageContext";
-import { JOB_LENSES, type JobLensId } from "./jobLenses";
-import type { Product, StorefrontSort } from "../../types";
+import { JOB_LENSES } from "./jobLenses";
+import type { StorefrontSort } from "../../types";
 
 import {
   askPriceHref,
@@ -67,44 +67,50 @@ export function StorefrontView({
   const productFieldRef = useRef<HTMLElement | null>(null);
   const sidebarRef = useRef<HTMLElement | null>(null);
 
-  useEffect(() => {
+  const [prevMinPriceCents, setPrevMinPriceCents] = useState(minPriceCents);
+  if (prevMinPriceCents !== minPriceCents) {
+    setPrevMinPriceCents(minPriceCents);
     const next = minPriceCents == null ? "" : String(minPriceCents / 100);
-    setMinPriceDraft((current) =>
-      priceInputToCents(current) === minPriceCents ? current : next
-    );
-  }, [minPriceCents]);
+    if (priceInputToCents(minPriceDraft) !== minPriceCents) {
+      setMinPriceDraft(next);
+    }
+  }
 
-  useEffect(() => {
+  const [prevMaxPriceCents, setPrevMaxPriceCents] = useState(maxPriceCents);
+  if (prevMaxPriceCents !== maxPriceCents) {
+    setPrevMaxPriceCents(maxPriceCents);
     const next = maxPriceCents == null ? "" : String(maxPriceCents / 100);
-    setMaxPriceDraft((current) =>
-      priceInputToCents(current) === maxPriceCents ? current : next
-    );
-  }, [maxPriceCents]);
+    if (priceInputToCents(maxPriceDraft) !== maxPriceCents) {
+      setMaxPriceDraft(next);
+    }
+  }
+
   // Host for the filter drawer portal. It carries `storefront-shell` because every
   // drawer/backdrop rule in styles.css is scoped under that class, and `display:
   // contents` keeps the host itself out of layout.
-  const filterHostRef = useRef<HTMLDivElement | null>(null);
-  if (filterHostRef.current === null) {
+  const [filterHost] = useState(() => {
     const host = document.createElement("div");
     host.className = "storefront-shell";
     host.style.display = "contents";
-    filterHostRef.current = host;
-  }
+    return host;
+  });
 
   useEffect(() => {
-    const host = filterHostRef.current;
-    if (!host) return;
-    document.body.appendChild(host);
-    return () => host.remove();
-  }, []);
+    document.body.appendChild(filterHost);
+    return () => filterHost.remove();
+  }, [filterHost]);
   const availableJobs = isShowingFallbackData
     ? []
     : JOB_LENSES.filter(
         (job) =>
           job.approvedForProduction &&
-          job.departmentSlugs.some((slug) => filteredProducts.some((product) => product.category_slug === slug)),
+          job.departmentSlugs.some((slug) =>
+            filteredProducts.some((product) => product.category_slug === slug)
+          )
       );
-  const activeJob = activeJobId ? availableJobs.find((job) => job.id === activeJobId) ?? null : null;
+  const activeJob = activeJobId
+    ? (availableJobs.find((job) => job.id === activeJobId) ?? null)
+    : null;
 
   useEffect(() => {
     if (!isFiltersOpen) return;
@@ -151,6 +157,7 @@ export function StorefrontView({
     // The drawer is portalled to <body>, so marking the app shell inert keeps a
     // screen reader's virtual cursor out of the page behind it — Tab alone only
     // traps the keyboard.
+    const toggleButton = filtersToggleRef.current;
     const appShell = document.querySelector<HTMLElement>(".app-shell");
     appShell?.setAttribute("inert", "");
 
@@ -160,11 +167,16 @@ export function StorefrontView({
       appShell?.removeAttribute("inert");
       // Only restore focus when the toggle is still on the page; on unmount it
       // is gone and focusing it would steal focus from the next view.
-      if (filtersToggleRef.current?.isConnected) {
-        filtersToggleRef.current.focus();
+      if (toggleButton?.isConnected) {
+        toggleButton.focus();
       }
     };
   }, [isFiltersOpen]);
+
+  const onReturnFocusCompleteRef = useRef(onReturnFocusComplete);
+  useEffect(() => {
+    onReturnFocusCompleteRef.current = onReturnFocusComplete;
+  }, [onReturnFocusComplete]);
 
   useEffect(() => {
     if (returnFocusProductId === null) return;
@@ -177,14 +189,16 @@ export function StorefrontView({
 
       (productControl ?? productFieldRef.current)?.focus();
       productControl?.scrollIntoView({ block: "center", inline: "nearest" });
-      onReturnFocusComplete();
+      onReturnFocusCompleteRef.current();
     }, 0);
 
     return () => window.clearTimeout(timeout);
   }, [isRefetching, returnFocusProductId]);
 
   const jobProducts = activeJob
-    ? filteredProducts.filter((product) => activeJob.departmentSlugs.includes(product.category_slug))
+    ? filteredProducts.filter((product) =>
+        activeJob.departmentSlugs.includes(product.category_slug)
+      )
     : filteredProducts;
   // Filtering happens in the query now; everything returned is already a match.
   const visibleProducts = jobProducts;
@@ -233,8 +247,16 @@ export function StorefrontView({
       >
         {activeJob ? (
           <>
-            <JobContextRail categories={storefront.categories} job={activeJob} products={visibleProducts} />
-            <JobContextDisclosure categories={storefront.categories} job={activeJob} products={visibleProducts} />
+            <JobContextRail
+              categories={storefront.categories}
+              job={activeJob}
+              products={visibleProducts}
+            />
+            <JobContextDisclosure
+              categories={storefront.categories}
+              job={activeJob}
+              products={visibleProducts}
+            />
           </>
         ) : null}
 
@@ -276,11 +298,19 @@ export function StorefrontView({
                 type="button"
               >
                 {t("shop.filters.toggle")}
-                {activeFilterCount > 0 ? <> <span>{activeFilterCount}</span></> : null}
+                {activeFilterCount > 0 ? (
+                  <>
+                    {" "}
+                    <span>{activeFilterCount}</span>
+                  </>
+                ) : null}
               </button>
               <label className="worklist-sort">
                 <span>{t("shop.toolbar.sort")}:</span>
-                <select value={sortOption} onChange={(event) => onChangeSort(event.target.value as StorefrontSort)}>
+                <select
+                  value={sortOption}
+                  onChange={(event) => onChangeSort(event.target.value as StorefrontSort)}
+                >
                   <option value="featured">{t("shop.sort.featured")}</option>
                   <option value="price_asc">{t("shop.sort.priceAsc")}</option>
                   <option value="price_desc">{t("shop.sort.priceDesc")}</option>
@@ -290,129 +320,163 @@ export function StorefrontView({
             </div>
           </div>
 
-          {isFiltersOpen ? createPortal(
-            <>
-              <button
-                aria-label={t("shop.filters.close")}
-                className="worklist-filter-backdrop"
-                onClick={() => setIsFiltersOpen(false)}
-                type="button"
-              />
-              <aside
-                id="worklist-filter-drawer"
-                className="worklist-filter-drawer"
-                aria-label={t("shop.filters.title")}
-                aria-modal="true"
-                role="dialog"
-                ref={sidebarRef}
-              >
-                <div className="worklist-filter-drawer__header">
-                  <h2>{t("shop.filters.title")}</h2>
-                  <button aria-label={t("shop.filters.close")} onClick={() => setIsFiltersOpen(false)} type="button">
-                    <IconClose />
-                  </button>
-                </div>
-                <fieldset className="fgroup">
-                  <legend>{t("shop.filters.availability")}</legend>
-                  <label className="opt">
-                    <input checked={inStockOnly} onChange={(event) => onChangeInStockOnly(event.target.checked)} type="checkbox" />
-                    <span>{t("shop.filters.instock")}</span>
-                  </label>
-                  <label className="opt">
-                    <input checked={onSaleOnly} onChange={(event) => onChangeOnSaleOnly(event.target.checked)} type="checkbox" />
-                    <span>{t("shop.filters.onsale")}</span>
-                  </label>
-                </fieldset>
-                <fieldset className="fgroup">
-                  <legend>{t("shop.filters.department")}</legend>
-                  <div className="opts opts--scroll">
-                    {departmentsWithStock.map((category) => (
-                      <label className="opt" key={category.slug}>
-                        <input
-                          checked={selectedCategory === category.slug}
-                          name="shop-department"
-                          onChange={() => onChangeCategory(category.slug)}
-                          type="radio"
-                        />
-                        <span>{category.name}</span>
-                        {category.slug === "all" ? null : (
-                          <span className="opt-count">{countBySlug.get(category.slug) ?? 0}</span>
-                        )}
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-                <fieldset className="fgroup">
-                  <legend>{t("shop.filters.price")}</legend>
-                  <div className="presets">
-                    {PRICE_PRESETS.map((preset) => (
+          {isFiltersOpen
+            ? createPortal(
+                <>
+                  <button
+                    aria-label={t("shop.filters.close")}
+                    className="worklist-filter-backdrop"
+                    onClick={() => setIsFiltersOpen(false)}
+                    type="button"
+                  />
+                  <aside
+                    id="worklist-filter-drawer"
+                    className="worklist-filter-drawer"
+                    aria-label={t("shop.filters.title")}
+                    aria-modal="true"
+                    role="dialog"
+                    ref={sidebarRef}
+                  >
+                    <div className="worklist-filter-drawer__header">
+                      <h2>{t("shop.filters.title")}</h2>
                       <button
-                        className={"preset" + (activePreset === preset ? " preset--on" : "")}
-                        key={`${preset.minCents}-${preset.maxCents}`}
-                        onClick={() => {
-                          if (activePreset === preset) {
-                            onChangeMinPrice(null);
-                            onChangeMaxPrice(null);
-                          } else {
-                            onChangeMinPrice(preset.minCents);
-                            onChangeMaxPrice(preset.maxCents);
-                          }
-                        }}
+                        aria-label={t("shop.filters.close")}
+                        onClick={() => setIsFiltersOpen(false)}
                         type="button"
                       >
-                        {preset.maxCents == null
-                          ? t("shop.filters.priceOver", { n: formatWorklistPrice(preset.minCents) })
-                          : preset.minCents > 0
-                            ? `${formatWorklistPrice(preset.minCents)} – ${formatWorklistPrice(preset.maxCents)}`
-                            : t("shop.filters.priceUnder", { n: formatWorklistPrice(preset.maxCents) })}
+                        <IconClose />
                       </button>
-                    ))}
-                  </div>
-                  <div className="price-inputs">
-                    <label>
-                      <span>{t("shop.filter.min")}</span>
-                      <input
-                        min="0"
-                        onBlur={() => setMinPriceDraft(minPriceCents == null ? "" : String(minPriceCents / 100))}
-                        onChange={(event) => {
-                          setMinPriceDraft(event.target.value);
-                          onChangeMinPrice(priceInputToCents(event.target.value));
-                        }}
-                        placeholder="RM 0"
-                        step="0.01"
-                        type="number"
-                        value={minPriceDraft}
-                      />
-                    </label>
-                    <label>
-                      <span>{t("shop.filter.max")}</span>
-                      <input
-                        min="0"
-                        onBlur={() => setMaxPriceDraft(maxPriceCents == null ? "" : String(maxPriceCents / 100))}
-                        onChange={(event) => {
-                          setMaxPriceDraft(event.target.value);
-                          onChangeMaxPrice(priceInputToCents(event.target.value));
-                        }}
-                        placeholder={t("shop.filter.any")}
-                        step="0.01"
-                        type="number"
-                        value={maxPriceDraft}
-                      />
-                    </label>
-                  </div>
-                </fieldset>
-                <button className="worklist-filter-drawer__clear" onClick={clearAllFilters} type="button">
-                  {t("shop.filters.clearAll")}
-                </button>
-              </aside>
-            </>,
-            filterHostRef.current
-          ) : null}
+                    </div>
+                    <fieldset className="fgroup">
+                      <legend>{t("shop.filters.availability")}</legend>
+                      <label className="opt">
+                        <input
+                          checked={inStockOnly}
+                          onChange={(event) => onChangeInStockOnly(event.target.checked)}
+                          type="checkbox"
+                        />
+                        <span>{t("shop.filters.instock")}</span>
+                      </label>
+                      <label className="opt">
+                        <input
+                          checked={onSaleOnly}
+                          onChange={(event) => onChangeOnSaleOnly(event.target.checked)}
+                          type="checkbox"
+                        />
+                        <span>{t("shop.filters.onsale")}</span>
+                      </label>
+                    </fieldset>
+                    <fieldset className="fgroup">
+                      <legend>{t("shop.filters.department")}</legend>
+                      <div className="opts opts--scroll">
+                        {departmentsWithStock.map((category) => (
+                          <label className="opt" key={category.slug}>
+                            <input
+                              checked={selectedCategory === category.slug}
+                              name="shop-department"
+                              onChange={() => onChangeCategory(category.slug)}
+                              type="radio"
+                            />
+                            <span>{category.name}</span>
+                            {category.slug === "all" ? null : (
+                              <span className="opt-count">
+                                {countBySlug.get(category.slug) ?? 0}
+                              </span>
+                            )}
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                    <fieldset className="fgroup">
+                      <legend>{t("shop.filters.price")}</legend>
+                      <div className="presets">
+                        {PRICE_PRESETS.map((preset) => (
+                          <button
+                            className={"preset" + (activePreset === preset ? " preset--on" : "")}
+                            key={`${preset.minCents}-${preset.maxCents}`}
+                            onClick={() => {
+                              if (activePreset === preset) {
+                                onChangeMinPrice(null);
+                                onChangeMaxPrice(null);
+                              } else {
+                                onChangeMinPrice(preset.minCents);
+                                onChangeMaxPrice(preset.maxCents);
+                              }
+                            }}
+                            type="button"
+                          >
+                            {preset.maxCents == null
+                              ? t("shop.filters.priceOver", {
+                                  n: formatWorklistPrice(preset.minCents)
+                                })
+                              : preset.minCents > 0
+                                ? `${formatWorklistPrice(preset.minCents)} – ${formatWorklistPrice(preset.maxCents)}`
+                                : t("shop.filters.priceUnder", {
+                                    n: formatWorklistPrice(preset.maxCents)
+                                  })}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="price-inputs">
+                        <label>
+                          <span>{t("shop.filter.min")}</span>
+                          <input
+                            min="0"
+                            onBlur={() =>
+                              setMinPriceDraft(
+                                minPriceCents == null ? "" : String(minPriceCents / 100)
+                              )
+                            }
+                            onChange={(event) => {
+                              setMinPriceDraft(event.target.value);
+                              onChangeMinPrice(priceInputToCents(event.target.value));
+                            }}
+                            placeholder="RM 0"
+                            step="0.01"
+                            type="number"
+                            value={minPriceDraft}
+                          />
+                        </label>
+                        <label>
+                          <span>{t("shop.filter.max")}</span>
+                          <input
+                            min="0"
+                            onBlur={() =>
+                              setMaxPriceDraft(
+                                maxPriceCents == null ? "" : String(maxPriceCents / 100)
+                              )
+                            }
+                            onChange={(event) => {
+                              setMaxPriceDraft(event.target.value);
+                              onChangeMaxPrice(priceInputToCents(event.target.value));
+                            }}
+                            placeholder={t("shop.filter.any")}
+                            step="0.01"
+                            type="number"
+                            value={maxPriceDraft}
+                          />
+                        </label>
+                      </div>
+                    </fieldset>
+                    <button
+                      className="worklist-filter-drawer__clear"
+                      onClick={clearAllFilters}
+                      type="button"
+                    >
+                      {t("shop.filters.clearAll")}
+                    </button>
+                  </aside>
+                </>,
+                filterHost
+              )
+            : null}
 
           <div className="shop-listing-region" aria-busy={isRefetching}>
             {isRefetching ? (
               <>
-                <span className="sr-only" role="status">{t("shop.listing.loading")}</span>
+                <span className="sr-only" role="status">
+                  {t("shop.listing.loading")}
+                </span>
                 <ShopListingSkeletonRows count={6} />
               </>
             ) : visibleProducts.length === 0 ? (
@@ -427,13 +491,17 @@ export function StorefrontView({
               <div className="shop-card-grid">
                 {visibleProducts.map((product) => {
                   const categoryName =
-                    storefront.categories.find((category) => category.slug === product.category_slug)?.name ??
-                    product.category_slug;
+                    storefront.categories.find(
+                      (category) => category.slug === product.category_slug
+                    )?.name ?? product.category_slug;
                   const stockState = productStockState(product);
 
                   return (
                     <article className="shop-product-card" key={product.id}>
-                      <ListingProductMedia product={product} onOpen={() => onViewProduct(product.id)} />
+                      <ListingProductMedia
+                        product={product}
+                        onOpen={() => onViewProduct(product.id)}
+                      />
                       <div className="shop-product-card-body">
                         <span className="shop-product-category">{categoryName}</span>
                         <h2>
@@ -448,7 +516,9 @@ export function StorefrontView({
                           </button>
                         </h2>
                         <div className="shop-product-card__commerce">
-                          <span className="shop-price">{formatWorklistPrice(product.price_cents)}</span>
+                          <span className="shop-price">
+                            {formatWorklistPrice(product.price_cents)}
+                          </span>
                           <ListingStockLine product={product} />
                         </div>
                         <div className="shop-product-card__actions">
@@ -461,25 +531,25 @@ export function StorefrontView({
                             {t("shop.product.view")} <span aria-hidden="true">→</span>
                           </button>
                           {PURCHASE_ENABLED ? (
-                          <button
-                            aria-label={`${t("shop.product.add")}: ${product.name}`}
-                            className="shop-add-to-cart"
-                            disabled={stockState === "out"}
-                            onClick={() => onAddToCart(product)}
-                            type="button"
-                          >
-                            {t("shop.product.add")}
-                          </button>
+                            <button
+                              aria-label={`${t("shop.product.add")}: ${product.name}`}
+                              className="shop-add-to-cart"
+                              disabled={stockState === "out"}
+                              onClick={() => onAddToCart(product)}
+                              type="button"
+                            >
+                              {t("shop.product.add")}
+                            </button>
                           ) : (
-                          <a
-                            aria-label={`${t("shop.purchase.askPrice")}: ${product.name}`}
-                            className="shop-add-to-cart"
-                            href={askPriceHref(product.name)}
-                            rel="noopener"
-                            target="_blank"
-                          >
-                            {t("shop.purchase.askPrice")}
-                          </a>
+                            <a
+                              aria-label={`${t("shop.purchase.askPrice")}: ${product.name}`}
+                              className="shop-add-to-cart"
+                              href={askPriceHref(product.name)}
+                              rel="noopener"
+                              target="_blank"
+                            >
+                              {t("shop.purchase.askPrice")}
+                            </a>
                           )}
                         </div>
                       </div>

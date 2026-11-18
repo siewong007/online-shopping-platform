@@ -62,18 +62,11 @@ function mapsEmbedUrl(lang: Lang): string {
 }
 
 function isPlainLeftClick(event: ReactMouseEvent<HTMLAnchorElement>): boolean {
-  return (
-    event.button === 0 &&
-    !event.metaKey &&
-    !event.ctrlKey &&
-    !event.shiftKey &&
-    !event.altKey
-  );
+  return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
 }
 
 const prefersReducedMotion = () =>
-  typeof window !== "undefined" &&
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function shouldSkipIntroOnMount(): boolean {
   if (typeof window === "undefined") return true;
@@ -126,19 +119,79 @@ function charSpans(text: string): ReactNode[] {
 }
 
 const catRows = [
-  { num: "/01", name: "cat.01.name", sub: "cat.01.sub", img: "/ekoway/categories/power-tools-v1.jpg", shopHint: "power-tools|tools" },
-  { num: "/02", name: "cat.02.name", sub: "cat.02.sub", img: "/ekoway/categories/paint-v1.jpg", shopHint: "paint" },
-  { num: "/03", name: "cat.03.name", sub: "cat.03.sub", img: "/ekoway/categories/building-v1.jpg", shopHint: "building-materials" },
-  { num: "/04", name: "cat.04.name", sub: "cat.04.sub", img: "/ekoway/categories/bathroom-v1.jpg", shopHint: "bathroom|bath" },
-  { num: "/05", name: "cat.05.name", sub: "cat.05.sub", img: "/ekoway/categories/kitchen-v1.jpg", shopHint: "kitchen" },
-  { num: "/06", name: "cat.06.name", sub: "cat.06.sub", img: "/ekoway/categories/electrical-v1.jpg", shopHint: "electrical|appliances" }
+  {
+    num: "/01",
+    name: "cat.01.name",
+    sub: "cat.01.sub",
+    img: "/ekoway/categories/power-tools-v1.jpg",
+    shopHint: "power-tools|tools"
+  },
+  {
+    num: "/02",
+    name: "cat.02.name",
+    sub: "cat.02.sub",
+    img: "/ekoway/categories/paint-v1.jpg",
+    shopHint: "paint"
+  },
+  {
+    num: "/03",
+    name: "cat.03.name",
+    sub: "cat.03.sub",
+    img: "/ekoway/categories/building-v1.jpg",
+    shopHint: "building-materials"
+  },
+  {
+    num: "/04",
+    name: "cat.04.name",
+    sub: "cat.04.sub",
+    img: "/ekoway/categories/bathroom-v1.jpg",
+    shopHint: "bathroom|bath"
+  },
+  {
+    num: "/05",
+    name: "cat.05.name",
+    sub: "cat.05.sub",
+    img: "/ekoway/categories/kitchen-v1.jpg",
+    shopHint: "kitchen"
+  },
+  {
+    num: "/06",
+    name: "cat.06.name",
+    sub: "cat.06.sub",
+    img: "/ekoway/categories/electrical-v1.jpg",
+    shopHint: "electrical|appliances"
+  }
 ] as const;
 
 const dealCards = [
-  { img: "/ekoway/img/power-tools.jpg", brand: "BOSCH · DONGCHENG · STANLEY", title: "month.1.title", body: "month.1.body", shopHint: "power-tools|tools" },
-  { img: "/ekoway/img/paints.jpg", brand: "Nippon Paint · Smart Paint", title: "month.2.title", body: "month.2.body", shopHint: "paint" },
-  { img: "/ekoway/img/home-appliances.jpg", brand: "Panasonic · Midea · KDK", title: "month.3.title", body: "month.3.body", shopHint: "electrical|appliances" },
-  { img: "/ekoway/img/bathroom-plumbing.jpg", brand: "Saniware · Cabana · Inspire", title: "month.4.title", body: "month.4.body", shopHint: "bathroom|bath" }
+  {
+    img: "/ekoway/img/power-tools.jpg",
+    brand: "BOSCH · DONGCHENG · STANLEY",
+    title: "month.1.title",
+    body: "month.1.body",
+    shopHint: "power-tools|tools"
+  },
+  {
+    img: "/ekoway/img/paints.jpg",
+    brand: "Nippon Paint · Smart Paint",
+    title: "month.2.title",
+    body: "month.2.body",
+    shopHint: "paint"
+  },
+  {
+    img: "/ekoway/img/home-appliances.jpg",
+    brand: "Panasonic · Midea · KDK",
+    title: "month.3.title",
+    body: "month.3.body",
+    shopHint: "electrical|appliances"
+  },
+  {
+    img: "/ekoway/img/bathroom-plumbing.jpg",
+    brand: "Saniware · Cabana · Inspire",
+    title: "month.4.title",
+    body: "month.4.body",
+    shopHint: "bathroom|bath"
+  }
 ] as const;
 
 const stats = [
@@ -148,8 +201,27 @@ const stats = [
   { count: 4000, suffix: "+", label: "stat.4" }
 ] as const;
 
-const brandRowA = ["Bosch", "Stanley", "Dong Cheng", "Black+Decker", "Kobelco", "Nippon Paint", "Smart Paint", "Panasonic"];
-const brandRowB = ["KDK", "Khind", "Midea", "Joven", "Alpha", "Sorento", "Cabana", "Saniware", "Inspire"];
+const brandRowA = [
+  "Bosch",
+  "Stanley",
+  "Dong Cheng",
+  "Black+Decker",
+  "Kobelco",
+  "Nippon Paint",
+  "Smart Paint",
+  "Panasonic"
+];
+const brandRowB = [
+  "KDK",
+  "Khind",
+  "Midea",
+  "Joven",
+  "Alpha",
+  "Sorento",
+  "Cabana",
+  "Saniware",
+  "Inspire"
+];
 
 const storeShots = [
   { src: "/ekoway/store/store-03.jpg", cap: "store.cap.1", wide: false },
@@ -165,15 +237,39 @@ const storeShots = [
 ] as const;
 
 const whyIcons = [
-  <svg key="shield" className="ficon" viewBox="0 0 24 24" fill="none" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    key="shield"
+    className="ficon"
+    viewBox="0 0 24 24"
+    fill="none"
+    strokeWidth="1.6"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" />
     <path d="M9 12l2 2 4-4" />
   </svg>,
-  <svg key="tag" className="ficon" viewBox="0 0 24 24" fill="none" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    key="tag"
+    className="ficon"
+    viewBox="0 0 24 24"
+    fill="none"
+    strokeWidth="1.6"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0l-6.2-6.2a2 2 0 0 1-.6-1.4V4.4a1.4 1.4 0 0 1 1.4-1.4h6.2a2 2 0 0 1 1.4.6l6.8 6.8a2 2 0 0 1 0 2.8z" />
     <circle cx="8" cy="8" r="1.4" />
   </svg>,
-  <svg key="chat" className="ficon" viewBox="0 0 24 24" fill="none" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    key="chat"
+    className="ficon"
+    viewBox="0 0 24 24"
+    fill="none"
+    strokeWidth="1.6"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M4 5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" />
     <path d="M8 10h8M8 13h5" />
   </svg>
@@ -229,11 +325,7 @@ type LandingViewProps = {
   onPrefetchStorefront?: () => void;
 };
 
-export function LandingView({
-  onOpenShop,
-  onOpenLegal,
-  onPrefetchStorefront
-}: LandingViewProps) {
+export function LandingView({ onOpenShop, onOpenLegal, onPrefetchStorefront }: LandingViewProps) {
   const { lang, t } = useI18n();
   const rootRef = useRef<HTMLDivElement>(null);
   const heroNavRef = useRef<HTMLElement>(null);
@@ -645,7 +737,8 @@ export function LandingView({
       };
       const onWheel = (event: WheelEvent) => {
         if (maxShift <= 0) return;
-        if (Math.abs(event.deltaX) <= Math.abs(event.deltaY) || Math.abs(event.deltaX) < 0.5) return;
+        if (Math.abs(event.deltaX) <= Math.abs(event.deltaY) || Math.abs(event.deltaX) < 0.5)
+          return;
         const rect = pin.getBoundingClientRect();
         const curShift = Math.max(0, Math.min(maxShift, -rect.top));
         const nextShift = Math.max(0, Math.min(maxShift, curShift + event.deltaX));
@@ -818,7 +911,9 @@ export function LandingView({
         const dialog = lightboxRef.current;
         if (!dialog) return;
         const focusables = Array.from(
-          dialog.querySelectorAll<HTMLElement>("button:not([disabled]), [href], [tabindex]:not([tabindex='-1'])")
+          dialog.querySelectorAll<HTMLElement>(
+            "button:not([disabled]), [href], [tabindex]:not([tabindex='-1'])"
+          )
         );
         if (focusables.length === 0) {
           event.preventDefault();
@@ -1118,8 +1213,19 @@ export function LandingView({
               {dealCards.map((card, index) => {
                 const title = t(card.title);
                 return (
-                  <div className="deal-card" data-reveal="" style={delay(index * 0.08)} key={card.brand}>
-                    <img className="slot-img" src={card.img} alt={title} loading="lazy" decoding="async" />
+                  <div
+                    className="deal-card"
+                    data-reveal=""
+                    style={delay(index * 0.08)}
+                    key={card.brand}
+                  >
+                    <img
+                      className="slot-img"
+                      src={card.img}
+                      alt={title}
+                      loading="lazy"
+                      decoding="async"
+                    />
                     <div className="dbrand">{card.brand}</div>
                     <h3>{title}</h3>
                     <p className="dnote">{t(card.body)}</p>
@@ -1132,7 +1238,11 @@ export function LandingView({
                       >
                         <span>{t("month.wa")}</span> <span className="arr">↗</span>
                       </a>
-                      <a className="deal-shop-link" href="/shop" onClick={handleShopClick(card.shopHint)}>
+                      <a
+                        className="deal-shop-link"
+                        href="/shop"
+                        onClick={handleShopClick(card.shopHint)}
+                      >
                         <span>{t("landing.browseInShop")}</span> <span className="arr">↗</span>
                       </a>
                     </div>
@@ -1173,7 +1283,13 @@ export function LandingView({
             </div>
             <div className="feat-grid">
               <div className="feat-card media" style={delay(0)}>
-                <img className="slot-img" src="/ekoway/img/why-ekoway.jpg" alt={t("why.cap")} loading="lazy" decoding="async" />
+                <img
+                  className="slot-img"
+                  src="/ekoway/img/why-ekoway.jpg"
+                  alt={t("why.cap")}
+                  loading="lazy"
+                  decoding="async"
+                />
                 <div className="m-grad" />
                 <div className="m-cap">{t("why.cap")}</div>
               </div>
@@ -1212,7 +1328,11 @@ export function LandingView({
             <div className={`brand-row ${rowIndex === 1 ? "rev" : ""}`} key={rowIndex}>
               <div className="brand-track">
                 {[false, true].map((hidden) => (
-                  <div className="brand-group" aria-hidden={hidden || undefined} key={String(hidden)}>
+                  <div
+                    className="brand-group"
+                    aria-hidden={hidden || undefined}
+                    key={String(hidden)}
+                  >
                     {row.map((brand) => (
                       <span key={brand} style={{ display: "contents" }}>
                         <span>{brand}</span>
@@ -1323,7 +1443,12 @@ export function LandingView({
             </h2>
             <div className="cta-row" data-reveal="" style={delay(0.15)}>
               <div className="cta-btns">
-                <a className="btn btn-solid" href={waGeneral} target="_blank" rel="noopener noreferrer">
+                <a
+                  className="btn btn-solid"
+                  href={waGeneral}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <span>{t("cta.wa")}</span> <span className="arr">↗</span>
                 </a>
                 <a className="btn btn-ghost" href="#contact">
@@ -1335,7 +1460,12 @@ export function LandingView({
               </div>
               <div className="wa-join">
                 <span className="label">{t("cta.join.k")}</span>
-                <a className="btn btn-ghost" href={waJoin} target="_blank" rel="noopener noreferrer">
+                <a
+                  className="btn btn-ghost"
+                  href={waJoin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <span>{t("cta.join.v")}</span> <span className="arr">↗</span>
                 </a>
               </div>
@@ -1376,7 +1506,12 @@ export function LandingView({
                   </table>
                 </div>
                 <div className="ci-actions">
-                  <a className="btn btn-solid" href={waGeneral} target="_blank" rel="noopener noreferrer">
+                  <a
+                    className="btn btn-solid"
+                    href={waGeneral}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <span>{t("contact.wa")}</span> <span className="arr">↗</span>
                   </a>
                   <a className="btn btn-ghost" href="tel:+6084253883">
@@ -1433,7 +1568,9 @@ export function LandingView({
           aria-label={t("landing.lightboxPrev")}
           onClick={(event) => {
             event.stopPropagation();
-            setLightboxIndex((c) => (c === null ? 0 : (c - 1 + storeShots.length) % storeShots.length));
+            setLightboxIndex((c) =>
+              c === null ? 0 : (c - 1 + storeShots.length) % storeShots.length
+            );
           }}
         >
           ‹
@@ -1473,7 +1610,12 @@ export function LandingView({
         <div className="container">
           <div className="foot-grid">
             <div className="foot-brand">
-              <img src="/ekoway/ekoway-logo.jpeg" alt="Ekoway logo" loading="lazy" decoding="async" />
+              <img
+                src="/ekoway/ekoway-logo.jpeg"
+                alt="Ekoway logo"
+                loading="lazy"
+                decoding="async"
+              />
               <p>
                 {t("foot.tag.1")}
                 <br />
@@ -1514,7 +1656,11 @@ export function LandingView({
             </nav>
             <div>
               <div className="label">{t("foot.follow")}</div>
-              <a href="https://facebook.com/ekowayhardware" target="_blank" rel="noopener noreferrer">
+              <a
+                href="https://facebook.com/ekowayhardware"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 Facebook
               </a>
               <a href={waGeneral} target="_blank" rel="noopener noreferrer">

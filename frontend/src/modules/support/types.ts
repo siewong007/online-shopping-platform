@@ -47,8 +47,7 @@ export type SupportConversationUpdateInput = {
 };
 
 export type SupportMessageListResponse =
-  | SupportMessage[]
-  | { items?: SupportMessage[]; messages?: SupportMessage[] };
+  SupportMessage[] | { items?: SupportMessage[]; messages?: SupportMessage[] };
 
 export type SupportConversationPage = {
   items: SupportInboxConversation[];

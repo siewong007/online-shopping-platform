@@ -8,9 +8,10 @@ const LANG_STORAGE_KEY = "ekoway-lang";
 
 function detectBrowserLang(): Lang {
   if (typeof navigator === "undefined") return "en";
-  const candidates = Array.isArray(navigator.languages) && navigator.languages.length > 0
-    ? navigator.languages
-    : [navigator.language];
+  const candidates =
+    Array.isArray(navigator.languages) && navigator.languages.length > 0
+      ? navigator.languages
+      : [navigator.language];
   for (const raw of candidates) {
     const code = (raw ?? "").toLowerCase();
     if (code.startsWith("zh")) return "zh";

@@ -30,10 +30,7 @@ export function updatePromotion(
   promotionId: number,
   input: UpdatePromotionInput
 ): Promise<Promotion> {
-  return putJson<UpdatePromotionInput, Promotion>(
-    `/api/admin/promotions/${promotionId}`,
-    input
-  );
+  return putJson<UpdatePromotionInput, Promotion>(`/api/admin/promotions/${promotionId}`, input);
 }
 
 export function deletePromotion(promotionId: number): Promise<void> {

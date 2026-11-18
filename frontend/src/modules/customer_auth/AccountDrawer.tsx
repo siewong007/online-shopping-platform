@@ -56,14 +56,16 @@ const emptyCustomerAuthForm: CustomerRegisterInput = {
 };
 
 function getFocusableElements(container: HTMLElement): HTMLElement[] {
-  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter((element) => {
-    if (element.closest('[hidden], [aria-hidden="true"]')) {
-      return false;
-    }
+  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+    (element) => {
+      if (element.closest('[hidden], [aria-hidden="true"]')) {
+        return false;
+      }
 
-    const style = window.getComputedStyle(element);
-    return style.display !== "none" && style.visibility !== "hidden";
-  });
+      const style = window.getComputedStyle(element);
+      return style.display !== "none" && style.visibility !== "hidden";
+    }
+  );
 }
 
 function parseTimestamp(value: string): Date | null {
@@ -197,8 +199,10 @@ export function AccountDrawer({
   const turnstile = useTurnstile();
   const onAuthenticatedRef = useRef(onAuthenticated);
 
-  onCloseRef.current = onClose;
-  onAuthenticatedRef.current = onAuthenticated;
+  useEffect(() => {
+    onCloseRef.current = onClose;
+    onAuthenticatedRef.current = onAuthenticated;
+  }, [onAuthenticated, onClose]);
 
   useEffect(() => {
     return () => {
@@ -214,39 +218,34 @@ export function AccountDrawer({
     }
   }, [session]);
 
-  useEffect(() => {
-    if (!open) {
-      return;
+  const prefillEmailKey = open ? customerAccountEmail.trim() : "";
+  const [prevPrefillEmailKey, setPrevPrefillEmailKey] = useState(prefillEmailKey);
+  if (prevPrefillEmailKey !== prefillEmailKey) {
+    setPrevPrefillEmailKey(prefillEmailKey);
+    if (prefillEmailKey && !authForm.email.trim()) {
+      setAuthForm((current) => ({ ...current, email: prefillEmailKey }));
     }
+  }
 
-    const email = customerAccountEmail.trim();
-    if (!email) {
-      return;
-    }
-
-    setAuthForm((current) => {
-      if (current.email.trim()) {
-        return current;
-      }
-
-      return { ...current, email };
-    });
-  }, [customerAccountEmail, open]);
-
-  useEffect(() => {
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
     if (!open) {
       setRestoreStatus("idle");
-      return;
-    }
-
-    if (!getCustomerAuthToken()) {
+    } else if (!getCustomerAuthToken()) {
       setSession(null);
       setRestoreStatus("idle");
+    } else {
+      setRestoreStatus("restoring");
+    }
+  }
+
+  useEffect(() => {
+    if (!open || !getCustomerAuthToken()) {
       return;
     }
 
     let cancelled = false;
-    setRestoreStatus("restoring");
 
     void (async () => {
       try {
@@ -278,7 +277,8 @@ export function AccountDrawer({
       return;
     }
 
-    openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    openerRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
@@ -368,13 +368,23 @@ export function AccountDrawer({
     (getFocusableElements(drawer)[0] ?? drawer).focus();
   }, [authView, isRestoringSession, open, portalTab, session]);
 
+  const sessionKey = open && session ? String(session.account.id) : "";
+
+  const membershipLoadKey = sessionKey ? `${sessionKey}:${membershipRetry}` : "";
+  const [prevMembershipLoadKey, setPrevMembershipLoadKey] = useState(membershipLoadKey);
+  if (prevMembershipLoadKey !== membershipLoadKey) {
+    setPrevMembershipLoadKey(membershipLoadKey);
+    if (membershipLoadKey) {
+      setMembershipStatus("loading");
+    }
+  }
+
   useEffect(() => {
     if (!open || !session) {
       return;
     }
 
     let cancelled = false;
-    setMembershipStatus("loading");
 
     void (async () => {
       try {
@@ -403,13 +413,21 @@ export function AccountDrawer({
     };
   }, [membershipRetry, open, session]);
 
+  const benefitsLoadKey = sessionKey ? `${sessionKey}:${benefitsRetry}` : "";
+  const [prevBenefitsLoadKey, setPrevBenefitsLoadKey] = useState(benefitsLoadKey);
+  if (prevBenefitsLoadKey !== benefitsLoadKey) {
+    setPrevBenefitsLoadKey(benefitsLoadKey);
+    if (benefitsLoadKey) {
+      setBenefitsStatus("loading");
+    }
+  }
+
   useEffect(() => {
     if (!open || !session) {
       return;
     }
 
     let cancelled = false;
-    setBenefitsStatus("loading");
 
     void (async () => {
       try {
@@ -436,13 +454,23 @@ export function AccountDrawer({
     };
   }, [benefitsRetry, open, session]);
 
+  const transactionsLoadKey = sessionKey
+    ? `${sessionKey}:${transactionsOffset}:${transactionsRetry}`
+    : "";
+  const [prevTransactionsLoadKey, setPrevTransactionsLoadKey] = useState(transactionsLoadKey);
+  if (prevTransactionsLoadKey !== transactionsLoadKey) {
+    setPrevTransactionsLoadKey(transactionsLoadKey);
+    if (transactionsLoadKey) {
+      setTransactionsStatus("loading");
+    }
+  }
+
   useEffect(() => {
     if (!open || !session) {
       return;
     }
 
     let cancelled = false;
-    setTransactionsStatus("loading");
 
     void (async () => {
       try {
@@ -472,14 +500,23 @@ export function AccountDrawer({
     };
   }, [open, session, transactionsOffset, transactionsRetry]);
 
+  const sessionsLoadKey =
+    sessionKey && portalTab === "sessions" ? `${sessionKey}:${sessionsRetry}` : "";
+  const [prevSessionsLoadKey, setPrevSessionsLoadKey] = useState(sessionsLoadKey);
+  if (prevSessionsLoadKey !== sessionsLoadKey) {
+    setPrevSessionsLoadKey(sessionsLoadKey);
+    if (sessionsLoadKey) {
+      setCustomerSessionsStatus("loading");
+      setCustomerSessionsError("");
+    }
+  }
+
   useEffect(() => {
     if (!open || !session || portalTab !== "sessions") {
       return;
     }
 
     let cancelled = false;
-    setCustomerSessionsStatus("loading");
-    setCustomerSessionsError("");
 
     void (async () => {
       try {
@@ -664,588 +701,583 @@ export function AccountDrawer({
     sessions: t("account.tab.sessions")
   };
 
-  const renderAuthenticatedBody = () => {
-    if (!session) {
-      return null;
-    }
+  const sessionProfile = session?.profile ?? null;
+  const sessionOrders = session
+    ? [...session.orders].sort(
+        (first, second) => Date.parse(second.created_at) - Date.parse(first.created_at)
+      )
+    : [];
+  const membershipProfile = membership?.profile ?? null;
+  const sessionLifetimeCents =
+    membershipProfile?.lifetime_purchase_cents ??
+    sessionProfile?.lifetime_purchase_cents ??
+    sessionOrders.reduce((sum, order) => sum + order.subtotal_cents, 0);
+  const sessionTotalOrders =
+    membershipProfile?.total_orders ?? sessionProfile?.total_orders ?? sessionOrders.length;
+  const sessionPointsBalance =
+    membershipProfile?.points_balance ?? sessionProfile?.points_balance ?? 0;
+  const sessionLastPurchaseAt =
+    membershipProfile?.last_purchase_at ?? sessionProfile?.last_purchase_at ?? null;
+  const membershipTierLabel =
+    membershipProfile?.membership_tier ?? sessionProfile?.membership_tier ?? "Online Shopper";
 
-    const sessionProfile = session.profile;
-    const sessionOrders = [...session.orders].sort(
-      (first, second) => Date.parse(second.created_at) - Date.parse(first.created_at)
-    );
+  const tabId = (tab: AccountPortalTab) => `${baseId}-tab-${tab}`;
+  const panelId = (tab: AccountPortalTab) => `${baseId}-panel-${tab}`;
 
-    const membershipProfile = membership?.profile ?? null;
-    const sessionLifetimeCents =
-      membershipProfile?.lifetime_purchase_cents ??
-      sessionProfile?.lifetime_purchase_cents ??
-      sessionOrders.reduce((sum, order) => sum + order.subtotal_cents, 0);
-    const sessionTotalOrders =
-      membershipProfile?.total_orders ?? sessionProfile?.total_orders ?? sessionOrders.length;
-    const sessionPointsBalance =
-      membershipProfile?.points_balance ?? sessionProfile?.points_balance ?? 0;
-    const sessionLastPurchaseAt =
-      membershipProfile?.last_purchase_at ?? sessionProfile?.last_purchase_at ?? null;
-    const membershipTierLabel =
-      membershipProfile?.membership_tier ?? sessionProfile?.membership_tier ?? "Online Shopper";
+  const authenticatedBody = session ? (
+    <div className="account-content">
+      <section className="account-hero">
+        <p className="eyebrow">{t("account.memberLabel", { tier: membershipTierLabel })}</p>
+        <h3>
+          {membershipProfile?.customer_name ??
+            sessionProfile?.customer_name ??
+            session.account.display_name}
+        </h3>
+        <p>{session.account.email}</p>
+      </section>
 
-    const tabId = (tab: AccountPortalTab) => `${baseId}-tab-${tab}`;
-    const panelId = (tab: AccountPortalTab) => `${baseId}-panel-${tab}`;
+      <section className="account-stat-grid" aria-label={t("account.title")}>
+        <div>
+          <span>{t("account.stat.points")}</span>
+          <strong>{sessionPointsBalance.toLocaleString(locale)}</strong>
+        </div>
+        <div>
+          <span>{t("account.stat.lifetime")}</span>
+          <strong>{currencyFromCents(sessionLifetimeCents)}</strong>
+        </div>
+        <div>
+          <span>{t("account.stat.orders")}</span>
+          <strong>{sessionTotalOrders.toLocaleString(locale)}</strong>
+        </div>
+        <div>
+          <span>{t("account.stat.lastOrder")}</span>
+          <strong>
+            {sessionLastPurchaseAt
+              ? formatAccountDate(sessionLastPurchaseAt, locale)
+              : sessionOrders[0]
+                ? formatAccountDate(sessionOrders[0].created_at, locale)
+                : "—"}
+          </strong>
+        </div>
+      </section>
 
-    return (
-      <div className="account-content">
-        <section className="account-hero">
-          <p className="eyebrow">{t("account.memberLabel", { tier: membershipTierLabel })}</p>
-          <h3>
-            {membershipProfile?.customer_name ??
-              sessionProfile?.customer_name ??
-              session.account.display_name}
-          </h3>
-          <p>{session.account.email}</p>
-        </section>
+      <div className="account-portal-tabs" role="tablist" aria-label={t("account.dialogLabel")}>
+        {PORTAL_TABS.map((tab, index) => {
+          const isActive = portalTab === tab;
+          return (
+            <button
+              aria-controls={panelId(tab)}
+              aria-selected={isActive}
+              className={`text-link${isActive ? " active" : ""}`}
+              id={tabId(tab)}
+              key={tab}
+              onClick={() => {
+                setConfirmRevokeOthers(false);
+                setPortalTab(tab);
+              }}
+              onKeyDown={(event) => handleTabKeyDown(event, index)}
+              ref={(element) => {
+                tabRefs.current[tab] = element;
+              }}
+              role="tab"
+              tabIndex={isActive ? 0 : -1}
+              type="button"
+            >
+              {tabLabels[tab]}
+            </button>
+          );
+        })}
+      </div>
 
-        <section className="account-stat-grid" aria-label={t("account.title")}>
-          <div>
-            <span>{t("account.stat.points")}</span>
-            <strong>{sessionPointsBalance.toLocaleString(locale)}</strong>
+      {portalTab === "transactions" ? (
+        <section
+          aria-labelledby={tabId("transactions")}
+          className="account-section"
+          id={panelId("transactions")}
+          role="tabpanel"
+          tabIndex={0}
+        >
+          <div className="account-section-head">
+            <p className="eyebrow">{t("account.tab.transactions")}</p>
+            <span className="status-pill">
+              {(transactions ? transactions.total : sessionOrders.length).toLocaleString(locale)}
+            </span>
           </div>
-          <div>
-            <span>{t("account.stat.lifetime")}</span>
-            <strong>{currencyFromCents(sessionLifetimeCents)}</strong>
-          </div>
-          <div>
-            <span>{t("account.stat.orders")}</span>
-            <strong>{sessionTotalOrders.toLocaleString(locale)}</strong>
-          </div>
-          <div>
-            <span>{t("account.stat.lastOrder")}</span>
-            <strong>
-              {sessionLastPurchaseAt
-                ? formatAccountDate(sessionLastPurchaseAt, locale)
-                : sessionOrders[0]
-                  ? formatAccountDate(sessionOrders[0].created_at, locale)
-                  : "—"}
-            </strong>
-          </div>
-        </section>
 
-        <div className="account-portal-tabs" role="tablist" aria-label={t("account.dialogLabel")}>
-          {PORTAL_TABS.map((tab, index) => {
-            const isActive = portalTab === tab;
-            return (
+          {transactionsStatus === "loading" && !transactions ? (
+            <p className="account-empty-note">{t("account.loadingTransactions")}</p>
+          ) : transactionsStatus === "error" ? (
+            <div className="account-retry-bar" role="alert">
+              <p className="account-empty-note">{t("account.errorTransactions")}</p>
               <button
-                aria-controls={panelId(tab)}
-                aria-selected={isActive}
-                className={`text-link${isActive ? " active" : ""}`}
-                id={tabId(tab)}
-                key={tab}
-                onClick={() => {
-                  setConfirmRevokeOthers(false);
-                  setPortalTab(tab);
-                }}
-                onKeyDown={(event) => handleTabKeyDown(event, index)}
-                ref={(element) => {
-                  tabRefs.current[tab] = element;
-                }}
-                role="tab"
-                tabIndex={isActive ? 0 : -1}
+                className="outline-button"
+                onClick={() => setTransactionsRetry((count) => count + 1)}
                 type="button"
               >
-                {tabLabels[tab]}
+                {t("account.retry")}
               </button>
-            );
-          })}
-        </div>
-
-        {portalTab === "transactions" ? (
-          <section
-            aria-labelledby={tabId("transactions")}
-            className="account-section"
-            id={panelId("transactions")}
-            role="tabpanel"
-            tabIndex={0}
-          >
-            <div className="account-section-head">
-              <p className="eyebrow">{t("account.tab.transactions")}</p>
-              <span className="status-pill">
-                {(transactions ? transactions.total : sessionOrders.length).toLocaleString(locale)}
-              </span>
             </div>
-
-            {transactionsStatus === "loading" && !transactions ? (
-              <p className="account-empty-note">{t("account.loadingTransactions")}</p>
-            ) : transactionsStatus === "error" ? (
-              <div className="account-retry-bar" role="alert">
-                <p className="account-empty-note">{t("account.errorTransactions")}</p>
-                <button
-                  className="outline-button"
-                  onClick={() => setTransactionsRetry((count) => count + 1)}
-                  type="button"
-                >
-                  {t("account.retry")}
-                </button>
-              </div>
-            ) : transactions && transactions.transactions.length > 0 ? (
-              <>
-                <div className="account-orders">
-                  {transactions.transactions.map((transaction) => (
-                    <article className="account-order" key={transaction.id}>
-                      <div className="account-order-head">
-                        <div>
-                          <strong>{t("account.orderNumber", { id: transaction.id })}</strong>
-                          <span>{formatAccountDate(transaction.created_at, locale)}</span>
-                        </div>
-                        <div className="account-order-total">
-                          <strong>{currencyFromCents(transaction.total_cents)}</strong>
-                          <span>{fulfillmentLabel(transaction.status)}</span>
-                        </div>
+          ) : transactions && transactions.transactions.length > 0 ? (
+            <>
+              <div className="account-orders">
+                {transactions.transactions.map((transaction) => (
+                  <article className="account-order" key={transaction.id}>
+                    <div className="account-order-head">
+                      <div>
+                        <strong>{t("account.orderNumber", { id: transaction.id })}</strong>
+                        <span>{formatAccountDate(transaction.created_at, locale)}</span>
                       </div>
-                      <ul className="account-line-items">
-                        {transaction.items.map((item, index) => (
-                          <li key={`${transaction.id}-${index}-${item.product_name}`}>
-                            <span>{item.product_name}</span>
+                      <div className="account-order-total">
+                        <strong>{currencyFromCents(transaction.total_cents)}</strong>
+                        <span>{fulfillmentLabel(transaction.status)}</span>
+                      </div>
+                    </div>
+                    <ul className="account-line-items">
+                      {transaction.items.map((item, index) => (
+                        <li key={`${transaction.id}-${index}-${item.product_name}`}>
+                          <span>{item.product_name}</span>
+                          <strong>
+                            {item.quantity} &times; {currencyFromCents(item.unit_price_cents)}
+                          </strong>
+                        </li>
+                      ))}
+                    </ul>
+                    {transaction.fulfillment_history.length > 0 ? (
+                      <div
+                        className="account-fulfillment-timeline"
+                        aria-label={`${t("account.orderNumber", { id: transaction.id })} ${t("account.deliveryProgress")}`}
+                      >
+                        <strong>{t("account.deliveryProgress")}</strong>
+                        <ol>
+                          {transaction.fulfillment_history.map((event) => (
+                            <li key={event.id}>
+                              <span>{fulfillmentLabel(event.to_status as FulfillmentStatus)}</span>
+                              <small>
+                                {formatAccountDate(event.happened_at, locale)}
+                                {event.note ? ` — ${event.note}` : ""}
+                              </small>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                    ) : null}
+                    {transaction.applied_offers.length > 0 ? (
+                      <ul className="account-payment-list" aria-label={t("account.offerLabel")}>
+                        {transaction.applied_offers.map((offer, index) => (
+                          <li key={`${transaction.id}-offer-${index}`}>
+                            <span>
+                              {offer.code ? (
+                                <>
+                                  <span>{offer.label} </span>
+                                  <button
+                                    aria-label={`${t("account.copyCode")}: ${offer.code}`}
+                                    className="status-pill"
+                                    onClick={() => void handleCopyVoucherCode(offer.code!)}
+                                    type="button"
+                                  >
+                                    {copiedVoucherCode === offer.code
+                                      ? `${offer.code} · ${t("account.copiedCode")}`
+                                      : offer.code}
+                                  </button>
+                                </>
+                              ) : (
+                                offer.label
+                              )}
+                            </span>
+                            <strong>-{currencyFromCents(offer.discount_cents)}</strong>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    {transaction.payments.length > 0 ? (
+                      <ul className="account-payment-list" aria-label={t("account.paymentMethod")}>
+                        {transaction.payments.map((payment, index) => (
+                          <li key={`${transaction.id}-payment-${index}`}>
+                            <span>
+                              {payment.method} &middot; {payment.reference}
+                            </span>
                             <strong>
-                              {item.quantity} &times; {currencyFromCents(item.unit_price_cents)}
+                              {currencyFromCents(payment.amount_cents)} &middot; {payment.status}
                             </strong>
                           </li>
                         ))}
                       </ul>
-                      {transaction.fulfillment_history.length > 0 ? (
-                        <div
-                          className="account-fulfillment-timeline"
-                          aria-label={`${t("account.orderNumber", { id: transaction.id })} ${t("account.deliveryProgress")}`}
-                        >
-                          <strong>{t("account.deliveryProgress")}</strong>
-                          <ol>
-                            {transaction.fulfillment_history.map((event) => (
-                              <li key={event.id}>
-                                <span>{fulfillmentLabel(event.to_status as FulfillmentStatus)}</span>
-                                <small>
-                                  {formatAccountDate(event.happened_at, locale)}
-                                  {event.note ? ` — ${event.note}` : ""}
-                                </small>
-                              </li>
-                            ))}
-                          </ol>
-                        </div>
-                      ) : null}
-                      {transaction.applied_offers.length > 0 ? (
-                        <ul className="account-payment-list" aria-label={t("account.offerLabel")}>
-                          {transaction.applied_offers.map((offer, index) => (
-                            <li key={`${transaction.id}-offer-${index}`}>
-                              <span>
-                                {offer.code ? (
-                                  <>
-                                    <span>{offer.label} </span>
-                                    <button
-                                      aria-label={`${t("account.copyCode")}: ${offer.code}`}
-                                      className="status-pill"
-                                      onClick={() => void handleCopyVoucherCode(offer.code!)}
-                                      type="button"
-                                    >
-                                      {copiedVoucherCode === offer.code
-                                        ? `${offer.code} · ${t("account.copiedCode")}`
-                                        : offer.code}
-                                    </button>
-                                  </>
-                                ) : (
-                                  offer.label
-                                )}
-                              </span>
-                              <strong>-{currencyFromCents(offer.discount_cents)}</strong>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : null}
-                      {transaction.payments.length > 0 ? (
-                        <ul className="account-payment-list" aria-label={t("account.paymentMethod")}>
-                          {transaction.payments.map((payment, index) => (
-                            <li key={`${transaction.id}-payment-${index}`}>
-                              <span>
-                                {payment.method} &middot; {payment.reference}
-                              </span>
-                              <strong>
-                                {currencyFromCents(payment.amount_cents)} &middot; {payment.status}
-                              </strong>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : null}
-                    </article>
-                  ))}
-                </div>
-                <div className="account-pagination">
-                  <button
-                    className="outline-button"
-                    disabled={transactionsOffset === 0 || transactionsStatus === "loading"}
-                    onClick={() =>
-                      setTransactionsOffset((current) =>
-                        Math.max(0, current - PORTAL_TRANSACTIONS_PAGE_SIZE)
-                      )
-                    }
-                    type="button"
-                  >
-                    {t("account.prevPage")}
-                  </button>
-                  <span>
-                    {transactions.total === 0
-                      ? "0 / 0"
-                      : `${transactionsOffset + 1}-${Math.min(
-                          transactionsOffset + PORTAL_TRANSACTIONS_PAGE_SIZE,
-                          transactions.total
-                        )} / ${transactions.total}`}
-                  </span>
-                  <button
-                    className="outline-button"
-                    disabled={
-                      transactionsStatus === "loading" ||
-                      transactionsOffset + PORTAL_TRANSACTIONS_PAGE_SIZE >= transactions.total
-                    }
-                    onClick={() =>
-                      setTransactionsOffset((current) => current + PORTAL_TRANSACTIONS_PAGE_SIZE)
-                    }
-                    type="button"
-                  >
-                    {t("account.nextPage")}
-                  </button>
-                </div>
-              </>
-            ) : (
-              <p className="account-empty-note">{t("account.noTransactions")}</p>
-            )}
-          </section>
-        ) : null}
-
-        {portalTab === "membership" ? (
-          <section
-            aria-labelledby={tabId("membership")}
-            className="account-section"
-            id={panelId("membership")}
-            role="tabpanel"
-            tabIndex={0}
-          >
-            {membershipStatus === "loading" && !membership ? (
-              <p className="account-empty-note">{t("account.loadingMembership")}</p>
-            ) : membershipStatus === "error" ? (
-              <div className="account-retry-bar" role="alert">
-                <p className="account-empty-note">{t("account.errorMembership")}</p>
+                    ) : null}
+                  </article>
+                ))}
+              </div>
+              <div className="account-pagination">
                 <button
                   className="outline-button"
-                  onClick={() => setMembershipRetry((count) => count + 1)}
+                  disabled={transactionsOffset === 0 || transactionsStatus === "loading"}
+                  onClick={() =>
+                    setTransactionsOffset((current) =>
+                      Math.max(0, current - PORTAL_TRANSACTIONS_PAGE_SIZE)
+                    )
+                  }
                   type="button"
                 >
-                  {t("account.retry")}
+                  {t("account.prevPage")}
+                </button>
+                <span>
+                  {transactions.total === 0
+                    ? "0 / 0"
+                    : `${transactionsOffset + 1}-${Math.min(
+                        transactionsOffset + PORTAL_TRANSACTIONS_PAGE_SIZE,
+                        transactions.total
+                      )} / ${transactions.total}`}
+                </span>
+                <button
+                  className="outline-button"
+                  disabled={
+                    transactionsStatus === "loading" ||
+                    transactionsOffset + PORTAL_TRANSACTIONS_PAGE_SIZE >= transactions.total
+                  }
+                  onClick={() =>
+                    setTransactionsOffset((current) => current + PORTAL_TRANSACTIONS_PAGE_SIZE)
+                  }
+                  type="button"
+                >
+                  {t("account.nextPage")}
                 </button>
               </div>
-            ) : membershipStatus === "not-found" || !membership ? (
-              <div className="membership-panel">
-                <div className="membership-current">
-                  <p className="eyebrow">{t("account.membershipTier")}</p>
-                  <h3>{membershipTierLabel}</h3>
-                </div>
-                <p className="account-empty-note">{t("account.noTransactions")}</p>
-              </div>
-            ) : (
-              <div className="membership-panel">
-                <div className="membership-current">
-                  <p className="eyebrow">{t("account.membershipTier")}</p>
-                  <h3>{membership.current_tier?.name ?? membership.profile.membership_tier}</h3>
-                </div>
+            </>
+          ) : (
+            <p className="account-empty-note">{t("account.noTransactions")}</p>
+          )}
+        </section>
+      ) : null}
 
-                {membership.next_tier ? (
-                  <div className="membership-progress">
-                    <div className="membership-progress-head">
-                      <span>{t("account.tierProgress")}</span>
+      {portalTab === "membership" ? (
+        <section
+          aria-labelledby={tabId("membership")}
+          className="account-section"
+          id={panelId("membership")}
+          role="tabpanel"
+          tabIndex={0}
+        >
+          {membershipStatus === "loading" && !membership ? (
+            <p className="account-empty-note">{t("account.loadingMembership")}</p>
+          ) : membershipStatus === "error" ? (
+            <div className="account-retry-bar" role="alert">
+              <p className="account-empty-note">{t("account.errorMembership")}</p>
+              <button
+                className="outline-button"
+                onClick={() => setMembershipRetry((count) => count + 1)}
+                type="button"
+              >
+                {t("account.retry")}
+              </button>
+            </div>
+          ) : membershipStatus === "not-found" || !membership ? (
+            <div className="membership-panel">
+              <div className="membership-current">
+                <p className="eyebrow">{t("account.membershipTier")}</p>
+                <h3>{membershipTierLabel}</h3>
+              </div>
+              <p className="account-empty-note">{t("account.noTransactions")}</p>
+            </div>
+          ) : (
+            <div className="membership-panel">
+              <div className="membership-current">
+                <p className="eyebrow">{t("account.membershipTier")}</p>
+                <h3>{membership.current_tier?.name ?? membership.profile.membership_tier}</h3>
+              </div>
+
+              {membership.next_tier ? (
+                <div className="membership-progress">
+                  <div className="membership-progress-head">
+                    <span>{t("account.tierProgress")}</span>
+                    <span>
+                      {t("account.nextTierLeft", {
+                        amount: currencyFromCents(membership.next_tier.remaining_cents),
+                        tier: membership.next_tier.name
+                      })}
+                    </span>
+                  </div>
+                  <div className="membership-progress-bar">
+                    <div
+                      className="membership-progress-fill"
+                      style={{
+                        width: `${
+                          membership.next_tier.min_lifetime_purchase_cents > 0
+                            ? Math.min(
+                                100,
+                                Math.max(
+                                  0,
+                                  ((membership.next_tier.min_lifetime_purchase_cents -
+                                    membership.next_tier.remaining_cents) /
+                                    membership.next_tier.min_lifetime_purchase_cents) *
+                                    100
+                                )
+                              )
+                            : 100
+                        }%`
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="membership-progress">
+                  <span className="status-pill">{t("account.maxTierBadge")}</span>
+                  <p className="account-empty-note">{t("account.topTierReached")}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+      ) : null}
+
+      {portalTab === "benefits" ? (
+        <section
+          aria-labelledby={tabId("benefits")}
+          className="account-section"
+          id={panelId("benefits")}
+          role="tabpanel"
+          tabIndex={0}
+        >
+          <div className="account-section-head">
+            <p className="eyebrow">{t("account.availableOffers")}</p>
+          </div>
+
+          {publicOffers &&
+          (publicOffers.vouchers.length > 0 || publicOffers.promotions.length > 0) ? (
+            <div className="account-offer-list">
+              {publicOffers.vouchers.map((voucher) => (
+                <article className="account-offer-card" key={`voucher-${voucher.id}`}>
+                  <div className="account-offer-card__meta">
+                    <span className="account-offer-card__code">{voucher.code}</span>
+                    <strong>{voucher.title}</strong>
+                    {voucher.description ? <span>{voucher.description}</span> : null}
+                    {voucher.minimum_subtotal_cents > 0 ? (
                       <span>
-                        {t("account.nextTierLeft", {
-                          amount: currencyFromCents(membership.next_tier.remaining_cents),
-                          tier: membership.next_tier.name
+                        {t("account.minSpend", {
+                          amount: currencyFromCents(voucher.minimum_subtotal_cents)
                         })}
                       </span>
-                    </div>
-                    <div className="membership-progress-bar">
-                      <div
-                        className="membership-progress-fill"
-                        style={{
-                          width: `${
-                            membership.next_tier.min_lifetime_purchase_cents > 0
-                              ? Math.min(
-                                  100,
-                                  Math.max(
-                                    0,
-                                    ((membership.next_tier.min_lifetime_purchase_cents -
-                                      membership.next_tier.remaining_cents) /
-                                      membership.next_tier.min_lifetime_purchase_cents) *
-                                      100
-                                  )
-                                )
-                              : 100
-                          }%`
-                        }}
-                      />
-                    </div>
+                    ) : null}
                   </div>
-                ) : (
-                  <div className="membership-progress">
-                    <span className="status-pill">{t("account.maxTierBadge")}</span>
-                    <p className="account-empty-note">{t("account.topTierReached")}</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </section>
-        ) : null}
-
-        {portalTab === "benefits" ? (
-          <section
-            aria-labelledby={tabId("benefits")}
-            className="account-section"
-            id={panelId("benefits")}
-            role="tabpanel"
-            tabIndex={0}
-          >
-            <div className="account-section-head">
-              <p className="eyebrow">{t("account.availableOffers")}</p>
-            </div>
-
-            {publicOffers &&
-            (publicOffers.vouchers.length > 0 || publicOffers.promotions.length > 0) ? (
-              <div className="account-offer-list">
-                {publicOffers.vouchers.map((voucher) => (
-                  <article className="account-offer-card" key={`voucher-${voucher.id}`}>
-                    <div className="account-offer-card__meta">
-                      <span className="account-offer-card__code">{voucher.code}</span>
-                      <strong>{voucher.title}</strong>
-                      {voucher.description ? <span>{voucher.description}</span> : null}
-                      {voucher.minimum_subtotal_cents > 0 ? (
-                        <span>
-                          {t("account.minSpend", {
-                            amount: currencyFromCents(voucher.minimum_subtotal_cents)
-                          })}
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="account-offer-card__actions">
-                      <button
-                        className="outline-button"
-                        onClick={() => void handleCopyVoucherCode(voucher.code)}
-                        type="button"
-                      >
-                        {copiedVoucherCode === voucher.code
-                          ? t("account.copiedCode")
-                          : t("account.copyCode")}
-                      </button>
-                      {onApplyVoucher ? (
-                        <button
-                          className="solid-button"
-                          onClick={() => onApplyVoucher(voucher.code)}
-                          type="button"
-                        >
-                          {t("account.applyInCart")}
-                        </button>
-                      ) : null}
-                    </div>
-                  </article>
-                ))}
-                {publicOffers.promotions.map((promotion) => (
-                  <article className="account-offer-card" key={`promo-${promotion.id}`}>
-                    <div className="account-offer-card__meta">
-                      <span className="account-offer-card__code">{promotion.label}</span>
-                      <strong>{promotion.title}</strong>
-                      {promotion.description ? <span>{promotion.description}</span> : null}
-                      {promotion.minimum_subtotal_cents > 0 ? (
-                        <span>
-                          {t("account.minSpend", {
-                            amount: currencyFromCents(promotion.minimum_subtotal_cents)
-                          })}
-                        </span>
-                      ) : null}
-                    </div>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <p className="account-empty-note">{t("account.noActiveOffers")}</p>
-            )}
-
-            <div className="account-section-head">
-              <p className="eyebrow">{t("account.tierLadder")}</p>
-            </div>
-
-            {benefitsStatus === "loading" && !benefits ? (
-              <p className="account-empty-note">{t("account.loadingBenefits")}</p>
-            ) : benefitsStatus === "error" ? (
-              <div className="account-retry-bar" role="alert">
-                <p className="account-empty-note">{t("account.errorBenefits")}</p>
-                <button
-                  className="outline-button"
-                  onClick={() => setBenefitsRetry((count) => count + 1)}
-                  type="button"
-                >
-                  {t("account.retry")}
-                </button>
-              </div>
-            ) : benefits && benefits.tiers.length > 0 ? (
-              <div className="benefit-tier-list">
-                {benefits.tiers.map((tier) => {
-                  const isCurrentTier =
-                    benefits.current_tier?.toLowerCase() === tier.name.toLowerCase();
-                  return (
-                    <article
-                      className={`benefit-tier${isCurrentTier ? " current" : ""}`}
-                      key={tier.name}
+                  <div className="account-offer-card__actions">
+                    <button
+                      className="outline-button"
+                      onClick={() => void handleCopyVoucherCode(voucher.code)}
+                      type="button"
                     >
-                      <div className="benefit-tier-head">
-                        <h4>{tier.name}</h4>
-                        {isCurrentTier ? (
-                          <span className="status-pill">{t("account.currentTierBadge")}</span>
-                        ) : null}
-                      </div>
-                      {tier.min_lifetime_purchase_cents > 0 ? (
-                        <span className="account-field-hint">
-                          {t("account.minSpend", {
-                            amount: currencyFromCents(tier.min_lifetime_purchase_cents)
-                          })}
-                        </span>
-                      ) : null}
-                      <ul className="benefit-list">
-                        {tier.benefits.map((benefit) => (
-                          <li key={`${tier.name}-${benefit.title}`}>
-                            <strong>{benefit.title}</strong>
-                            {benefit.description ? <span>{benefit.description}</span> : null}
-                          </li>
-                        ))}
-                      </ul>
-                    </article>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="account-empty-note">{t("account.noActiveOffers")}</p>
-            )}
-          </section>
-        ) : null}
-
-        {portalTab === "sessions" ? (
-          <section
-            aria-labelledby={tabId("sessions")}
-            className="account-section"
-            id={panelId("sessions")}
-            role="tabpanel"
-            tabIndex={0}
-          >
-            <div className="account-section-head">
-              <div>
-                <p className="eyebrow">{t("account.tab.sessions")}</p>
-                <p className="account-empty-note">{t("account.sessionsHint")}</p>
-              </div>
-              {customerSessions.some((item) => !item.is_current) ? (
-                <button
-                  className="text-link"
-                  disabled={sessionActionId !== null || confirmRevokeOthers}
-                  onClick={() => setConfirmRevokeOthers(true)}
-                  type="button"
-                >
-                  {t("account.revokeOthers")}
-                </button>
-              ) : null}
-            </div>
-
-            {confirmRevokeOthers ? (
-              <div
-                aria-label={t("account.confirmRevokeTitle")}
-                className="account-confirm-bar"
-                role="alertdialog"
-              >
-                <span>{t("account.confirmRevokeTitle")}</span>
-                <div className="account-confirm-bar__actions">
-                  <button
-                    className="outline-button"
-                    disabled={sessionActionId !== null}
-                    onClick={() => setConfirmRevokeOthers(false)}
-                    type="button"
-                  >
-                    {t("account.cancel")}
-                  </button>
-                  <button
-                    className="solid-button"
-                    disabled={sessionActionId !== null}
-                    onClick={() => void revokeOtherSessions()}
-                    type="button"
-                  >
-                    {sessionActionId === "others"
-                      ? t("account.revoking")
-                      : t("account.confirmRevokeAction")}
-                  </button>
-                </div>
-              </div>
-            ) : null}
-
-            {customerSessionsError && customerSessionsStatus !== "error" ? (
-              <p className="cart-feedback" role="alert">
-                {customerSessionsError}
-              </p>
-            ) : null}
-
-            {customerSessionsStatus === "loading" ? (
-              <p className="account-empty-note">{t("account.loadingSessions")}</p>
-            ) : customerSessionsStatus === "error" ? (
-              <div className="account-retry-bar" role="alert">
-                <p className="account-empty-note">
-                  {customerSessionsError || t("account.errorSessions")}
-                </p>
-                <button
-                  className="outline-button"
-                  onClick={() => setSessionsRetry((count) => count + 1)}
-                  type="button"
-                >
-                  {t("account.retry")}
-                </button>
-              </div>
-            ) : customerSessions.length === 0 ? (
-              <p className="account-empty-note">{t("account.noSessions")}</p>
-            ) : (
-              <div className="customer-session-list">
-                {customerSessions.map((item) => (
-                  <article className="customer-session" key={item.id}>
-                    <div>
-                      <strong>
-                        {customerSessionDeviceLabel(item.user_agent, t("account.unknownDevice"))}
-                      </strong>
-                      <span>
-                        {item.is_current
-                          ? t("account.currentDevice")
-                          : t("account.lastSeen", {
-                              time: formatRelativeTimeLocalized(item.last_seen_at, locale)
-                            })}
-                      </span>
-                    </div>
-                    {item.is_current ? (
-                      <span className="status-pill">{t("account.currentDevice")}</span>
-                    ) : (
+                      {copiedVoucherCode === voucher.code
+                        ? t("account.copiedCode")
+                        : t("account.copyCode")}
+                    </button>
+                    {onApplyVoucher ? (
                       <button
-                        className="outline-button"
-                        disabled={sessionActionId !== null}
-                        onClick={() => void revokeSession(item.id)}
+                        className="solid-button"
+                        onClick={() => onApplyVoucher(voucher.code)}
                         type="button"
                       >
-                        {sessionActionId === item.id
-                          ? t("account.revoking")
-                          : t("account.revokeSession")}
+                        {t("account.applyInCart")}
                       </button>
-                    )}
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
-        ) : null}
+                    ) : null}
+                  </div>
+                </article>
+              ))}
+              {publicOffers.promotions.map((promotion) => (
+                <article className="account-offer-card" key={`promo-${promotion.id}`}>
+                  <div className="account-offer-card__meta">
+                    <span className="account-offer-card__code">{promotion.label}</span>
+                    <strong>{promotion.title}</strong>
+                    {promotion.description ? <span>{promotion.description}</span> : null}
+                    {promotion.minimum_subtotal_cents > 0 ? (
+                      <span>
+                        {t("account.minSpend", {
+                          amount: currencyFromCents(promotion.minimum_subtotal_cents)
+                        })}
+                      </span>
+                    ) : null}
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="account-empty-note">{t("account.noActiveOffers")}</p>
+          )}
 
-        <button className="outline-button" onClick={() => void handleLogout()} type="button">
-          {t("account.signOut")}
-        </button>
-      </div>
-    );
-  };
+          <div className="account-section-head">
+            <p className="eyebrow">{t("account.tierLadder")}</p>
+          </div>
+
+          {benefitsStatus === "loading" && !benefits ? (
+            <p className="account-empty-note">{t("account.loadingBenefits")}</p>
+          ) : benefitsStatus === "error" ? (
+            <div className="account-retry-bar" role="alert">
+              <p className="account-empty-note">{t("account.errorBenefits")}</p>
+              <button
+                className="outline-button"
+                onClick={() => setBenefitsRetry((count) => count + 1)}
+                type="button"
+              >
+                {t("account.retry")}
+              </button>
+            </div>
+          ) : benefits && benefits.tiers.length > 0 ? (
+            <div className="benefit-tier-list">
+              {benefits.tiers.map((tier) => {
+                const isCurrentTier =
+                  benefits.current_tier?.toLowerCase() === tier.name.toLowerCase();
+                return (
+                  <article
+                    className={`benefit-tier${isCurrentTier ? " current" : ""}`}
+                    key={tier.name}
+                  >
+                    <div className="benefit-tier-head">
+                      <h4>{tier.name}</h4>
+                      {isCurrentTier ? (
+                        <span className="status-pill">{t("account.currentTierBadge")}</span>
+                      ) : null}
+                    </div>
+                    {tier.min_lifetime_purchase_cents > 0 ? (
+                      <span className="account-field-hint">
+                        {t("account.minSpend", {
+                          amount: currencyFromCents(tier.min_lifetime_purchase_cents)
+                        })}
+                      </span>
+                    ) : null}
+                    <ul className="benefit-list">
+                      {tier.benefits.map((benefit) => (
+                        <li key={`${tier.name}-${benefit.title}`}>
+                          <strong>{benefit.title}</strong>
+                          {benefit.description ? <span>{benefit.description}</span> : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="account-empty-note">{t("account.noActiveOffers")}</p>
+          )}
+        </section>
+      ) : null}
+
+      {portalTab === "sessions" ? (
+        <section
+          aria-labelledby={tabId("sessions")}
+          className="account-section"
+          id={panelId("sessions")}
+          role="tabpanel"
+          tabIndex={0}
+        >
+          <div className="account-section-head">
+            <div>
+              <p className="eyebrow">{t("account.tab.sessions")}</p>
+              <p className="account-empty-note">{t("account.sessionsHint")}</p>
+            </div>
+            {customerSessions.some((item) => !item.is_current) ? (
+              <button
+                className="text-link"
+                disabled={sessionActionId !== null || confirmRevokeOthers}
+                onClick={() => setConfirmRevokeOthers(true)}
+                type="button"
+              >
+                {t("account.revokeOthers")}
+              </button>
+            ) : null}
+          </div>
+
+          {confirmRevokeOthers ? (
+            <div
+              aria-label={t("account.confirmRevokeTitle")}
+              className="account-confirm-bar"
+              role="alertdialog"
+            >
+              <span>{t("account.confirmRevokeTitle")}</span>
+              <div className="account-confirm-bar__actions">
+                <button
+                  className="outline-button"
+                  disabled={sessionActionId !== null}
+                  onClick={() => setConfirmRevokeOthers(false)}
+                  type="button"
+                >
+                  {t("account.cancel")}
+                </button>
+                <button
+                  className="solid-button"
+                  disabled={sessionActionId !== null}
+                  onClick={() => void revokeOtherSessions()}
+                  type="button"
+                >
+                  {sessionActionId === "others"
+                    ? t("account.revoking")
+                    : t("account.confirmRevokeAction")}
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          {customerSessionsError && customerSessionsStatus !== "error" ? (
+            <p className="cart-feedback" role="alert">
+              {customerSessionsError}
+            </p>
+          ) : null}
+
+          {customerSessionsStatus === "loading" ? (
+            <p className="account-empty-note">{t("account.loadingSessions")}</p>
+          ) : customerSessionsStatus === "error" ? (
+            <div className="account-retry-bar" role="alert">
+              <p className="account-empty-note">
+                {customerSessionsError || t("account.errorSessions")}
+              </p>
+              <button
+                className="outline-button"
+                onClick={() => setSessionsRetry((count) => count + 1)}
+                type="button"
+              >
+                {t("account.retry")}
+              </button>
+            </div>
+          ) : customerSessions.length === 0 ? (
+            <p className="account-empty-note">{t("account.noSessions")}</p>
+          ) : (
+            <div className="customer-session-list">
+              {customerSessions.map((item) => (
+                <article className="customer-session" key={item.id}>
+                  <div>
+                    <strong>
+                      {customerSessionDeviceLabel(item.user_agent, t("account.unknownDevice"))}
+                    </strong>
+                    <span>
+                      {item.is_current
+                        ? t("account.currentDevice")
+                        : t("account.lastSeen", {
+                            time: formatRelativeTimeLocalized(item.last_seen_at, locale)
+                          })}
+                    </span>
+                  </div>
+                  {item.is_current ? (
+                    <span className="status-pill">{t("account.currentDevice")}</span>
+                  ) : (
+                    <button
+                      className="outline-button"
+                      disabled={sessionActionId !== null}
+                      onClick={() => void revokeSession(item.id)}
+                      type="button"
+                    >
+                      {sessionActionId === item.id
+                        ? t("account.revoking")
+                        : t("account.revokeSession")}
+                    </button>
+                  )}
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      ) : null}
+
+      <button className="outline-button" onClick={() => void handleLogout()} type="button">
+        {t("account.signOut")}
+      </button>
+    </div>
+  ) : null;
 
   const registerPasswordHintId = `${baseId}-register-password-hint`;
 
@@ -1278,10 +1310,14 @@ export function AccountDrawer({
               {t("account.restoring")}
             </div>
           ) : session ? (
-            renderAuthenticatedBody()
+            authenticatedBody
           ) : (
             <>
-              <div className="account-auth-tabs" role="tablist" aria-label={t("account.dialogLabel")}>
+              <div
+                className="account-auth-tabs"
+                role="tablist"
+                aria-label={t("account.dialogLabel")}
+              >
                 <button
                   aria-selected={authView === "login"}
                   className={`text-link${authView === "login" ? " active" : ""}`}

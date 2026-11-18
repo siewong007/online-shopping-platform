@@ -1,4 +1,13 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useSyncExternalStore, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode
+} from "react";
 import { reportError } from "./errors";
 import { registerGlobalNotificationHandlers, type GlobalHandlerOptions } from "./globalHandlers";
 import { NotificationBox } from "./NotificationBox";
@@ -61,7 +70,9 @@ function createApi(store: NotificationStore): NotificationsApi {
         retry: normalized.retryable ? options.retry : undefined,
         presentation: options.presentation ?? (severity === "critical" ? "banner" : "toast"),
         scope: options.scope ?? "global",
-        dedupeKey: options.dedupeKey ?? `${normalized.code ?? "UNKNOWN_ERROR"}:${options.operation ?? "unknown"}`,
+        dedupeKey:
+          options.dedupeKey ??
+          `${normalized.code ?? "UNKNOWN_ERROR"}:${options.operation ?? "unknown"}`,
         persistent: options.persistent,
         dismissible: options.dismissible
       });
@@ -72,11 +83,13 @@ function createApi(store: NotificationStore): NotificationsApi {
   };
 }
 
-export function NotificationProvider({ children, enableGlobalHandlers = true, globalHandlerOptions }: NotificationProviderProps) {
-  const storeRef = useRef<NotificationStore | null>(null);
+export function NotificationProvider({
+  children,
+  enableGlobalHandlers = true,
+  globalHandlerOptions
+}: NotificationProviderProps) {
+  const [store] = useState(createNotificationStore);
   const lifecycleGeneration = useRef(0);
-  if (!storeRef.current) storeRef.current = createNotificationStore();
-  const store = storeRef.current;
   const api = useMemo(() => createApi(store), [store]);
   const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
 
@@ -86,11 +99,13 @@ export function NotificationProvider({ children, enableGlobalHandlers = true, gl
   }, [api, enableGlobalHandlers, globalHandlerOptions]);
 
   useEffect(() => {
-    const generation = ++lifecycleGeneration.current;
-    return () => queueMicrotask(() => {
-      // StrictMode immediately starts a new effect generation; only a real unmount destroys the store.
-      if (lifecycleGeneration.current === generation) store.destroy();
-    });
+    const generationRef = lifecycleGeneration;
+    const generation = ++generationRef.current;
+    return () =>
+      queueMicrotask(() => {
+        // StrictMode immediately starts a new effect generation; only a real unmount destroys the store.
+        if (generationRef.current === generation) store.destroy();
+      });
   }, [store]);
 
   const toasts = snapshot.visible.filter((item) => item.presentation === "toast");
@@ -100,12 +115,33 @@ export function NotificationProvider({ children, enableGlobalHandlers = true, gl
     <NotificationsContext.Provider value={api}>
       {children}
       {notices.length ? (
-        <div aria-label="Application notifications" className="notification-region notification-region--persistent">
-          {notices.map((item) => <NotificationBox key={item.id} notification={item} onDismiss={store.remove} onRetry={store.retry} />)}
+        <div
+          aria-label="Application notifications"
+          className="notification-region notification-region--persistent"
+        >
+          {notices.map((item) => (
+            <NotificationBox
+              key={item.id}
+              notification={item}
+              onDismiss={store.remove}
+              onRetry={store.retry}
+            />
+          ))}
         </div>
       ) : null}
-      <div aria-label="Notifications" aria-live="polite" className="notification-region notification-region--toasts">
-        {toasts.map((item) => <NotificationBox key={item.id} notification={item} onDismiss={store.remove} onRetry={store.retry} />)}
+      <div
+        aria-label="Notifications"
+        aria-live="polite"
+        className="notification-region notification-region--toasts"
+      >
+        {toasts.map((item) => (
+          <NotificationBox
+            key={item.id}
+            notification={item}
+            onDismiss={store.remove}
+            onRetry={store.retry}
+          />
+        ))}
       </div>
     </NotificationsContext.Provider>
   );

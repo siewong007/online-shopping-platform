@@ -4,8 +4,7 @@ export const RECENTLY_VIEWED_STORAGE_KEY = "ekoway_recently_viewed_v1";
 const MAX_RECENTLY_VIEWED = 8;
 
 export function readRecentlyViewed(storage?: Storage): Product[] {
-  const target =
-    storage ?? (typeof window !== "undefined" ? window.localStorage : undefined);
+  const target = storage ?? (typeof window !== "undefined" ? window.localStorage : undefined);
   if (!target) return [];
   try {
     const raw = target.getItem(RECENTLY_VIEWED_STORAGE_KEY);
@@ -25,8 +24,7 @@ export function readRecentlyViewed(storage?: Storage): Product[] {
 }
 
 export function writeRecentlyViewed(items: Product[], storage?: Storage): void {
-  const target =
-    storage ?? (typeof window !== "undefined" ? window.localStorage : undefined);
+  const target = storage ?? (typeof window !== "undefined" ? window.localStorage : undefined);
   if (!target) return;
   try {
     target.setItem(RECENTLY_VIEWED_STORAGE_KEY, JSON.stringify(items));

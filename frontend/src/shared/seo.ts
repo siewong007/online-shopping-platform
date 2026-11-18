@@ -58,7 +58,9 @@ export function buildRouteSeo({
   }
 
   if (view === "product") {
-    const productTitle = product ? `${product.name} — Ekoway Hardware` : "Ekoway Hardware — Shop Online";
+    const productTitle = product
+      ? `${product.name} — Ekoway Hardware`
+      : "Ekoway Hardware — Shop Online";
     const fallbackDesc = categoryName
       ? `${product?.name ?? "Hardware product"} in ${categoryName} at Ekoway Hardware, Sibu.`
       : STORE_DESCRIPTION;
@@ -157,9 +159,7 @@ export function buildProductJsonLd({
       priceCurrency: "MYR",
       price: (product.price_cents / 100).toFixed(2),
       availability:
-        product.stock_quantity > 0
-          ? "https://schema.org/InStock"
-          : "https://schema.org/OutOfStock",
+        product.stock_quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       seller: {
         "@type": "HardwareStore",
         name: "Ekoway Hardware"

@@ -16,13 +16,8 @@ export {
   setAdminUserActive,
   updateAdminUserProfile
 } from "../modules/admin_users/api/adminUsersApi";
-export {
-  fetchAdminDashboard
-} from "../modules/dashboard/api/dashboardApi";
-export {
-  AUDIT_EVENTS_PAGE_SIZE,
-  fetchAuditEvents
-} from "../modules/audit/api/auditApi";
+export { fetchAdminDashboard } from "../modules/dashboard/api/dashboardApi";
+export { AUDIT_EVENTS_PAGE_SIZE, fetchAuditEvents } from "../modules/audit/api/auditApi";
 export {
   deleteCategory,
   deleteProduct,
@@ -54,10 +49,7 @@ export {
   fetchMembership as fetchCustomerPortalMembership,
   fetchTransactions as fetchCustomerPortalTransactions
 } from "../modules/customer_portal/api/customerPortalApi";
-export {
-  checkout,
-  startPaymentCheckout
-} from "../modules/orders/api/orderApi";
+export { checkout, startPaymentCheckout } from "../modules/orders/api/orderApi";
 export {
   createAdminOrder,
   deleteAdminOrder,
@@ -92,19 +84,13 @@ export {
   updateInvoiceBilling,
   voidInvoice
 } from "../modules/invoices/api/invoiceApi";
-export {
-  fetchSystemSettings,
-  updateSystemSetting
-} from "../modules/settings/api/settingsApi";
+export { fetchSystemSettings, updateSystemSetting } from "../modules/settings/api/settingsApi";
 export {
   fetchStorefront,
   findInitialProductById,
   initialProductDirectory
 } from "../modules/storefront/api/storefrontApi";
-export {
-  createProductReview,
-  fetchProductDetail
-} from "../modules/reviews/api/reviewsApi";
+export { createProductReview, fetchProductDetail } from "../modules/reviews/api/reviewsApi";
 export {
   closeSupportConversation,
   createSupportConversation,

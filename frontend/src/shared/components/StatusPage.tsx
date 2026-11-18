@@ -28,12 +28,23 @@ const KEYS_BY_CODE: Record<
 };
 
 /** Full-page recovery for an unavailable or inaccessible application route. */
-export function StatusPage({ code, onGoHome, onOpenLegal, onPrefetchShop, onShop }: StatusPageProps) {
+export function StatusPage({
+  code,
+  onGoHome,
+  onOpenLegal,
+  onPrefetchShop,
+  onShop
+}: StatusPageProps) {
   const { t } = useI18n();
   const keys = KEYS_BY_CODE[code];
 
   return (
-    <PublicSiteChrome onHome={onGoHome} onOpenLegal={onOpenLegal} onPrefetchShop={onPrefetchShop} onShop={onShop}>
+    <PublicSiteChrome
+      onHome={onGoHome}
+      onOpenLegal={onOpenLegal}
+      onPrefetchShop={onPrefetchShop}
+      onShop={onShop}
+    >
       <main className="status-page" aria-labelledby="status-page-title">
         <section className="status-page__card">
           <p className="status-page__code" aria-hidden="true">

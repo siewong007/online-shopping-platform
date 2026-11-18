@@ -35,17 +35,11 @@ export function updateInvoiceBilling(
   invoiceId: number,
   input: UpdateInvoiceBillingInput
 ): Promise<Invoice> {
-  return putJson<UpdateInvoiceBillingInput, Invoice>(
-    `/api/admin/invoices/${invoiceId}`,
-    input
-  );
+  return putJson<UpdateInvoiceBillingInput, Invoice>(`/api/admin/invoices/${invoiceId}`, input);
 }
 
 export function voidInvoice(invoiceId: number): Promise<Invoice> {
-  return postJson<Record<string, never>, Invoice>(
-    `/api/admin/invoices/${invoiceId}/void`,
-    {}
-  );
+  return postJson<Record<string, never>, Invoice>(`/api/admin/invoices/${invoiceId}/void`, {});
 }
 
 export function recordInvoicePayment(

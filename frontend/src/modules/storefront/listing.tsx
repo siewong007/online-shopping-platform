@@ -1,14 +1,8 @@
 import { useState } from "react";
 import { useI18n } from "../../i18n/LanguageContext";
 import type { JobLens, JobLensId } from "./jobLenses";
-import type {
-  Category,
-  Product,
-  StorefrontPayload,
-  StorefrontSort
-} from "../../types";
+import type { Category, Product, StorefrontPayload, StorefrontSort } from "../../types";
 import type { PublicOffersPayload } from "../offers/types";
-
 
 export type StorefrontViewProps = {
   activeJobId: JobLensId | null;
@@ -87,8 +81,24 @@ export function isGenericPlaceholderImage(imageUrl: string): boolean {
 export function IconClose() {
   return (
     <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
-      <line x1="4" y1="4" x2="16" y2="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <line x1="16" y1="4" x2="4" y2="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <line
+        x1="4"
+        y1="4"
+        x2="16"
+        y2="16"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <line
+        x1="16"
+        y1="4"
+        x2="4"
+        y2="16"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -126,13 +136,7 @@ export function ListingStockLine({ product }: { product: Product }) {
 
 // Shared missing-image / real-image media button for both listing modes — consistent
 // treatment everywhere, per design/SYSTEM.md §6 and design/assets/ICON-GUIDE.md.
-export function ListingProductMedia({
-  onOpen,
-  product
-}: {
-  onOpen: () => void;
-  product: Product;
-}) {
+export function ListingProductMedia({ onOpen, product }: { onOpen: () => void; product: Product }) {
   const { t } = useI18n();
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = !imageFailed && !isGenericPlaceholderImage(product.image_url);
@@ -155,7 +159,9 @@ export function ListingProductMedia({
         <span className="shop-missing-image">
           <span className="shop-missing-image-mark" aria-hidden="true" />
           <span>
-            <span className="shop-missing-image-department">{product.category_slug.replaceAll("-", " ")}</span>
+            <span className="shop-missing-image-department">
+              {product.category_slug.replaceAll("-", " ")}
+            </span>
             <span className="shop-missing-image-caption">{t("shop.listing.noPhoto")}</span>
           </span>
         </span>
@@ -163,7 +169,6 @@ export function ListingProductMedia({
     </button>
   );
 }
-
 
 export function JobBand({
   activeJob,
@@ -218,8 +223,14 @@ export function JobContextRail({
     return result;
   }, new Map());
   const departments = job.departmentSlugs
-    .map((slug) => ({ category: categories.find((category) => category.slug === slug), count: counts.get(slug) ?? 0 }))
-    .filter((item): item is { category: Category; count: number } => item.category !== undefined && item.count > 0);
+    .map((slug) => ({
+      category: categories.find((category) => category.slug === slug),
+      count: counts.get(slug) ?? 0
+    }))
+    .filter(
+      (item): item is { category: Category; count: number } =>
+        item.category !== undefined && item.count > 0
+    );
 
   return (
     <aside className="worklist-context-rail" aria-label={t("shop.jobs.context")}>
@@ -260,8 +271,14 @@ export function JobContextDisclosure({
     return result;
   }, new Map());
   const departments = job.departmentSlugs
-    .map((slug) => ({ category: categories.find((category) => category.slug === slug), count: counts.get(slug) ?? 0 }))
-    .filter((item): item is { category: Category; count: number } => item.category !== undefined && item.count > 0);
+    .map((slug) => ({
+      category: categories.find((category) => category.slug === slug),
+      count: counts.get(slug) ?? 0
+    }))
+    .filter(
+      (item): item is { category: Category; count: number } =>
+        item.category !== undefined && item.count > 0
+    );
 
   return (
     <section className="worklist-context-mobile" aria-label={t("shop.jobs.context")}>
@@ -276,7 +293,9 @@ export function JobContextDisclosure({
               <span>{job.atmosphere}</span>
             </p>
           </div>
-          <p className="worklist-context-mobile__disclosure">{t("shop.jobs.inspirationDisclosure")}</p>
+          <p className="worklist-context-mobile__disclosure">
+            {t("shop.jobs.inspirationDisclosure")}
+          </p>
           <div className="worklist-context-mobile__departments">
             <h2>{t("shop.jobs.departments")}</h2>
             {departments.map(({ category, count }) => (
@@ -314,7 +333,13 @@ export type EmptyResultsProps = {
   searchTerm: string;
 };
 
-export function EmptyResults({ hasSearch, onBrowseAll, onClearAll, onClearSearch, searchTerm }: EmptyResultsProps) {
+export function EmptyResults({
+  hasSearch,
+  onBrowseAll,
+  onClearAll,
+  onClearSearch,
+  searchTerm
+}: EmptyResultsProps) {
   const { t } = useI18n();
 
   return (
@@ -334,7 +359,11 @@ export function EmptyResults({ hasSearch, onBrowseAll, onClearAll, onClearSearch
         <button className="shop-empty-action" onClick={onClearAll} type="button">
           {t("shop.filters.clearAll")}
         </button>
-        <button className="shop-empty-action shop-empty-action--primary" onClick={onBrowseAll} type="button">
+        <button
+          className="shop-empty-action shop-empty-action--primary"
+          onClick={onBrowseAll}
+          type="button"
+        >
           {t("shop.listing.empty.browseAll")}
         </button>
       </div>

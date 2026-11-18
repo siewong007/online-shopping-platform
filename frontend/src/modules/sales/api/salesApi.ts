@@ -35,8 +35,5 @@ export function updateSalesStatus(
   orderId: number,
   input: UpdateSalesStatusInput
 ): Promise<SalesRecord> {
-  return putJson<UpdateSalesStatusInput, SalesRecord>(
-    `/api/admin/sales/${orderId}/status`,
-    input
-  );
+  return putJson<UpdateSalesStatusInput, SalesRecord>(`/api/admin/sales/${orderId}/status`, input);
 }

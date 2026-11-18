@@ -98,35 +98,38 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
     setMessages(ordered);
   }, []);
 
-  const appendMessages = useCallback((incoming: SupportMessage[], markCollapsedRepliesAsUnread = true) => {
-    if (incoming.length === 0) {
-      return;
-    }
-
-    const byId = new Map(messagesRef.current.map((message) => [message.id, message]));
-    let receivedReplyWhileCollapsed = false;
-
-    for (const message of incoming) {
-      if (
-        markCollapsedRepliesAsUnread &&
-        !byId.has(message.id) &&
-        message.author_kind === "admin" &&
-        !isOpenRef.current
-      ) {
-        receivedReplyWhileCollapsed = true;
+  const appendMessages = useCallback(
+    (incoming: SupportMessage[], markCollapsedRepliesAsUnread = true) => {
+      if (incoming.length === 0) {
+        return;
       }
-      byId.set(message.id, message);
-    }
 
-    const ordered = sortMessages([...byId.values()]);
-    messagesRef.current = ordered;
-    latestMessageIdRef.current = ordered.at(-1)?.id ?? 0;
-    setMessages(ordered);
+      const byId = new Map(messagesRef.current.map((message) => [message.id, message]));
+      let receivedReplyWhileCollapsed = false;
 
-    if (receivedReplyWhileCollapsed) {
-      setHasUnread(true);
-    }
-  }, []);
+      for (const message of incoming) {
+        if (
+          markCollapsedRepliesAsUnread &&
+          !byId.has(message.id) &&
+          message.author_kind === "admin" &&
+          !isOpenRef.current
+        ) {
+          receivedReplyWhileCollapsed = true;
+        }
+        byId.set(message.id, message);
+      }
+
+      const ordered = sortMessages([...byId.values()]);
+      messagesRef.current = ordered;
+      latestMessageIdRef.current = ordered.at(-1)?.id ?? 0;
+      setMessages(ordered);
+
+      if (receivedReplyWhileCollapsed) {
+        setHasUnread(true);
+      }
+    },
+    []
+  );
 
   const recoverFromExpiredSession = useCallback(() => {
     setSupportAuthToken(null);
@@ -229,19 +232,26 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
     };
   }, []);
 
-  useEffect(() => {
+  const [prevCustomerEmail, setPrevCustomerEmail] = useState(customerEmail);
+  if (prevCustomerEmail !== customerEmail) {
+    setPrevCustomerEmail(customerEmail);
     if (!guestEmail && customerEmail) {
       setGuestEmail(customerEmail);
     }
-  }, [customerEmail, guestEmail]);
+  }
+
+  if (isSuppressed && isOpen) {
+    setIsOpen(false);
+  }
 
   useEffect(() => {
-    if (!isSuppressed || !isOpen) {
+    if (!isSuppressed) {
       return;
     }
 
-    closePanel();
-  }, [closePanel, isOpen, isSuppressed]);
+    isOpenRef.current = false;
+    resumeAbortRef.current?.abort();
+  }, [isSuppressed]);
 
   useEffect(() => {
     if (!isOpen || !getCustomerAuthToken()) {
@@ -309,7 +319,10 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
       pollInFlightRef.current = true;
 
       try {
-        const incoming = await fetchSupportMessages(latestMessageIdRef.current || undefined, signal);
+        const incoming = await fetchSupportMessages(
+          latestMessageIdRef.current || undefined,
+          signal
+        );
         if (!signal.aborted && mountedRef.current) {
           appendMessages(incoming, markCollapsedRepliesAsUnread);
           return true;
@@ -632,8 +645,12 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
                     key={message.id}
                   >
                     <div className="support-chat-message__meta">
-                      <strong>{message.author_kind === "guest" ? t("support.you") : t("support.team")}</strong>
-                      <time dateTime={message.created_at}>{formatMessageTime(message.created_at, locale)}</time>
+                      <strong>
+                        {message.author_kind === "guest" ? t("support.you") : t("support.team")}
+                      </strong>
+                      <time dateTime={message.created_at}>
+                        {formatMessageTime(message.created_at, locale)}
+                      </time>
                     </div>
                     <p>{message.body}</p>
                   </li>
@@ -675,7 +692,9 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
             </>
           ) : (
             <form className="support-chat-start-form" onSubmit={startConversation}>
-              {loadState === "expired" ? <p className="support-chat-expired">{t("support.newConversation")}</p> : null}
+              {loadState === "expired" ? (
+                <p className="support-chat-expired">{t("support.newConversation")}</p>
+              ) : null}
               <p className="support-chat-welcome">{t("support.welcome")}</p>
               <fieldset className="support-chat-details">
                 <legend>{t("support.guestDetails")}</legend>
@@ -754,9 +773,13 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
         ref={launcherRef}
         type="button"
       >
-        <span aria-hidden="true" className="support-chat-launcher__icon">◌</span>
+        <span aria-hidden="true" className="support-chat-launcher__icon">
+          ◌
+        </span>
         <span>{t("support.launcher")}</span>
-        {hasUnread ? <span aria-label={t("support.unread")} className="support-chat-launcher__badge" /> : null}
+        {hasUnread ? (
+          <span aria-label={t("support.unread")} className="support-chat-launcher__badge" />
+        ) : null}
       </button>
     </div>
   );

@@ -5,7 +5,7 @@ import type {
   AdminLoginResponse,
   AdminMePayload,
   AdminMfaEnrollmentStart,
-  AdminMfaRecoveryCodes,
+  AdminMfaRecoveryCodes
 } from "../types";
 
 function hasToken(payload: AdminLoginResponse): payload is AdminAuthPayload {
@@ -16,11 +16,15 @@ export async function login(
   input: AdminLoginInput,
   turnstileToken?: string | null
 ): Promise<AdminLoginResponse> {
-  const payload = await requestJson<AdminLoginResponse>("/api/admin/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...turnstileHeaders(turnstileToken) },
-    body: JSON.stringify(input)
-  }, "public");
+  const payload = await requestJson<AdminLoginResponse>(
+    "/api/admin/login",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...turnstileHeaders(turnstileToken) },
+      body: JSON.stringify(input)
+    },
+    "public"
+  );
 
   if (hasToken(payload)) {
     setAuthToken(payload.token);
@@ -34,11 +38,15 @@ export async function verifyLogin(input: {
   code?: string;
   recovery_code?: string;
 }): Promise<AdminAuthPayload> {
-  const payload = await requestJson<AdminAuthPayload>("/api/admin/login/verify", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input)
-  }, "public");
+  const payload = await requestJson<AdminAuthPayload>(
+    "/api/admin/login/verify",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input)
+    },
+    "public"
+  );
 
   setAuthToken(payload.token);
   return payload;

@@ -94,7 +94,9 @@ const PaymentManagementPanel = lazy(() =>
   }))
 );
 const PermissionsPanel = lazy(() =>
-  import("../permissions/components/PermissionsPanel").then((m) => ({ default: m.PermissionsPanel }))
+  import("../permissions/components/PermissionsPanel").then((m) => ({
+    default: m.PermissionsPanel
+  }))
 );
 const SalesPanel = lazy(() =>
   import("../sales/components/SalesPanel").then((m) => ({ default: m.SalesPanel }))
@@ -162,10 +164,7 @@ type AdminViewProps = {
   onLoadMoreOrders: () => void;
   onLoadMoreSales: () => void;
   onOpenChangePassword: () => void;
-  onRecordInvoicePayment: (
-    invoiceId: number,
-    input: RecordInvoicePaymentInput
-  ) => Promise<Invoice>;
+  onRecordInvoicePayment: (invoiceId: number, input: RecordInvoicePaymentInput) => Promise<Invoice>;
   onRefreshCatalog: () => Promise<void>;
   onResetAdminUserPassword: (userId: number, input: AdminResetPasswordInput) => Promise<void>;
   onSetAdminUserActive: (userId: number, input: SetAdminUserActiveInput) => Promise<AdminUser>;
@@ -183,10 +182,7 @@ type AdminViewProps = {
   onUpdatePayment: (paymentId: number, input: UpdatePaymentInput) => Promise<Payment>;
   onUpdateProduct: (productId: number, input: UpdateProductInput) => Promise<Product>;
   onUpdatePromotion: (promotionId: number, input: UpdatePromotionInput) => Promise<Promotion>;
-  onUpdateOrderFulfillment: (
-    orderId: number,
-    input: UpdateOrderFulfillmentInput
-  ) => Promise<Order>;
+  onUpdateOrderFulfillment: (orderId: number, input: UpdateOrderFulfillmentInput) => Promise<Order>;
   onUpdateRole: (roleId: number, input: UpdateRoleInput) => Promise<Role>;
   onUpdateRolePermission: (input: UpdateRolePagePermissionInput) => Promise<RolePagePermission>;
   onUpdateSalesDetails: (orderId: number, input: UpdateSalesDetailsInput) => Promise<SalesRecord>;
@@ -297,7 +293,8 @@ export function AdminView({
   });
   const [isSavingChangePassword, setIsSavingChangePassword] = useState(false);
   const [teamLogQuery, setTeamLogQuery] = useState("");
-  const activeRole = currentAdmin?.role ?? permissions?.roles.find((role) => role.id === activeRoleId) ?? null;
+  const activeRole =
+    currentAdmin?.role ?? permissions?.roles.find((role) => role.id === activeRoleId) ?? null;
   const canReadCatalog = canAccess(permissions, activeRoleId, "admin-catalog", "read");
   const canCreateCatalog = canAccess(permissions, activeRoleId, "admin-catalog", "create");
   const canUpdateCatalog = canAccess(permissions, activeRoleId, "admin-catalog", "update");
@@ -338,11 +335,13 @@ export function AdminView({
     onCloseChangePassword();
   };
 
-  useEffect(() => {
+  const [prevIsChangePasswordOpen, setPrevIsChangePasswordOpen] = useState(isChangePasswordOpen);
+  if (prevIsChangePasswordOpen !== isChangePasswordOpen) {
+    setPrevIsChangePasswordOpen(isChangePasswordOpen);
     if (!isChangePasswordOpen) {
       resetChangePasswordForm();
     }
-  }, [isChangePasswordOpen]);
+  }
 
   const handleChangeOwnPassword = async () => {
     setIsSavingChangePassword(true);
@@ -354,9 +353,19 @@ export function AdminView({
       });
       resetChangePasswordForm();
       onCloseChangePassword();
-      notify({ severity: "success", title: "Password changed", message: "Your password was changed successfully.", scope: "admin-account", dedupeKey: "admin-account:password:success" });
+      notify({
+        severity: "success",
+        title: "Password changed",
+        message: "Your password was changed successfully.",
+        scope: "admin-account",
+        dedupeKey: "admin-account:password:success"
+      });
     } catch (error) {
-      notifyError(error, { operation: "change own password", scope: "admin-account", dedupeKey: "admin-account:password:error" });
+      notifyError(error, {
+        operation: "change own password",
+        scope: "admin-account",
+        dedupeKey: "admin-account:password:error"
+      });
     } finally {
       setIsSavingChangePassword(false);
     }
@@ -382,17 +391,13 @@ export function AdminView({
     );
   }, [activityFeed, teamLogQuery]);
 
-  useEffect(() => {
-    if (!permissions || permissions.roles.length === 0) {
-      return;
-    }
-
-    setPermissionEditorRoleId((current) =>
-      current !== null && permissions.roles.some((role) => role.id === current)
-        ? current
-        : permissions.roles[0].id
-    );
-  }, [permissions]);
+  const effectivePermissionEditorRoleId =
+    !permissions || permissions.roles.length === 0
+      ? permissionEditorRoleId
+      : permissionEditorRoleId !== null &&
+          permissions.roles.some((role) => role.id === permissionEditorRoleId)
+        ? permissionEditorRoleId
+        : permissions.roles[0].id;
 
   useEffect(() => {
     const currentTab = adminTabs.find((item) => item.tab === adminTab);
@@ -458,7 +463,9 @@ export function AdminView({
           <h3>{currentAdmin?.user.display_name ?? "Read-only demo"}</h3>
           <p>{activeRole?.name ?? "Fallback data"} access</p>
           <p>{activeRole?.description ?? "The API is unreachable, so live writes are disabled."}</p>
-          {activeRole?.is_super_admin ? <span className="status-pill live">Ultimate access</span> : null}
+          {activeRole?.is_super_admin ? (
+            <span className="status-pill live">Ultimate access</span>
+          ) : null}
           {demoMode ? <span className="status-pill warning">Fallback</span> : null}
           {!demoMode ? (
             <button className="outline-button" onClick={onOpenChangePassword} type="button">
@@ -715,7 +722,7 @@ export function AdminView({
           {adminTab === "permissions" ? (
             <>
               <PermissionsPanel
-                activeRoleId={permissionEditorRoleId}
+                activeRoleId={effectivePermissionEditorRoleId}
                 canCreate={canCreateAdminUsers}
                 canDelete={canDeleteAdminUsers}
                 canUpdate={canUpdateAdminUsers}
@@ -748,7 +755,8 @@ export function AdminView({
                   <h3 id="team-log-title">Team log</h3>
                 </div>
                 <span className="status-pill">
-                  {filteredActivityFeed.length} {filteredActivityFeed.length === 1 ? "event" : "events"}
+                  {filteredActivityFeed.length}{" "}
+                  {filteredActivityFeed.length === 1 ? "event" : "events"}
                 </span>
               </div>
 
@@ -773,7 +781,10 @@ export function AdminView({
               <div className="activity-list">
                 {filteredActivityFeed.length > 0 ? (
                   filteredActivityFeed.map((item, index) => (
-                    <div className="activity-log-row" key={`${item.happened_at}-${item.detail}-${index}`}>
+                    <div
+                      className="activity-log-row"
+                      key={`${item.happened_at}-${item.detail}-${index}`}
+                    >
                       <strong className="activity-log-time">{item.happened_at}</strong>
                       <span className="activity-log-detail">{item.detail}</span>
                     </div>

@@ -1,4 +1,12 @@
-import { type FormEvent, type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type FormEvent,
+  type KeyboardEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 
 import { ApiError } from "../../../shared/api/http";
 import {
@@ -61,7 +69,12 @@ function formatTimestamp(value: string | null): string {
   const date = new Date(value);
   return Number.isNaN(date.getTime())
     ? value
-    : date.toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+    : date.toLocaleString([], {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
 }
 
 function errorText(error: unknown): string {
@@ -75,7 +88,10 @@ function statusLabel(status: SupportConversationStatus): string {
   return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
-function appendThreadMessage(thread: SupportAdminConversationThread, message: SupportMessage): SupportAdminConversationThread {
+function appendThreadMessage(
+  thread: SupportAdminConversationThread,
+  message: SupportMessage
+): SupportAdminConversationThread {
   if (thread.messages.some((item) => item.id === message.id)) {
     return thread;
   }
@@ -113,6 +129,24 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
   const nextCursorRef = useRef<number | null>(null);
   const hasLoadedOlderPagesRef = useRef(false);
 
+  const [prevStatus, setPrevStatus] = useState(status);
+  if (prevStatus !== status) {
+    setPrevStatus(status);
+    setIsListLoading(true);
+    setLoadMoreError("");
+    setNextCursor(null);
+  }
+
+  const [prevSelectedConversationId, setPrevSelectedConversationId] =
+    useState(selectedConversationId);
+  if (prevSelectedConversationId !== selectedConversationId) {
+    setPrevSelectedConversationId(selectedConversationId);
+    setReplyDraft("");
+    setThreadError("");
+    setThread((current) => (current?.conversation.id === selectedConversationId ? current : null));
+    setIsThreadLoading(selectedConversationId !== null && document.visibilityState === "visible");
+  }
+
   useEffect(() => {
     selectedConversationIdRef.current = selectedConversationId;
   }, [selectedConversationId]);
@@ -132,9 +166,9 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
   }, []);
 
   const loadList = useCallback(
-    async (mode: ListLoadMode = "refresh", replaceExistingRequest = false) => {
+    (mode: ListLoadMode = "refresh", replaceExistingRequest = false): Promise<void> => {
       if (listInFlightRef.current && !replaceExistingRequest) {
-        return;
+        return Promise.resolve();
       }
 
       if (listInFlightRef.current) {
@@ -146,50 +180,50 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
       listInFlightRef.current = true;
 
       if (mode === "initial") {
-        setIsListLoading(true);
-        setLoadMoreError("");
         hasLoadedOlderPagesRef.current = false;
-        setPaginationCursor(null);
+        nextCursorRef.current = null;
       }
 
-      try {
-        const page = await fetchAdminSupportConversations(
-          { limit: 50, status: status === "all" ? undefined : status },
-          controller.signal
-        );
-        if (controller.signal.aborted || !mountedRef.current) {
-          return;
-        }
+      return fetchAdminSupportConversations(
+        { limit: 50, status: status === "all" ? undefined : status },
+        controller.signal
+      )
+        .then((page) => {
+          if (controller.signal.aborted || !mountedRef.current) {
+            return;
+          }
 
-        if (mode === "initial") {
-          const next = sortConversations(page.items);
-          setConversations(next);
-          setPaginationCursor(page.next_cursor);
-          setSelectedConversationId((current) =>
-            current !== null && next.some((conversation) => conversation.id === current)
-              ? current
-              : next[0]?.id ?? null
-          );
-        } else {
-          setConversations((current) => mergeConversations(current, page.items));
-          if (!hasLoadedOlderPagesRef.current) {
+          if (mode === "initial") {
+            const next = sortConversations(page.items);
+            setConversations(next);
             setPaginationCursor(page.next_cursor);
+            setSelectedConversationId((current) =>
+              current !== null && next.some((conversation) => conversation.id === current)
+                ? current
+                : (next[0]?.id ?? null)
+            );
+          } else {
+            setConversations((current) => mergeConversations(current, page.items));
+            if (!hasLoadedOlderPagesRef.current) {
+              setPaginationCursor(page.next_cursor);
+            }
           }
-        }
-        setListError("");
-      } catch (error) {
-        if (!controller.signal.aborted && mountedRef.current) {
-          setListError(errorText(error));
-        }
-      } finally {
-        if (listAbortRef.current === controller) {
-          listAbortRef.current = null;
-          listInFlightRef.current = false;
-          if (mountedRef.current) {
-            setIsListLoading(false);
+          setListError("");
+        })
+        .catch((error) => {
+          if (!controller.signal.aborted && mountedRef.current) {
+            setListError(errorText(error));
           }
-        }
-      }
+        })
+        .finally(() => {
+          if (listAbortRef.current === controller) {
+            listAbortRef.current = null;
+            listInFlightRef.current = false;
+            if (mountedRef.current) {
+              setIsListLoading(false);
+            }
+          }
+        });
     },
     [setPaginationCursor, status]
   );
@@ -237,9 +271,9 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
   }, [setPaginationCursor, status]);
 
   const loadThread = useCallback(
-    async (conversationId: number, showLoading = false, replaceExistingRequest = false) => {
+    (conversationId: number, replaceExistingRequest = false): Promise<void> => {
       if (threadInFlightRef.current && !replaceExistingRequest) {
-        return;
+        return Promise.resolve();
       }
 
       if (threadInFlightRef.current) {
@@ -250,35 +284,36 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
       threadAbortRef.current = controller;
       threadInFlightRef.current = true;
 
-      if (showLoading) {
-        setIsThreadLoading(true);
-      }
-
-      try {
-        const next = await fetchAdminSupportConversationThread(conversationId, controller.signal);
-        if (
-          controller.signal.aborted ||
-          !mountedRef.current ||
-          selectedConversationIdRef.current !== conversationId
-        ) {
-          return;
-        }
-
-        setThread({ ...next, messages: [...next.messages].sort((first, second) => first.id - second.id) });
-        setThreadError("");
-      } catch (error) {
-        if (!controller.signal.aborted && mountedRef.current) {
-          setThreadError(errorText(error));
-        }
-      } finally {
-        if (threadAbortRef.current === controller) {
-          threadAbortRef.current = null;
-          threadInFlightRef.current = false;
-          if (mountedRef.current) {
-            setIsThreadLoading(false);
+      return fetchAdminSupportConversationThread(conversationId, controller.signal)
+        .then((next) => {
+          if (
+            controller.signal.aborted ||
+            !mountedRef.current ||
+            selectedConversationIdRef.current !== conversationId
+          ) {
+            return;
           }
-        }
-      }
+
+          setThread({
+            ...next,
+            messages: [...next.messages].sort((first, second) => first.id - second.id)
+          });
+          setThreadError("");
+        })
+        .catch((error) => {
+          if (!controller.signal.aborted && mountedRef.current) {
+            setThreadError(errorText(error));
+          }
+        })
+        .finally(() => {
+          if (threadAbortRef.current === controller) {
+            threadAbortRef.current = null;
+            threadInFlightRef.current = false;
+            if (mountedRef.current) {
+              setIsThreadLoading(false);
+            }
+          }
+        });
     },
     []
   );
@@ -290,18 +325,12 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
   }, [loadList]);
 
   useEffect(() => {
-    setReplyDraft("");
-    setThreadError("");
-    setThread((current) =>
-      current?.conversation.id === selectedConversationId ? current : null
-    );
-
     if (selectedConversationId === null) {
       return;
     }
 
     if (document.visibilityState === "visible") {
-      void loadThread(selectedConversationId, true, true);
+      void loadThread(selectedConversationId, true);
     }
   }, [loadThread, selectedConversationId]);
 
@@ -378,7 +407,7 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
       }
     } finally {
       if (mountedRef.current) {
-        setUpdatingConversationId((current) => current === conversationId ? null : current);
+        setUpdatingConversationId((current) => (current === conversationId ? null : current));
       }
     }
   };
@@ -405,7 +434,7 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
       }
     } finally {
       if (mountedRef.current) {
-        setUpdatingConversationId((current) => current === conversationId ? null : current);
+        setUpdatingConversationId((current) => (current === conversationId ? null : current));
       }
     }
   };
@@ -428,7 +457,9 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
       }
 
       setThread((current) =>
-        current?.conversation.id === conversationId ? appendThreadMessage(current, message) : current
+        current?.conversation.id === conversationId
+          ? appendThreadMessage(current, message)
+          : current
       );
       setReplyDraft("");
       void loadList("refresh", true);
@@ -474,9 +505,10 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
   }, [conversations, searchQuery, status]);
 
   const selectedThread = thread?.conversation.id === selectedConversationId ? thread : null;
-  const selectedConversation = selectedThread?.conversation ?? conversations.find(
-    (conversation) => conversation.id === selectedConversationId
-  ) ?? null;
+  const selectedConversation =
+    selectedThread?.conversation ??
+    conversations.find((conversation) => conversation.id === selectedConversationId) ??
+    null;
 
   return (
     <section aria-labelledby="support-inbox-title" className="admin-section active support-inbox">
@@ -495,7 +527,11 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
             type="search"
             value={searchQuery}
           />
-          <div className="admin-filter-pills" role="group" aria-label="Filter conversations by status">
+          <div
+            className="admin-filter-pills"
+            role="group"
+            aria-label="Filter conversations by status"
+          >
             {supportStatusFilters.map((option) => {
               const isActive = status === option.value;
               return (
@@ -519,11 +555,23 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
           {listError ? (
             <div className="support-inbox__error" role="alert">
               <p>{listError}</p>
-              <button onClick={() => void loadList("initial", true)} type="button">Try again</button>
+              <button
+                onClick={() => {
+                  setIsListLoading(true);
+                  setLoadMoreError("");
+                  setPaginationCursor(null);
+                  void loadList("initial", true);
+                }}
+                type="button"
+              >
+                Try again
+              </button>
             </div>
           ) : null}
 
-          {isListLoading && conversations.length === 0 ? <p className="table-muted">Loading conversations…</p> : null}
+          {isListLoading && conversations.length === 0 ? (
+            <p className="table-muted">Loading conversations…</p>
+          ) : null}
           {!isListLoading && filteredConversations.length === 0 && !listError ? (
             <p className="table-muted">
               {searchQuery.trim()
@@ -553,7 +601,9 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
                 <span className="support-inbox__queue-preview">
                   {conversation.last_message_preview || "No message preview"}
                 </span>
-                <span className={`support-inbox__status support-inbox__status--${conversation.status}`}>
+                <span
+                  className={`support-inbox__status support-inbox__status--${conversation.status}`}
+                >
                   {statusLabel(conversation.status)}
                 </span>
               </button>
@@ -563,7 +613,9 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
           {loadMoreError ? (
             <div className="support-inbox__error" role="alert">
               <p>{loadMoreError}</p>
-              <button onClick={() => void loadMore()} type="button">Try again</button>
+              <button onClick={() => void loadMore()} type="button">
+                Try again
+              </button>
             </div>
           ) : null}
 
@@ -592,7 +644,9 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
                 <div>
                   <p className="eyebrow">Guest conversation</p>
                   <h4>{selectedConversation.guest_name}</h4>
-                  <a href={`mailto:${selectedConversation.guest_email}`}>{selectedConversation.guest_email}</a>
+                  <a href={`mailto:${selectedConversation.guest_email}`}>
+                    {selectedConversation.guest_email}
+                  </a>
                   <p>
                     {selectedConversation.assigned_admin_display_name
                       ? `Assigned to ${selectedConversation.assigned_admin_display_name}`
@@ -610,43 +664,68 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
                     onClick={() => void assignToMe()}
                     type="button"
                   >
-                    {selectedConversation.assigned_admin_user_id === currentAdminUserId ? "Assigned to me" : "Assign to me"}
+                    {selectedConversation.assigned_admin_user_id === currentAdminUserId
+                      ? "Assigned to me"
+                      : "Assign to me"}
                   </button>
-                  {(["open", "pending", "closed"] as SupportConversationStatus[]).map((nextStatus) => (
-                    <button
-                      className={selectedConversation.status === nextStatus ? "is-active" : ""}
-                      disabled={
-                        !canUpdate ||
-                        selectedConversation.status === nextStatus ||
-                        (selectedConversation.status === "closed" && nextStatus === "pending") ||
-                        updatingConversationId === selectedConversation.id
-                      }
-                      key={nextStatus}
-                      onClick={() => void changeStatus(nextStatus)}
-                      type="button"
-                    >
-                      {statusLabel(nextStatus)}
-                    </button>
-                  ))}
+                  {(["open", "pending", "closed"] as SupportConversationStatus[]).map(
+                    (nextStatus) => (
+                      <button
+                        className={selectedConversation.status === nextStatus ? "is-active" : ""}
+                        disabled={
+                          !canUpdate ||
+                          selectedConversation.status === nextStatus ||
+                          (selectedConversation.status === "closed" && nextStatus === "pending") ||
+                          updatingConversationId === selectedConversation.id
+                        }
+                        key={nextStatus}
+                        onClick={() => void changeStatus(nextStatus)}
+                        type="button"
+                      >
+                        {statusLabel(nextStatus)}
+                      </button>
+                    )
+                  )}
                 </div>
               </header>
 
               {threadError ? (
                 <div className="support-inbox__error" role="alert">
                   <p>{threadError}</p>
-                  <button onClick={() => void loadThread(selectedConversation.id, true, true)} type="button">
+                  <button
+                    onClick={() => {
+                      setIsThreadLoading(true);
+                      void loadThread(selectedConversation.id, true);
+                    }}
+                    type="button"
+                  >
                     Try again
                   </button>
                 </div>
               ) : null}
 
-              {isThreadLoading && thread === null ? <p className="table-muted">Loading messages…</p> : null}
-              <ol aria-live="polite" className="support-inbox__messages" aria-label="Conversation messages">
+              {isThreadLoading && thread === null ? (
+                <p className="table-muted">Loading messages…</p>
+              ) : null}
+              <ol
+                aria-live="polite"
+                className="support-inbox__messages"
+                aria-label="Conversation messages"
+              >
                 {(selectedThread?.messages ?? []).map((message) => (
-                  <li className={`support-inbox__message support-inbox__message--${message.author_kind}`} key={message.id}>
+                  <li
+                    className={`support-inbox__message support-inbox__message--${message.author_kind}`}
+                    key={message.id}
+                  >
                     <div>
-                      <strong>{message.author_kind === "guest" ? selectedConversation.guest_name : "Admin"}</strong>
-                      <time dateTime={message.created_at}>{formatTimestamp(message.created_at)}</time>
+                      <strong>
+                        {message.author_kind === "guest"
+                          ? selectedConversation.guest_name
+                          : "Admin"}
+                      </strong>
+                      <time dateTime={message.created_at}>
+                        {formatTimestamp(message.created_at)}
+                      </time>
                     </div>
                     <p>{message.body}</p>
                   </li>
@@ -661,7 +740,11 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
                   maxLength={MAX_MESSAGE_LENGTH}
                   onChange={(event) => setReplyDraft(event.target.value)}
                   onKeyDown={handleReplyKeyDown}
-                  placeholder={selectedConversation.status === "closed" ? "Reopen this conversation to reply." : "Write a reply…"}
+                  placeholder={
+                    selectedConversation.status === "closed"
+                      ? "Reopen this conversation to reply."
+                      : "Write a reply…"
+                  }
                   rows={3}
                   value={replyDraft}
                 />

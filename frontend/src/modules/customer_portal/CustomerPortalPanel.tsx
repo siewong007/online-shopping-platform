@@ -12,7 +12,7 @@ import type {
   UpdateCustomerPortalProfileInput
 } from "../../types";
 
-export const membershipTiers = ["Bronze", "Silver", "Gold", "Pro Xtra", "VIP"];
+const membershipTiers = ["Bronze", "Silver", "Gold", "Pro Xtra", "VIP"];
 
 const tierFilterOptions = ["All", ...membershipTiers];
 
@@ -113,8 +113,7 @@ const customerPortalFields: RecordFormField<CustomerPortalFormState>[] = [
     required: true,
     min: 0,
     step: 1,
-    validate: (value) =>
-      Number.isInteger(Number(value)) ? null : "Points must be a whole number."
+    validate: (value) => (Number.isInteger(Number(value)) ? null : "Points must be a whole number.")
   },
   {
     name: "lifetime_purchase",
@@ -131,8 +130,7 @@ const customerPortalFields: RecordFormField<CustomerPortalFormState>[] = [
     required: true,
     min: 0,
     step: 1,
-    validate: (value) =>
-      Number.isInteger(Number(value)) ? null : "Orders must be a whole number."
+    validate: (value) => (Number.isInteger(Number(value)) ? null : "Orders must be a whole number.")
   }
 ];
 
@@ -176,7 +174,9 @@ export function CustomerPortalPanel({
   const [isCreating, setIsCreating] = useState(false);
   const [savingProfileId, setSavingProfileId] = useState<number | null>(null);
   const [deletingProfileId, setDeletingProfileId] = useState<number | null>(null);
-  const [pendingDeleteProfile, setPendingDeleteProfile] = useState<CustomerPortalProfile | null>(null);
+  const [pendingDeleteProfile, setPendingDeleteProfile] = useState<CustomerPortalProfile | null>(
+    null
+  );
   const [tierFilter, setTierFilter] = useState<string>("All");
 
   const filteredProfiles = useMemo(
@@ -196,7 +196,13 @@ export function CustomerPortalPanel({
 
   const handleCreate = async () => {
     if (!canCreate) {
-      notify({ severity: "error", title: "Customer not created", message: "The active role cannot create customer profiles.", scope: "customer-profiles", dedupeKey: "customer-profiles:create:permission" });
+      notify({
+        severity: "error",
+        title: "Customer not created",
+        message: "The active role cannot create customer profiles.",
+        scope: "customer-profiles",
+        dedupeKey: "customer-profiles:create:permission"
+      });
       return;
     }
 
@@ -207,9 +213,19 @@ export function CustomerPortalPanel({
 
       setCreateForm(emptyCustomerPortalForm);
       setIsCreateOpen(false);
-      notify({ severity: "success", title: "Customer created", message: `${profile.customer_name} was created successfully.`, scope: "customer-profiles", dedupeKey: `customer-profiles:${profile.id}:create:success` });
+      notify({
+        severity: "success",
+        title: "Customer created",
+        message: `${profile.customer_name} was created successfully.`,
+        scope: "customer-profiles",
+        dedupeKey: `customer-profiles:${profile.id}:create:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: "create customer profile", scope: "customer-profiles", dedupeKey: "customer-profiles:create:error" });
+      notifyError(error, {
+        operation: "create customer profile",
+        scope: "customer-profiles",
+        dedupeKey: "customer-profiles:create:error"
+      });
     } finally {
       setIsCreating(false);
     }
@@ -226,7 +242,13 @@ export function CustomerPortalPanel({
     }
 
     if (!canUpdate) {
-      notify({ severity: "error", title: "Customer not updated", message: "The active role cannot update customer profiles.", scope: "customer-profiles", dedupeKey: "customer-profiles:update:permission" });
+      notify({
+        severity: "error",
+        title: "Customer not updated",
+        message: "The active role cannot update customer profiles.",
+        scope: "customer-profiles",
+        dedupeKey: "customer-profiles:update:permission"
+      });
       return;
     }
 
@@ -240,9 +262,19 @@ export function CustomerPortalPanel({
 
       setEditingProfileId(null);
       setEditForm(null);
-      notify({ severity: "success", title: "Customer updated", message: `${profile.customer_name} was updated successfully.`, scope: "customer-profiles", dedupeKey: `customer-profiles:${profile.id}:update:success` });
+      notify({
+        severity: "success",
+        title: "Customer updated",
+        message: `${profile.customer_name} was updated successfully.`,
+        scope: "customer-profiles",
+        dedupeKey: `customer-profiles:${profile.id}:update:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: "update customer profile", scope: "customer-profiles", dedupeKey: `customer-profiles:${editingProfileId}:update:error` });
+      notifyError(error, {
+        operation: "update customer profile",
+        scope: "customer-profiles",
+        dedupeKey: `customer-profiles:${editingProfileId}:update:error`
+      });
     } finally {
       setSavingProfileId(null);
     }
@@ -250,7 +282,13 @@ export function CustomerPortalPanel({
 
   const requestDelete = (profile: CustomerPortalProfile) => {
     if (!canDelete) {
-      notify({ severity: "error", title: "Customer not deleted", message: "The active role cannot delete customer profiles.", scope: "customer-profiles", dedupeKey: "customer-profiles:delete:permission" });
+      notify({
+        severity: "error",
+        title: "Customer not deleted",
+        message: "The active role cannot delete customer profiles.",
+        scope: "customer-profiles",
+        dedupeKey: "customer-profiles:delete:permission"
+      });
       return;
     }
 
@@ -268,9 +306,19 @@ export function CustomerPortalPanel({
     try {
       await onDeleteCustomerPortalProfile(profile.id);
       setPendingDeleteProfile(null);
-      notify({ severity: "success", title: "Customer deleted", message: `${profile.customer_name} was deleted successfully.`, scope: "customer-profiles", dedupeKey: `customer-profiles:${profile.id}:delete:success` });
+      notify({
+        severity: "success",
+        title: "Customer deleted",
+        message: `${profile.customer_name} was deleted successfully.`,
+        scope: "customer-profiles",
+        dedupeKey: `customer-profiles:${profile.id}:delete:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: "delete customer profile", scope: "customer-profiles", dedupeKey: `customer-profiles:${profile.id}:delete:error` });
+      notifyError(error, {
+        operation: "delete customer profile",
+        scope: "customer-profiles",
+        dedupeKey: `customer-profiles:${profile.id}:delete:error`
+      });
     } finally {
       setDeletingProfileId(null);
     }
@@ -310,8 +358,7 @@ export function CustomerPortalPanel({
       label: "Lifetime",
       align: "right" as const,
       sortValue: (profile: CustomerPortalProfile) => profile.lifetime_purchase_cents,
-      render: (profile: CustomerPortalProfile) =>
-        currencyFromCents(profile.lifetime_purchase_cents)
+      render: (profile: CustomerPortalProfile) => currencyFromCents(profile.lifetime_purchase_cents)
     },
     {
       key: "orders",
@@ -372,7 +419,7 @@ export function CustomerPortalPanel({
   const editingProfile =
     editingProfileId === null
       ? null
-      : profiles.find((profile) => profile.id === editingProfileId) ?? null;
+      : (profiles.find((profile) => profile.id === editingProfileId) ?? null);
   const isEditOpen = Boolean(editingProfile && editForm);
   const closeEdit = () => {
     setEditingProfileId(null);
@@ -455,12 +502,7 @@ export function CustomerPortalPanel({
           }
           getRowKey={(profile) => profile.id}
           getSearchText={(profile) =>
-            [
-              profile.id,
-              profile.customer_name,
-              profile.customer_email,
-              profile.membership_tier
-            ]
+            [profile.id, profile.customer_name, profile.customer_email, profile.membership_tier]
               .filter(Boolean)
               .join(" ")
           }

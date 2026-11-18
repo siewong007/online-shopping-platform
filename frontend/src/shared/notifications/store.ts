@@ -39,18 +39,25 @@ const defaultScheduler: NotificationScheduler = {
 export function createNotificationStore(options: NotificationStoreOptions = {}): NotificationStore {
   const maxVisible = Math.max(1, options.maxVisible ?? 5);
   const now = options.now ?? Date.now;
-  const idFactory = options.idFactory ?? (() => `notification-${now()}-${Math.random().toString(36).slice(2, 8)}`);
+  const idFactory =
+    options.idFactory ?? (() => `notification-${now()}-${Math.random().toString(36).slice(2, 8)}`);
   const scheduler = options.scheduler ?? defaultScheduler;
   const listeners = new Set<() => void>();
   const timers = new Map<string, unknown>();
   const retrying = new Map<string, Promise<void>>();
   let visible: AppNotification[] = [];
   let queued: AppNotification[] = [];
-  let snapshot: NotificationSnapshot = Object.freeze({ visible: Object.freeze([]), queued: Object.freeze([]) });
+  let snapshot: NotificationSnapshot = Object.freeze({
+    visible: Object.freeze([]),
+    queued: Object.freeze([])
+  });
   let destroyed = false;
 
   const publish = () => {
-    snapshot = Object.freeze({ visible: Object.freeze([...visible]), queued: Object.freeze([...queued]) });
+    snapshot = Object.freeze({
+      visible: Object.freeze([...visible]),
+      queued: Object.freeze([...queued])
+    });
     for (const listener of listeners) listener();
   };
 
@@ -62,8 +69,16 @@ export function createNotificationStore(options: NotificationStoreOptions = {}):
 
   const schedule = (notification: AppNotification) => {
     cancelTimer(notification.id);
-    if (notification.duration === null || notification.persistent || !visible.some(({ id }) => id === notification.id)) return;
-    timers.set(notification.id, scheduler.setTimeout(() => remove(notification.id), notification.duration));
+    if (
+      notification.duration === null ||
+      notification.persistent ||
+      !visible.some(({ id }) => id === notification.id)
+    )
+      return;
+    timers.set(
+      notification.id,
+      scheduler.setTimeout(() => remove(notification.id), notification.duration)
+    );
   };
 
   const promote = () => {
@@ -88,14 +103,16 @@ export function createNotificationStore(options: NotificationStoreOptions = {}):
   const add = (input: NotificationInput): string => {
     if (destroyed) return "";
     const existing = input.dedupeKey
-      ? [...visible, ...queued].find((item) => item.dedupeKey === input.dedupeKey && item.scope === (input.scope ?? "global"))
+      ? [...visible, ...queued].find(
+          (item) => item.dedupeKey === input.dedupeKey && item.scope === (input.scope ?? "global")
+        )
       : undefined;
     if (existing) {
       const severityChanged = input.severity !== existing.severity;
       const defaultDuration = SEVERITY_CONFIG[input.severity].defaultDuration;
       const persistent = severityChanged
-        ? input.persistent ?? (input.duration === null || defaultDuration === null)
-        : input.persistent ?? existing.persistent;
+        ? (input.persistent ?? (input.duration === null || defaultDuration === null))
+        : (input.persistent ?? existing.persistent);
       const duration = persistent
         ? null
         : (input.duration ?? (severityChanged ? defaultDuration : existing.duration));
@@ -108,8 +125,8 @@ export function createNotificationStore(options: NotificationStoreOptions = {}):
         timestamp: now(),
         occurrenceCount: existing.occurrenceCount + 1
       };
-      visible = visible.map((item) => item.id === existing.id ? updated : item);
-      queued = queued.map((item) => item.id === existing.id ? updated : item);
+      visible = visible.map((item) => (item.id === existing.id ? updated : item));
+      queued = queued.map((item) => (item.id === existing.id ? updated : item));
       schedule(updated);
       publish();
       return existing.id;
@@ -139,8 +156,14 @@ export function createNotificationStore(options: NotificationStoreOptions = {}):
     if (destroyed) return;
     const apply = (item: AppNotification): AppNotification => {
       if (item.id !== id) return item;
-      const duration = patch.persistent === true ? null : patch.duration ?? item.duration;
-      return { ...item, ...patch, id: item.id, duration, persistent: patch.persistent ?? (duration === null) };
+      const duration = patch.persistent === true ? null : (patch.duration ?? item.duration);
+      return {
+        ...item,
+        ...patch,
+        id: item.id,
+        duration,
+        persistent: patch.persistent ?? duration === null
+      };
     };
     visible = visible.map(apply);
     queued = queued.map(apply);
@@ -156,10 +179,12 @@ export function createNotificationStore(options: NotificationStoreOptions = {}):
     const item = [...visible, ...queued].find((candidate) => candidate.id === id);
     if (!item?.retry) return Promise.resolve();
     update(id, { retrying: true });
-    const attempt = Promise.resolve().then(item.retry.run).finally(() => {
-      retrying.delete(id);
-      if (!destroyed) update(id, { retrying: false });
-    });
+    const attempt = Promise.resolve()
+      .then(item.retry.run)
+      .finally(() => {
+        retrying.delete(id);
+        if (!destroyed) update(id, { retrying: false });
+      });
     retrying.set(id, attempt);
     return attempt;
   };

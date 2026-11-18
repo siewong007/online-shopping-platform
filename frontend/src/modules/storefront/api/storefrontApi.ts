@@ -122,7 +122,10 @@ export async function fetchStorefront(params?: StorefrontQueryParams): Promise<S
     isFallback,
     payload: {
       ...payload,
-      products: sortProducts(payload.products.filter((product) => matchesQuery(product, params)), params.sort)
+      products: sortProducts(
+        payload.products.filter((product) => matchesQuery(product, params)),
+        params.sort
+      )
     }
   };
 }

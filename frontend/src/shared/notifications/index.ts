@@ -18,7 +18,12 @@ export type {
   NotificationsApi
 } from "./NotificationProvider";
 export { createNotificationStore } from "./store";
-export type { NotificationScheduler, NotificationSnapshot, NotificationStore, NotificationStoreOptions } from "./store";
+export type {
+  NotificationScheduler,
+  NotificationSnapshot,
+  NotificationStore,
+  NotificationStoreOptions
+} from "./store";
 export type {
   AppNotification,
   ErrorContext,

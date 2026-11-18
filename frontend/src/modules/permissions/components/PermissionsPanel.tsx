@@ -1,7 +1,11 @@
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useState } from "react";
 
 import { ConfirmModal } from "../../../shared/components/ConfirmModal";
-import { RecordForm, type RecordFormField, RecordModal } from "../../../shared/components/RecordModal";
+import {
+  RecordForm,
+  type RecordFormField,
+  RecordModal
+} from "../../../shared/components/RecordModal";
 import { useNotifications } from "../../../shared/notifications";
 import type {
   CreateRoleInput,
@@ -81,18 +85,28 @@ export function PermissionsPanel({
   const canEditActiveRole = Boolean(canUpdate && activeRole && !activeRole.is_super_admin);
   const canDeleteActiveRole = Boolean(canDelete && activeRole && !activeRole.is_super_admin);
 
-  useEffect(() => {
-    if (!activeRole) {
-      setEditForm({ name: "", description: "" });
-      return;
-    }
-
-    setEditForm({ name: activeRole.name, description: activeRole.description });
-  }, [activeRole]);
+  const activeRoleKey = activeRole
+    ? `${activeRole.id}:${activeRole.name}:${activeRole.description}`
+    : "";
+  const [prevActiveRoleKey, setPrevActiveRoleKey] = useState(activeRoleKey);
+  if (prevActiveRoleKey !== activeRoleKey) {
+    setPrevActiveRoleKey(activeRoleKey);
+    setEditForm(
+      activeRole
+        ? { name: activeRole.name, description: activeRole.description }
+        : { name: "", description: "" }
+    );
+  }
 
   const handleCreateRole = async () => {
     if (!canCreate) {
-      notify({ severity: "error", title: "Role not created", message: "The active role cannot create roles.", scope: "permissions", dedupeKey: "permissions:role:create:permission" });
+      notify({
+        severity: "error",
+        title: "Role not created",
+        message: "The active role cannot create roles.",
+        scope: "permissions",
+        dedupeKey: "permissions:role:create:permission"
+      });
       return;
     }
 
@@ -106,9 +120,19 @@ export function PermissionsPanel({
       setRoleForm({ name: "", description: "" });
       setIsCreateOpen(false);
       onChangeRole(role.id);
-      notify({ severity: "success", title: "Role created", message: `${role.name} was created successfully.`, scope: "permissions", dedupeKey: `permissions:role:${role.id}:create:success` });
+      notify({
+        severity: "success",
+        title: "Role created",
+        message: `${role.name} was created successfully.`,
+        scope: "permissions",
+        dedupeKey: `permissions:role:${role.id}:create:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: "create role", scope: "permissions", dedupeKey: "permissions:role:create:error" });
+      notifyError(error, {
+        operation: "create role",
+        scope: "permissions",
+        dedupeKey: "permissions:role:create:error"
+      });
     } finally {
       setIsCreatingRole(false);
     }
@@ -128,9 +152,19 @@ export function PermissionsPanel({
         name: editForm.name.trim(),
         description: editForm.description.trim()
       });
-      notify({ severity: "success", title: "Role updated", message: `${role.name} was updated successfully.`, scope: "permissions", dedupeKey: `permissions:role:${role.id}:update:success` });
+      notify({
+        severity: "success",
+        title: "Role updated",
+        message: `${role.name} was updated successfully.`,
+        scope: "permissions",
+        dedupeKey: `permissions:role:${role.id}:update:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: "update role", scope: "permissions", dedupeKey: `permissions:role:${activeRole.id}:update:error` });
+      notifyError(error, {
+        operation: "update role",
+        scope: "permissions",
+        dedupeKey: `permissions:role:${activeRole.id}:update:error`
+      });
     } finally {
       setIsSavingRole(false);
     }
@@ -153,16 +187,25 @@ export function PermissionsPanel({
     setIsDeletingRole(true);
 
     try {
-      const nextRoleId =
-        permissions.roles.find((role) => role.id !== roleToDelete.id)?.id ?? null;
+      const nextRoleId = permissions.roles.find((role) => role.id !== roleToDelete.id)?.id ?? null;
       await onDeleteRole(roleToDelete.id);
       setPendingDeleteRole(null);
       if (nextRoleId !== null) {
         onChangeRole(nextRoleId);
       }
-      notify({ severity: "success", title: "Role deleted", message: `${roleToDelete.name} was deleted successfully.`, scope: "permissions", dedupeKey: `permissions:role:${roleToDelete.id}:delete:success` });
+      notify({
+        severity: "success",
+        title: "Role deleted",
+        message: `${roleToDelete.name} was deleted successfully.`,
+        scope: "permissions",
+        dedupeKey: `permissions:role:${roleToDelete.id}:delete:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: "delete role", scope: "permissions", dedupeKey: `permissions:role:${roleToDelete.id}:delete:error` });
+      notifyError(error, {
+        operation: "delete role",
+        scope: "permissions",
+        dedupeKey: `permissions:role:${roleToDelete.id}:delete:error`
+      });
     } finally {
       setIsDeletingRole(false);
     }
@@ -212,11 +255,23 @@ export function PermissionsPanel({
         can_delete: false
       };
     } else if (action === "create") {
-      nextPermission = { ...nextPermission, can_create: checked, can_read: checked || nextPermission.can_read };
+      nextPermission = {
+        ...nextPermission,
+        can_create: checked,
+        can_read: checked || nextPermission.can_read
+      };
     } else if (action === "update") {
-      nextPermission = { ...nextPermission, can_update: checked, can_read: checked || nextPermission.can_read };
+      nextPermission = {
+        ...nextPermission,
+        can_update: checked,
+        can_read: checked || nextPermission.can_read
+      };
     } else if (action === "delete") {
-      nextPermission = { ...nextPermission, can_delete: checked, can_read: checked || nextPermission.can_read };
+      nextPermission = {
+        ...nextPermission,
+        can_delete: checked,
+        can_read: checked || nextPermission.can_read
+      };
     } else {
       nextPermission = { ...nextPermission, can_read: checked };
     }
@@ -226,9 +281,19 @@ export function PermissionsPanel({
 
     try {
       await onUpdateRolePermission(nextPermission);
-      notify({ severity: "success", title: "Permission updated", message: `The ${action} permission was updated successfully.`, scope: "permissions", dedupeKey: `permissions:${key}:success` });
+      notify({
+        severity: "success",
+        title: "Permission updated",
+        message: `The ${action} permission was updated successfully.`,
+        scope: "permissions",
+        dedupeKey: `permissions:${key}:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: "update role permission", scope: "permissions", dedupeKey: `permissions:${key}:error` });
+      notifyError(error, {
+        operation: "update role permission",
+        scope: "permissions",
+        dedupeKey: `permissions:${key}:error`
+      });
     } finally {
       setSavingPermissionKey(null);
     }
@@ -296,7 +361,9 @@ export function PermissionsPanel({
             <input
               disabled={!canEditActiveRole}
               value={editForm.name}
-              onChange={(event) => setEditForm((current) => ({ ...current, name: event.target.value }))}
+              onChange={(event) =>
+                setEditForm((current) => ({ ...current, name: event.target.value }))
+              }
               required
             />
           </label>
@@ -314,7 +381,11 @@ export function PermissionsPanel({
           </label>
 
           <div className="form-actions split-actions">
-            <button className="solid-button" disabled={!canEditActiveRole || isSavingRole} type="submit">
+            <button
+              className="solid-button"
+              disabled={!canEditActiveRole || isSavingRole}
+              type="submit"
+            >
               {isSavingRole ? "Saving..." : "Save Role"}
             </button>
             <button
@@ -378,7 +449,9 @@ export function PermissionsPanel({
                         aria-label={`${page.name} ${action}`}
                         checked={checked}
                         disabled={!canEditActiveRole || savingPermissionKey === key}
-                        onChange={(event) => void updatePermission(permission, action, event.target.checked)}
+                        onChange={(event) =>
+                          void updatePermission(permission, action, event.target.checked)
+                        }
                         type="checkbox"
                       />
                       <span>{checked ? "On" : "Off"}</span>

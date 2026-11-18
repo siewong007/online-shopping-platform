@@ -67,7 +67,11 @@ function ReviewComposer({
 
   return (
     <form className="pdp-reviews__form" onSubmit={handleSubmit}>
-      <div className="pdp-reviews__rating-group" role="group" aria-label={t("shop.reviews.ratingLabel")}>
+      <div
+        className="pdp-reviews__rating-group"
+        role="group"
+        aria-label={t("shop.reviews.ratingLabel")}
+      >
         <span className="pdp-reviews__field-label">{t("shop.reviews.ratingLabel")}</span>
         <div className="pdp-reviews__stars">
           {[1, 2, 3, 4, 5].map((score) => (

@@ -187,7 +187,11 @@ export function ManagementTable<T>({
   const toggleRowSelection = (row: T) => {
     const key = getRowKey(row);
     const next = new Set(selectedKeys);
-    next.has(key) ? next.delete(key) : next.add(key);
+    if (next.has(key)) {
+      next.delete(key);
+    } else {
+      next.add(key);
+    }
     onSelectionChange?.(next);
   };
 
@@ -224,8 +228,7 @@ export function ManagementTable<T>({
           ) : null}
           {filterSlot ? <div className="management-table-filters">{filterSlot}</div> : null}
           <span className="management-table-summary">
-            {summaryText ??
-              `${sortedRows.length} ${sortedRows.length === 1 ? "row" : "rows"}`}
+            {summaryText ?? `${sortedRows.length} ${sortedRows.length === 1 ? "row" : "rows"}`}
           </span>
         </div>
       ) : null}
@@ -257,7 +260,11 @@ export function ManagementTable<T>({
                 return (
                   <th
                     aria-sort={
-                      isActiveSort ? (sort.direction === "asc" ? "ascending" : "descending") : "none"
+                      isActiveSort
+                        ? sort.direction === "asc"
+                          ? "ascending"
+                          : "descending"
+                        : "none"
                     }
                     className={column.align ? `management-cell-${column.align}` : undefined}
                     key={column.key}
@@ -270,7 +277,9 @@ export function ManagementTable<T>({
                         type="button"
                       >
                         <span>{column.label}</span>
-                        <span className="sort-state" aria-hidden="true">{sortIndicator}</span>
+                        <span className="sort-state" aria-hidden="true">
+                          {sortIndicator}
+                        </span>
                       </button>
                     ) : (
                       column.label
@@ -283,7 +292,10 @@ export function ManagementTable<T>({
           <tbody>
             {sortedRows.length === 0 ? (
               <tr>
-                <td className="management-table-empty" colSpan={columns.length + (selectable ? 1 : 0)}>
+                <td
+                  className="management-table-empty"
+                  colSpan={columns.length + (selectable ? 1 : 0)}
+                >
                   {emptyMessage}
                 </td>
               </tr>
@@ -304,14 +316,22 @@ export function ManagementTable<T>({
                     key={rowKey}
                     tabIndex={onRowClick ? 0 : undefined}
                     onClick={(event) => {
-                      if ((event.target as HTMLElement).closest("button, input, a, select, textarea, label")) {
+                      if (
+                        (event.target as HTMLElement).closest(
+                          "button, input, a, select, textarea, label"
+                        )
+                      ) {
                         return;
                       }
                       onRowClick?.(row);
                     }}
                     onKeyDown={(event) => {
                       if (!onRowClick) return;
-                      if ((event.target as HTMLElement).closest("button, input, a, select, textarea, label")) {
+                      if (
+                        (event.target as HTMLElement).closest(
+                          "button, input, a, select, textarea, label"
+                        )
+                      ) {
                         return;
                       }
                       if (event.key === "Enter" || event.key === " ") {
@@ -348,7 +368,12 @@ export function ManagementTable<T>({
       {hasMore && onLoadMore ? (
         <div className="table-pagination-actions">
           <span className="table-pagination-count">Showing {rows.length} loaded</span>
-          <button className="outline-button" disabled={isLoadingMore} onClick={onLoadMore} type="button">
+          <button
+            className="outline-button"
+            disabled={isLoadingMore}
+            onClick={onLoadMore}
+            type="button"
+          >
             {isLoadingMore ? "Loading..." : "Load more"}
           </button>
         </div>

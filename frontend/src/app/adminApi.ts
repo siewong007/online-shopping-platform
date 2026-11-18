@@ -6,16 +6,8 @@ export {
   setAdminUserActive,
   updateAdminUserProfile
 } from "../modules/admin_users/api/adminUsersApi";
-export {
-  AUDIT_EVENTS_PAGE_SIZE,
-  fetchAuditEvents
-} from "../modules/audit/api/auditApi";
-export {
-  fetchMe,
-  login,
-  logout,
-  verifyLogin
-} from "../modules/auth/api/authApi";
+export { AUDIT_EVENTS_PAGE_SIZE, fetchAuditEvents } from "../modules/audit/api/auditApi";
+export { fetchMe, login, logout, verifyLogin } from "../modules/auth/api/authApi";
 export {
   createCategory,
   createProduct,
@@ -76,7 +68,4 @@ export {
   updateSalesDetails,
   updateSalesStatus
 } from "../modules/sales/api/salesApi";
-export {
-  fetchSystemSettings,
-  updateSystemSetting
-} from "../modules/settings/api/settingsApi";
+export { fetchSystemSettings, updateSystemSetting } from "../modules/settings/api/settingsApi";

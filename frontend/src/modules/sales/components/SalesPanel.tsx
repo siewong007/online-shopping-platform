@@ -94,20 +94,23 @@ export function SalesPanel({
 }: SalesPanelProps) {
   const { notify, notifyError } = useNotifications();
   const [detailsDrafts, setDetailsDrafts] = useState<Record<number, DetailsDraft>>({});
-  const [statusDrafts, setStatusDrafts] = useState<Record<number, { status: string; note: string }>>({});
+  const [statusDrafts, setStatusDrafts] = useState<
+    Record<number, { status: string; note: string }>
+  >({});
   const [savingOrderId, setSavingOrderId] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<SalesStatusFilter>("all");
 
-  const draftFor = (sale: SalesRecord): DetailsDraft => detailsDrafts[sale.order_id] ?? detailsDraftFor(sale);
+  const draftFor = (sale: SalesRecord): DetailsDraft =>
+    detailsDrafts[sale.order_id] ?? detailsDraftFor(sale);
   const filteredSales = useMemo(
-    () =>
-      statusFilter === "all"
-        ? sales
-        : sales.filter((sale) => sale.status === statusFilter),
+    () => (statusFilter === "all" ? sales : sales.filter((sale) => sale.status === statusFilter)),
     [sales, statusFilter]
   );
   const dirtyCount = useMemo(
-    () => sales.filter((sale) => isDetailsDirty(sale, detailsDrafts[sale.order_id] ?? detailsDraftFor(sale))).length,
+    () =>
+      sales.filter((sale) =>
+        isDetailsDirty(sale, detailsDrafts[sale.order_id] ?? detailsDraftFor(sale))
+      ).length,
     [detailsDrafts, sales]
   );
   const statusDraftFor = (sale: SalesRecord) =>
@@ -118,7 +121,13 @@ export function SalesPanel({
 
   const saveDetails = async (sale: SalesRecord) => {
     if (!canUpdate) {
-      notify({ severity: "error", title: "Sale not updated", message: "The active role cannot update sales details.", scope: "sales", dedupeKey: "sales:details:permission" });
+      notify({
+        severity: "error",
+        title: "Sale not updated",
+        message: "The active role cannot update sales details.",
+        scope: "sales",
+        dedupeKey: "sales:details:permission"
+      });
       return;
     }
 
@@ -126,7 +135,13 @@ export function SalesPanel({
     const discountCents = Math.round(Number(draft.discount) * 100);
 
     if (!Number.isFinite(discountCents) || discountCents < 0) {
-      notify({ severity: "warning", title: "Check the discount", message: "Discount must be zero or greater.", scope: "sales", dedupeKey: `sales:${sale.order_id}:discount:validation` });
+      notify({
+        severity: "warning",
+        title: "Check the discount",
+        message: "Discount must be zero or greater.",
+        scope: "sales",
+        dedupeKey: `sales:${sale.order_id}:discount:validation`
+      });
       return;
     }
 
@@ -139,9 +154,19 @@ export function SalesPanel({
         discount_cents: discountCents
       });
       setDetailsDrafts((current) => ({ ...current, [updated.order_id]: detailsDraftFor(updated) }));
-      notify({ severity: "success", title: "Sale details updated", message: `Sale #${updated.order_id} details were updated successfully.`, scope: "sales", dedupeKey: `sales:${updated.order_id}:details:success` });
+      notify({
+        severity: "success",
+        title: "Sale details updated",
+        message: `Sale #${updated.order_id} details were updated successfully.`,
+        scope: "sales",
+        dedupeKey: `sales:${updated.order_id}:details:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: "update sale details", scope: "sales", dedupeKey: `sales:${sale.order_id}:details:error` });
+      notifyError(error, {
+        operation: "update sale details",
+        scope: "sales",
+        dedupeKey: `sales:${sale.order_id}:details:error`
+      });
     } finally {
       setSavingOrderId(null);
     }
@@ -149,7 +174,13 @@ export function SalesPanel({
 
   const updateStatus = async (sale: SalesRecord) => {
     if (!canUpdate) {
-      notify({ severity: "error", title: "Status not changed", message: "The active role cannot change sales status.", scope: "sales", dedupeKey: "sales:status:permission" });
+      notify({
+        severity: "error",
+        title: "Status not changed",
+        message: "The active role cannot change sales status.",
+        scope: "sales",
+        dedupeKey: "sales:status:permission"
+      });
       return;
     }
 
@@ -167,9 +198,19 @@ export function SalesPanel({
         delete next[updated.order_id];
         return next;
       });
-      notify({ severity: "success", title: "Sales status updated", message: `Sale #${updated.order_id} was moved to ${updated.status} successfully.`, scope: "sales", dedupeKey: `sales:${updated.order_id}:status:success` });
+      notify({
+        severity: "success",
+        title: "Sales status updated",
+        message: `Sale #${updated.order_id} was moved to ${updated.status} successfully.`,
+        scope: "sales",
+        dedupeKey: `sales:${updated.order_id}:status:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: "update sale status", scope: "sales", dedupeKey: `sales:${sale.order_id}:status:error` });
+      notifyError(error, {
+        operation: "update sale status",
+        scope: "sales",
+        dedupeKey: `sales:${sale.order_id}:status:error`
+      });
     } finally {
       setSavingOrderId(null);
     }

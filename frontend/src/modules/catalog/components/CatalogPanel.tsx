@@ -1,8 +1,12 @@
-import { type ChangeEvent, useEffect, useMemo, useState } from "react";
+import { type ChangeEvent, useMemo, useState } from "react";
 
 import { ConfirmModal } from "../../../shared/components/ConfirmModal";
 import { ManagementTable } from "../../../shared/components/ManagementTable";
-import { RecordForm, type RecordFormField, RecordModal } from "../../../shared/components/RecordModal";
+import {
+  RecordForm,
+  type RecordFormField,
+  RecordModal
+} from "../../../shared/components/RecordModal";
 import { currencyFromCents } from "../../../shared/formatters";
 import { useNotifications } from "../../../shared/notifications";
 import { importCatalogue, importProductImages } from "../api/catalogApi";
@@ -18,7 +22,12 @@ import type {
 } from "../types";
 
 const MAX_PRODUCT_IMAGE_BYTES = 1_000_000;
-const ACCEPTED_PRODUCT_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
+const ACCEPTED_PRODUCT_IMAGE_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif"
+]);
 
 type CatalogConfirmAction =
   | { kind: "apply-images" }
@@ -251,7 +260,7 @@ function productFields(categories: Category[]): RecordFormField<ProductFormState
         Number.isInteger(Number(value)) && Number(value) >= 0
           ? null
           : "Enter a valid low stock threshold."
-    },
+    }
   ];
 }
 
@@ -266,7 +275,13 @@ function slugify(value: string): string {
 function TrashIcon() {
   return (
     <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
-      <path d="M4 7h16M10 11v6m4-6v6M9 7l1-2h4l1 2m-9 0 1 13h10l1-13" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
+      <path
+        d="M4 7h16M10 11v6m4-6v6M9 7l1-2h4l1 2m-9 0 1 13h10l1-13"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
     </svg>
   );
 }
@@ -296,7 +311,9 @@ export function CatalogPanel({
     name: "",
     teaser: ""
   });
-  const [productForm, setProductForm] = useState<ProductFormState>(() => emptyProductForm(categories));
+  const [productForm, setProductForm] = useState<ProductFormState>(() =>
+    emptyProductForm(categories)
+  );
   const [editingCategorySlug, setEditingCategorySlug] = useState<string | null>(null);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -370,7 +387,10 @@ export function CatalogPanel({
     } catch (error) {
       setImageManifestCsv("");
       setImageManifestName("");
-      notifyError(error, { operation: "check the product image manifest", scope: "product-image-import" });
+      notifyError(error, {
+        operation: "check the product image manifest",
+        scope: "product-image-import"
+      });
     } finally {
       setIsCheckingImages(false);
     }
@@ -396,7 +416,10 @@ export function CatalogPanel({
         scope: "product-image-import"
       });
     } catch (error) {
-      notifyError(error, { operation: "apply the product image manifest", scope: "product-image-import" });
+      notifyError(error, {
+        operation: "apply the product image manifest",
+        scope: "product-image-import"
+      });
     } finally {
       setIsApplyingImages(false);
       setPendingConfirm(null);
@@ -444,28 +467,32 @@ export function CatalogPanel({
   const editingCategory =
     editingCategorySlug === null
       ? null
-      : categories.find((category) => category.slug === editingCategorySlug) ?? null;
+      : (categories.find((category) => category.slug === editingCategorySlug) ?? null);
   const editingProduct =
     editingProductId === null
       ? null
-      : products.find((product) => product.id === editingProductId) ?? null;
+      : (products.find((product) => product.id === editingProductId) ?? null);
 
-  useEffect(() => {
+  const [prevCategories, setPrevCategories] = useState(categories);
+  if (prevCategories !== categories) {
+    setPrevCategories(categories);
     const assignableCategories = categories.filter((category) => category.slug !== "all");
-    if (assignableCategories.length === 0) {
-      return;
+    if (
+      assignableCategories.length > 0 &&
+      !assignableCategories.some((category) => category.slug === productForm.category_slug)
+    ) {
+      setProductForm((current) => ({ ...current, category_slug: assignableCategories[0].slug }));
     }
+  }
 
-    setProductForm((current) =>
-      assignableCategories.some((category) => category.slug === current.category_slug)
-        ? current
-        : { ...current, category_slug: assignableCategories[0].slug }
-    );
-  }, [categories]);
-
-  useEffect(() => {
-    setSelectedProductIds((current) => new Set([...current].filter((id) => products.some((product) => product.id === id))));
-  }, [products]);
+  const [prevProducts, setPrevProducts] = useState(products);
+  if (prevProducts !== products) {
+    setPrevProducts(products);
+    setSelectedProductIds((current) => {
+      const filtered = [...current].filter((id) => products.some((product) => product.id === id));
+      return filtered.length === current.size ? current : new Set(filtered);
+    });
+  }
 
   const openCreateCategory = () => {
     setCategoryForm({ slug: "", name: "", teaser: "" });
@@ -505,13 +532,25 @@ export function CatalogPanel({
     if (!file) return;
 
     if (!ACCEPTED_PRODUCT_IMAGE_TYPES.has(file.type)) {
-      notify({ severity: "error", title: "Image not selected", message: "Choose a PNG, JPEG, WebP, or GIF image.", scope: "catalog", dedupeKey: "catalog:product:image:type" });
+      notify({
+        severity: "error",
+        title: "Image not selected",
+        message: "Choose a PNG, JPEG, WebP, or GIF image.",
+        scope: "catalog",
+        dedupeKey: "catalog:product:image:type"
+      });
       event.target.value = "";
       return;
     }
 
     if (file.size > MAX_PRODUCT_IMAGE_BYTES) {
-      notify({ severity: "error", title: "Image too large", message: "Choose an image smaller than 1 MB.", scope: "catalog", dedupeKey: "catalog:product:image:size" });
+      notify({
+        severity: "error",
+        title: "Image too large",
+        message: "Choose an image smaller than 1 MB.",
+        scope: "catalog",
+        dedupeKey: "catalog:product:image:size"
+      });
       event.target.value = "";
       return;
     }
@@ -530,7 +569,13 @@ export function CatalogPanel({
 
   const handleCreateCategory = async () => {
     if (!canCreate) {
-      notify({ severity: "error", title: "Category not created", message: "The active role cannot create catalog records.", scope: "catalog", dedupeKey: "catalog:category:create:permission" });
+      notify({
+        severity: "error",
+        title: "Category not created",
+        message: "The active role cannot create catalog records.",
+        scope: "catalog",
+        dedupeKey: "catalog:category:create:permission"
+      });
       return;
     }
 
@@ -546,9 +591,19 @@ export function CatalogPanel({
       setCategoryForm({ slug: "", name: "", teaser: "" });
       setProductForm((current) => ({ ...current, category_slug: category.slug }));
       setIsCategoryModalOpen(false);
-      notify({ severity: "success", title: "Category created", message: `${category.name} was created successfully and is ready for products.`, scope: "catalog", dedupeKey: `catalog:category:${category.slug}:create:success` });
+      notify({
+        severity: "success",
+        title: "Category created",
+        message: `${category.name} was created successfully and is ready for products.`,
+        scope: "catalog",
+        dedupeKey: `catalog:category:${category.slug}:create:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: "create category", scope: "catalog", dedupeKey: "catalog:category:create:error" });
+      notifyError(error, {
+        operation: "create category",
+        scope: "catalog",
+        dedupeKey: "catalog:category:create:error"
+      });
     } finally {
       setIsSavingCategory(false);
     }
@@ -556,7 +611,13 @@ export function CatalogPanel({
 
   const handleUpdateCategory = async () => {
     if (!editingCategorySlug || !canUpdate) {
-      notify({ severity: "error", title: "Category not updated", message: "The active role cannot update catalog records.", scope: "catalog", dedupeKey: "catalog:category:update:permission" });
+      notify({
+        severity: "error",
+        title: "Category not updated",
+        message: "The active role cannot update catalog records.",
+        scope: "catalog",
+        dedupeKey: "catalog:category:update:permission"
+      });
       return;
     }
 
@@ -568,9 +629,19 @@ export function CatalogPanel({
         teaser: categoryEditForm.teaser.trim()
       });
       closeCategoryEdit();
-      notify({ severity: "success", title: "Category updated", message: `${category.name} was updated successfully.`, scope: "catalog", dedupeKey: `catalog:category:${category.slug}:update:success` });
+      notify({
+        severity: "success",
+        title: "Category updated",
+        message: `${category.name} was updated successfully.`,
+        scope: "catalog",
+        dedupeKey: `catalog:category:${category.slug}:update:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: "update category", scope: "catalog", dedupeKey: `catalog:category:${editingCategorySlug}:update:error` });
+      notifyError(error, {
+        operation: "update category",
+        scope: "catalog",
+        dedupeKey: `catalog:category:${editingCategorySlug}:update:error`
+      });
     } finally {
       setIsSavingCategory(false);
     }
@@ -578,7 +649,13 @@ export function CatalogPanel({
 
   const requestDeleteCategory = (category: Category) => {
     if (!canDelete) {
-      notify({ severity: "error", title: "Category not deleted", message: "The active role cannot delete catalog records.", scope: "catalog", dedupeKey: "catalog:category:delete:permission" });
+      notify({
+        severity: "error",
+        title: "Category not deleted",
+        message: "The active role cannot delete catalog records.",
+        scope: "catalog",
+        dedupeKey: "catalog:category:delete:permission"
+      });
       return;
     }
 
@@ -590,9 +667,19 @@ export function CatalogPanel({
 
     try {
       await onDeleteCategory(category.slug);
-      notify({ severity: "success", title: "Category deleted", message: `${category.name} was deleted successfully.`, scope: "catalog", dedupeKey: `catalog:category:${category.slug}:delete:success` });
+      notify({
+        severity: "success",
+        title: "Category deleted",
+        message: `${category.name} was deleted successfully.`,
+        scope: "catalog",
+        dedupeKey: `catalog:category:${category.slug}:delete:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: "delete category", scope: "catalog", dedupeKey: `catalog:category:${category.slug}:delete:error` });
+      notifyError(error, {
+        operation: "delete category",
+        scope: "catalog",
+        dedupeKey: `catalog:category:${category.slug}:delete:error`
+      });
     } finally {
       setDeletingCategorySlug(null);
       setPendingConfirm(null);
@@ -603,7 +690,13 @@ export function CatalogPanel({
     const canSave = editingProductId === null ? canCreate : canUpdate;
 
     if (!canSave) {
-      notify({ severity: "error", title: "Product not saved", message: "The active role cannot save catalog records.", scope: "catalog", dedupeKey: "catalog:product:save:permission" });
+      notify({
+        severity: "error",
+        title: "Product not saved",
+        message: "The active role cannot save catalog records.",
+        scope: "catalog",
+        dedupeKey: "catalog:product:save:permission"
+      });
       return;
     }
 
@@ -618,9 +711,19 @@ export function CatalogPanel({
 
       setProductForm(emptyProductForm(categories));
       closeProductModal();
-      notify({ severity: "success", title: wasCreating ? "Product created" : "Product updated", message: `${product.name} was ${wasCreating ? "created" : "updated"} successfully.`, scope: "catalog", dedupeKey: `catalog:product:${product.id}:${wasCreating ? "create" : "update"}:success` });
+      notify({
+        severity: "success",
+        title: wasCreating ? "Product created" : "Product updated",
+        message: `${product.name} was ${wasCreating ? "created" : "updated"} successfully.`,
+        scope: "catalog",
+        dedupeKey: `catalog:product:${product.id}:${wasCreating ? "create" : "update"}:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: wasCreating ? "create product" : "update product", scope: "catalog", dedupeKey: `catalog:product:${editingProductId ?? "new"}:save:error` });
+      notifyError(error, {
+        operation: wasCreating ? "create product" : "update product",
+        scope: "catalog",
+        dedupeKey: `catalog:product:${editingProductId ?? "new"}:save:error`
+      });
     } finally {
       setIsSavingProduct(false);
     }
@@ -628,7 +731,13 @@ export function CatalogPanel({
 
   const requestDeleteProduct = (product: Product) => {
     if (!canDelete) {
-      notify({ severity: "error", title: "Product not deleted", message: "The active role cannot delete catalog records.", scope: "catalog", dedupeKey: "catalog:product:delete:permission" });
+      notify({
+        severity: "error",
+        title: "Product not deleted",
+        message: "The active role cannot delete catalog records.",
+        scope: "catalog",
+        dedupeKey: "catalog:product:delete:permission"
+      });
       return;
     }
 
@@ -643,9 +752,19 @@ export function CatalogPanel({
       if (editingProductId === product.id) {
         closeProductModal();
       }
-      notify({ severity: "success", title: "Product deleted", message: `${product.name} was deleted successfully.`, scope: "catalog", dedupeKey: `catalog:product:${product.id}:delete:success` });
+      notify({
+        severity: "success",
+        title: "Product deleted",
+        message: `${product.name} was deleted successfully.`,
+        scope: "catalog",
+        dedupeKey: `catalog:product:${product.id}:delete:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: "delete product", scope: "catalog", dedupeKey: `catalog:product:${product.id}:delete:error` });
+      notifyError(error, {
+        operation: "delete product",
+        scope: "catalog",
+        dedupeKey: `catalog:product:${product.id}:delete:error`
+      });
     } finally {
       setDeletingProductId(null);
       setPendingConfirm(null);
@@ -671,9 +790,19 @@ export function CatalogPanel({
     try {
       await Promise.all(targets.map((product) => onDeleteProduct(product.id)));
       setSelectedProductIds(new Set());
-      notify({ severity: "success", title: "Inventory deleted", message: `${targets.length} ${targets.length === 1 ? "record was" : "records were"} deleted successfully.`, scope: "catalog", dedupeKey: `catalog:product:bulk-delete:${scope}:success` });
+      notify({
+        severity: "success",
+        title: "Inventory deleted",
+        message: `${targets.length} ${targets.length === 1 ? "record was" : "records were"} deleted successfully.`,
+        scope: "catalog",
+        dedupeKey: `catalog:product:bulk-delete:${scope}:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: `delete ${scope} inventory records`, scope: "catalog", dedupeKey: `catalog:product:bulk-delete:${scope}:error` });
+      notifyError(error, {
+        operation: `delete ${scope} inventory records`,
+        scope: "catalog",
+        dedupeKey: `catalog:product:bulk-delete:${scope}:error`
+      });
     } finally {
       setIsBulkActionRunning(false);
       setPendingConfirm(null);
@@ -698,11 +827,25 @@ export function CatalogPanel({
 
     setIsBulkActionRunning(true);
     try {
-      await Promise.all(selectedProducts.map((product) => onUpdateProduct(product.id, { ...product, featured: true })));
+      await Promise.all(
+        selectedProducts.map((product) =>
+          onUpdateProduct(product.id, { ...product, featured: true })
+        )
+      );
       setSelectedProductIds(new Set());
-      notify({ severity: "success", title: "Storefront activated", message: `${selectedProducts.length} ${selectedProducts.length === 1 ? "product is" : "products are"} now visible on the storefront.`, scope: "catalog", dedupeKey: "catalog:product:bulk-publish:success" });
+      notify({
+        severity: "success",
+        title: "Storefront activated",
+        message: `${selectedProducts.length} ${selectedProducts.length === 1 ? "product is" : "products are"} now visible on the storefront.`,
+        scope: "catalog",
+        dedupeKey: "catalog:product:bulk-publish:success"
+      });
     } catch (error) {
-      notifyError(error, { operation: "activate selected products on the storefront", scope: "catalog", dedupeKey: "catalog:product:bulk-publish:error" });
+      notifyError(error, {
+        operation: "activate selected products on the storefront",
+        scope: "catalog",
+        dedupeKey: "catalog:product:bulk-publish:error"
+      });
     } finally {
       setIsBulkActionRunning(false);
     }
@@ -812,7 +955,11 @@ export function CatalogPanel({
       key: "status",
       label: "Stock status",
       sortValue: (product: Product) =>
-        product.stock_quantity === 0 ? 0 : product.stock_quantity <= product.low_stock_threshold ? 1 : 2,
+        product.stock_quantity === 0
+          ? 0
+          : product.stock_quantity <= product.low_stock_threshold
+            ? 1
+            : 2,
       render: (product: Product) => {
         const isOut = product.stock_quantity === 0;
         const isLow = product.stock_quantity <= product.low_stock_threshold;
@@ -850,7 +997,9 @@ export function CatalogPanel({
             />
             <span className="status-pill live">Ready</span>
           </div>
-        ) : <span className="status-pill warning">Missing</span>
+        ) : (
+          <span className="status-pill warning">Missing</span>
+        )
     },
     {
       key: "actions",
@@ -929,8 +1078,14 @@ export function CatalogPanel({
     <section className="admin-section active">
       <div className="panel-header">
         <div>
-          <p className="eyebrow">{variant === "inventory" ? "Inventory manager" : "Catalog manager"}</p>
-          <h3>{variant === "inventory" ? "Manage product stock and replenishment" : "Manage categories and products"}</h3>
+          <p className="eyebrow">
+            {variant === "inventory" ? "Inventory manager" : "Catalog manager"}
+          </p>
+          <h3>
+            {variant === "inventory"
+              ? "Manage product stock and replenishment"
+              : "Manage categories and products"}
+          </h3>
         </div>
         <span className={`status-pill ${canCreate || canUpdate || canDelete ? "live" : ""}`}>
           {canCreate || canUpdate || canDelete ? "Writable" : "Read only"}
@@ -939,11 +1094,21 @@ export function CatalogPanel({
 
       <div className="record-toolbar">
         {variant === "catalog" ? (
-          <button className="outline-button" disabled={!canCreate} onClick={openCreateCategory} type="button">
+          <button
+            className="outline-button"
+            disabled={!canCreate}
+            onClick={openCreateCategory}
+            type="button"
+          >
             Create Category
           </button>
         ) : null}
-        <button className="solid-button" disabled={!canCreate} onClick={openCreateProduct} type="button">
+        <button
+          className="solid-button"
+          disabled={!canCreate}
+          onClick={openCreateProduct}
+          type="button"
+        >
           {variant === "inventory" ? "Add Inventory Item" : "Create Product"}
         </button>
         {variant === "catalog" ? (
@@ -968,14 +1133,18 @@ export function CatalogPanel({
             />
           </label>
         ) : null}
-        {variant === "catalog" && imageImportReport?.dry_run && imageImportReport.approved_rows > 0 ? (
+        {variant === "catalog" &&
+        imageImportReport?.dry_run &&
+        imageImportReport.approved_rows > 0 ? (
           <button
             className="solid-button"
             disabled={!canUpdate || isApplyingImages || imageImportReport.products_updated === 0}
             onClick={requestApplyImageManifest}
             type="button"
           >
-            {isApplyingImages ? "Applying…" : `Apply ${imageImportReport.products_updated} verified images`}
+            {isApplyingImages
+              ? "Applying…"
+              : `Apply ${imageImportReport.products_updated} verified images`}
           </button>
         ) : null}
       </div>
@@ -1005,14 +1174,17 @@ export function CatalogPanel({
           <strong>
             {imageImportReport.dry_run ? "Check only · no changes made · " : "Applied · "}
             {imageImportReport.rows_read} rows · {imageImportReport.rows_pending} pending ·{" "}
-            {imageImportReport.approved_rows} approved · {imageImportReport.products_matched} matched ·{" "}
-            {imageImportReport.products_updated} {imageImportReport.dry_run ? "ready to update" : "updated"}
+            {imageImportReport.approved_rows} approved · {imageImportReport.products_matched}{" "}
+            matched · {imageImportReport.products_updated}{" "}
+            {imageImportReport.dry_run ? "ready to update" : "updated"}
           </strong>
           {imageImportReport.problems.length > 0 ? (
             <details>
               <summary>{imageImportReport.problems.length} issue(s) need attention</summary>
               <ul>
-                {imageImportReport.problems.map((problem) => <li key={problem}>{problem}</li>)}
+                {imageImportReport.problems.map((problem) => (
+                  <li key={problem}>{problem}</li>
+                ))}
               </ul>
             </details>
           ) : null}
@@ -1020,10 +1192,18 @@ export function CatalogPanel({
       ) : null}
 
       {variant === "catalog" ? (
-        <div className="record-toolbar catalog-subtabs" role="tablist" aria-label="Catalog sections">
+        <div
+          className="record-toolbar catalog-subtabs"
+          role="tablist"
+          aria-label="Catalog sections"
+        >
           <button
             aria-selected={catalogSubtab === "products"}
-            className={catalogSubtab === "products" ? "solid-button catalog-subtab active" : "outline-button catalog-subtab"}
+            className={
+              catalogSubtab === "products"
+                ? "solid-button catalog-subtab active"
+                : "outline-button catalog-subtab"
+            }
             onClick={() => setCatalogSubtab("products")}
             role="tab"
             type="button"
@@ -1032,7 +1212,11 @@ export function CatalogPanel({
           </button>
           <button
             aria-selected={catalogSubtab === "departments"}
-            className={catalogSubtab === "departments" ? "solid-button catalog-subtab active" : "outline-button catalog-subtab"}
+            className={
+              catalogSubtab === "departments"
+                ? "solid-button catalog-subtab active"
+                : "outline-button catalog-subtab"
+            }
             onClick={() => setCatalogSubtab("departments")}
             role="tab"
             type="button"
@@ -1079,24 +1263,48 @@ export function CatalogPanel({
           <article className="dashboard-panel">
             <div className="panel-header">
               <div>
-                <p className="eyebrow">{variant === "inventory" ? "Stock records" : "Storefront products"}</p>
-                <h3>{variant === "inventory" ? "Inventory management table" : "Product inventory table"}</h3>
+                <p className="eyebrow">
+                  {variant === "inventory" ? "Stock records" : "Storefront products"}
+                </p>
+                <h3>
+                  {variant === "inventory"
+                    ? "Inventory management table"
+                    : "Product inventory table"}
+                </h3>
               </div>
             </div>
             {variant === "inventory" ? (
               <div className="inventory-bulk-actions" aria-label="Inventory bulk actions">
-                <span>{selectedProducts.length ? `${selectedProducts.length} selected` : "Select inventory records to run a bulk action"}</span>
+                <span>
+                  {selectedProducts.length
+                    ? `${selectedProducts.length} selected`
+                    : "Select inventory records to run a bulk action"}
+                </span>
                 <div className="inventory-bulk-controls">
                   <div className="inventory-bulk-selection-actions">
-                    <button disabled={!canUpdate || selectedProducts.length === 0 || isBulkActionRunning} onClick={() => void handlePublishSelected()} type="button">
+                    <button
+                      disabled={!canUpdate || selectedProducts.length === 0 || isBulkActionRunning}
+                      onClick={() => void handlePublishSelected()}
+                      type="button"
+                    >
                       Activate selected storefront
                     </button>
-                    <button className="danger-button" disabled={!canDelete || selectedProducts.length === 0 || isBulkActionRunning} onClick={() => requestBulkDelete("selected")} type="button">
+                    <button
+                      className="danger-button"
+                      disabled={!canDelete || selectedProducts.length === 0 || isBulkActionRunning}
+                      onClick={() => requestBulkDelete("selected")}
+                      type="button"
+                    >
                       Delete selected
                     </button>
                   </div>
                   <span className="inventory-bulk-separator" aria-hidden="true" />
-                  <button className="danger-button inventory-bulk-all-action" disabled={!canDelete || products.length === 0 || isBulkActionRunning} onClick={() => requestBulkDelete("all")} type="button">
+                  <button
+                    className="danger-button inventory-bulk-all-action"
+                    disabled={!canDelete || products.length === 0 || isBulkActionRunning}
+                    onClick={() => requestBulkDelete("all")}
+                    type="button"
+                  >
                     Delete all
                   </button>
                 </div>
@@ -1129,7 +1337,11 @@ export function CatalogPanel({
                         ))}
                     </select>
                   </label>
-                  <div className="management-filter-pills" role="group" aria-label="Filter by stock status">
+                  <div
+                    className="management-filter-pills"
+                    role="group"
+                    aria-label="Filter by stock status"
+                  >
                     {(
                       [
                         { key: "all", label: "All" },
@@ -1174,51 +1386,51 @@ export function CatalogPanel({
 
       {variant === "catalog" ? (
         <RecordModal
-        eyebrow="New category"
-        isBusy={isSavingCategory}
-        isOpen={isCategoryModalOpen}
-        onClose={() => {
-          setIsCategoryModalOpen(false);
-        }}
-        statusLabel={canCreate ? "Writable" : "Read only"}
-        statusTone={canCreate ? "live" : undefined}
-        title="Add a department to the storefront"
-      >
-        <RecordForm
-          disabled={!canCreate}
-          fields={categoryFields}
-          isSubmitting={isSavingCategory}
-          onCancel={() => {
+          eyebrow="New category"
+          isBusy={isSavingCategory}
+          isOpen={isCategoryModalOpen}
+          onClose={() => {
             setIsCategoryModalOpen(false);
           }}
-          onChange={setCategoryForm}
-          onSubmit={() => void handleCreateCategory()}
-          submitLabel="Create Category"
-          values={categoryForm}
-        />
+          statusLabel={canCreate ? "Writable" : "Read only"}
+          statusTone={canCreate ? "live" : undefined}
+          title="Add a department to the storefront"
+        >
+          <RecordForm
+            disabled={!canCreate}
+            fields={categoryFields}
+            isSubmitting={isSavingCategory}
+            onCancel={() => {
+              setIsCategoryModalOpen(false);
+            }}
+            onChange={setCategoryForm}
+            onSubmit={() => void handleCreateCategory()}
+            submitLabel="Create Category"
+            values={categoryForm}
+          />
         </RecordModal>
       ) : null}
 
       {variant === "catalog" ? (
         <RecordModal
-        eyebrow="Editing category"
-        isBusy={isSavingCategory}
-        isOpen={isCategoryEditOpen}
-        onClose={closeCategoryEdit}
-        statusLabel={canUpdate ? "Writable" : "Read only"}
-        statusTone={canUpdate ? "live" : undefined}
-        title={editingCategory?.name ?? "Edit category"}
-      >
-        <RecordForm
-          disabled={!canUpdate}
-          fields={updateCategoryFields}
-          isSubmitting={isSavingCategory}
-          onCancel={closeCategoryEdit}
-          onChange={setCategoryEditForm}
-          onSubmit={() => void handleUpdateCategory()}
-          submitLabel="Save Category"
-          values={categoryEditForm}
-        />
+          eyebrow="Editing category"
+          isBusy={isSavingCategory}
+          isOpen={isCategoryEditOpen}
+          onClose={closeCategoryEdit}
+          statusLabel={canUpdate ? "Writable" : "Read only"}
+          statusTone={canUpdate ? "live" : undefined}
+          title={editingCategory?.name ?? "Edit category"}
+        >
+          <RecordForm
+            disabled={!canUpdate}
+            fields={updateCategoryFields}
+            isSubmitting={isSavingCategory}
+            onCancel={closeCategoryEdit}
+            onChange={setCategoryEditForm}
+            onSubmit={() => void handleUpdateCategory()}
+            submitLabel="Save Category"
+            values={categoryEditForm}
+          />
         </RecordModal>
       ) : null}
 
@@ -1228,12 +1440,30 @@ export function CatalogPanel({
         isOpen={isProductModalOpen}
         onClose={closeProductModal}
         size="wide"
-        statusLabel={editingProductId === null ? (canCreate ? "Writable" : "Read only") : canUpdate ? "Writable" : "Read only"}
-        statusTone={editingProductId === null ? (canCreate ? "live" : undefined) : canUpdate ? "live" : undefined}
+        statusLabel={
+          editingProductId === null
+            ? canCreate
+              ? "Writable"
+              : "Read only"
+            : canUpdate
+              ? "Writable"
+              : "Read only"
+        }
+        statusTone={
+          editingProductId === null
+            ? canCreate
+              ? "live"
+              : undefined
+            : canUpdate
+              ? "live"
+              : undefined
+        }
         title={
           editingProductId === null
-            ? variant === "inventory" ? "Add inventory item" : "Publish a new storefront item"
-            : editingProduct?.name ?? "Edit storefront item"
+            ? variant === "inventory"
+              ? "Add inventory item"
+              : "Publish a new storefront item"
+            : (editingProduct?.name ?? "Edit storefront item")
         }
       >
         <RecordForm

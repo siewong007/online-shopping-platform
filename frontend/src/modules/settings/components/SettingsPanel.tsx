@@ -111,14 +111,26 @@ export function SettingsPanel({ canUpdate, onUpdateSetting, settings }: Settings
     event.preventDefault();
 
     if (!canUpdate) {
-      notify({ severity: "error", title: "Setting not updated", message: "The active role cannot update system settings.", scope: "settings", dedupeKey: "settings:update:permission" });
+      notify({
+        severity: "error",
+        title: "Setting not updated",
+        message: "The active role cannot update system settings.",
+        scope: "settings",
+        dedupeKey: "settings:update:permission"
+      });
       return;
     }
 
     const value = draftFor(setting).trim();
     const validationError = validateSettingValue(setting, value);
     if (validationError) {
-      notify({ severity: "warning", title: "Check the setting value", message: validationError, scope: "settings", dedupeKey: `settings:${setting.key}:validation` });
+      notify({
+        severity: "warning",
+        title: "Check the setting value",
+        message: validationError,
+        scope: "settings",
+        dedupeKey: `settings:${setting.key}:validation`
+      });
       return;
     }
 
@@ -127,9 +139,19 @@ export function SettingsPanel({ canUpdate, onUpdateSetting, settings }: Settings
     try {
       const updated = await onUpdateSetting(setting.key, { value });
       setDrafts((current) => ({ ...current, [updated.key]: updated.value }));
-      notify({ severity: "success", title: "Setting updated", message: `${updated.key} was updated successfully.`, scope: "settings", dedupeKey: `settings:${updated.key}:update:success` });
+      notify({
+        severity: "success",
+        title: "Setting updated",
+        message: `${updated.key} was updated successfully.`,
+        scope: "settings",
+        dedupeKey: `settings:${updated.key}:update:success`
+      });
     } catch (error) {
-      notifyError(error, { operation: "update system setting", scope: "settings", dedupeKey: `settings:${setting.key}:update:error` });
+      notifyError(error, {
+        operation: "update system setting",
+        scope: "settings",
+        dedupeKey: `settings:${setting.key}:update:error`
+      });
     } finally {
       setSavingKey(null);
     }
@@ -177,7 +199,10 @@ export function SettingsPanel({ canUpdate, onUpdateSetting, settings }: Settings
                         <select
                           disabled={!canUpdate}
                           onChange={(event) =>
-                            setDrafts((current) => ({ ...current, [setting.key]: event.target.value }))
+                            setDrafts((current) => ({
+                              ...current,
+                              [setting.key]: event.target.value
+                            }))
                           }
                           value={draftValue}
                         >
@@ -189,7 +214,10 @@ export function SettingsPanel({ canUpdate, onUpdateSetting, settings }: Settings
                           disabled={!canUpdate}
                           min={setting.key.endsWith("_cents") ? 0 : undefined}
                           onChange={(event) =>
-                            setDrafts((current) => ({ ...current, [setting.key]: event.target.value }))
+                            setDrafts((current) => ({
+                              ...current,
+                              [setting.key]: event.target.value
+                            }))
                           }
                           type={setting.value_type === "int" ? "number" : "text"}
                           value={draftValue}
@@ -198,7 +226,10 @@ export function SettingsPanel({ canUpdate, onUpdateSetting, settings }: Settings
                     </label>
                     <p className="settings-row-description">{setting.description}</p>
                     <div className="settings-row-footer">
-                      <div className="admin-actions" style={{ alignItems: "center", gap: "0.5rem" }}>
+                      <div
+                        className="admin-actions"
+                        style={{ alignItems: "center", gap: "0.5rem" }}
+                      >
                         <span>Updated {formatOrderDate(setting.updated_at)}</span>
                         {isDirty ? (
                           <strong className="sales-row-dirty" style={{ marginTop: 0 }}>

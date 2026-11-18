@@ -18,14 +18,7 @@ type RecordModalProps = {
 };
 
 type RecordFormControl =
-  | "checkbox"
-  | "email"
-  | "number"
-  | "password"
-  | "select"
-  | "text"
-  | "textarea"
-  | "toggle";
+  "checkbox" | "email" | "number" | "password" | "select" | "text" | "textarea" | "toggle";
 
 type RecordFormOption = {
   label: string;
@@ -34,7 +27,8 @@ type RecordFormOption = {
 
 export type RecordFormErrors<TValues extends object> = Partial<
   Record<keyof TValues & string, string | null | undefined>
-> & Record<string, string | null | undefined>;
+> &
+  Record<string, string | null | undefined>;
 
 export type RecordFormField<TValues extends object> = {
   autoComplete?: string;
@@ -73,7 +67,9 @@ type RecordFormProps<TValues extends object> = {
 };
 
 function isBlank(value: unknown): boolean {
-  return typeof value === "string" ? value.trim().length === 0 : value === null || value === undefined;
+  return typeof value === "string"
+    ? value.trim().length === 0
+    : value === null || value === undefined;
 }
 
 function validateField<TValues extends object>(
@@ -150,7 +146,9 @@ export function validateRecordFields<TValues extends object>(
   return errors;
 }
 
-export function hasRecordFormErrors<TValues extends object>(errors: RecordFormErrors<TValues>): boolean {
+export function hasRecordFormErrors<TValues extends object>(
+  errors: RecordFormErrors<TValues>
+): boolean {
   return Object.values(errors).some(Boolean);
 }
 
@@ -175,8 +173,10 @@ export function RecordModal({
   const onCloseRef = useRef(onClose);
   const isBusyRef = useRef(isBusy);
 
-  onCloseRef.current = onClose;
-  isBusyRef.current = isBusy;
+  useEffect(() => {
+    onCloseRef.current = onClose;
+    isBusyRef.current = isBusy;
+  }, [isBusy, onClose]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -368,7 +368,11 @@ export function RecordForm<TValues extends object>({
   return (
     <form className="record-form" noValidate onSubmit={handleSubmit}>
       {showErrorSummary ? (
-        <section aria-labelledby={summaryTitleId} className="record-form-error-summary" role="alert">
+        <section
+          aria-labelledby={summaryTitleId}
+          className="record-form-error-summary"
+          role="alert"
+        >
           <h4 id={summaryTitleId}>Review the highlighted fields</h4>
           <p>Correct these items before submitting:</p>
           <ul>
@@ -402,9 +406,10 @@ export function RecordForm<TValues extends object>({
           const controlId = fieldId(field.name);
           const helpId = `${controlId}-help`;
           const errorId = `${controlId}-error`;
-          const describedBy = [field.helpText || field.description ? helpId : null, error ? errorId : null]
-            .filter(Boolean)
-            .join(" ") || undefined;
+          const describedBy =
+            [field.helpText || field.description ? helpId : null, error ? errorId : null]
+              .filter(Boolean)
+              .join(" ") || undefined;
 
           if (control === "checkbox") {
             return (
@@ -422,7 +427,11 @@ export function RecordForm<TValues extends object>({
                 <span>
                   <strong>{field.label}</strong>
                   {field.description ? <small id={helpId}>{field.description}</small> : null}
-                  {error ? <small className="record-field-error" id={errorId}>{error}</small> : null}
+                  {error ? (
+                    <small className="record-field-error" id={errorId}>
+                      {error}
+                    </small>
+                  ) : null}
                 </span>
               </label>
             );
@@ -448,7 +457,11 @@ export function RecordForm<TValues extends object>({
                 <span>
                   <strong>{field.label}</strong>
                   {field.description ? <small id={helpId}>{field.description}</small> : null}
-                  {error ? <small className="record-field-error" id={errorId}>{error}</small> : null}
+                  {error ? (
+                    <small className="record-field-error" id={errorId}>
+                      {error}
+                    </small>
+                  ) : null}
                 </span>
               </label>
             );
@@ -507,7 +520,9 @@ export function RecordForm<TValues extends object>({
                     value={typeof value === "string" ? value : ""}
                   />
                   <button
-                    aria-label={revealedPasswords[field.name] ? `Hide ${field.label}` : `Show ${field.label}`}
+                    aria-label={
+                      revealedPasswords[field.name] ? `Hide ${field.label}` : `Show ${field.label}`
+                    }
                     aria-pressed={Boolean(revealedPasswords[field.name])}
                     className="record-password-toggle"
                     disabled={fieldDisabled}
@@ -542,8 +557,16 @@ export function RecordForm<TValues extends object>({
                   value={typeof value === "string" ? value : ""}
                 />
               )}
-              {field.helpText ? <small className="record-field-help" id={helpId}>{field.helpText}</small> : null}
-              {error ? <small className="record-field-error" id={errorId}>{error}</small> : null}
+              {field.helpText ? (
+                <small className="record-field-help" id={helpId}>
+                  {field.helpText}
+                </small>
+              ) : null}
+              {error ? (
+                <small className="record-field-error" id={errorId}>
+                  {error}
+                </small>
+              ) : null}
             </label>
           );
         })}
@@ -558,7 +581,12 @@ export function RecordForm<TValues extends object>({
           {isSubmitting ? "Saving..." : submitLabel}
         </button>
         {onCancel ? (
-          <button className="outline-button" disabled={isSubmitting} onClick={onCancel} type="button">
+          <button
+            className="outline-button"
+            disabled={isSubmitting}
+            onClick={onCancel}
+            type="button"
+          >
             {cancelLabel}
           </button>
         ) : null}

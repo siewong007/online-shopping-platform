@@ -23,8 +23,7 @@ import type {
 type OfferTab = "promotions" | "vouchers";
 type OfferStatusFilter = "all" | "active" | "inactive";
 type PendingOfferDelete =
-  | { kind: "promotion"; record: Promotion }
-  | { kind: "voucher"; record: Voucher };
+  { kind: "promotion"; record: Promotion } | { kind: "voucher"; record: Voucher };
 
 const offerStatusFilters: { label: string; value: OfferStatusFilter }[] = [
   { label: "All", value: "all" },
@@ -190,7 +189,9 @@ function promotionInputFromForm(form: PromotionFormState): CreatePromotionInput 
   const discountValue = optionalPositiveInteger(form.discount_value, "Discount value");
 
   if ((discountType === null) !== (discountValue === null)) {
-    throw new Error("Select both a discount type and discount value, or leave both blank for display-only.");
+    throw new Error(
+      "Select both a discount type and discount value, or leave both blank for display-only."
+    );
   }
 
   if (discountType === "percent_bps" && discountValue !== null && discountValue > 10_000) {
@@ -341,8 +342,20 @@ function minimumSubtotalHelpText(rawValue: string): string {
 
 function buildPromotionFields(form: PromotionFormState): RecordFormField<PromotionFormState>[] {
   return [
-    { name: "label", label: "Label", required: true, minLength: 2, placeholder: "Seasonal savings" },
-    { name: "title", label: "Title", required: true, minLength: 2, placeholder: "Summer project event" },
+    {
+      name: "label",
+      label: "Label",
+      required: true,
+      minLength: 2,
+      placeholder: "Seasonal savings"
+    },
+    {
+      name: "title",
+      label: "Title",
+      required: true,
+      minLength: 2,
+      placeholder: "Summer project event"
+    },
     {
       name: "description",
       label: "Description",
@@ -393,7 +406,14 @@ function buildPromotionFields(form: PromotionFormState): RecordFormField<Promoti
       helpText: "Optional ISO 8601 timestamp.",
       placeholder: "2026-07-31T23:59:59Z"
     },
-    { name: "max_redemptions", label: "Maximum redemptions", type: "number", min: 1, step: "1", validate: validatePositiveInteger },
+    {
+      name: "max_redemptions",
+      label: "Maximum redemptions",
+      type: "number",
+      min: 1,
+      step: "1",
+      validate: validatePositiveInteger
+    },
     {
       name: "is_active",
       label: "Active",
@@ -464,7 +484,14 @@ function buildVoucherFields(form: VoucherFormState): RecordFormField<VoucherForm
       helpText: "Optional ISO 8601 timestamp.",
       placeholder: "2026-07-31T23:59:59Z"
     },
-    { name: "max_redemptions", label: "Maximum redemptions", type: "number", min: 1, step: "1", validate: validatePositiveInteger },
+    {
+      name: "max_redemptions",
+      label: "Maximum redemptions",
+      type: "number",
+      min: 1,
+      step: "1",
+      validate: validatePositiveInteger
+    },
     {
       name: "is_active",
       label: "Active",
@@ -589,11 +616,11 @@ export function OfferManagementPanel({
   const editingPromotion =
     editingPromotionId === null
       ? null
-      : promotions.find((promotion) => promotion.id === editingPromotionId) ?? null;
+      : (promotions.find((promotion) => promotion.id === editingPromotionId) ?? null);
   const editingVoucher =
     editingVoucherId === null
       ? null
-      : vouchers.find((voucher) => voucher.id === editingVoucherId) ?? null;
+      : (vouchers.find((voucher) => voucher.id === editingVoucherId) ?? null);
   const promotionCanSave = editingPromotionId === null ? canCreateOffers : canUpdateOffers;
   const voucherCanSave = editingVoucherId === null ? canCreateOffers : canUpdateOffers;
   const isWritable = canCreateOffers || canUpdateOffers || canDeleteOffers;
@@ -614,7 +641,13 @@ export function OfferManagementPanel({
     if (!canCreateOffers) {
       const message = mutationUnavailableMessage(demoMode, "create promotions");
       setError(message);
-      notify({ severity: "error", title: "Promotion not created", message, scope: "offers", dedupeKey: "offers:promotion:create:permission" });
+      notify({
+        severity: "error",
+        title: "Promotion not created",
+        message,
+        scope: "offers",
+        dedupeKey: "offers:promotion:create:permission"
+      });
       return;
     }
 
@@ -628,7 +661,13 @@ export function OfferManagementPanel({
     if (!canUpdateOffers) {
       const message = mutationUnavailableMessage(demoMode, "update promotions");
       setError(message);
-      notify({ severity: "error", title: "Promotion not updated", message, scope: "offers", dedupeKey: "offers:promotion:update:permission" });
+      notify({
+        severity: "error",
+        title: "Promotion not updated",
+        message,
+        scope: "offers",
+        dedupeKey: "offers:promotion:update:permission"
+      });
       return;
     }
 
@@ -642,7 +681,13 @@ export function OfferManagementPanel({
     if (!canCreateOffers) {
       const message = mutationUnavailableMessage(demoMode, "create vouchers");
       setError(message);
-      notify({ severity: "error", title: "Voucher not created", message, scope: "offers", dedupeKey: "offers:voucher:create:permission" });
+      notify({
+        severity: "error",
+        title: "Voucher not created",
+        message,
+        scope: "offers",
+        dedupeKey: "offers:voucher:create:permission"
+      });
       return;
     }
 
@@ -656,7 +701,13 @@ export function OfferManagementPanel({
     if (!canUpdateOffers) {
       const message = mutationUnavailableMessage(demoMode, "update vouchers");
       setError(message);
-      notify({ severity: "error", title: "Voucher not updated", message, scope: "offers", dedupeKey: "offers:voucher:update:permission" });
+      notify({
+        severity: "error",
+        title: "Voucher not updated",
+        message,
+        scope: "offers",
+        dedupeKey: "offers:voucher:update:permission"
+      });
       return;
     }
 
@@ -670,7 +721,13 @@ export function OfferManagementPanel({
     if (!promotionCanSave) {
       const message = mutationUnavailableMessage(demoMode, "save promotions");
       setError(message);
-      notify({ severity: "error", title: "Promotion not saved", message, scope: "offers", dedupeKey: "offers:promotion:save:permission" });
+      notify({
+        severity: "error",
+        title: "Promotion not saved",
+        message,
+        scope: "offers",
+        dedupeKey: "offers:promotion:save:permission"
+      });
       return;
     }
 
@@ -708,7 +765,13 @@ export function OfferManagementPanel({
     if (!voucherCanSave) {
       const message = mutationUnavailableMessage(demoMode, "save vouchers");
       setError(message);
-      notify({ severity: "error", title: "Voucher not saved", message, scope: "offers", dedupeKey: "offers:voucher:save:permission" });
+      notify({
+        severity: "error",
+        title: "Voucher not saved",
+        message,
+        scope: "offers",
+        dedupeKey: "offers:voucher:save:permission"
+      });
       return;
     }
 
@@ -746,7 +809,13 @@ export function OfferManagementPanel({
     if (!canDeleteOffers) {
       const message = mutationUnavailableMessage(demoMode, "delete promotions");
       setError(message);
-      notify({ severity: "error", title: "Promotion not deleted", message, scope: "offers", dedupeKey: "offers:promotion:delete:permission" });
+      notify({
+        severity: "error",
+        title: "Promotion not deleted",
+        message,
+        scope: "offers",
+        dedupeKey: "offers:promotion:delete:permission"
+      });
       return;
     }
 
@@ -757,7 +826,13 @@ export function OfferManagementPanel({
     if (!canDeleteOffers) {
       const message = mutationUnavailableMessage(demoMode, "delete vouchers");
       setError(message);
-      notify({ severity: "error", title: "Voucher not deleted", message, scope: "offers", dedupeKey: "offers:voucher:delete:permission" });
+      notify({
+        severity: "error",
+        title: "Voucher not deleted",
+        message,
+        scope: "offers",
+        dedupeKey: "offers:voucher:delete:permission"
+      });
       return;
     }
 
@@ -882,7 +957,8 @@ export function OfferManagementPanel({
       label: "Redemptions",
       align: "right" as const,
       sortValue: (promotion: Promotion) => promotion.redemption_count,
-      render: (promotion: Promotion) => redemptionSummary(promotion.redemption_count, promotion.max_redemptions)
+      render: (promotion: Promotion) =>
+        redemptionSummary(promotion.redemption_count, promotion.max_redemptions)
     },
     {
       key: "actions",
@@ -965,7 +1041,8 @@ export function OfferManagementPanel({
       label: "Redemptions",
       align: "right" as const,
       sortValue: (voucher: Voucher) => voucher.redemption_count,
-      render: (voucher: Voucher) => redemptionSummary(voucher.redemption_count, voucher.max_redemptions)
+      render: (voucher: Voucher) =>
+        redemptionSummary(voucher.redemption_count, voucher.max_redemptions)
     },
     {
       key: "actions",
@@ -1053,7 +1130,11 @@ export function OfferManagementPanel({
                 : "No promotions match the current filter."
             }
             filterSlot={
-              <div className="admin-filter-pills" role="group" aria-label="Filter promotions by status">
+              <div
+                className="admin-filter-pills"
+                role="group"
+                aria-label="Filter promotions by status"
+              >
                 {offerStatusFilters.map((option) => {
                   const count =
                     option.value === "all"
@@ -1120,7 +1201,11 @@ export function OfferManagementPanel({
                 : "No vouchers match the current filter."
             }
             filterSlot={
-              <div className="admin-filter-pills" role="group" aria-label="Filter vouchers by status">
+              <div
+                className="admin-filter-pills"
+                role="group"
+                aria-label="Filter vouchers by status"
+              >
                 {offerStatusFilters.map((option) => {
                   const count =
                     option.value === "all"
