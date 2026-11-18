@@ -226,7 +226,10 @@ jobs:
             postgres:19beta1
           ready=0
           for _ in $(seq 1 60); do
-            if docker exec online-shopping-db pg_isready -U project_depot -d project_depot >/dev/null 2>&1; then
+            # pg_isready succeeds during the image's temporary initdb server (before the target database
+            # exists), so poll for an actual query on the target database instead.
+            if docker exec -e PGPASSWORD=project_depot online-shopping-db \
+                psql -At -U project_depot -d project_depot -c 'SELECT 1' >/dev/null 2>&1; then
               ready=1
               break
             fi
