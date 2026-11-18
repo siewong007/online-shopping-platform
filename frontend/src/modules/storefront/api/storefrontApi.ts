@@ -1,4 +1,4 @@
-import { fallbackStorefront } from "../../../data/fallback";
+import { fallbackStorefront } from "../../../data/storefrontFallback";
 import { fetchJsonResult } from "../../../shared/api/http";
 import type { Product, StorefrontPayload, StorefrontQueryParams, StorefrontSort } from "../types";
 
@@ -110,7 +110,8 @@ export function findInitialProductById(productId: number): Product | null {
 export async function fetchStorefront(params?: StorefrontQueryParams): Promise<StorefrontResult> {
   const { data: payload, isFallback } = await fetchJsonResult(
     `/api/storefront${buildQueryString(params)}`,
-    fallbackStorefront
+    fallbackStorefront,
+    "public"
   );
 
   if (!isFallback || !params) {

@@ -226,9 +226,14 @@ function delay(seconds: number): CSSProperties {
 type LandingViewProps = {
   onOpenShop: (categoryHint?: string) => void;
   onOpenLegal?: (slug: LegalSlug) => void;
+  onPrefetchStorefront?: () => void;
 };
 
-export function LandingView({ onOpenShop, onOpenLegal }: LandingViewProps) {
+export function LandingView({
+  onOpenShop,
+  onOpenLegal,
+  onPrefetchStorefront
+}: LandingViewProps) {
   const { lang, t } = useI18n();
   const rootRef = useRef<HTMLDivElement>(null);
   const heroNavRef = useRef<HTMLElement>(null);
@@ -905,7 +910,12 @@ export function LandingView({ onOpenShop, onOpenLegal }: LandingViewProps) {
                   {t(item.labelKey)}
                 </a>
               ))}
-              <a href="/shop" onClick={handleShopClick(undefined, true)}>
+              <a
+                href="/shop"
+                onClick={handleShopClick(undefined, true)}
+                onFocus={onPrefetchStorefront}
+                onMouseEnter={onPrefetchStorefront}
+              >
                 {t("nav.shop")}
               </a>
             </div>
@@ -942,7 +952,13 @@ export function LandingView({ onOpenShop, onOpenLegal }: LandingViewProps) {
                   <span>{t("hero.cta")}</span>
                   <span className="circle">↗</span>
                 </a>
-                <a className="hero-shop-cta" href="/shop" onClick={handleShopClick()}>
+                <a
+                  className="hero-shop-cta"
+                  href="/shop"
+                  onClick={handleShopClick()}
+                  onFocus={onPrefetchStorefront}
+                  onMouseEnter={onPrefetchStorefront}
+                >
                   <span>{t("landing.shopOnlineCta")}</span> <span className="arr">↗</span>
                 </a>
                 <a className="hero-sec" href="#categories">
@@ -973,7 +989,13 @@ export function LandingView({ onOpenShop, onOpenLegal }: LandingViewProps) {
           ))}
         </div>
         <div className="nav-sticky-right">
-          <a className="nav-sticky-cta" href="/shop" onClick={handleShopClick(undefined, true)}>
+          <a
+            className="nav-sticky-cta"
+            href="/shop"
+            onClick={handleShopClick(undefined, true)}
+            onFocus={onPrefetchStorefront}
+            onMouseEnter={onPrefetchStorefront}
+          >
             <span>{t("landing.shopOnlineCta")}</span>
             <span className="arr" aria-hidden="true">
               ↗
@@ -1050,7 +1072,13 @@ export function LandingView({ onOpenShop, onOpenLegal }: LandingViewProps) {
                 const label = t(row.name);
                 return (
                   <div className="cat-row" data-reveal="" style={delay(index * 0.04)} key={row.num}>
-                    <a className="cat-row-main" href="/shop" onClick={handleShopClick(row.shopHint)}>
+                    <a
+                      className="cat-row-main"
+                      href="/shop"
+                      onClick={handleShopClick(row.shopHint)}
+                      onFocus={onPrefetchStorefront}
+                      onMouseEnter={onPrefetchStorefront}
+                    >
                       <span className="num">{row.num}</span>
                       <div className="cat-row-copy">
                         <h3>{label}</h3>

@@ -9,6 +9,7 @@ type LegalPageProps = {
   onBack: () => void;
   onHome: () => void;
   onOpenLegal?: (slug: LegalSlug) => void;
+  onPrefetchShop?: () => void;
   slug: LegalSlug;
 };
 
@@ -31,7 +32,13 @@ function isPlainLeftClick(event: MouseEvent<HTMLAnchorElement>): boolean {
 }
 
 /** Static policy page. Content lives in ./content.ts so the prose is editable in one place. */
-export function LegalPage({ onBack, onHome, onOpenLegal, slug }: LegalPageProps) {
+export function LegalPage({
+  onBack,
+  onHome,
+  onOpenLegal,
+  onPrefetchShop,
+  slug
+}: LegalPageProps) {
   const { t } = useI18n();
   const document = LEGAL_DOCUMENTS[slug];
 
@@ -44,6 +51,7 @@ export function LegalPage({ onBack, onHome, onOpenLegal, slug }: LegalPageProps)
       activeLegalSlug={slug}
       onHome={onHome}
       onOpenLegal={onOpenLegal}
+      onPrefetchShop={onPrefetchShop}
       onShop={onBack}
     >
       <main className="legal-page" aria-labelledby="legal-page-title">

@@ -460,6 +460,9 @@ export const translations = {
   "shop.cartd.checkout": { en: "Checkout", bm: "Bayar", zh: "结算" },
   "shop.cartd.remove": { en: "Remove", bm: "Buang", zh: "移除" },
   "shop.cartd.close": { en: "Close", bm: "Tutup", zh: "关闭" },
+  "shop.recent.title": { en: "Recently viewed", bm: "Baru dilihat", zh: "最近浏览" },
+  "shop.recent.clear": { en: "Clear", bm: "Padam", zh: "清除" },
+  "shop.recent.add": { en: "Add", bm: "Tambah", zh: "加入" },
 
   /* ---- storefront support chat ---- */
   "support.launcher": { en: "Chat with support", bm: "Chat dengan sokongan", zh: "联系支持" },

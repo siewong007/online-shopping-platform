@@ -1,5 +1,9 @@
 import { deleteJson, fetchJson, postJson, putJson } from "../../../shared/api/http";
-import { fallbackPromotions, fallbackPublicOffers, fallbackVouchers } from "../../../data/fallback";
+import {
+  fallbackPromotions,
+  fallbackPublicOffers,
+  fallbackVouchers
+} from "../../../data/storefrontFallback";
 import type {
   CreatePromotionInput,
   CreateVoucherInput,

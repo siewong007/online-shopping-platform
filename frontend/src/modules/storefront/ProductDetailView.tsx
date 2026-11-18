@@ -1,8 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { useI18n } from "../../i18n/LanguageContext";
-import { fetchProductDetail } from "../../lib/api";
+import { fetchProductDetail } from "../../modules/reviews/api/reviewsApi";
 import { ApiError } from "../../shared/api/http";
+import { buildProductJsonLd } from "../../shared/seo";
 import type { Product, ProductDetailPayload, StorefrontPayload } from "../../types";
 
 import { askPriceHref, formatWorklistPrice, PURCHASE_ENABLED } from "./helpers";
@@ -20,6 +21,7 @@ type ProductDetailViewProps = {
   onAddToCart: (product: Product, quantity?: number) => void;
   onBack: () => void;
   onOpenDepartment: (slug: string) => void;
+  onProductLoaded?: (product: Product) => void;
   onViewProduct: (productId: number) => void;
   productId: number | null;
   storefront: StorefrontPayload;
@@ -32,6 +34,7 @@ export function ProductDetailView({
   onAddToCart,
   onBack,
   onOpenDepartment,
+  onProductLoaded,
   onViewProduct,
   productId,
   storefront
@@ -42,6 +45,7 @@ export function ProductDetailView({
   const [isFallbackDetail, setIsFallbackDetail] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [quantityDraft, setQuantityDraft] = useState("1");
   const [retryVersion, setRetryVersion] = useState(0);
   const [showCondensedActions, setShowCondensedActions] = useState(false);
   const primaryActionsRef = useRef<HTMLDivElement | null>(null);
@@ -64,6 +68,7 @@ export function ProductDetailView({
     setIsFallbackDetail(false);
     setImageFailed(false);
     setQuantity(1);
+    setQuantityDraft("1");
     setShowCondensedActions(false);
     hasSeenPrimaryActions.current = false;
 
@@ -72,6 +77,7 @@ export function ProductDetailView({
         if (cancelled) return;
         setPayload(data);
         setStatus("loaded");
+        onProductLoaded?.(data.product);
       })
       .catch((error) => {
         if (cancelled) return;
@@ -213,20 +219,28 @@ export function ProductDetailView({
     return Math.min(maxAllowed, Math.max(1, Math.floor(next)));
   };
 
+  const applyQuantity = (next: number) => {
+    const clamped = clampQuantity(next);
+    setQuantity(clamped);
+    setQuantityDraft(String(clamped));
+  };
+
   const quantityControl = (condensed = false) => (
     <div className={`pdp-quantity${condensed ? " pdp-quantity--condensed" : ""}`} role="group" aria-label={t("shop.detail.quantity")}>
       <button
         aria-label={t("shop.detail.decreaseQuantity")}
         disabled={stockState === "out" || quantity <= 1}
-        onClick={() => setQuantity((current) => clampQuantity(current - 1))}
+        onClick={() => applyQuantity(quantity - 1)}
         type="button"
       >−</button>
       <input
         aria-label={t("shop.detail.quantity")}
         disabled={stockState === "out"}
         inputMode="numeric"
+        onBlur={() => setQuantityDraft(String(quantity))}
         onChange={(event) => {
           const digits = event.target.value.replace(/\D+/g, "");
+          setQuantityDraft(digits);
           if (!digits) return;
           const parsed = Number.parseInt(digits, 10);
           if (Number.isFinite(parsed)) {
@@ -236,18 +250,18 @@ export function ProductDetailView({
         onKeyDown={(event) => {
           if (event.key === "ArrowUp") {
             event.preventDefault();
-            setQuantity((current) => clampQuantity(current + 1));
+            applyQuantity(quantity + 1);
           } else if (event.key === "ArrowDown") {
             event.preventDefault();
-            setQuantity((current) => clampQuantity(current - 1));
+            applyQuantity(quantity - 1);
           }
         }}
-        value={quantity}
+        value={quantityDraft}
       />
       <button
         aria-label={t("shop.detail.increaseQuantity")}
         disabled={stockState === "out" || quantity >= product.stock_quantity}
-        onClick={() => setQuantity((current) => clampQuantity(current + 1))}
+        onClick={() => applyQuantity(quantity + 1)}
         type="button"
       >+</button>
     </div>
@@ -407,6 +421,9 @@ export function ProductDetailView({
           )}
         </div>
       ) : null}
+      <script id="ekoway-product-jsonld" type="application/ld+json">
+        {JSON.stringify(buildProductJsonLd({ product, categoryName }))}
+      </script>
     </main>
   );
 }

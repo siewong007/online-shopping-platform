@@ -16,12 +16,13 @@ import type {
   StorefrontPayload,
   SystemSetting
 } from "../types";
-import type { PublicOffersPayload, Promotion, Voucher } from "../modules/offers/types";
 import { PAGE_REGISTRY } from "./pageRegistry";
-
-export const fallbackPromotions: Promotion[] = [];
-export const fallbackVouchers: Voucher[] = [];
-export const fallbackPublicOffers: PublicOffersPayload = { promotions: [], vouchers: [] };
+export {
+  fallbackPromotions,
+  fallbackPublicOffers,
+  fallbackStorefront,
+  fallbackVouchers
+} from "./storefrontFallback";
 
 const demoStorefront: StorefrontPayload = {
   total_products: 8,
@@ -195,24 +196,6 @@ const demoStorefront: StorefrontPayload = {
     { label: "rental and service touchpoints", value: "1,300+" },
     { label: "pro quote turnaround", value: "30 min" }
   ]
-};
-
-// A customer must never see or attempt to buy demonstration merchandise when the API is
-// unavailable. Keep the old fixtures only for the explicitly labelled admin demo surfaces.
-export const fallbackStorefront: StorefrontPayload = {
-  total_products: 0,
-  category_counts: [],
-  categories: [
-    {
-      slug: "all",
-      name: "Shop All Departments",
-      teaser: "Products are temporarily unavailable. Please try again shortly."
-    }
-  ],
-  products: [],
-  promotions: [],
-  services: [],
-  pro_stats: []
 };
 
 export const fallbackCatalog: AdminCatalogPayload = {

@@ -7,78 +7,9 @@ import {
   useState
 } from "react";
 
-import {
-  changeOwnPassword as changeOwnPasswordRequest,
-  startPaymentCheckout as startPaymentCheckoutRequest,
-  createAdminOrder as createAdminOrderRequest,
-  createAdminUser as createAdminUserRequest,
-  createCategory as createCategoryRequest,
-  createCustomerPortalProfile as createCustomerPortalProfileRequest,
-  createInvoiceFromOrder as createInvoiceFromOrderRequest,
-  createPayment as createPaymentRequest,
-  createProduct as createProductRequest,
-  createRole as createRoleRequest,
-  deleteAdminOrder as deleteAdminOrderRequest,
-  deleteCategory as deleteCategoryRequest,
-  deleteCustomerPortalProfile as deleteCustomerPortalProfileRequest,
-  deletePayment as deletePaymentRequest,
-  AUDIT_EVENTS_PAGE_SIZE,
-  deleteProduct as deleteProductRequest,
-  deleteRole as deleteRoleRequest,
-  exportAutoCountInvoices as exportAutoCountInvoicesRequest,
-  fetchAdminCatalog,
-  fetchAdminDashboard,
-  fetchAdminUsers,
-  fetchAuditEvents,
-  fetchCustomerPortalProfiles,
-  fetchInvoices,
-  fetchMe,
-  fetchOrders,
-  fetchPayments,
-  fetchPermissions,
-  fetchSales,
-  fetchSalesSummary,
-  fetchStorefront,
-  findInitialProductById,
-  initialProductDirectory,
-  fetchSystemSettings,
-  login as loginRequest,
-  verifyLogin,
-  logout as logoutRequest,
-  recordInvoicePayment as recordInvoicePaymentRequest,
-  resetAdminUserPassword as resetAdminUserPasswordRequest,
-  setAdminUserActive as setAdminUserActiveRequest,
-  updateAdminOrder as updateAdminOrderRequest,
-  updateAdminUserProfile as updateAdminUserProfileRequest,
-  updateCategory as updateCategoryRequest,
-  updateCustomerPortalProfile as updateCustomerPortalProfileRequest,
-  updateInvoiceBilling as updateInvoiceBillingRequest,
-  updatePayment as updatePaymentRequest,
-  updateProduct as updateProductRequest,
-  updateOrderFulfillment as updateOrderFulfillmentRequest,
-  updateRole as updateRoleRequest,
-  updateRolePermission as updateRolePermissionRequest,
-  updateSalesDetails as updateSalesDetailsRequest,
-  updateSalesStatus as updateSalesStatusRequest,
-  updateSystemSetting as updateSystemSettingRequest,
-  voidInvoice as voidInvoiceRequest
-} from "./lib/api";
 import { useI18n } from "./i18n/LanguageContext";
-import { LandingView } from "./modules/landing/LandingView";
-import { LegalPage } from "./modules/legal/LegalPage";
 import { LEGAL_DOCUMENTS, type LegalSlug } from "./modules/legal/content";
-import { JOB_LENSES, type JobLensId } from "./modules/storefront/jobLenses";
-import {
-  createPromotion as createPromotionRequest,
-  createVoucher as createVoucherRequest,
-  deletePromotion as deletePromotionRequest,
-  deleteVoucher as deleteVoucherRequest,
-  fetchPublicOffers,
-  fetchPromotions,
-  fetchVouchers,
-  updatePromotion as updatePromotionRequest,
-  updateVoucher as updateVoucherRequest
-} from "./modules/offers/api/offersApi";
+import { fetchPublicOffers } from "./modules/offers/api/offersApi";
 import type {
   CreatePromotionInput,
   CreateVoucherInput,
@@ -88,7 +19,28 @@ import type {
   UpdateVoucherInput,
   Voucher
 } from "./modules/offers/types";
-import { SupportChatWidget } from "./modules/support/components/SupportChatWidget";
+import { startPaymentCheckout as startPaymentCheckoutRequest } from "./modules/orders/api/orderApi";
+import { JOB_LENSES, type JobLensId } from "./modules/storefront/jobLenses";
+import {
+  fetchStorefront,
+  findInitialProductById,
+  initialProductDirectory
+} from "./modules/storefront/api/storefrontApi";
+import {
+  CART_STORAGE_KEY,
+  PURCHASE_ENABLED,
+  reconcileCartStock
+} from "./modules/storefront/helpers";
+import {
+  readRecentlyViewed,
+  recordRecentlyViewed,
+  writeRecentlyViewed
+} from "./modules/storefront/recentlyViewed";
+import { ShopFooter, ShopHeader } from "./modules/storefront/ShopChrome";
+import {
+  consumePaymentReturn,
+  takePendingPayment
+} from "./modules/payments/paymentReturn";
 import {
   ApiError,
   getAuthToken,
@@ -99,6 +51,7 @@ import type { PagedResponse } from "./shared/api/pagination";
 import { StatusPage } from "./shared/components/StatusPage";
 import { currencyFromCents } from "./shared/formatters";
 import { useNotifications } from "./shared/notifications";
+import { applyRouteSeo, buildRouteSeo } from "./shared/seo";
 import type {
   ActivityItem,
   AdminCatalogPayload,
@@ -150,12 +103,9 @@ import type {
   UpdateSalesStatusInput,
   UpdateSystemSettingInput
 } from "./types";
-import {
-  consumePaymentReturn,
-  takePendingPayment
-} from "./modules/payments/paymentReturn";
 
 import {
+  adminTabs,
   applyPermissionUpdate,
   canAccess,
   permissionsFromAuth,
@@ -177,18 +127,47 @@ import {
   readStoredAccountEmail,
   rememberAccountEmail
 } from "./app/utils";
-import { AccountDrawer } from "./modules/customer_auth/AccountDrawer";
-import { AdminView } from "./modules/dashboard/AdminView";
-import { CartDrawer } from "./modules/storefront/CartDrawer";
-import {
-  CART_STORAGE_KEY,
-  PURCHASE_ENABLED,
-  reconcileCartStock
-} from "./modules/storefront/helpers";
-import { ProductDetailView } from "./modules/storefront/ProductDetailView";
-import { ShopFooter, ShopHeader } from "./modules/storefront/ShopChrome";
-import { StorefrontView } from "./modules/storefront/StorefrontView";
 
+let adminApiPromise: Promise<typeof import("./app/adminApi")> | null = null;
+function loadAdminApi() {
+  adminApiPromise ??= import("./app/adminApi");
+  return adminApiPromise;
+}
+
+const preloadLandingView = () => import("./modules/landing/LandingView");
+const preloadLegalPage = () => import("./modules/legal/LegalPage");
+const preloadAdminView = () => import("./modules/dashboard/AdminView");
+const preloadStorefrontView = () => import("./modules/storefront/StorefrontView");
+const preloadProductDetailView = () => import("./modules/storefront/ProductDetailView");
+const preloadCartDrawer = () => import("./modules/storefront/CartDrawer");
+const preloadAccountDrawer = () => import("./modules/customer_auth/AccountDrawer");
+const preloadSupportChatWidget = () =>
+  import("./modules/support/components/SupportChatWidget");
+
+const LandingView = lazy(() =>
+  preloadLandingView().then((m) => ({ default: m.LandingView }))
+);
+const LegalPage = lazy(() =>
+  preloadLegalPage().then((m) => ({ default: m.LegalPage }))
+);
+const AdminView = lazy(() =>
+  preloadAdminView().then((m) => ({ default: m.AdminView }))
+);
+const StorefrontView = lazy(() =>
+  preloadStorefrontView().then((m) => ({ default: m.StorefrontView }))
+);
+const ProductDetailView = lazy(() =>
+  preloadProductDetailView().then((m) => ({ default: m.ProductDetailView }))
+);
+const CartDrawer = lazy(() =>
+  preloadCartDrawer().then((m) => ({ default: m.CartDrawer }))
+);
+const AccountDrawer = lazy(() =>
+  preloadAccountDrawer().then((m) => ({ default: m.AccountDrawer }))
+);
+const SupportChatWidget = lazy(() =>
+  preloadSupportChatWidget().then((m) => ({ default: m.SupportChatWidget }))
+);
 const AdminLoginScreen = lazy(() =>
   import("./modules/auth/components/AdminLoginScreen").then((m) => ({ default: m.AdminLoginScreen }))
 );
@@ -283,6 +262,10 @@ export default function App() {
   );
   const productReturnFocusRef = useRef<number | null>(null);
   const storefrontRequestGeneration = useRef(0);
+  const hasStartedStorefrontFetchRef = useRef(false);
+  const hasStartedOffersFetchRef = useRef(false);
+  const [recentlyViewed, setRecentlyViewed] = useState<Product[]>(() => readRecentlyViewed());
+  const [loadedProduct, setLoadedProduct] = useState<Product | null>(null);
   const [cartAnnouncement, setCartAnnouncement] = useState("");
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const { t } = useI18n();
@@ -326,29 +309,27 @@ export default function App() {
   }, [notify, t]);
 
   useEffect(() => {
-    document.title =
-      view === "landing"
-        ? "Ekoway Hardware — 永光五金 · Sibu, Sarawak"
-        : view === "store" || view === "product"
-          ? "Ekoway Hardware — Shop Online"
-          : view === "admin"
-            ? "Ekoway Hardware — OPT Console"
-            : view === "forbidden"
-              ? "Access denied — Ekoway Hardware"
-              : view === "legal" && legalSlug
-                ? `${LEGAL_DOCUMENTS[legalSlug].title} — Ekoway Hardware`
-                : "Page not found — Ekoway Hardware";
-
-    const themeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-    if (themeMeta) {
-      themeMeta.content =
-        view === "landing" ? "#000000" : view === "admin" ? "#171b20" : "#14342a";
-    }
-  }, [legalSlug, view]);
+    const activeProduct =
+      view === "product" && productDetailId != null
+        ? (loadedProduct?.id === productDetailId ? loadedProduct : null) ??
+          storefront?.products.find((product) => product.id === productDetailId) ??
+          latestProductsById.current.get(productDetailId) ??
+          null
+        : null;
+    const categoryName = activeProduct
+      ? storefront?.categories.find((category) => category.slug === activeProduct.category_slug)?.name ??
+        activeProduct.category_slug
+      : null;
+    applyRouteSeo(buildRouteSeo({ view, legalSlug, product: activeProduct, categoryName }));
+  }, [legalSlug, loadedProduct, productDetailId, storefront, view]);
 
   useEffect(() => {
     window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
   }, [cart]);
+
+  useEffect(() => {
+    writeRecentlyViewed(recentlyViewed);
+  }, [recentlyViewed]);
 
   const resolveCategoryHint = (categories: Category[], hint: string): string => {
     const candidates = hint
@@ -370,40 +351,59 @@ export default function App() {
     return "all";
   };
 
-  useEffect(() => {
-    const requestGeneration = ++storefrontRequestGeneration.current;
-    void fetchStorefront()
-      .then(({ isFallback, payload }) => {
-        if (storefrontRequestGeneration.current === requestGeneration) {
-          payload.products.forEach((product) => latestProductsById.current.set(product.id, product));
-          setCart((current) => reconcileCartStock(current, payload.products));
-          setStorefront(payload);
-          setIsStorefrontFallback(isFallback);
-          if (pendingCategoryHintRef.current) {
-            const matchedSlug = resolveCategoryHint(payload.categories, pendingCategoryHintRef.current);
-            pendingCategoryHintRef.current = null;
-            if (matchedSlug !== "all") {
-              setSelectedCategory(matchedSlug);
-            }
-          }
-        }
-      })
-      .catch((error) => {
-        notifyError(error, { operation: "load storefront catalogue", scope: "storefront", dedupeKey: "storefront:catalogue:error" });
-      });
-  }, []);
-
   const refreshPublicOffers = () => {
+    hasStartedOffersFetchRef.current = true;
     void fetchPublicOffers()
       .then(setPublicOffers)
       .catch((error) => {
+        hasStartedOffersFetchRef.current = false;
         notifyError(error, { operation: "load offers", scope: "offers", dedupeKey: "storefront:offers:error" });
       });
   };
 
+  const ensureStorefrontLoaded = () => {
+    if (!hasStartedStorefrontFetchRef.current) {
+      hasStartedStorefrontFetchRef.current = true;
+      const requestGeneration = ++storefrontRequestGeneration.current;
+      void fetchStorefront()
+        .then(({ isFallback, payload }) => {
+          if (storefrontRequestGeneration.current === requestGeneration) {
+            payload.products.forEach((product) => latestProductsById.current.set(product.id, product));
+            setCart((current) => reconcileCartStock(current, payload.products));
+            setStorefront(payload);
+            setIsStorefrontFallback(isFallback);
+            if (pendingCategoryHintRef.current) {
+              const matchedSlug = resolveCategoryHint(payload.categories, pendingCategoryHintRef.current);
+              pendingCategoryHintRef.current = null;
+              if (matchedSlug !== "all") {
+                setSelectedCategory(matchedSlug);
+              }
+            }
+          }
+        })
+        .catch((error) => {
+          hasStartedStorefrontFetchRef.current = false;
+          notifyError(error, { operation: "load storefront catalogue", scope: "storefront", dedupeKey: "storefront:catalogue:error" });
+        });
+    }
+    if (!hasStartedOffersFetchRef.current) {
+      refreshPublicOffers();
+    }
+  };
+
+  const prefetchStorefront = () => {
+    void preloadStorefrontView();
+    if (view === "product") {
+      void preloadProductDetailView();
+    }
+    ensureStorefrontLoaded();
+  };
+
   useEffect(() => {
-    refreshPublicOffers();
-  }, []);
+    if (view === "store" || view === "product") {
+      ensureStorefrontLoaded();
+    }
+  }, [view]);
 
   // The API pages the catalogue; this appends the next page rather than replacing, so the
   // grid grows instead of jumping back to the first 60 results.
@@ -459,7 +459,7 @@ export default function App() {
       onSaleOnly
     });
 
-    if (storefront !== null && lastFetchedFilterKeyRef.current === filterKey) {
+    if (!hasStartedStorefrontFetchRef.current || lastFetchedFilterKeyRef.current === filterKey) {
       setIsStorefrontRefetching(false);
       return;
     }
@@ -469,7 +469,6 @@ export default function App() {
 
     const timeout = window.setTimeout(() => {
       setIsStorefrontRefetching(true);
-      lastFetchedFilterKeyRef.current = filterKey;
       void fetchStorefront({
         q: searchTerm,
         category: selectedCategory,
@@ -481,10 +480,18 @@ export default function App() {
       })
         .then(({ isFallback, payload }) => {
           if (!cancelled && storefrontRequestGeneration.current === requestGeneration) {
+            lastFetchedFilterKeyRef.current = filterKey;
             payload.products.forEach((product) => latestProductsById.current.set(product.id, product));
             setCart((current) => reconcileCartStock(current, payload.products));
             setStorefront(payload);
             setIsStorefrontFallback(isFallback);
+            if (pendingCategoryHintRef.current) {
+              const matchedSlug = resolveCategoryHint(payload.categories, pendingCategoryHintRef.current);
+              pendingCategoryHintRef.current = null;
+              if (matchedSlug !== selectedCategory) {
+                setSelectedCategory(matchedSlug);
+              }
+            }
           }
         })
         .catch((error) => {
@@ -556,15 +563,16 @@ export default function App() {
 
   const openProductDetail = (productId: number) => {
     startTransition(() => {
-      window.history.pushState(
-        {
-          ekowayStorefrontProduct:
-            view === "store" || Boolean(window.history.state?.ekowayStorefrontProduct),
-          storefrontReturnProductId: productReturnFocusRef.current
-        },
-        "",
-        `/shop/products/${productId}`
-      );
+      const state = {
+        ekowayStorefrontProduct:
+          view === "store" || Boolean(window.history.state?.ekowayStorefrontProduct),
+        storefrontReturnProductId: productReturnFocusRef.current
+      };
+      if (view === "product" && window.history.state?.ekowayStorefrontProduct === true) {
+        window.history.replaceState(state, "", `/shop/products/${productId}`);
+      } else {
+        window.history.pushState(state, "", `/shop/products/${productId}`);
+      }
       setProductDetailId(productId);
       setView("product");
       window.scrollTo({ behavior: "auto", left: 0, top: 0 });
@@ -574,6 +582,7 @@ export default function App() {
   const applyAdminData = ({
     adminUsersData,
     auditEventsData,
+    auditPageSize,
     catalogData,
     dashboardData,
     invoicesData,
@@ -589,6 +598,7 @@ export default function App() {
   }: {
     adminUsersData: AdminUser[];
     auditEventsData: AuditEvent[];
+    auditPageSize: number;
     catalogData: AdminCatalogPayload;
     dashboardData: AdminDashboardPayload;
     invoicesData: PagedResponse<Invoice>;
@@ -613,7 +623,7 @@ export default function App() {
         ? auditEventsData[auditEventsData.length - 1].id
         : null
     );
-    setHasMoreActivity(auditEventsData.length >= AUDIT_EVENTS_PAGE_SIZE);
+    setHasMoreActivity(auditEventsData.length >= auditPageSize);
     setOrders(ordersData.items);
     setOrdersNextCursor(ordersData.next_cursor);
     setPayments(paymentsData);
@@ -629,14 +639,46 @@ export default function App() {
   };
 
   const loadAdminData = async (auth: AdminAuthSnapshot) => {
+    const adminApi = await loadAdminApi();
     const ownPermissions = permissionsFromAuth(auth);
     const roleId = auth.role.id;
+    const canReadOverview = canAccess(ownPermissions, roleId, "admin-overview", "read");
+    const canReadCatalog = canAccess(ownPermissions, roleId, "admin-catalog", "read");
+    const canReadOrders = canAccess(ownPermissions, roleId, "admin-orders", "read");
+    const canReadPayments = canAccess(ownPermissions, roleId, "admin-payments", "read");
+    const canReadCampaigns = canAccess(ownPermissions, roleId, "admin-campaigns", "read");
+    const canReadSales = canAccess(ownPermissions, roleId, "admin-sales", "read");
+    const canReadInvoices = canAccess(ownPermissions, roleId, "admin-invoices", "read");
+    const canReadSettings = canAccess(ownPermissions, roleId, "admin-settings", "read");
+    const canReadCustomers = canAccess(ownPermissions, roleId, "admin-customers", "read");
     const canReadPermissionMatrix = canAccess(
       ownPermissions,
       roleId,
       "admin-permissions",
       "read"
     );
+
+    const emptyDashboard: AdminDashboardPayload = {
+      metrics: [],
+      live_metrics: {
+        revenue_today_cents: 0,
+        revenue_yesterday_cents: 0,
+        orders_awaiting_fulfillment: 0,
+        low_stock_sku_count: 0,
+        unpaid_invoice_count: 0,
+        unpaid_invoice_amount_cents: 0
+      },
+      inventory: [],
+      fulfillment: [],
+      campaigns: [],
+      activity: []
+    };
+    const emptySalesSummary: SalesSummaryPayload = {
+      total_revenue_cents: 0,
+      order_count: 0,
+      by_status: [],
+      by_channel: []
+    };
 
     setCurrentAdmin({
       user: auth.user,
@@ -645,6 +687,16 @@ export default function App() {
     });
     setPermissions(ownPermissions);
     setActiveRoleId(roleId);
+
+    const currentTabConfig = adminTabs.find((item) => item.tab === adminTab);
+    if (!currentTabConfig || !canAccess(ownPermissions, roleId, currentTabConfig.pageSlug, "read")) {
+      const nextTab = adminTabs.find((item) =>
+        canAccess(ownPermissions, roleId, item.pageSlug, "read")
+      );
+      if (nextTab) {
+        setAdminTab(nextTab.tab);
+      }
+    }
 
     const [
       adminUsersData,
@@ -662,25 +714,26 @@ export default function App() {
       vouchersData,
       permissionsData
     ] = await Promise.all([
-      fetchAdminUsers(),
-      fetchAuditEvents(),
-      fetchAdminCatalog(),
-      fetchAdminDashboard(),
-      fetchOrders(),
-      fetchPayments(),
-      fetchPromotions(),
-      fetchSales(),
-      fetchSalesSummary(),
-      fetchInvoices(),
-      fetchSystemSettings(),
-      fetchCustomerPortalProfiles(),
-      fetchVouchers(),
-      canReadPermissionMatrix ? fetchPermissions() : Promise.resolve(ownPermissions)
+      canReadPermissionMatrix ? adminApi.fetchAdminUsers() : Promise.resolve([]),
+      canReadOverview ? adminApi.fetchAuditEvents() : Promise.resolve([]),
+      canReadCatalog ? adminApi.fetchAdminCatalog() : Promise.resolve({ categories: [], products: [] }),
+      canReadOverview ? adminApi.fetchAdminDashboard() : Promise.resolve(emptyDashboard),
+      canReadOrders ? adminApi.fetchOrders() : Promise.resolve({ items: [], next_cursor: null }),
+      canReadPayments ? adminApi.fetchPayments() : Promise.resolve([]),
+      canReadCampaigns ? adminApi.fetchPromotions() : Promise.resolve([]),
+      canReadSales ? adminApi.fetchSales() : Promise.resolve({ items: [], next_cursor: null }),
+      canReadSales ? adminApi.fetchSalesSummary() : Promise.resolve(emptySalesSummary),
+      canReadInvoices ? adminApi.fetchInvoices() : Promise.resolve({ items: [], next_cursor: null }),
+      canReadSettings ? adminApi.fetchSystemSettings() : Promise.resolve([]),
+      canReadCustomers ? adminApi.fetchCustomerPortalProfiles() : Promise.resolve({ items: [], next_cursor: null }),
+      canReadCampaigns ? adminApi.fetchVouchers() : Promise.resolve([]),
+      canReadPermissionMatrix ? adminApi.fetchPermissions() : Promise.resolve(ownPermissions)
     ]);
 
     applyAdminData({
       adminUsersData,
       auditEventsData,
+      auditPageSize: adminApi.AUDIT_EVENTS_PAGE_SIZE,
       catalogData,
       dashboardData,
       ordersData,
@@ -697,6 +750,7 @@ export default function App() {
   };
 
   const loadDemoAdminData = async () => {
+    const adminApi = await loadAdminApi();
     const [
       adminUsersData,
       auditEventsData,
@@ -713,20 +767,20 @@ export default function App() {
       vouchersData,
       permissionsData
     ] = await Promise.all([
-      fetchAdminUsers(),
-      fetchAuditEvents(),
-      fetchAdminCatalog(),
-      fetchAdminDashboard(),
-      fetchOrders(),
-      fetchPayments(),
-      fetchPromotions(),
-      fetchSales(),
-      fetchSalesSummary(),
-      fetchInvoices(),
-      fetchSystemSettings(),
-      fetchCustomerPortalProfiles(),
-      fetchVouchers(),
-      fetchPermissions()
+      adminApi.fetchAdminUsers(),
+      adminApi.fetchAuditEvents(),
+      adminApi.fetchAdminCatalog(),
+      adminApi.fetchAdminDashboard(),
+      adminApi.fetchOrders(),
+      adminApi.fetchPayments(),
+      adminApi.fetchPromotions(),
+      adminApi.fetchSales(),
+      adminApi.fetchSalesSummary(),
+      adminApi.fetchInvoices(),
+      adminApi.fetchSystemSettings(),
+      adminApi.fetchCustomerPortalProfiles(),
+      adminApi.fetchVouchers(),
+      adminApi.fetchPermissions()
     ]);
 
     setCurrentAdmin(null);
@@ -734,6 +788,7 @@ export default function App() {
     applyAdminData({
       adminUsersData,
       auditEventsData,
+      auditPageSize: adminApi.AUDIT_EVENTS_PAGE_SIZE,
       catalogData,
       dashboardData,
       ordersData,
@@ -756,9 +811,12 @@ export default function App() {
 
     setIsLoadingMoreOrders(true);
     try {
+      const { fetchOrders } = await loadAdminApi();
       const page = await fetchOrders({ before: ordersNextCursor });
       setOrders((current) => appendUniqueByKey(current, page.items, (order) => order.id));
       setOrdersNextCursor(page.next_cursor);
+    } catch (error) {
+      notifyError(error, { operation: "load more orders", scope: "admin", dedupeKey: "admin:orders:more:error" });
     } finally {
       setIsLoadingMoreOrders(false);
     }
@@ -771,9 +829,12 @@ export default function App() {
 
     setIsLoadingMoreSales(true);
     try {
+      const { fetchSales } = await loadAdminApi();
       const page = await fetchSales({ before: salesNextCursor });
       setSales((current) => appendUniqueByKey(current, page.items, (sale) => sale.order_id));
       setSalesNextCursor(page.next_cursor);
+    } catch (error) {
+      notifyError(error, { operation: "load more sales", scope: "admin", dedupeKey: "admin:sales:more:error" });
     } finally {
       setIsLoadingMoreSales(false);
     }
@@ -786,9 +847,12 @@ export default function App() {
 
     setIsLoadingMoreInvoices(true);
     try {
+      const { fetchInvoices } = await loadAdminApi();
       const page = await fetchInvoices({ before: invoicesNextCursor });
       setInvoices((current) => appendUniqueByKey(current, page.items, (invoice) => invoice.id));
       setInvoicesNextCursor(page.next_cursor);
+    } catch (error) {
+      notifyError(error, { operation: "load more invoices", scope: "admin", dedupeKey: "admin:invoices:more:error" });
     } finally {
       setIsLoadingMoreInvoices(false);
     }
@@ -801,11 +865,14 @@ export default function App() {
 
     setIsLoadingMoreCustomerProfiles(true);
     try {
+      const { fetchCustomerPortalProfiles } = await loadAdminApi();
       const page = await fetchCustomerPortalProfiles({ before: customerProfilesNextCursor });
       setCustomerProfiles((current) =>
         appendUniqueByKey(current, page.items, (profile) => profile.id)
       );
       setCustomerProfilesNextCursor(page.next_cursor);
+    } catch (error) {
+      notifyError(error, { operation: "load more customer profiles", scope: "admin", dedupeKey: "admin:customers:more:error" });
     } finally {
       setIsLoadingMoreCustomerProfiles(false);
     }
@@ -827,6 +894,7 @@ export default function App() {
     setAdminAuth("checking");
 
     try {
+      const { fetchMe } = await loadAdminApi();
       const me = await fetchMe();
       await loadAdminData(me);
       setAdminAuth("authenticated");
@@ -852,7 +920,8 @@ export default function App() {
     input: AdminLoginInput,
     turnstileToken: string | null
   ): Promise<AdminLoginResponse> => {
-    const response = await loginRequest(input, turnstileToken);
+    const { login } = await loadAdminApi();
+    const response = await login(input, turnstileToken);
     if ("mfa_required" in response) {
       setAdminMfaChallengeToken(response.challenge_token);
       setAdminAuth("mfa-challenge");
@@ -866,6 +935,7 @@ export default function App() {
 
   const handleAdminMfaVerify = async (input: { code?: string; recovery_code?: string }) => {
     if (!adminMfaChallengeToken) throw new Error("The sign-in session expired. Sign in again.");
+    const { verifyLogin } = await loadAdminApi();
     const payload = await verifyLogin({ challenge_token: adminMfaChallengeToken, ...input });
     setAdminMfaChallengeToken(null);
     await loadAdminData(payload);
@@ -875,7 +945,8 @@ export default function App() {
 
   const handleAdminLogout = async () => {
     try {
-      await logoutRequest();
+      const { logout } = await loadAdminApi();
+      await logout();
     } catch (error) {
       console.warn("Unable to notify the API about logout.", error);
       setAuthToken(null);
@@ -895,7 +966,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    void restoreAdminSession();
+    if (getAuthToken()) {
+      void restoreAdminSession();
+    }
   }, []);
 
   const addToCart = (product: Product, quantity = 1) => {
@@ -980,10 +1053,18 @@ export default function App() {
     setCustomerAccountEmail(checkoutEmail);
     rememberAccountEmail(checkoutEmail);
     setOrders((current) => [order, ...current]);
-    void fetchCustomerPortalProfiles().then((page) => {
-      setCustomerProfiles(page.items);
-      setCustomerProfilesNextCursor(page.next_cursor);
-    });
+    if (
+      adminAuth === "authenticated" &&
+      canAccess(permissions, activeRoleId, "admin-customers", "read")
+    ) {
+      void loadAdminApi()
+        .then(({ fetchCustomerPortalProfiles }) => fetchCustomerPortalProfiles())
+        .then((page) => {
+          setCustomerProfiles(page.items);
+          setCustomerProfilesNextCursor(page.next_cursor);
+        })
+        .catch(() => {});
+    }
     setActivityFeed((current) => [
       {
         happened_at: "Now",
@@ -998,13 +1079,19 @@ export default function App() {
   };
 
   const createAdminOrder = async (input: CreateOrderInput): Promise<Order> => {
+    const { createAdminOrder: createAdminOrderRequest, fetchCustomerPortalProfiles } =
+      await loadAdminApi();
     const order = await createAdminOrderRequest(input);
 
     setOrders((current) => [order, ...current]);
-    void fetchCustomerPortalProfiles().then((page) => {
-      setCustomerProfiles(page.items);
-      setCustomerProfilesNextCursor(page.next_cursor);
-    });
+    if (canAccess(permissions, activeRoleId, "admin-customers", "read")) {
+      void fetchCustomerPortalProfiles()
+        .then((page) => {
+          setCustomerProfiles(page.items);
+          setCustomerProfilesNextCursor(page.next_cursor);
+        })
+        .catch(() => {});
+    }
     setActivityFeed((current) => [
       {
         happened_at: "Now",
@@ -1017,6 +1104,7 @@ export default function App() {
   };
 
   const updateAdminOrder = async (orderId: number, input: CreateOrderInput): Promise<Order> => {
+    const { updateAdminOrder: updateAdminOrderRequest } = await loadAdminApi();
     const order = await updateAdminOrderRequest(orderId, input);
 
     setOrders((current) => current.map((item) => (item.id === order.id ? order : item)));
@@ -1035,15 +1123,25 @@ export default function App() {
     orderId: number,
     input: UpdateOrderFulfillmentInput
   ): Promise<Order> => {
+    const {
+      fetchSales,
+      fetchSalesSummary,
+      updateOrderFulfillment: updateOrderFulfillmentRequest
+    } = await loadAdminApi();
     const order = await updateOrderFulfillmentRequest(orderId, input);
 
     setOrders((current) => current.map((item) => (item.id === order.id ? order : item)));
-    if (order.fulfillment_status === "completed" || order.fulfillment_status === "delivered") {
-      void fetchSales().then((page) => {
-        setSales(page.items);
-        setSalesNextCursor(page.next_cursor);
-      });
-      void fetchSalesSummary().then(setSalesSummary);
+    if (
+      (order.fulfillment_status === "completed" || order.fulfillment_status === "delivered") &&
+      canAccess(permissions, activeRoleId, "admin-sales", "read")
+    ) {
+      void fetchSales()
+        .then((page) => {
+          setSales(page.items);
+          setSalesNextCursor(page.next_cursor);
+        })
+        .catch(() => {});
+      void fetchSalesSummary().then(setSalesSummary).catch(() => {});
     }
     setActivityFeed((current) => [
       {
@@ -1057,6 +1155,7 @@ export default function App() {
   };
 
   const deleteAdminOrder = async (orderId: number): Promise<void> => {
+    const { deleteAdminOrder: deleteAdminOrderRequest } = await loadAdminApi();
     await deleteAdminOrderRequest(orderId);
 
     setOrders((current) => current.filter((order) => order.id !== orderId));
@@ -1071,6 +1170,7 @@ export default function App() {
   };
 
   const createPayment = async (input: CreatePaymentInput): Promise<Payment> => {
+    const { createPayment: createPaymentRequest } = await loadAdminApi();
     const payment = await createPaymentRequest(input);
 
     setPayments((current) => {
@@ -1094,6 +1194,7 @@ export default function App() {
     paymentId: number,
     input: UpdatePaymentInput
   ): Promise<Payment> => {
+    const { updatePayment: updatePaymentRequest } = await loadAdminApi();
     const payment = await updatePaymentRequest(paymentId, input);
 
     setPayments((current) => current.map((item) => (item.id === payment.id ? payment : item)));
@@ -1109,6 +1210,7 @@ export default function App() {
   };
 
   const deletePayment = async (paymentId: number): Promise<void> => {
+    const { deletePayment: deletePaymentRequest } = await loadAdminApi();
     await deletePaymentRequest(paymentId);
 
     setPayments((current) => current.filter((payment) => payment.id !== paymentId));
@@ -1125,6 +1227,8 @@ export default function App() {
     orderId: number,
     input: UpdateSalesDetailsInput
   ): Promise<SalesRecord> => {
+    const { fetchSalesSummary, updateSalesDetails: updateSalesDetailsRequest } =
+      await loadAdminApi();
     const sale = await updateSalesDetailsRequest(orderId, input);
 
     setSales((current) => current.map((item) => (item.order_id === sale.order_id ? sale : item)));
@@ -1137,6 +1241,8 @@ export default function App() {
     orderId: number,
     input: UpdateSalesStatusInput
   ): Promise<SalesRecord> => {
+    const { fetchSalesSummary, updateSalesStatus: updateSalesStatusRequest } =
+      await loadAdminApi();
     const sale = await updateSalesStatusRequest(orderId, input);
 
     setSales((current) => current.map((item) => (item.order_id === sale.order_id ? sale : item)));
@@ -1156,6 +1262,7 @@ export default function App() {
     orderId: number,
     input: CreateInvoiceFromOrderInput
   ): Promise<Invoice> => {
+    const { createInvoiceFromOrder: createInvoiceFromOrderRequest } = await loadAdminApi();
     const invoice = await createInvoiceFromOrderRequest(orderId, input);
 
     setInvoices((current) => [invoice, ...current]);
@@ -1174,6 +1281,7 @@ export default function App() {
     invoiceId: number,
     input: UpdateInvoiceBillingInput
   ): Promise<Invoice> => {
+    const { updateInvoiceBilling: updateInvoiceBillingRequest } = await loadAdminApi();
     const invoice = await updateInvoiceBillingRequest(invoiceId, input);
 
     setInvoices((current) => current.map((item) => (item.id === invoice.id ? invoice : item)));
@@ -1182,6 +1290,7 @@ export default function App() {
   };
 
   const voidInvoice = async (invoiceId: number): Promise<Invoice> => {
+    const { voidInvoice: voidInvoiceRequest } = await loadAdminApi();
     const invoice = await voidInvoiceRequest(invoiceId);
 
     setInvoices((current) => current.map((item) => (item.id === invoice.id ? invoice : item)));
@@ -1197,6 +1306,7 @@ export default function App() {
     invoiceId: number,
     input: RecordInvoicePaymentInput
   ): Promise<Invoice> => {
+    const { recordInvoicePayment: recordInvoicePaymentRequest } = await loadAdminApi();
     const invoice = await recordInvoicePaymentRequest(invoiceId, input);
 
     setInvoices((current) => current.map((item) => (item.id === invoice.id ? invoice : item)));
@@ -1212,6 +1322,8 @@ export default function App() {
   };
 
   const exportAutoCountInvoices = async (input: AutoCountExportInput): Promise<void> => {
+    const { exportAutoCountInvoices: exportAutoCountInvoicesRequest, fetchInvoices } =
+      await loadAdminApi();
     const blob = await exportAutoCountInvoicesRequest(input);
     downloadBlob(blob, `autocount-invoices-${new Date().toISOString().slice(0, 10)}.csv`);
 
@@ -1228,6 +1340,7 @@ export default function App() {
     key: string,
     input: UpdateSystemSettingInput
   ): Promise<SystemSetting> => {
+    const { updateSystemSetting: updateSystemSettingRequest } = await loadAdminApi();
     const setting = await updateSystemSettingRequest(key, input);
 
     setSystemSettings((current) =>
@@ -1238,6 +1351,7 @@ export default function App() {
   };
 
   const createRole = async (input: CreateRoleInput): Promise<Role> => {
+    const { createRole: createRoleRequest } = await loadAdminApi();
     const role = await createRoleRequest(input);
 
     setPermissions((current) =>
@@ -1257,6 +1371,7 @@ export default function App() {
   };
 
   const updateRole = async (roleId: number, input: UpdateRoleInput): Promise<Role> => {
+    const { updateRole: updateRoleRequest } = await loadAdminApi();
     const role = await updateRoleRequest(roleId, input);
 
     setPermissions((current) =>
@@ -1272,6 +1387,7 @@ export default function App() {
   };
 
   const deleteRole = async (roleId: number): Promise<void> => {
+    const { deleteRole: deleteRoleRequest } = await loadAdminApi();
     await deleteRoleRequest(roleId);
 
     setPermissions((current) => {
@@ -1292,6 +1408,7 @@ export default function App() {
   const updateRolePermission = async (
     input: UpdateRolePagePermissionInput
   ): Promise<RolePagePermission> => {
+    const { updateRolePermission: updateRolePermissionRequest } = await loadAdminApi();
     const permission = await updateRolePermissionRequest(input);
 
     setPermissions((current) => (current ? applyPermissionUpdate(current, permission) : current));
@@ -1300,6 +1417,7 @@ export default function App() {
   };
 
   const createAdminUser = async (input: CreateAdminUserInput): Promise<AdminUser> => {
+    const { createAdminUser: createAdminUserRequest } = await loadAdminApi();
     const user = await createAdminUserRequest(input);
 
     setAdminUsers((current) => [...current, user]);
@@ -1315,6 +1433,7 @@ export default function App() {
     userId: number,
     input: UpdateAdminUserProfileInput
   ): Promise<AdminUser> => {
+    const { updateAdminUserProfile: updateAdminUserProfileRequest } = await loadAdminApi();
     const user = await updateAdminUserProfileRequest(userId, input);
 
     setAdminUsers((current) => current.map((item) => (item.id === user.id ? user : item)));
@@ -1326,6 +1445,7 @@ export default function App() {
     userId: number,
     input: SetAdminUserActiveInput
   ): Promise<AdminUser> => {
+    const { setAdminUserActive: setAdminUserActiveRequest } = await loadAdminApi();
     const user = await setAdminUserActiveRequest(userId, input);
 
     setAdminUsers((current) => current.map((item) => (item.id === user.id ? user : item)));
@@ -1337,15 +1457,18 @@ export default function App() {
     userId: number,
     input: AdminResetPasswordInput
   ): Promise<void> => {
+    const { resetAdminUserPassword: resetAdminUserPasswordRequest } = await loadAdminApi();
     await resetAdminUserPasswordRequest(userId, input);
   };
 
   const changeOwnPassword = async (input: ChangeOwnPasswordInput): Promise<void> => {
+    const { changeOwnPassword: changeOwnPasswordRequest } = await loadAdminApi();
     await changeOwnPasswordRequest(input);
     await handleAdminLogout();
   };
 
   const createPromotion = async (input: CreatePromotionInput): Promise<Promotion> => {
+    const { createPromotion: createPromotionRequest } = await loadAdminApi();
     const promotion = await createPromotionRequest(input);
 
     setPromotions((current) =>
@@ -1365,6 +1488,7 @@ export default function App() {
     promotionId: number,
     input: UpdatePromotionInput
   ): Promise<Promotion> => {
+    const { updatePromotion: updatePromotionRequest } = await loadAdminApi();
     const promotion = await updatePromotionRequest(promotionId, input);
 
     setPromotions((current) =>
@@ -1380,6 +1504,7 @@ export default function App() {
 
   const deletePromotion = async (promotionId: number): Promise<void> => {
     const promotion = promotions.find((item) => item.id === promotionId);
+    const { deletePromotion: deletePromotionRequest } = await loadAdminApi();
 
     await deletePromotionRequest(promotionId);
 
@@ -1391,6 +1516,7 @@ export default function App() {
   };
 
   const createVoucher = async (input: CreateVoucherInput): Promise<Voucher> => {
+    const { createVoucher: createVoucherRequest } = await loadAdminApi();
     const voucher = await createVoucherRequest(input);
 
     setVouchers((current) =>
@@ -1407,6 +1533,7 @@ export default function App() {
   };
 
   const updateVoucher = async (voucherId: number, input: UpdateVoucherInput): Promise<Voucher> => {
+    const { updateVoucher: updateVoucherRequest } = await loadAdminApi();
     const voucher = await updateVoucherRequest(voucherId, input);
 
     setVouchers((current) => current.map((item) => (item.id === voucher.id ? voucher : item)));
@@ -1420,6 +1547,7 @@ export default function App() {
 
   const deleteVoucher = async (voucherId: number): Promise<void> => {
     const voucher = vouchers.find((item) => item.id === voucherId);
+    const { deleteVoucher: deleteVoucherRequest } = await loadAdminApi();
 
     await deleteVoucherRequest(voucherId);
 
@@ -1431,13 +1559,25 @@ export default function App() {
   };
 
   const refreshCatalog = async () => {
-    const catalogData = await fetchAdminCatalog();
-    const productsById = new Map(catalogData.products.map((product) => [product.id, product]));
-    setAdminCatalog(catalogData);
-    setStorefront((current) => current ? {
-      ...current,
-      products: current.products.map((product) => productsById.get(product.id) ?? product)
-    } : current);
+    if (
+      adminAuth === "authenticated" &&
+      !canAccess(permissions, activeRoleId, "admin-catalog", "read")
+    ) {
+      return;
+    }
+
+    try {
+      const { fetchAdminCatalog } = await loadAdminApi();
+      const catalogData = await fetchAdminCatalog();
+      const productsById = new Map(catalogData.products.map((product) => [product.id, product]));
+      setAdminCatalog(catalogData);
+      setStorefront((current) => current ? {
+        ...current,
+        products: current.products.map((product) => productsById.get(product.id) ?? product)
+      } : current);
+    } catch (error) {
+      notifyError(error, { operation: "refresh catalogue", scope: "admin", dedupeKey: "admin:catalog:refresh:error" });
+    }
   };
 
   const loadMoreActivity = async () => {
@@ -1447,16 +1587,20 @@ export default function App() {
 
     setIsLoadingMoreActivity(true);
     try {
+      const { AUDIT_EVENTS_PAGE_SIZE, fetchAuditEvents } = await loadAdminApi();
       const events = await fetchAuditEvents(oldestAuditEventId);
       setActivityFeed((current) => [...current, ...events.map(auditEventToActivityItem)]);
       setOldestAuditEventId(events.length > 0 ? events[events.length - 1].id : null);
       setHasMoreActivity(events.length >= AUDIT_EVENTS_PAGE_SIZE);
+    } catch (error) {
+      notifyError(error, { operation: "load more activity", scope: "admin", dedupeKey: "admin:activity:more:error" });
     } finally {
       setIsLoadingMoreActivity(false);
     }
   };
 
   const createCategory = async (input: CreateCategoryInput): Promise<Category> => {
+    const { createCategory: createCategoryRequest } = await loadAdminApi();
     const category = await createCategoryRequest(input);
 
     setAdminCatalog((current) =>
@@ -1495,6 +1639,7 @@ export default function App() {
     slug: string,
     input: UpdateCategoryInput
   ): Promise<Category> => {
+    const { updateCategory: updateCategoryRequest } = await loadAdminApi();
     const category = await updateCategoryRequest(slug, input);
 
     setAdminCatalog((current) =>
@@ -1530,6 +1675,7 @@ export default function App() {
 
   const deleteCategory = async (slug: string): Promise<void> => {
     const category = adminCatalog?.categories.find((item) => item.slug === slug);
+    const { deleteCategory: deleteCategoryRequest } = await loadAdminApi();
 
     await deleteCategoryRequest(slug);
 
@@ -1560,6 +1706,7 @@ export default function App() {
   };
 
   const createProduct = async (input: CreateProductInput): Promise<Product> => {
+    const { createProduct: createProductRequest } = await loadAdminApi();
     const product = await createProductRequest(input);
 
     setAdminCatalog((current) =>
@@ -1600,6 +1747,7 @@ export default function App() {
     productId: number,
     input: UpdateProductInput
   ): Promise<Product> => {
+    const { updateProduct: updateProductRequest } = await loadAdminApi();
     const product = await updateProductRequest(productId, input);
 
     setAdminCatalog((current) =>
@@ -1644,6 +1792,7 @@ export default function App() {
 
   const deleteProduct = async (productId: number): Promise<void> => {
     const product = adminCatalog?.products.find((item) => item.id === productId);
+    const { deleteProduct: deleteProductRequest } = await loadAdminApi();
 
     await deleteProductRequest(productId);
 
@@ -1676,6 +1825,8 @@ export default function App() {
   const createCustomerPortalProfile = async (
     input: CreateCustomerPortalProfileInput
   ): Promise<CustomerPortalProfile> => {
+    const { createCustomerPortalProfile: createCustomerPortalProfileRequest } =
+      await loadAdminApi();
     const profile = await createCustomerPortalProfileRequest(input);
 
     setCustomerProfiles((current) => [profile, ...current]);
@@ -1694,6 +1845,8 @@ export default function App() {
     profileId: number,
     input: UpdateCustomerPortalProfileInput
   ): Promise<CustomerPortalProfile> => {
+    const { updateCustomerPortalProfile: updateCustomerPortalProfileRequest } =
+      await loadAdminApi();
     const profile = await updateCustomerPortalProfileRequest(profileId, input);
 
     setCustomerProfiles((current) =>
@@ -1712,6 +1865,8 @@ export default function App() {
 
   const deleteCustomerPortalProfile = async (profileId: number): Promise<void> => {
     const profile = customerProfiles.find((item) => item.id === profileId);
+    const { deleteCustomerPortalProfile: deleteCustomerPortalProfileRequest } =
+      await loadAdminApi();
 
     await deleteCustomerPortalProfileRequest(profileId);
 
@@ -1725,16 +1880,26 @@ export default function App() {
     ]);
   };
 
+  const handleProductLoaded = (product: Product) => {
+    latestProductsById.current.set(product.id, product);
+    setLoadedProduct(product);
+    setRecentlyViewed((current) => recordRecentlyViewed(current, product));
+  };
+
   const openShop = (categoryHint?: string) => {
     productReturnFocusRef.current = null;
     setReturnFocusProductId(null);
     setActiveJobId(null);
     if (categoryHint) {
       if (storefront) {
+        pendingCategoryHintRef.current = null;
         setSelectedCategory(resolveCategoryHint(storefront.categories, categoryHint));
       } else {
         pendingCategoryHintRef.current = categoryHint;
       }
+    } else {
+      pendingCategoryHintRef.current = null;
+      setSelectedCategory("all");
     }
     openView("store");
   };
@@ -1742,7 +1907,13 @@ export default function App() {
   if (view === "forbidden") {
     return (
       <div className="app-shell status-shell">
-        <StatusPage code="403" onGoHome={() => openView("landing")} onOpenLegal={openLegal} onShop={() => openShop()} />
+        <StatusPage
+          code="403"
+          onGoHome={() => openView("landing")}
+          onOpenLegal={openLegal}
+          onPrefetchShop={prefetchStorefront}
+          onShop={() => openShop()}
+        />
       </div>
     );
   }
@@ -1750,7 +1921,13 @@ export default function App() {
   if (view === "not-found") {
     return (
       <div className="app-shell status-shell">
-        <StatusPage code="404" onGoHome={() => openView("landing")} onOpenLegal={openLegal} onShop={() => openShop()} />
+        <StatusPage
+          code="404"
+          onGoHome={() => openView("landing")}
+          onOpenLegal={openLegal}
+          onPrefetchShop={prefetchStorefront}
+          onShop={() => openShop()}
+        />
       </div>
     );
   }
@@ -1760,13 +1937,16 @@ export default function App() {
   if (view === "legal" && legalSlug) {
     return (
       <div className="app-shell legal-shell">
-        <LegalPage
-          onBack={() => openShop()}
-          onHome={() => openView("landing")}
-          onOpenLegal={openLegal}
-          slug={legalSlug}
-        />
-        <SupportChatWidget customerEmail={customerAccountEmail} />
+        <Suspense fallback={<main className="loading-shell">{t("shop.loading")}</main>}>
+          <LegalPage
+            onBack={() => openShop()}
+            onHome={() => openView("landing")}
+            onOpenLegal={openLegal}
+            onPrefetchShop={prefetchStorefront}
+            slug={legalSlug}
+          />
+          <SupportChatWidget customerEmail={customerAccountEmail} />
+        </Suspense>
       </div>
     );
   }
@@ -1775,7 +1955,13 @@ export default function App() {
   if (view === "landing") {
     return (
       <div className="app-shell landing-shell">
-        <LandingView onOpenLegal={openLegal} onOpenShop={openShop} />
+        <Suspense fallback={<main className="loading-shell">{t("shop.loading")}</main>}>
+          <LandingView
+            onOpenLegal={openLegal}
+            onOpenShop={openShop}
+            onPrefetchStorefront={prefetchStorefront}
+          />
+        </Suspense>
       </div>
     );
   }
@@ -1920,6 +2106,8 @@ export default function App() {
             setIsAccountOpen(false);
             setIsCartOpen(true);
           }}
+          onPreloadAccount={() => void preloadAccountDrawer()}
+          onPreloadCart={() => void preloadCartDrawer()}
           onSubmitSearch={() => {
             setActiveJobId(null);
             if (view !== "store") {
@@ -1937,82 +2125,87 @@ export default function App() {
         />
 
         {view === "store" ? (
-          <StorefrontView
-            activeJobId={activeJobId}
-            filteredProducts={filteredProducts}
-            isRefetching={isStorefrontRefetching}
-            isShowingFallbackData={isShowingFallbackStorefront}
-            isLoadingMoreProducts={isLoadingMoreProducts}
-            inStockOnly={inStockOnly}
-            onSaleOnly={onSaleOnly}
-            onChangeInStockOnly={setInStockOnly}
-            onChangeOnSaleOnly={setOnSaleOnly}
-            onLoadMoreProducts={() => void loadMoreProducts()}
-            totalProducts={storefront.total_products}
-            maxPriceCents={maxPriceCents}
-            minPriceCents={minPriceCents}
-            onAddToCart={addToCart}
-            onChangeCategory={(slug) => {
-              setActiveJobId(null);
-              setSelectedCategory(slug);
-            }}
-            onChangeMaxPrice={setMaxPriceCents}
-            onChangeMinPrice={setMinPriceCents}
-            onChangeSearch={setSearchTerm}
-            onChangeSort={setSortOption}
-            onGrabPromotion={grabPromotion}
-            onSelectJob={(jobId) => {
-              setActiveJobId(jobId);
-              setSelectedCategory("all");
-            }}
-            onReturnFocusComplete={() => {
-              productReturnFocusRef.current = null;
-              setReturnFocusProductId(null);
-            }}
-            onViewProduct={(productId) => {
-              productReturnFocusRef.current = productId;
-              openProductDetail(productId);
-            }}
-            publicOffers={publicOffers}
-            returnFocusProductId={returnFocusProductId}
-            searchTerm={searchTerm}
-            selectedCategory={selectedCategory}
-            sortOption={sortOption}
-            storefront={storefront}
-          />
+          <Suspense fallback={<main className="loading-shell">{t("shop.loading")}</main>}>
+            <StorefrontView
+              activeJobId={activeJobId}
+              filteredProducts={filteredProducts}
+              isRefetching={isStorefrontRefetching}
+              isShowingFallbackData={isShowingFallbackStorefront}
+              isLoadingMoreProducts={isLoadingMoreProducts}
+              inStockOnly={inStockOnly}
+              onSaleOnly={onSaleOnly}
+              onChangeInStockOnly={setInStockOnly}
+              onChangeOnSaleOnly={setOnSaleOnly}
+              onLoadMoreProducts={() => void loadMoreProducts()}
+              totalProducts={storefront.total_products}
+              maxPriceCents={maxPriceCents}
+              minPriceCents={minPriceCents}
+              onAddToCart={addToCart}
+              onChangeCategory={(slug) => {
+                setActiveJobId(null);
+                setSelectedCategory(slug);
+              }}
+              onChangeMaxPrice={setMaxPriceCents}
+              onChangeMinPrice={setMinPriceCents}
+              onChangeSearch={setSearchTerm}
+              onChangeSort={setSortOption}
+              onGrabPromotion={grabPromotion}
+              onSelectJob={(jobId) => {
+                setActiveJobId(jobId);
+                setSelectedCategory("all");
+              }}
+              onReturnFocusComplete={() => {
+                productReturnFocusRef.current = null;
+                setReturnFocusProductId(null);
+              }}
+              onViewProduct={(productId) => {
+                productReturnFocusRef.current = productId;
+                openProductDetail(productId);
+              }}
+              publicOffers={publicOffers}
+              returnFocusProductId={returnFocusProductId}
+              searchTerm={searchTerm}
+              selectedCategory={selectedCategory}
+              sortOption={sortOption}
+              storefront={storefront}
+            />
+          </Suspense>
         ) : (
-          <ProductDetailView
-            activeJobName={
-              activeJobId
-                ? JOB_LENSES.find((job) => job.id === activeJobId && job.approvedForProduction)?.name ?? null
-                : null
-            }
-            fallbackProduct={
-              isShowingFallbackStorefront && productDetailId != null
-                ? findInitialProductById(productDetailId)
-                : null
-            }
-            isCatalogueLoaded={storefront !== null}
-            onAddToCart={addToCart}
-            onBack={() => {
-              setReturnFocusProductId(productReturnFocusRef.current);
-              if (window.history.state?.ekowayStorefrontProduct === true) {
-                window.history.back();
-                return;
+          <Suspense fallback={<main className="loading-shell">{t("shop.loading")}</main>}>
+            <ProductDetailView
+              activeJobName={
+                activeJobId
+                  ? JOB_LENSES.find((job) => job.id === activeJobId && job.approvedForProduction)?.name ?? null
+                  : null
               }
-              openView("store");
-            }}
-            onOpenDepartment={(slug) => {
-              productReturnFocusRef.current = null;
-              setReturnFocusProductId(null);
-              setActiveJobId(null);
-              setSelectedCategory(slug);
-              openView("store");
-            }}
-            onViewProduct={openProductDetail}
-            productId={productDetailId}
-            storefront={storefront}
-          />
+              fallbackProduct={
+                isShowingFallbackStorefront && productDetailId != null
+                  ? findInitialProductById(productDetailId)
+                  : null
+              }
+              isCatalogueLoaded={storefront !== null}
+              onAddToCart={addToCart}
+              onBack={() => {
+                setReturnFocusProductId(productReturnFocusRef.current);
+                if (window.history.state?.ekowayStorefrontProduct === true) {
+                  window.history.back();
+                  return;
+                }
+                openView("store");
+              }}
+              onOpenDepartment={(slug) => {
+                productReturnFocusRef.current = null;
+                setReturnFocusProductId(null);
+                setActiveJobId(null);
+                setSelectedCategory(slug);
+                openView("store");
+              }}
+              onProductLoaded={handleProductLoaded}
+              onViewProduct={openProductDetail}
+              productId={productDetailId}
+              storefront={storefront}
+            />
+          </Suspense>
         )}
 
         <ShopFooter
@@ -2028,43 +2221,60 @@ export default function App() {
           storefront={storefront}
         />
 
-        <CartDrawer
-          cart={cart}
-          customerAccountEmail={customerAccountEmail}
-          open={isCartOpen}
-          onCheckout={submitCheckout}
-          onClose={() => setIsCartOpen(false)}
-          onCompleted={clearCart}
-          onPromotionChange={setSelectedPromotionId}
-          onRemoveFromCart={removeFromCart}
-          onUpdateQuantity={updateQuantity}
-          onVoucherCodeChange={setVoucherCode}
-          publicOffers={publicOffers}
-          selectedPromotionId={selectedPromotionId}
-          voucherCode={voucherCode}
-        />
-        <AccountDrawer
-          open={isAccountOpen}
-          customerAccountEmail={customerAccountEmail}
-          onApplyVoucher={(code) => {
-            setVoucherCode(code);
-            setIsAccountOpen(false);
-            setIsCartOpen(true);
-          }}
-          onAuthenticated={(email) => {
-            const normalizedEmail = email.trim().toLowerCase();
-            setCustomerAccountEmail(normalizedEmail);
-            rememberAccountEmail(normalizedEmail);
-            refreshPublicOffers();
-          }}
-          onClose={() => setIsAccountOpen(false)}
-          onLoggedOut={refreshPublicOffers}
-          publicOffers={publicOffers}
-        />
-        <SupportChatWidget
-          customerEmail={customerAccountEmail}
-          isSuppressed={isCartOpen || isAccountOpen || view === "store" || view === "product"}
-        />
+        {isCartOpen ? (
+          <Suspense fallback={null}>
+            <CartDrawer
+              cart={cart}
+              customerAccountEmail={customerAccountEmail}
+              open={isCartOpen}
+              onAddToCart={(product) => addToCart(product, 1)}
+              onCheckout={submitCheckout}
+              onClearRecentlyViewed={() => setRecentlyViewed([])}
+              onClose={() => setIsCartOpen(false)}
+              onCompleted={clearCart}
+              onPromotionChange={setSelectedPromotionId}
+              onRemoveFromCart={removeFromCart}
+              onUpdateQuantity={updateQuantity}
+              onViewProduct={(productId) => {
+                setIsCartOpen(false);
+                openProductDetail(productId);
+              }}
+              onVoucherCodeChange={setVoucherCode}
+              publicOffers={publicOffers}
+              recentlyViewed={recentlyViewed}
+              selectedPromotionId={selectedPromotionId}
+              voucherCode={voucherCode}
+            />
+          </Suspense>
+        ) : null}
+        {isAccountOpen ? (
+          <Suspense fallback={null}>
+            <AccountDrawer
+              open={isAccountOpen}
+              customerAccountEmail={customerAccountEmail}
+              onApplyVoucher={(code) => {
+                setVoucherCode(code);
+                setIsAccountOpen(false);
+                setIsCartOpen(true);
+              }}
+              onAuthenticated={(email) => {
+                const normalizedEmail = email.trim().toLowerCase();
+                setCustomerAccountEmail(normalizedEmail);
+                rememberAccountEmail(normalizedEmail);
+                refreshPublicOffers();
+              }}
+              onClose={() => setIsAccountOpen(false)}
+              onLoggedOut={refreshPublicOffers}
+              publicOffers={publicOffers}
+            />
+          </Suspense>
+        ) : null}
+        <Suspense fallback={null}>
+          <SupportChatWidget
+            customerEmail={customerAccountEmail}
+            isSuppressed={isCartOpen || isAccountOpen || view === "store" || view === "product"}
+          />
+        </Suspense>
       </div>
     </div>
   );

@@ -56,13 +56,15 @@ export {
 } from "../modules/customer_portal/api/customerPortalApi";
 export {
   checkout,
-  startPaymentCheckout,
+  startPaymentCheckout
+} from "../modules/orders/api/orderApi";
+export {
   createAdminOrder,
   deleteAdminOrder,
   fetchOrders,
   updateAdminOrder,
   updateOrderFulfillment
-} from "../modules/orders/api/orderApi";
+} from "../modules/orders/api/adminOrderApi";
 export {
   createPayment,
   deletePayment,

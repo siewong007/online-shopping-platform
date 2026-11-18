@@ -9,7 +9,6 @@ import {
   type ChangeOwnPasswordFormValues
 } from "../../app/adminHelpers";
 import { EkowayMark } from "../storefront/ShopChrome";
-import { CustomerPortalPanel } from "../customer_portal/CustomerPortalPanel";
 import type {
   CreatePromotionInput,
   CreateVoucherInput,
@@ -69,6 +68,11 @@ const TeamPanel = lazy(() =>
 );
 const CatalogPanel = lazy(() =>
   import("../catalog/components/CatalogPanel").then((m) => ({ default: m.CatalogPanel }))
+);
+const CustomerPortalPanel = lazy(() =>
+  import("../customer_portal/CustomerPortalPanel").then((m) => ({
+    default: m.CustomerPortalPanel
+  }))
 );
 const OperationsConsole = lazy(() =>
   import("./components/OperationsConsole").then((m) => ({ default: m.OperationsConsole }))
@@ -294,6 +298,7 @@ export function AdminView({
   const [isSavingChangePassword, setIsSavingChangePassword] = useState(false);
   const [teamLogQuery, setTeamLogQuery] = useState("");
   const activeRole = currentAdmin?.role ?? permissions?.roles.find((role) => role.id === activeRoleId) ?? null;
+  const canReadCatalog = canAccess(permissions, activeRoleId, "admin-catalog", "read");
   const canCreateCatalog = canAccess(permissions, activeRoleId, "admin-catalog", "create");
   const canUpdateCatalog = canAccess(permissions, activeRoleId, "admin-catalog", "update");
   const canDeleteCatalog = canAccess(permissions, activeRoleId, "admin-catalog", "delete");
@@ -507,7 +512,7 @@ export function AdminView({
             <div className="admin-actions">
               <button
                 className="solid-button"
-                disabled={!canRunOperationsSync}
+                disabled={!canRunOperationsSync || !canReadCatalog}
                 onClick={() => void onRefreshCatalog()}
                 type="button"
               >
@@ -533,7 +538,7 @@ export function AdminView({
           {adminTab === "overview" ? (
             <OperationsConsole
               activity={activityFeed}
-              canRefresh={canRunOperationsSync}
+              canRefresh={canRunOperationsSync && canReadCatalog}
               dashboard={dashboard}
               demoMode={demoMode}
               onOpenFulfillment={() => onChangeTab("fulfillment")}

@@ -30,6 +30,8 @@ export type ShopHeaderProps = {
   onNavigateHome?: () => void;
   onOpenAccount: () => void;
   onOpenCart: () => void;
+  onPreloadAccount?: () => void;
+  onPreloadCart?: () => void;
   onSubmitSearch: () => void;
   searchTerm: string;
   selectedCategory: string;
@@ -43,6 +45,8 @@ export function ShopHeader({
   onNavigateHome,
   onOpenAccount,
   onOpenCart,
+  onPreloadAccount,
+  onPreloadCart,
   onSubmitSearch,
   searchTerm,
   selectedCategory
@@ -53,7 +57,15 @@ export function ShopHeader({
 
   useEffect(() => {
     const onGlobalKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.defaultPrevented || event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) {
+        return;
+      }
+      if (
+        searchInputRef.current?.closest("[inert]") ||
+        document.querySelector('[aria-modal="true"], [role="dialog"]:not([aria-hidden="true"])')
+      ) {
+        return;
+      }
       const target = event.target as HTMLElement | null;
       if (
         target &&
@@ -136,10 +148,22 @@ export function ShopHeader({
 
         <div className="header-actions worklist-utils">
           <LangToggle />
-          <button className="shop-header-account" onClick={onOpenAccount} type="button">
+          <button
+            className="shop-header-account"
+            onClick={onOpenAccount}
+            onFocus={onPreloadAccount}
+            onMouseEnter={onPreloadAccount}
+            type="button"
+          >
             {t("shop.account.short")}
           </button>
-          <button className="shop-header-cart" onClick={onOpenCart} type="button">
+          <button
+            className="shop-header-cart"
+            onClick={onOpenCart}
+            onFocus={onPreloadCart}
+            onMouseEnter={onPreloadCart}
+            type="button"
+          >
             {t("shop.cart")}
             <span className="shop-header-cart-count">{cartCount}</span>
           </button>
@@ -280,12 +304,14 @@ export function PublicSiteChrome({
   activeLegalSlug,
   onHome,
   onOpenLegal,
+  onPrefetchShop,
   onShop,
   children
 }: {
   activeLegalSlug?: LegalSlug;
   onHome: () => void;
   onOpenLegal?: (slug: LegalSlug) => void;
+  onPrefetchShop?: () => void;
   onShop: () => void;
   children: React.ReactNode;
 }) {
@@ -328,6 +354,8 @@ export function PublicSiteChrome({
               event.preventDefault();
               onShop();
             }}
+            onFocus={onPrefetchShop}
+            onMouseEnter={onPrefetchShop}
           >
             {t("nav.shop")} <span aria-hidden="true">↗</span>
           </a>

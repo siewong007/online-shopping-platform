@@ -12,6 +12,7 @@ import type {
   CreateOrderInput,
   FulfillmentMethod,
   PaymentCheckout,
+  Product,
   ShippingAddressInput,
   ShippingOption
 } from "../../types";
@@ -29,6 +30,8 @@ import { isGenericPlaceholderImage } from "./listing";
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
 
+const CHECKOUT_DRAFT_STORAGE_KEY = "ekoway_checkout_draft_v1";
+
 const EMPTY_SHIPPING_ADDRESS: ShippingAddressInput = {
   recipient_name: "",
   phone: "",
@@ -39,6 +42,60 @@ const EMPTY_SHIPPING_ADDRESS: ShippingAddressInput = {
   postal_code: "",
   country_code: "MY"
 };
+
+type CheckoutDraftForm = {
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  fulfillment_method: FulfillmentMethod;
+  shipping_address: ShippingAddressInput;
+  shipping_service_code: string;
+};
+
+const EMPTY_CHECKOUT_FORM: CheckoutDraftForm = {
+  customer_name: "",
+  customer_email: "",
+  customer_phone: "",
+  fulfillment_method: "pickup",
+  shipping_address: EMPTY_SHIPPING_ADDRESS,
+  shipping_service_code: ""
+};
+
+function readCheckoutDraft(): CheckoutDraftForm {
+  if (typeof window === "undefined") return EMPTY_CHECKOUT_FORM;
+  try {
+    const raw = window.sessionStorage.getItem(CHECKOUT_DRAFT_STORAGE_KEY);
+    if (!raw) return EMPTY_CHECKOUT_FORM;
+    const parsed = JSON.parse(raw) as Partial<CheckoutDraftForm>;
+    const rawShipping = parsed.shipping_address;
+    return {
+      customer_name: typeof parsed.customer_name === "string" ? parsed.customer_name : "",
+      customer_email: typeof parsed.customer_email === "string" ? parsed.customer_email : "",
+      customer_phone: typeof parsed.customer_phone === "string" ? parsed.customer_phone : "",
+      fulfillment_method:
+        DELIVERY_CHECKOUT_ENABLED && parsed.fulfillment_method === "delivery"
+          ? "delivery"
+          : "pickup",
+      shipping_service_code:
+        typeof parsed.shipping_service_code === "string" ? parsed.shipping_service_code : "",
+      shipping_address: {
+        ...EMPTY_SHIPPING_ADDRESS,
+        ...(rawShipping && typeof rawShipping === "object" ? rawShipping : {})
+      }
+    };
+  } catch {
+    return EMPTY_CHECKOUT_FORM;
+  }
+}
+
+function clearCheckoutDraft(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem(CHECKOUT_DRAFT_STORAGE_KEY);
+  } catch {
+    // Session storage may be unavailable in restricted contexts.
+  }
+}
 
 function isShippingAddressComplete(address: ShippingAddressInput): boolean {
   return Boolean(
@@ -74,14 +131,18 @@ type CartDrawerProps = {
   cart: CartItem[];
   customerAccountEmail: string;
   open: boolean;
+  onAddToCart?: (product: Product) => void;
   onCheckout: (input: CreateOrderInput, turnstileToken: string | null) => Promise<PaymentCheckout>;
+  onClearRecentlyViewed?: () => void;
   onClose: () => void;
   onCompleted: () => void;
   onPromotionChange: (promotionId: number | null) => void;
   onRemoveFromCart: (productId: number) => void;
   onUpdateQuantity: (productId: number, quantity: number) => void;
+  onViewProduct?: (productId: number) => void;
   onVoucherCodeChange: (code: string) => void;
   publicOffers: PublicOffersPayload | null;
+  recentlyViewed?: Product[];
   selectedPromotionId: number | null;
   voucherCode: string;
 };
@@ -90,35 +151,25 @@ export function CartDrawer({
   cart,
   customerAccountEmail,
   open,
+  onAddToCart,
   onCheckout,
+  onClearRecentlyViewed,
   onClose,
   onCompleted,
   onPromotionChange,
   onRemoveFromCart,
   onUpdateQuantity,
+  onViewProduct,
   onVoucherCodeChange,
   publicOffers,
+  recentlyViewed = [],
   selectedPromotionId,
   voucherCode
 }: CartDrawerProps) {
   const { t } = useI18n();
   const checkoutFormId = useId();
   const [stage, setStage] = useState<"cart" | "checkout">("cart");
-  const [form, setForm] = useState<{
-    customer_name: string;
-    customer_email: string;
-    customer_phone: string;
-    fulfillment_method: FulfillmentMethod;
-    shipping_address: ShippingAddressInput;
-    shipping_service_code: string;
-  }>({
-    customer_name: "",
-    customer_email: "",
-    customer_phone: "",
-    fulfillment_method: "pickup",
-    shipping_address: EMPTY_SHIPPING_ADDRESS,
-    shipping_service_code: ""
-  });
+  const [form, setForm] = useState<CheckoutDraftForm>(readCheckoutDraft);
   const [voucherDraft, setVoucherDraft] = useState(voucherCode);
   const hasPublicOffers = Boolean(
     publicOffers && (publicOffers.promotions.length > 0 || publicOffers.vouchers.length > 0)
@@ -150,6 +201,15 @@ export function CartDrawer({
   useEffect(() => {
     setVoucherDraft(voucherCode);
   }, [voucherCode]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.sessionStorage.setItem(CHECKOUT_DRAFT_STORAGE_KEY, JSON.stringify(form));
+    } catch {
+      // Session storage may be unavailable in restricted contexts.
+    }
+  }, [form]);
 
   useEffect(() => {
     if (selectedPromotionId || voucherCode.trim()) {
@@ -448,13 +508,10 @@ export function CartDrawer({
         // The hosted checkout still works when session storage is unavailable.
       }
       setStage("cart");
+      clearCheckoutDraft();
       setForm({
-        customer_name: "",
-        customer_email: customerAccountEmail.trim(),
-        customer_phone: "",
-        fulfillment_method: "pickup",
-        shipping_address: EMPTY_SHIPPING_ADDRESS,
-        shipping_service_code: ""
+        ...EMPTY_CHECKOUT_FORM,
+        customer_email: customerAccountEmail.trim()
       });
       setVoucherDraft("");
       setFeedback(null);
@@ -547,6 +604,83 @@ export function CartDrawer({
     );
   };
 
+  const cartProductIds = new Set(cart.map((item) => item.product.id));
+  const emptyRecentProducts = recentlyViewed.slice(0, 6);
+  const addonRecentProducts = recentlyViewed
+    .filter((product) => !cartProductIds.has(product.id))
+    .slice(0, 3);
+
+  const renderRecentlyViewed = (items: Product[]) => {
+    if (items.length === 0) return null;
+    return (
+      <section className="cart-recent" aria-label={t("shop.recent.title")}>
+        <div className="cart-recent__head">
+          <h3>{t("shop.recent.title")}</h3>
+          {onClearRecentlyViewed ? (
+            <button
+              className="cart-recent__clear"
+              onClick={onClearRecentlyViewed}
+              type="button"
+            >
+              {t("shop.recent.clear")}
+            </button>
+          ) : null}
+        </div>
+        <ul className="cart-recent__list">
+          {items.map((product) => {
+            const showThumb =
+              !failedImageIds[product.id] && !isGenericPlaceholderImage(product.image_url);
+            const canAdd = PURCHASE_ENABLED && product.stock_quantity > 0 && Boolean(onAddToCart);
+            return (
+              <li className="cart-recent__item" key={product.id}>
+                {showThumb ? (
+                  <img
+                    alt={product.name}
+                    className="cart-recent__thumb"
+                    loading="lazy"
+                    onError={() =>
+                      setFailedImageIds((current) => ({ ...current, [product.id]: true }))
+                    }
+                    src={product.image_url}
+                  />
+                ) : (
+                  <div className="cart-recent__thumb cart-recent__thumb--missing" aria-hidden="true">
+                    <span className="cart-line-missing-mark" />
+                  </div>
+                )}
+                <div className="cart-recent__info">
+                  <button
+                    className="cart-recent__name"
+                    onClick={() => {
+                      close();
+                      onViewProduct?.(product.id);
+                    }}
+                    type="button"
+                  >
+                    {product.name}
+                  </button>
+                  <span className="cart-recent__price">
+                    {currencyFromCents(product.price_cents)}
+                  </span>
+                </div>
+                {canAdd ? (
+                  <button
+                    aria-label={`${t("shop.recent.add")}: ${product.name}`}
+                    className="cart-recent__add"
+                    onClick={() => onAddToCart?.(product)}
+                    type="button"
+                  >
+                    + {t("shop.recent.add")}
+                  </button>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    );
+  };
+
   return (
     <div className="cart-overlay">
       <div className="cart-scrim" aria-hidden="true" onClick={close} />
@@ -577,12 +711,15 @@ export function CartDrawer({
               <p>{t("shop.cartd.redirectingBody")}</p>
             </div>
           ) : cart.length === 0 ? (
-            <div className="cart-empty">
-              <p>{t("shop.cartd.empty")}</p>
-              <button className="outline-button" onClick={close} type="button">
-                {t("shop.cartd.browseProducts")}
-              </button>
-            </div>
+            <>
+              <div className="cart-empty">
+                <p>{t("shop.cartd.empty")}</p>
+                <button className="outline-button" onClick={close} type="button">
+                  {t("shop.cartd.browseProducts")}
+                </button>
+              </div>
+              {renderRecentlyViewed(emptyRecentProducts)}
+            </>
           ) : stage === "cart" ? (
             <>
               <ul className="cart-lines">
@@ -764,6 +901,7 @@ export function CartDrawer({
                   {renderQuoteFeedback()}
                 </div>
               </details>
+              {renderRecentlyViewed(addonRecentProducts)}
             </>
           ) : (
             <form className="cart-checkout-form" id={checkoutFormId} onSubmit={handleSubmit}>
@@ -808,6 +946,7 @@ export function CartDrawer({
                 <span>{t("shop.checkout.phone")}</span>
                 <input
                   autoComplete="tel"
+                  inputMode="tel"
                   onChange={(event) =>
                     setForm((current) => ({ ...current, customer_phone: event.target.value }))
                   }
@@ -877,6 +1016,7 @@ export function CartDrawer({
                     <span>{t("shop.checkout.phone")}</span>
                     <input
                       autoComplete="shipping tel"
+                      inputMode="tel"
                       onChange={(event) =>
                         setForm((current) => ({
                           ...current,
@@ -1018,7 +1158,7 @@ export function CartDrawer({
                   {t("shop.cartd.buyingPaused")}
                 </p>
               ) : null}
-              <TurnstileSlot turnstile={turnstile} />
+              {CARD_PAY_ENABLED ? <TurnstileSlot turnstile={turnstile} /> : null}
             </form>
           )}
         </div>
@@ -1030,7 +1170,7 @@ export function CartDrawer({
               PURCHASE_ENABLED ? (
                 <button
                   className="solid-button"
-                  disabled={isQuoting}
+                  disabled={CARD_PAY_ENABLED && isQuoting}
                   onClick={() => setStage("checkout")}
                   type="button"
                 >
@@ -1059,9 +1199,9 @@ export function CartDrawer({
                   className="solid-button"
                   disabled={
                     isSubmitting ||
-                    isQuoting ||
-                    (isDelivery && (!addressReady || !form.shipping_service_code)) ||
-                    (turnstile.isConfigured && !turnstile.token)
+                    (CARD_PAY_ENABLED && isQuoting) ||
+                    (CARD_PAY_ENABLED && isDelivery && (!addressReady || !form.shipping_service_code)) ||
+                    (CARD_PAY_ENABLED && turnstile.isConfigured && !turnstile.token)
                   }
                   form={checkoutFormId}
                   type="submit"
