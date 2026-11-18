@@ -123,6 +123,16 @@ import {
   readStoredAccountEmail,
   rememberAccountEmail
 } from "./app/utils";
+import {
+  appendProductToCart,
+  removeProductFromStorefront,
+  removeStorefrontCategory,
+  replaceStorefrontCategory,
+  resolveCategoryHint,
+  setCartItemQuantity,
+  syncProductInStorefront,
+  upsertStorefrontCategory
+} from "./app/storefrontSync";
 
 let adminApiPromise: Promise<typeof import("./app/adminApi")> | null = null;
 function loadAdminApi() {
@@ -160,26 +170,6 @@ const AdminLoginScreen = lazy(() =>
     default: m.AdminLoginScreen
   }))
 );
-
-function resolveCategoryHint(categories: Category[], hint: string): string {
-  const candidates = hint
-    .split("|")
-    .map((part) => part.trim().toLowerCase())
-    .filter(Boolean);
-  for (const candidate of candidates) {
-    const exact = categories.find((cat) => cat.slug.toLowerCase() === candidate);
-    if (exact) return exact.slug;
-  }
-  for (const candidate of candidates) {
-    const partial = categories.find(
-      (cat) =>
-        cat.slug !== "all" &&
-        (cat.slug.toLowerCase().includes(candidate) || cat.name.toLowerCase().includes(candidate))
-    );
-    if (partial) return partial.slug;
-  }
-  return "all";
-}
 
 export default function App() {
   const initialView = viewFromPath(window.location.pathname);
@@ -1120,30 +1110,10 @@ export default function App() {
 
     latestProductsById.current.set(product.id, product);
     const currentProduct = latestProductsById.current.get(product.id) ?? product;
-    const stockLimit = Math.max(0, Math.floor(currentProduct.stock_quantity));
-    if (stockLimit === 0) return;
+    if (Math.max(0, Math.floor(currentProduct.stock_quantity)) === 0) return;
 
-    const delta = Math.max(1, Math.floor(quantity));
-    const currentInCart = cart.find((item) => item.product.id === product.id)?.quantity ?? 0;
-    const nextQty = Math.min(currentInCart + delta, stockLimit);
-    const addedCount = nextQty - currentInCart;
-
-    setCart((current) => {
-      const existing = current.find((item) => item.product.id === product.id);
-      if (existing) {
-        return current.map((item) =>
-          item.product.id === product.id
-            ? {
-                ...item,
-                product: currentProduct,
-                quantity: Math.min(item.quantity + delta, stockLimit)
-              }
-            : item
-        );
-      }
-
-      return [...current, { product: currentProduct, quantity: Math.min(delta, stockLimit) }];
-    });
+    const { nextCart, addedCount } = appendProductToCart(cart, currentProduct, quantity);
+    setCart(nextCart);
     setCartAnnouncement(
       addedCount <= 0
         ? t("shop.cart.maxStock", { product: currentProduct.name })
@@ -1157,26 +1127,9 @@ export default function App() {
   };
 
   const updateQuantity = (productId: number, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(productId);
-      return;
-    }
-
-    setCart((current) => {
-      const item = current.find((candidate) => candidate.product.id === productId);
-      if (!item) return current;
-
-      const currentProduct = latestProductsById.current.get(productId) ?? item.product;
-      const stockLimit = Math.max(0, Math.floor(currentProduct.stock_quantity));
-      if (stockLimit === 0)
-        return current.filter((candidate) => candidate.product.id !== productId);
-
-      return current.map((candidate) =>
-        candidate.product.id === productId
-          ? { ...candidate, product: currentProduct, quantity: Math.min(quantity, stockLimit) }
-          : candidate
-      );
-    });
+    setCart((current) =>
+      setCartItemQuantity(current, productId, quantity, latestProductsById.current.get(productId))
+    );
   };
 
   const clearCart = () => {
@@ -1775,16 +1728,7 @@ export default function App() {
           }
         : current
     );
-    setStorefront((current) => {
-      if (!current || current.categories.some((item) => item.slug === category.slug)) {
-        return current;
-      }
-
-      return {
-        ...current,
-        categories: [...current.categories, category]
-      };
-    });
+    setStorefront((current) => upsertStorefrontCategory(current, category));
     setSelectedCategory(category.slug);
     setActivityFeed((current) => [
       {
@@ -1811,16 +1755,7 @@ export default function App() {
           }
         : current
     );
-    setStorefront((current) =>
-      current
-        ? {
-            ...current,
-            categories: current.categories.map((item) =>
-              item.slug === category.slug ? category : item
-            )
-          }
-        : current
-    );
+    setStorefront((current) => replaceStorefrontCategory(current, category));
     setActivityFeed((current) => [
       {
         happened_at: "Now",
@@ -1846,14 +1781,7 @@ export default function App() {
           }
         : current
     );
-    setStorefront((current) =>
-      current
-        ? {
-            ...current,
-            categories: current.categories.filter((item) => item.slug !== slug)
-          }
-        : current
-    );
+    setStorefront((current) => removeStorefrontCategory(current, slug));
     setSelectedCategory((current) => (current === slug ? "all" : current));
     setActivityFeed((current) => [
       {
@@ -1878,18 +1806,7 @@ export default function App() {
           }
         : current
     );
-    if (product.featured) {
-      setStorefront((current) => {
-        if (!current || current.products.some((item) => item.id === product.id)) {
-          return current;
-        }
-
-        return {
-          ...current,
-          products: [...current.products, product]
-        };
-      });
-    }
+    setStorefront((current) => syncProductInStorefront(current, product, "create"));
 
     setActivityFeed((current) => [
       {
@@ -1914,27 +1831,7 @@ export default function App() {
           }
         : current
     );
-    setStorefront((current) => {
-      if (!current) {
-        return current;
-      }
-
-      const exists = current.products.some((item) => item.id === product.id);
-
-      if (!product.featured) {
-        return {
-          ...current,
-          products: current.products.filter((item) => item.id !== product.id)
-        };
-      }
-
-      return {
-        ...current,
-        products: exists
-          ? current.products.map((item) => (item.id === product.id ? product : item))
-          : [...current.products, product]
-      };
-    });
+    setStorefront((current) => syncProductInStorefront(current, product, "update"));
     setActivityFeed((current) => [
       {
         happened_at: "Now",
@@ -1960,14 +1857,7 @@ export default function App() {
           }
         : current
     );
-    setStorefront((current) =>
-      current
-        ? {
-            ...current,
-            products: current.products.filter((item) => item.id !== productId)
-          }
-        : current
-    );
+    setStorefront((current) => removeProductFromStorefront(current, productId));
     setCart((current) => current.filter((item) => item.product.id !== productId));
     setActivityFeed((current) => [
       {
