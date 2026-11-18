@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { createNotificationStore, type NotificationScheduler } from "../../src/shared/notifications/store";
+import {
+  createNotificationStore,
+  type NotificationScheduler
+} from "../../src/shared/notifications/store";
 import type { NotificationInput } from "../../src/shared/notifications/types";
 
 function input(title: string, extra: Partial<NotificationInput> = {}): NotificationInput {
@@ -11,11 +14,28 @@ function harness(maxVisible = 5) {
   let timerSequence = 0;
   const timers = new Map<number, () => void>();
   const scheduler: NotificationScheduler = {
-    setTimeout(callback) { const id = ++timerSequence; timers.set(id, callback); return id; },
-    clearTimeout(handle) { timers.delete(handle as number); }
+    setTimeout(callback) {
+      const id = ++timerSequence;
+      timers.set(id, callback);
+      return id;
+    },
+    clearTimeout(handle) {
+      timers.delete(handle as number);
+    }
   };
-  const store = createNotificationStore({ maxVisible, idFactory: () => `id-${++sequence}`, now: () => sequence, scheduler });
-  return { store, timers, runTimers: () => { for (const callback of [...timers.values()]) callback(); } };
+  const store = createNotificationStore({
+    maxVisible,
+    idFactory: () => `id-${++sequence}`,
+    now: () => sequence,
+    scheduler
+  });
+  return {
+    store,
+    timers,
+    runTimers: () => {
+      for (const callback of [...timers.values()]) callback();
+    }
+  };
 }
 
 describe("notification store", () => {
@@ -43,7 +63,9 @@ describe("notification store", () => {
 
   test("limits visible items and promotes its FIFO queue", () => {
     const { store } = harness(2);
-    const ids = ["One", "Two", "Three", "Four"].map((title) => store.add(input(title, { persistent: true })));
+    const ids = ["One", "Two", "Three", "Four"].map((title) =>
+      store.add(input(title, { persistent: true }))
+    );
     expect(store.getSnapshot().visible.map(({ id }) => id)).toEqual(ids.slice(0, 2));
     expect(store.getSnapshot().queued.map(({ id }) => id)).toEqual(ids.slice(2));
     store.remove(ids[0]!);
@@ -87,8 +109,19 @@ describe("notification store", () => {
     const { store } = harness();
     let runs = 0;
     let resolve!: () => void;
-    const work = new Promise<void>((done) => { resolve = done; });
-    const id = store.add(input("Retry", { retry: { run: () => { runs++; return work; } } }));
+    const work = new Promise<void>((done) => {
+      resolve = done;
+    });
+    const id = store.add(
+      input("Retry", {
+        retry: {
+          run: () => {
+            runs++;
+            return work;
+          }
+        }
+      })
+    );
     const first = store.retry(id);
     const second = store.retry(id);
     await Promise.resolve();
@@ -117,7 +150,16 @@ describe("notification store", () => {
     let notifications = 0;
     store.subscribe(() => notifications++);
     let resolve!: () => void;
-    const id = store.add(input("Retry", { retry: { run: () => new Promise<void>((done) => { resolve = done; }) } }));
+    const id = store.add(
+      input("Retry", {
+        retry: {
+          run: () =>
+            new Promise<void>((done) => {
+              resolve = done;
+            })
+        }
+      })
+    );
     const attempt = store.retry(id);
     await Promise.resolve();
     store.destroy();

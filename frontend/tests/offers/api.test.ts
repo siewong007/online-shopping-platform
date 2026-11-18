@@ -21,6 +21,7 @@ import type {
 import { quoteCheckout } from "../../src/modules/orders/api/orderApi";
 import type { CheckoutQuote, CheckoutQuoteInput } from "../../src/modules/orders/types";
 import { setAuthToken, setCustomerAuthToken, setSupportAuthToken } from "../../src/shared/api/http";
+import { mockFetch } from "../helpers/mockFetch";
 
 const originalFetch = globalThis.fetch;
 
@@ -134,8 +135,11 @@ const quoteResponse: CheckoutQuote = {
   ],
   subtotal_cents: 129800,
   discount_cents: 20470,
+  shipping_cents: 0,
   tax_cents: 8755,
   total_cents: 118085,
+  shipping_options: [],
+  requires_shipping_selection: false,
   applied_offers: [
     {
       promotion_id: 11,
@@ -180,7 +184,7 @@ describe("offers API client", () => {
     setCustomerAuthToken("customer-token");
     setSupportAuthToken("support-token");
     const requests: CapturedRequest[] = [];
-    globalThis.fetch = mock((input: RequestInfo | URL, init?: RequestInit) => {
+    globalThis.fetch = mockFetch((input: RequestInfo | URL, init?: RequestInit) => {
       requests.push(captureRequest(input, init));
       return Promise.resolve(Response.json(publicOffers));
     });
@@ -202,7 +206,7 @@ describe("offers API client", () => {
     setAuthToken("admin-token");
     setCustomerAuthToken("customer-token");
     const requests: CapturedRequest[] = [];
-    globalThis.fetch = mock((input: RequestInfo | URL, init?: RequestInit) => {
+    globalThis.fetch = mockFetch((input: RequestInfo | URL, init?: RequestInit) => {
       requests.push(captureRequest(input, init));
       return Promise.resolve(Response.json(quoteResponse));
     });
@@ -224,12 +228,12 @@ describe("offers API client", () => {
     setAuthToken("admin-token");
     setCustomerAuthToken(null);
     const requests: CapturedRequest[] = [];
-    globalThis.fetch = mock((input: RequestInfo | URL, init?: RequestInit) => {
+    globalThis.fetch = mockFetch((input: RequestInfo | URL, init?: RequestInit) => {
       const request = captureRequest(input, init);
       requests.push(request);
-      return Promise.resolve(Response.json(
-        request.url.endsWith("/api/offers") ? publicOffers : quoteResponse
-      ));
+      return Promise.resolve(
+        Response.json(request.url.endsWith("/api/offers") ? publicOffers : quoteResponse)
+      );
     });
 
     await expect(fetchPublicOffers()).resolves.toEqual(publicOffers);
@@ -257,7 +261,7 @@ describe("offers API client", () => {
     setAuthToken("admin-token");
     setCustomerAuthToken("customer-token");
     const requests: CapturedRequest[] = [];
-    globalThis.fetch = mock((input: RequestInfo | URL, init?: RequestInit) => {
+    globalThis.fetch = mockFetch((input: RequestInfo | URL, init?: RequestInit) => {
       const request = captureRequest(input, init);
       requests.push(request);
 
@@ -277,12 +281,14 @@ describe("offers API client", () => {
     await updateVoucher(22, voucherUpdate);
     await deleteVoucher(22);
 
-    expect(requests.map(({ authorization, contentType, method, url }) => ({
-      authorization,
-      contentType,
-      method,
-      url
-    }))).toEqual([
+    expect(
+      requests.map(({ authorization, contentType, method, url }) => ({
+        authorization,
+        contentType,
+        method,
+        url
+      }))
+    ).toEqual([
       {
         authorization: "Bearer admin-token",
         contentType: null,

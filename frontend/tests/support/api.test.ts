@@ -15,6 +15,7 @@ import {
   setCustomerAuthToken,
   setSupportAuthToken
 } from "../../src/shared/api/http";
+import { mockFetch } from "../helpers/mockFetch";
 
 const originalFetch = globalThis.fetch;
 
@@ -41,7 +42,7 @@ describe("support API authentication", () => {
     setCustomerAuthToken("customer-token");
     setSupportAuthToken("support-token");
     const authorizationHeaders: Array<string | null> = [];
-    globalThis.fetch = mock((_input: RequestInfo | URL, init?: RequestInit) => {
+    globalThis.fetch = mockFetch((_input: RequestInfo | URL, init?: RequestInit) => {
       authorizationHeaders.push(new Headers(init?.headers).get("Authorization"));
       return Promise.resolve(Response.json({ ok: true }));
     });
@@ -64,13 +65,15 @@ describe("support API authentication", () => {
     setAuthToken("admin-token");
     setSupportAuthToken("stale-support-token");
     const requests: Array<{ body: string | null; authorization: string | null; url: string }> = [];
-    globalThis.fetch = mock((input: RequestInfo | URL, init?: RequestInit) => {
+    globalThis.fetch = mockFetch((input: RequestInfo | URL, init?: RequestInit) => {
       requests.push({
         body: typeof init?.body === "string" ? init.body : null,
         authorization: new Headers(init?.headers).get("Authorization"),
         url: String(input)
       });
-      return Promise.resolve(Response.json({ token: "new-support-token", conversation: {}, messages: [message] }));
+      return Promise.resolve(
+        Response.json({ token: "new-support-token", conversation: {}, messages: [message] })
+      );
     });
 
     await createSupportConversation({
@@ -96,9 +99,11 @@ describe("support API authentication", () => {
     setAuthToken("admin-token");
     setCustomerAuthToken("customer-token");
     const authorizationHeaders: Array<string | null> = [];
-    globalThis.fetch = mock((_input: RequestInfo | URL, init?: RequestInit) => {
+    globalThis.fetch = mockFetch((_input: RequestInfo | URL, init?: RequestInit) => {
       authorizationHeaders.push(new Headers(init?.headers).get("Authorization"));
-      return Promise.resolve(Response.json({ token: "new-support-token", conversation: {}, messages: [message] }));
+      return Promise.resolve(
+        Response.json({ token: "new-support-token", conversation: {}, messages: [message] })
+      );
     });
 
     await createSupportConversation({
@@ -120,15 +125,19 @@ describe("support API authentication", () => {
     setSupportAuthToken("support-token");
     const authorizationHeaders: Array<string | null> = [];
     let requestCount = 0;
-    globalThis.fetch = mock((_input: RequestInfo | URL, init?: RequestInit) => {
+    globalThis.fetch = mockFetch((_input: RequestInfo | URL, init?: RequestInit) => {
       authorizationHeaders.push(new Headers(init?.headers).get("Authorization"));
       requestCount += 1;
 
       if (requestCount === 1) {
-        return Promise.resolve(Response.json({ message: "Customer session expired" }, { status: 401 }));
+        return Promise.resolve(
+          Response.json({ message: "Customer session expired" }, { status: 401 })
+        );
       }
 
-      return Promise.resolve(Response.json({ token: "new-support-token", conversation: {}, messages: [message] }));
+      return Promise.resolve(
+        Response.json({ token: "new-support-token", conversation: {}, messages: [message] })
+      );
     });
 
     await createSupportConversation({

@@ -3,7 +3,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { NotificationBox } from "../../src/shared/notifications/NotificationBox";
 import type { AppNotification, NotificationSeverity } from "../../src/shared/notifications/types";
 
-function notification(severity: NotificationSeverity, extra: Partial<AppNotification> = {}): AppNotification {
+function notification(
+  severity: NotificationSeverity,
+  extra: Partial<AppNotification> = {}
+): AppNotification {
   return {
     id: `id-${severity}`,
     severity,
@@ -33,7 +36,7 @@ describe("NotificationBox", () => {
     expect(html).toContain(`aria-label="${label}: ${severity} title"`);
     expect(html).toContain(`>${label}</span>`);
     expect(html).toContain(`notification-box--${severity}`);
-    expect(html).toContain("aria-hidden=\"true\"");
+    expect(html).toContain('aria-hidden="true"');
   });
 
   test("renders safe supporting content, actions, retry, dismiss, and repetition", () => {
@@ -56,11 +59,13 @@ describe("NotificationBox", () => {
     expect(html).toContain("Open draft");
     expect(html).toContain("Try save again");
     expect(html).toContain("Repeated 3 times");
-    expect(html).toContain("aria-label=\"Dismiss error title\"");
+    expect(html).toContain('aria-label="Dismiss error title"');
   });
 
   test("hides dismiss control when a notification is not dismissible", () => {
-    const html = renderToStaticMarkup(<NotificationBox notification={notification("critical", { dismissible: false })} />);
+    const html = renderToStaticMarkup(
+      <NotificationBox notification={notification("critical", { dismissible: false })} />
+    );
     expect(html).not.toContain("Dismiss critical title");
   });
 });

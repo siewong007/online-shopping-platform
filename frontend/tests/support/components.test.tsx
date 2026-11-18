@@ -21,7 +21,7 @@ describe("SupportChatWidget", () => {
     expect(html).toContain('aria-expanded="false"');
     expect(html).toContain('aria-label="Chat with support"');
     expect(html).toContain('<span aria-hidden="true" class="support-chat-launcher__icon">◌</span>');
-    expect(html).toContain('<span>Chat with support</span>');
+    expect(html).toContain("<span>Chat with support</span>");
     expect(html).not.toContain('role="dialog"');
   });
 

@@ -34,26 +34,37 @@ describe("record form validation", () => {
   });
 
   test("merges form-level validation into its matching field", () => {
-    const values: Values = { active: true, email: "taken@example.com", name: "Amina", quantity: "2" };
-    const result = validateRecordFields(fields, values, () => ({ email: "That email is already in use." }));
+    const values: Values = {
+      active: true,
+      email: "taken@example.com",
+      name: "Amina",
+      quantity: "2"
+    };
+    const result = validateRecordFields(fields, values, () => ({
+      email: "That email is already in use."
+    }));
 
     expect(result).toEqual({ email: "That email is already in use." });
   });
 
   test("retains unmatched form-level errors as submit blockers", () => {
     const values: Values = { active: true, email: "ok@example.com", name: "Amina", quantity: "2" };
-    const result = validateRecordFields(fields, values, () => ({ _form: "This record cannot be saved yet." }));
+    const result = validateRecordFields(fields, values, () => ({
+      _form: "This record cannot be saved yet."
+    }));
 
     expect(result).toEqual({ _form: "This record cannot be saved yet." });
     expect(hasRecordFormErrors(result)).toBe(true);
   });
 
   test("returns no summary entries for valid values", () => {
-    expect(validateRecordFields(fields, {
-      active: true,
-      email: "hello@example.com",
-      name: "Amina",
-      quantity: "3"
-    })).toEqual({});
+    expect(
+      validateRecordFields(fields, {
+        active: true,
+        email: "hello@example.com",
+        name: "Amina",
+        quantity: "3"
+      })
+    ).toEqual({});
   });
 });

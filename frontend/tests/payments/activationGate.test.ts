@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { startPaymentCheckout } from "../../src/modules/orders/api/orderApi";
 import type { CreateOrderInput, PaymentCheckout } from "../../src/modules/orders/types";
 import { setAuthToken, setCustomerAuthToken, setSupportAuthToken } from "../../src/shared/api/http";
+import { mockFetch } from "../helpers/mockFetch";
 
 const originalFetch = globalThis.fetch;
 const sourceRoot = join(import.meta.dir, "..", "..", "src");
@@ -77,7 +78,7 @@ describe("payment activation gate has no client-side surface", () => {
 
     let sentHeaders: string[] = [];
     let sentBody = "";
-    globalThis.fetch = mock((_input: RequestInfo | URL, init?: RequestInit) => {
+    globalThis.fetch = mockFetch((_input: RequestInfo | URL, init?: RequestInit) => {
       sentHeaders = [...new Headers(init?.headers).keys()];
       sentBody = typeof init?.body === "string" ? init.body : "";
       return Promise.resolve(Response.json(checkoutResponse));
@@ -92,7 +93,10 @@ describe("payment activation gate has no client-side surface", () => {
   test("a payment_url returned by the API is the only route to a gateway", () => {
     // The client cannot mint a checkout: everything it knows about the provider arrives in the
     // server's response, so there is nothing to flip locally to reach a live payment page.
-    const client = readFileSync(join(sourceRoot, "modules", "orders", "api", "orderApi.ts"), "utf8");
+    const client = readFileSync(
+      join(sourceRoot, "modules", "orders", "api", "orderApi.ts"),
+      "utf8"
+    );
 
     expect(client).toContain('"/api/checkout/payment"');
     expect(client).not.toMatch(/hit-pay|senangpay|payment_url\s*=/i);

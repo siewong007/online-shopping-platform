@@ -26,14 +26,16 @@ describe("shop URL filter serialization and parsing", () => {
     };
 
     const encoded = buildShopFilterSearch(state);
-    expect(encoded).toBe("?q=drill&category=tools&min=12.5&max=500&sort=price_asc&in_stock=1&sale=1&job=cut");
+    expect(encoded).toBe(
+      "?q=drill&category=tools&min=12.5&max=500&sort=price_asc&in_stock=1&sale=1&job=cut"
+    );
     expect(parseShopFilterSearch(encoded)).toEqual(state);
   });
 
   test("falls back safely on invalid sort, price, or job params", () => {
-    expect(
-      parseShopFilterSearch("?sort=hacked&min=-5&max=abc&job=unknown&in_stock=0")
-    ).toEqual(DEFAULT_SHOP_FILTER_STATE);
+    expect(parseShopFilterSearch("?sort=hacked&min=-5&max=abc&job=unknown&in_stock=0")).toEqual(
+      DEFAULT_SHOP_FILTER_STATE
+    );
   });
 
   test("preserves unrelated query parameters such as payment_return", () => {

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, mock, test } from "bun:test";
 
 import { fetchAdminCatalog } from "../../src/modules/catalog/api/catalogApi";
 import { setAuthToken } from "../../src/shared/api/http";
+import { mockFetch } from "../helpers/mockFetch";
 
 const originalFetch = globalThis.fetch;
 
@@ -56,7 +57,7 @@ describe("admin catalog refresh is read-only", () => {
   test("reloads current catalogue data with a plain GET to /api/admin/catalog", async () => {
     setAuthToken("admin-token");
     const requests: CapturedRequest[] = [];
-    globalThis.fetch = mock((input: RequestInfo | URL, init?: RequestInit) => {
+    globalThis.fetch = mockFetch((input: RequestInfo | URL, init?: RequestInit) => {
       requests.push(captureRequest(input, init));
       return Promise.resolve(Response.json(catalogPayload));
     });

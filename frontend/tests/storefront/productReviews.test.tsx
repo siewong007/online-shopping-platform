@@ -28,7 +28,7 @@ function renderReviews(props: {
         canReview={props.canReview ?? false}
         onReviewCreated={() => {}}
         productId={10}
-        reviewCount={props.reviewCount ?? (props.reviews?.length ?? 0)}
+        reviewCount={props.reviewCount ?? props.reviews?.length ?? 0}
         reviews={props.reviews ?? []}
       />
     </LanguageProvider>

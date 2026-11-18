@@ -43,7 +43,10 @@ describe("global notification handlers", () => {
 
     target.dispatchEvent(new Event("online"));
     expect(store.getSnapshot().visible).toHaveLength(1);
-    expect(store.getSnapshot().visible[0]).toMatchObject({ severity: "success", title: "Connection restored" });
+    expect(store.getSnapshot().visible[0]).toMatchObject({
+      severity: "success",
+      title: "Connection restored"
+    });
     cleanup();
     store.destroy();
   });
@@ -53,7 +56,9 @@ describe("global notification handlers", () => {
     const { api, reported, store } = runtimeHarness();
     const cleanup = registerGlobalNotificationHandlers(api, { target, isOnline: () => true });
     const errorEvent = Object.assign(new Event("error"), { error: new Error("render failed") });
-    const rejectionEvent = Object.assign(new Event("unhandledrejection"), { reason: new Error("async failed") });
+    const rejectionEvent = Object.assign(new Event("unhandledrejection"), {
+      reason: new Error("async failed")
+    });
 
     target.dispatchEvent(errorEvent);
     target.dispatchEvent(rejectionEvent);
@@ -64,7 +69,10 @@ describe("global notification handlers", () => {
       dedupeKey: "unexpected-runtime-failure"
     });
     expect(store.getSnapshot().visible).toHaveLength(1);
-    expect(store.getSnapshot().visible[0]).toMatchObject({ severity: "critical", occurrenceCount: 2 });
+    expect(store.getSnapshot().visible[0]).toMatchObject({
+      severity: "critical",
+      occurrenceCount: 2
+    });
     cleanup();
     store.destroy();
   });
@@ -73,8 +81,15 @@ describe("global notification handlers", () => {
     const target = new EventTarget();
     const connection = Object.assign(new EventTarget(), { effectiveType: "2g" });
     const { api, reported, store } = runtimeHarness();
-    const cleanup = registerGlobalNotificationHandlers(api, { target, connection, isOnline: () => true });
-    expect(store.getSnapshot().visible[0]).toMatchObject({ title: "Slow connection", persistent: true });
+    const cleanup = registerGlobalNotificationHandlers(api, {
+      target,
+      connection,
+      isOnline: () => true
+    });
+    expect(store.getSnapshot().visible[0]).toMatchObject({
+      title: "Slow connection",
+      persistent: true
+    });
 
     cleanup();
     store.clearAll();
@@ -106,7 +121,9 @@ describe("global notification handlers", () => {
       isOnline: () => false
     });
     expect(store.getSnapshot().visible).toHaveLength(2);
-    expect(store.getSnapshot().visible.every(({ occurrenceCount }) => occurrenceCount === 1)).toBe(true);
+    expect(store.getSnapshot().visible.every(({ occurrenceCount }) => occurrenceCount === 1)).toBe(
+      true
+    );
     secondCleanup();
     store.destroy();
   });
