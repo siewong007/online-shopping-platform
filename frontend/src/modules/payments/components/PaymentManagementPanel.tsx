@@ -9,13 +9,14 @@ import type { Order } from "../../orders/types";
 import type { CreatePaymentInput, Payment, PaymentStatus, UpdatePaymentInput } from "../types";
 
 const paymentStatuses: PaymentStatus[] = ["Pending", "Captured", "Refunded", "Failed", "Void"];
-type PaymentStatusFilter = "All" | "Pending" | "Captured" | "Failed" | "Refunded";
+type PaymentStatusFilter = "All" | "Pending" | "Captured" | "Failed" | "Refunded" | "Void";
 const paymentStatusFilterOptions: PaymentStatusFilter[] = [
   "All",
   "Pending",
   "Captured",
   "Failed",
-  "Refunded"
+  "Refunded",
+  "Void"
 ];
 const paymentMethods = ["Card", "Cash", "ACH", "Gift Card", "Store Credit"];
 

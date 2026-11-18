@@ -133,9 +133,13 @@ pub async fn authenticate_admin_session(
         FROM admin_sessions
         JOIN admin_users ON admin_users.id = admin_sessions.admin_user_id
         JOIN roles ON roles.id = admin_users.role_id
+        LEFT JOIN admin_mfa_factors
+               ON admin_mfa_factors.admin_user_id = admin_users.id
+              AND admin_mfa_factors.disabled_at IS NULL
         WHERE admin_sessions.token = $1
           AND admin_sessions.expires_at > now()
           AND admin_users.is_active = TRUE
+          AND (admin_mfa_factors.admin_user_id IS NULL OR admin_sessions.mfa_verified_at IS NOT NULL)
         "#,
     )
     .bind(token)

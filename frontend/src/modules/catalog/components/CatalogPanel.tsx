@@ -107,9 +107,10 @@ const updateCategoryFields: RecordFormField<UpdateCategoryInput>[] = [
 ];
 
 function emptyProductForm(categories: Category[]): ProductFormState {
+  const defaultCategory = categories.find((category) => category.slug !== "all");
   return {
     name: "",
-    category_slug: categories[0]?.slug ?? "all",
+    category_slug: defaultCategory?.slug ?? "",
     price: "",
     badge: "",
     description: "",
@@ -183,7 +184,9 @@ function productFields(categories: Category[]): RecordFormField<ProductFormState
       name: "category_slug",
       label: "Category",
       type: "select",
-      options: categories.map((category) => ({ label: category.name, value: category.slug }))
+      options: categories
+        .filter((category) => category.slug !== "all")
+        .map((category) => ({ label: category.name, value: category.slug }))
     },
     {
       name: "price",
@@ -448,14 +451,15 @@ export function CatalogPanel({
       : products.find((product) => product.id === editingProductId) ?? null;
 
   useEffect(() => {
-    if (categories.length === 0) {
+    const assignableCategories = categories.filter((category) => category.slug !== "all");
+    if (assignableCategories.length === 0) {
       return;
     }
 
     setProductForm((current) =>
-      categories.some((category) => category.slug === current.category_slug)
+      assignableCategories.some((category) => category.slug === current.category_slug)
         ? current
-        : { ...current, category_slug: categories[0].slug }
+        : { ...current, category_slug: assignableCategories[0].slug }
     );
   }, [categories]);
 
@@ -735,28 +739,31 @@ export function CatalogPanel({
       key: "actions",
       label: "Actions",
       align: "right" as const,
-      render: (category: Category) => (
-        <div className="management-action-stack">
-          <button
-            className="outline-button table-action"
-            disabled={!canUpdate}
-            onClick={() => openEditCategory(category)}
-            type="button"
-          >
-            Edit
-          </button>
-          <button
-            aria-label={`Delete ${category.name}`}
-            className="outline-button table-action table-icon-action danger-button"
-            disabled={!canDelete || deletingCategorySlug === category.slug}
-            onClick={() => requestDeleteCategory(category)}
-            title={`Delete ${category.name}`}
-            type="button"
-          >
-            {deletingCategorySlug === category.slug ? "…" : <TrashIcon />}
-          </button>
-        </div>
-      )
+      render: (category: Category) => {
+        const isAllCategory = category.slug === "all";
+        return (
+          <div className="management-action-stack">
+            <button
+              className="outline-button table-action"
+              disabled={!canUpdate || isAllCategory}
+              onClick={() => openEditCategory(category)}
+              type="button"
+            >
+              Edit
+            </button>
+            <button
+              aria-label={`Delete ${category.name}`}
+              className="outline-button table-action table-icon-action danger-button"
+              disabled={!canDelete || isAllCategory || deletingCategorySlug === category.slug}
+              onClick={() => requestDeleteCategory(category)}
+              title={`Delete ${category.name}`}
+              type="button"
+            >
+              {deletingCategorySlug === category.slug ? "…" : <TrashIcon />}
+            </button>
+          </div>
+        );
+      }
     }
   ];
 
@@ -1054,7 +1061,13 @@ export function CatalogPanel({
               getRowKey={(category) => category.slug}
               getSearchText={(category) => `${category.name} ${category.slug} ${category.teaser}`}
               initialSortKey="name"
-              onRowClick={canUpdate ? openEditCategory : undefined}
+              onRowClick={
+                canUpdate
+                  ? (category) => {
+                      if (category.slug !== "all") openEditCategory(category);
+                    }
+                  : undefined
+              }
               onSearchChange={setCategorySearch}
               rows={categories}
               searchPlaceholder="Search departments..."
@@ -1107,11 +1120,13 @@ export function CatalogPanel({
                       value={productCategoryFilter}
                     >
                       <option value="all">All categories</option>
-                      {categories.map((category) => (
-                        <option key={category.slug} value={category.slug}>
-                          {category.name}
-                        </option>
-                      ))}
+                      {categories
+                        .filter((category) => category.slug !== "all")
+                        .map((category) => (
+                          <option key={category.slug} value={category.slug}>
+                            {category.name}
+                          </option>
+                        ))}
                     </select>
                   </label>
                   <div className="management-filter-pills" role="group" aria-label="Filter by stock status">

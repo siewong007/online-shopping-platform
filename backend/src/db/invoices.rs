@@ -48,7 +48,7 @@ fn derive_invoice_status(
         return "void".to_string();
     }
 
-    if total_cents > 0 && amount_paid_cents >= total_cents {
+    if total_cents >= 0 && amount_paid_cents >= total_cents {
         return "paid".to_string();
     }
 
@@ -196,8 +196,19 @@ pub async fn create_invoice_from_order(
     }
 
     let tax_rate_bps = fetch_setting_int(pool, "sales.default_tax_rate_bps", 0).await?;
-    let (tax_cents, total_cents) =
-        compute_tax_and_total(order.subtotal_cents, discount_cents, tax_rate_bps);
+    let (tax_cents, merchandise_total_cents) = if discount_cents == order.discount_cents {
+        let merchandise_total = (i64::from(order.subtotal_cents) - i64::from(discount_cents))
+            .max(0)
+            .checked_add(i64::from(order.tax_cents))
+            .and_then(|value| i32::try_from(value).ok())
+            .ok_or_else(|| anyhow::anyhow!("Invoice total exceeds the supported maximum."))?;
+        (order.tax_cents, merchandise_total)
+    } else {
+        compute_tax_and_total(order.subtotal_cents, discount_cents, tax_rate_bps)
+    };
+    let total_cents = merchandise_total_cents
+        .checked_add(order.shipping_cents)
+        .ok_or_else(|| anyhow::anyhow!("Invoice total exceeds the supported maximum."))?;
     let payment_terms_days = fetch_setting_int(pool, "invoicing.payment_terms_days", 30).await?;
 
     let mut tx = pool.begin().await?;
@@ -698,8 +709,9 @@ struct AutoCountExportInvoiceRow {
 #[derive(sqlx::FromRow)]
 struct AutoCountExportLineRow {
     invoice_id: i32,
-    product_id: i32,
+    item_code: String,
     product_name: String,
+    uom: String,
     unit_price_cents: i32,
     quantity: i32,
     tax_code: Option<String>,
@@ -723,9 +735,9 @@ fn debtor_code(invoice: &AutoCountExportInvoiceRow) -> String {
     }
 }
 
-fn cents_to_decimal(cents: i32) -> String {
+fn cents_to_decimal(cents: i64) -> String {
     let sign = if cents < 0 { "-" } else { "" };
-    let absolute = cents.abs();
+    let absolute = cents.unsigned_abs();
     format!("{sign}{}.{:02}", absolute / 100, absolute % 100)
 }
 
@@ -785,17 +797,18 @@ fn build_autocount_invoice_csv(
 
         for (index, line) in lines.iter().enumerate() {
             let is_last = index + 1 == lines.len();
-            let line_subtotal_cents = line.unit_price_cents * line.quantity;
+            let line_subtotal_cents = i64::from(line.unit_price_cents) * i64::from(line.quantity);
             let line_discount_cents = if is_last {
                 invoice.discount_cents - allocated_discount_cents
             } else if invoice.subtotal_cents > 0 {
-                ((i64::from(line_subtotal_cents) * i64::from(invoice.discount_cents))
+                ((line_subtotal_cents * i64::from(invoice.discount_cents))
                     / i64::from(invoice.subtotal_cents)) as i32
             } else {
                 0
             };
             allocated_discount_cents += line_discount_cents;
-            let line_total_cents = line_subtotal_cents - line_discount_cents + line.tax_cents;
+            let line_total_cents =
+                line_subtotal_cents - i64::from(line_discount_cents) + i64::from(line.tax_cents);
             let tax_rate = line
                 .tax_rate_bps
                 .map(|rate| format!("{}.{:02}", rate / 100, rate % 100))
@@ -819,20 +832,20 @@ fn build_autocount_invoice_csv(
                         .buyer_sst_registration_number
                         .clone()
                         .unwrap_or_default(),
-                    format!("SKU-{}", line.product_id),
+                    line.item_code.clone(),
                     line.product_name.clone(),
                     line.quantity.to_string(),
-                    "UNIT".to_string(),
-                    cents_to_decimal(line.unit_price_cents),
-                    cents_to_decimal(line_discount_cents),
+                    line.uom.clone(),
+                    cents_to_decimal(i64::from(line.unit_price_cents)),
+                    cents_to_decimal(i64::from(line_discount_cents)),
                     line.tax_code.clone().unwrap_or_else(|| "SST".to_string()),
                     tax_rate,
-                    cents_to_decimal(line.tax_cents),
+                    cents_to_decimal(i64::from(line.tax_cents)),
                     cents_to_decimal(line_total_cents),
-                    cents_to_decimal(invoice.subtotal_cents),
-                    cents_to_decimal(invoice.discount_cents),
-                    cents_to_decimal(invoice.tax_cents),
-                    cents_to_decimal(invoice.total_cents),
+                    cents_to_decimal(i64::from(invoice.subtotal_cents)),
+                    cents_to_decimal(i64::from(invoice.discount_cents)),
+                    cents_to_decimal(i64::from(invoice.tax_cents)),
+                    cents_to_decimal(i64::from(invoice.total_cents)),
                     invoice.id.to_string(),
                     invoice.order_id.to_string(),
                 ],
@@ -881,11 +894,22 @@ pub async fn export_autocount_invoices(
         .collect::<Vec<_>>();
     let line_rows = sqlx::query_as::<_, AutoCountExportLineRow>(
         r#"
-        SELECT invoice_id, product_id, product_name, unit_price_cents, quantity,
-               tax_code, tax_rate_bps, tax_cents
+        SELECT invoice_line_items.invoice_id,
+               COALESCE(
+                   NULLIF(BTRIM(products.source_item_code), ''),
+                   'SKU-' || invoice_line_items.product_id::text
+               ) AS item_code,
+               invoice_line_items.product_name,
+               COALESCE(NULLIF(BTRIM(products.source_uom), ''), 'UNIT') AS uom,
+               invoice_line_items.unit_price_cents,
+               invoice_line_items.quantity,
+               invoice_line_items.tax_code,
+               invoice_line_items.tax_rate_bps,
+               invoice_line_items.tax_cents
         FROM invoice_line_items
-        WHERE invoice_id = ANY($1)
-        ORDER BY invoice_id, id
+        LEFT JOIN products ON products.id = invoice_line_items.product_id
+        WHERE invoice_line_items.invoice_id = ANY($1)
+        ORDER BY invoice_line_items.invoice_id, invoice_line_items.id
         "#,
     )
     .bind(invoice_ids.as_slice())

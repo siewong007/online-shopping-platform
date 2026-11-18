@@ -162,12 +162,39 @@ function requiredNonNegativeInteger(value: string, fieldLabel: string): number {
   return parsed;
 }
 
+function optionalPositiveInteger(value: string, fieldLabel: string): number | null {
+  const text = value.trim();
+  if (!text) {
+    return null;
+  }
+
+  const parsed = Number(text);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(`${fieldLabel} must be a whole number greater than zero.`);
+  }
+
+  return parsed;
+}
+
+function requiredPositiveInteger(value: string, fieldLabel: string): number {
+  const parsed = optionalPositiveInteger(value, fieldLabel);
+  if (parsed === null) {
+    throw new Error(`${fieldLabel} is required.`);
+  }
+
+  return parsed;
+}
+
 function promotionInputFromForm(form: PromotionFormState): CreatePromotionInput {
   const discountType = form.discount_type || null;
-  const discountValue = optionalNonNegativeInteger(form.discount_value, "Discount value");
+  const discountValue = optionalPositiveInteger(form.discount_value, "Discount value");
 
   if ((discountType === null) !== (discountValue === null)) {
     throw new Error("Select both a discount type and discount value, or leave both blank for display-only.");
+  }
+
+  if (discountType === "percent_bps" && discountValue !== null && discountValue > 10_000) {
+    throw new Error("Percentage discount cannot exceed 10000 basis points (100%).");
   }
 
   return {
@@ -184,18 +211,23 @@ function promotionInputFromForm(form: PromotionFormState): CreatePromotionInput 
     ends_at: optionalText(form.ends_at),
     is_active: form.is_active,
     is_stackable: form.is_stackable,
-    max_redemptions: optionalNonNegativeInteger(form.max_redemptions, "Maximum redemptions")
+    max_redemptions: optionalPositiveInteger(form.max_redemptions, "Maximum redemptions")
   };
 }
 
 function voucherInputFromForm(form: VoucherFormState): CreateVoucherInput {
-  const discountValue = requiredNonNegativeInteger(form.discount_value, "Discount value");
+  const discountType = form.discount_type || "fixed_cents";
+  const discountValue = requiredPositiveInteger(form.discount_value, "Discount value");
+
+  if (discountType === "percent_bps" && discountValue > 10_000) {
+    throw new Error("Percentage discount cannot exceed 10000 basis points (100%).");
+  }
 
   return {
     code: form.code.trim(),
     title: form.title.trim(),
     description: form.description.trim(),
-    discount_type: form.discount_type || "fixed_cents",
+    discount_type: discountType,
     discount_value: discountValue,
     minimum_subtotal_cents: requiredNonNegativeInteger(
       form.minimum_subtotal_cents,
@@ -205,7 +237,7 @@ function voucherInputFromForm(form: VoucherFormState): CreateVoucherInput {
     ends_at: optionalText(form.ends_at),
     is_active: form.is_active,
     is_stackable: form.is_stackable,
-    max_redemptions: optionalNonNegativeInteger(form.max_redemptions, "Maximum redemptions"),
+    max_redemptions: optionalPositiveInteger(form.max_redemptions, "Maximum redemptions"),
     is_public: form.is_public
   };
 }
@@ -219,6 +251,31 @@ function validateNonNegativeInteger(value: unknown): string | null {
   return Number.isInteger(Number(text)) && Number(text) >= 0
     ? null
     : "Enter a non-negative whole number.";
+}
+
+function validatePositiveInteger(value: unknown): string | null {
+  const text = String(value).trim();
+  if (!text) {
+    return null;
+  }
+
+  return Number.isInteger(Number(text)) && Number(text) > 0
+    ? null
+    : "Enter a whole number greater than zero.";
+}
+
+function validateDiscountValue(value: unknown, discountType: "" | DiscountType): string | null {
+  const integerError = validatePositiveInteger(value);
+  if (integerError) {
+    return integerError;
+  }
+
+  const text = String(value).trim();
+  if (text && discountType === "percent_bps" && Number(text) > 10_000) {
+    return "Percentage discount cannot exceed 10000 basis points (100%).";
+  }
+
+  return null;
 }
 
 function validatePromotionForm(values: PromotionFormState): RecordFormErrors<PromotionFormState> {
@@ -308,11 +365,11 @@ function buildPromotionFields(form: PromotionFormState): RecordFormField<Promoti
       name: "discount_value",
       label: "Discount value",
       type: "number",
-      min: 0,
+      min: 1,
       step: "1",
       placeholder: "1500",
       helpText: discountValueHelpText(form.discount_type, form.discount_value),
-      validate: validateNonNegativeInteger
+      validate: (value, values) => validateDiscountValue(value, values.discount_type)
     },
     {
       name: "minimum_subtotal_cents",
@@ -336,7 +393,7 @@ function buildPromotionFields(form: PromotionFormState): RecordFormField<Promoti
       helpText: "Optional ISO 8601 timestamp.",
       placeholder: "2026-07-31T23:59:59Z"
     },
-    { name: "max_redemptions", label: "Maximum redemptions", type: "number", min: 0, step: "1", validate: validateNonNegativeInteger },
+    { name: "max_redemptions", label: "Maximum redemptions", type: "number", min: 1, step: "1", validate: validatePositiveInteger },
     {
       name: "is_active",
       label: "Active",
@@ -379,11 +436,11 @@ function buildVoucherFields(form: VoucherFormState): RecordFormField<VoucherForm
       label: "Discount value",
       type: "number",
       required: true,
-      min: 0,
+      min: 1,
       step: "1",
       placeholder: "1500",
       helpText: discountValueHelpText(form.discount_type, form.discount_value),
-      validate: validateNonNegativeInteger
+      validate: (value, values) => validateDiscountValue(value, values.discount_type)
     },
     {
       name: "minimum_subtotal_cents",
@@ -407,7 +464,7 @@ function buildVoucherFields(form: VoucherFormState): RecordFormField<VoucherForm
       helpText: "Optional ISO 8601 timestamp.",
       placeholder: "2026-07-31T23:59:59Z"
     },
-    { name: "max_redemptions", label: "Maximum redemptions", type: "number", min: 0, step: "1", validate: validateNonNegativeInteger },
+    { name: "max_redemptions", label: "Maximum redemptions", type: "number", min: 1, step: "1", validate: validatePositiveInteger },
     {
       name: "is_active",
       label: "Active",

@@ -143,6 +143,10 @@ pub async fn fetch_storefront(pool: &PgPool, query: &StorefrontQuery) -> Result<
         r#"
         SELECT label, title, description
         FROM promotions
+        WHERE is_active = TRUE
+          AND (starts_at IS NULL OR starts_at <= now())
+          AND (ends_at IS NULL OR ends_at >= now())
+          AND (max_redemptions IS NULL OR redemption_count < max_redemptions)
         ORDER BY sort_order
         "#,
     )

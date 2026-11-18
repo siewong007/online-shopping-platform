@@ -1,5 +1,8 @@
 import { type FormEvent, type ReactNode, useEffect, useId, useRef, useState } from "react";
 
+const openModalStack: symbol[] = [];
+let savedBodyOverflow: string | null = null;
+
 type RecordModalTone = "danger" | "live" | "warning";
 
 type RecordModalProps = {
@@ -182,8 +185,12 @@ export function RecordModal({
 
     openerRef.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const modalToken = Symbol("record-modal");
+    if (openModalStack.length === 0) {
+      savedBodyOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+    }
+    openModalStack.push(modalToken);
 
     const getFocusables = () =>
       Array.from(
@@ -202,8 +209,13 @@ export function RecordModal({
     });
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (openModalStack[openModalStack.length - 1] !== modalToken) {
+        return;
+      }
+
       if (event.key === "Escape") {
         if (!isBusyRef.current) {
+          event.stopPropagation();
           onCloseRef.current();
         }
         return;
@@ -235,7 +247,14 @@ export function RecordModal({
     return () => {
       window.cancelAnimationFrame(frameId);
       window.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = previousOverflow;
+      const stackIndex = openModalStack.lastIndexOf(modalToken);
+      if (stackIndex !== -1) {
+        openModalStack.splice(stackIndex, 1);
+      }
+      if (openModalStack.length === 0) {
+        document.body.style.overflow = savedBodyOverflow ?? "";
+        savedBodyOverflow = null;
+      }
       if (openerRef.current?.isConnected) {
         openerRef.current.focus();
       }

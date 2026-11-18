@@ -98,6 +98,7 @@ jobs:
     env:
       SHELL_SCRIPTS: >-
         deploy/deploy.sh
+        deploy/deploy-staging.sh
         deploy/backup.sh
         deploy/restore.sh
         deploy/backup-capacity.sh

@@ -507,11 +507,12 @@ pub async fn create_order(
         insert_delivery_details(&mut tx, order_id, address, option).await?;
     }
 
+    let initial_payment_status = if total_cents == 0 { "paid" } else { "unpaid" };
     sqlx::query(
         r#"
         INSERT INTO order_sales_meta
             (order_id, status, payment_status, channel, discount_cents, tax_cents, shipping_cents, total_cents, manual_discount_cents)
-        VALUES ($1, 'confirmed', 'unpaid', 'web', $2, $3, $4, $5, 0)
+        VALUES ($1, 'confirmed', $6, 'web', $2, $3, $4, $5, 0)
         ON CONFLICT (order_id) DO NOTHING
         "#,
     )
@@ -520,6 +521,7 @@ pub async fn create_order(
     .bind(tax_cents)
     .bind(shipping_cents)
     .bind(total_cents)
+    .bind(initial_payment_status)
     .execute(&mut *tx)
     .await?;
 
@@ -1111,9 +1113,9 @@ pub async fn update_order(pool: &PgPool, order_id: i32, input: &CreateOrderInput
     let tax_rate_bps = fetch_setting_int(pool, "sales.default_tax_rate_bps", 0).await?;
     let mut tx = pool.begin().await?;
 
-    let current_status = sqlx::query_scalar::<_, String>(
+    let current_order = sqlx::query_as::<_, (String, bool)>(
         r#"
-        SELECT fulfillment_status
+        SELECT fulfillment_status, stock_released_at IS NOT NULL
         FROM orders
         WHERE id = $1
         FOR UPDATE
@@ -1123,7 +1125,7 @@ pub async fn update_order(pool: &PgPool, order_id: i32, input: &CreateOrderInput
     .fetch_optional(&mut *tx)
     .await?;
 
-    let Some(current_status) = current_status else {
+    let Some((current_status, stock_released)) = current_order else {
         bail!("Order {order_id} does not exist.");
     };
 
@@ -1135,11 +1137,83 @@ pub async fn update_order(pool: &PgPool, order_id: i32, input: &CreateOrderInput
     }
 
     // Priced without decrementing: the stock difference against the order's existing lines is
-    // settled by reconcile_stock_for_edit below, which must run before they are deleted.
+    // settled below, which must run before the existing lines are deleted.
     let (subtotal_cents, line_items) =
         resolve_order_line_items(&mut tx, &input.items, DecrementStock::No).await?;
 
-    reconcile_stock_for_edit(&mut tx, order_id, &line_items).await?;
+    let mut reacquired_stock = false;
+    if stock_released {
+        let previous_rows = sqlx::query_as::<_, (i32, i64)>(
+            r#"
+            SELECT product_id, SUM(quantity)
+            FROM order_items
+            WHERE order_id = $1
+            GROUP BY product_id
+            "#,
+        )
+        .bind(order_id)
+        .fetch_all(&mut *tx)
+        .await?;
+
+        let mut previous_map: BTreeMap<i32, i64> = BTreeMap::new();
+        for (product_id, qty) in previous_rows {
+            *previous_map.entry(product_id).or_default() += qty;
+        }
+
+        let mut next_map: BTreeMap<i32, i64> = BTreeMap::new();
+        for item in &line_items {
+            *next_map.entry(item.product_id).or_default() += i64::from(item.quantity);
+        }
+
+        if previous_map != next_map {
+            // Once an unpaid/failed order's stock was released, item edits cannot subtract from
+            // `order_items` as if units were still held: reserve full next quantities cleanly.
+            let product_ids: Vec<i32> = next_map.keys().copied().collect();
+            let locked_products = sqlx::query_as::<_, (i32, String, i32)>(
+                r#"
+                SELECT id, name, stock_quantity
+                FROM products
+                WHERE id = ANY($1)
+                ORDER BY id
+                FOR UPDATE
+                "#,
+            )
+            .bind(&product_ids)
+            .fetch_all(&mut *tx)
+            .await?;
+
+            let by_id: HashMap<i32, (String, i32)> = locked_products
+                .into_iter()
+                .map(|(id, name, stock)| (id, (name, stock)))
+                .collect();
+
+            for (product_id, required) in &next_map {
+                let required_i32 = i32::try_from(*required).map_err(|_| {
+                    anyhow!("Order quantity for product {product_id} is too large.")
+                })?;
+                let Some((name, stock_quantity)) = by_id.get(product_id) else {
+                    bail!("Product {product_id} does not exist.");
+                };
+                if *stock_quantity < required_i32 {
+                    bail!("{name} has only {stock_quantity} left in stock.");
+                }
+                sqlx::query(
+                    r#"
+                    UPDATE products
+                    SET stock_quantity = stock_quantity - $1
+                    WHERE id = $2
+                    "#,
+                )
+                .bind(required_i32)
+                .bind(*product_id)
+                .execute(&mut *tx)
+                .await?;
+            }
+            reacquired_stock = true;
+        }
+    } else {
+        reconcile_stock_for_edit(&mut tx, order_id, &line_items).await?;
+    }
 
     let order_state = sqlx::query_as::<_, (String, String)>(
         r#"
@@ -1148,7 +1222,8 @@ pub async fn update_order(pool: &PgPool, order_id: i32, input: &CreateOrderInput
             customer_email = $2,
             customer_phone = $3,
             subtotal_cents = $4,
-            fulfillment_method = COALESCE($5, fulfillment_method)
+            fulfillment_method = COALESCE($5, fulfillment_method),
+            stock_released_at = CASE WHEN $7 THEN NULL ELSE stock_released_at END
         WHERE id = $6
         RETURNING fulfillment_status, fulfillment_method
         "#,
@@ -1159,6 +1234,7 @@ pub async fn update_order(pool: &PgPool, order_id: i32, input: &CreateOrderInput
     .bind(subtotal_cents)
     .bind(fulfillment_method.as_deref())
     .bind(order_id)
+    .bind(reacquired_stock)
     .fetch_optional(&mut *tx)
     .await?;
 

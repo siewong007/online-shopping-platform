@@ -4,7 +4,13 @@ staging.ekowayhardware.com {
     header ?Strict-Transport-Security "max-age=31536000; includeSubDomains"
 
     # Staging gate — hash from /opt/online-shopping-staging/basic-auth.hash
-    basic_auth {
+    # Exclude Bearer-authenticated API requests and payment webhooks so browser
+    # Authorization: Bearer headers and external gateway callbacks are not rejected.
+    @staging_gate {
+        not header_regexp Authorization ^(?i)Bearer\s+\S+
+        not path /api/payments/hitpay/webhook /api/payments/senangpay/callback
+    }
+    basic_auth @staging_gate {
         staging __STAGING_BASIC_AUTH_HASH__
     }
 

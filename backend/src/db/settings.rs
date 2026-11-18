@@ -27,10 +27,10 @@ pub(crate) fn compute_tax_and_total(
     discount_cents: i32,
     tax_rate_bps: i32,
 ) -> (i32, i32) {
-    let taxable = i64::from(subtotal_cents - discount_cents).max(0);
+    let taxable = (i64::from(subtotal_cents) - i64::from(discount_cents)).max(0);
     let tax_cents_i64 = (taxable * i64::from(tax_rate_bps.max(0))) / 10_000;
     let tax_cents = tax_cents_i64.min(i64::from(i32::MAX)) as i32;
-    let total_cents = (subtotal_cents - discount_cents + tax_cents).max(0);
+    let total_cents = (taxable + tax_cents_i64).clamp(0, i64::from(i32::MAX)) as i32;
 
     (tax_cents, total_cents)
 }

@@ -118,6 +118,8 @@ pub async fn create_payment(pool: &PgPool, input: &CreatePaymentInput) -> Result
     .fetch_one(&mut *tx)
     .await?;
 
+    sync_order_payment_status_for_payment(&mut tx, normalized.order_id, Some(payment.id)).await?;
+
     tx.commit().await?;
 
     Ok(payment)
@@ -203,6 +205,8 @@ pub async fn update_payment(
     .fetch_one(&mut *tx)
     .await?;
 
+    sync_order_payment_status_for_payment(&mut tx, order_id, Some(payment_id)).await?;
+
     tx.commit().await?;
 
     Ok(payment)
@@ -211,9 +215,9 @@ pub async fn update_payment(
 pub async fn delete_payment(pool: &PgPool, payment_id: i32) -> Result<()> {
     let mut tx = pool.begin().await?;
 
-    let payment_exists = sqlx::query_scalar::<_, i32>(
+    let order_id = sqlx::query_scalar::<_, i32>(
         r#"
-        SELECT id
+        SELECT order_id
         FROM payments
         WHERE id = $1
         FOR UPDATE
@@ -223,9 +227,9 @@ pub async fn delete_payment(pool: &PgPool, payment_id: i32) -> Result<()> {
     .fetch_optional(&mut *tx)
     .await?;
 
-    if payment_exists.is_none() {
+    let Some(order_id) = order_id else {
         bail!("Payment {payment_id} does not exist.");
-    }
+    };
 
     sqlx::query(
         r#"
@@ -236,6 +240,8 @@ pub async fn delete_payment(pool: &PgPool, payment_id: i32) -> Result<()> {
     .bind(payment_id)
     .execute(&mut *tx)
     .await?;
+
+    sync_order_payment_status_for_payment(&mut tx, order_id, None).await?;
 
     tx.commit().await?;
 
@@ -498,6 +504,14 @@ pub async fn apply_gateway_payment_event(
         GatewayPaymentStatus::Captured => {
             if current_status != "Captured" {
                 captured_now = true;
+                let stock_note = resolve_late_paid_stock(&mut tx, order_id, payment_id).await?;
+                let notes = if stock_note.is_empty() {
+                    message.to_string()
+                } else if message.trim().is_empty() {
+                    stock_note
+                } else {
+                    format!("{} {stock_note}", message.trim())
+                };
                 sqlx::query(
                     r#"
                     UPDATE payments
@@ -506,7 +520,7 @@ pub async fn apply_gateway_payment_event(
                     "#,
                 )
                 .bind(transaction_id)
-                .bind(message)
+                .bind(notes)
                 .bind(payment_id)
                 .execute(&mut *tx)
                 .await?;
@@ -525,6 +539,7 @@ pub async fn apply_gateway_payment_event(
         }
         GatewayPaymentStatus::Failed => {
             if current_status != "Captured" {
+                release_unpaid_order_stock(&mut tx, order_id).await?;
                 sqlx::query(
                     r#"
                     UPDATE payments
@@ -999,6 +1014,73 @@ fn normalize_gateway_currency(currency: &str) -> Result<String> {
         bail!("Payment currency is invalid.");
     }
     Ok(currency)
+}
+
+async fn sync_order_payment_status_for_payment(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    order_id: i32,
+    triggering_payment_id: Option<i32>,
+) -> Result<()> {
+    let state = sqlx::query_as::<_, (i32, String, bool)>(
+        r#"
+        SELECT COALESCE(meta.total_cents, orders.subtotal_cents),
+               COALESCE(meta.payment_status, 'unpaid'),
+               orders.stock_released_at IS NOT NULL
+        FROM orders
+        LEFT JOIN order_sales_meta meta ON meta.order_id = orders.id
+        WHERE orders.id = $1
+        FOR UPDATE OF orders
+        "#,
+    )
+    .bind(order_id)
+    .fetch_optional(&mut **tx)
+    .await?;
+
+    let Some((order_total_cents, current_payment_status, stock_released)) = state else {
+        return Ok(());
+    };
+
+    let captured_sum = sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT COALESCE(SUM(amount_cents), 0)
+        FROM payments
+        WHERE order_id = $1 AND status = 'Captured'
+        "#,
+    )
+    .bind(order_id)
+    .fetch_one(&mut **tx)
+    .await?;
+
+    if captured_sum >= i64::from(order_total_cents) && order_total_cents > 0 {
+        if current_payment_status != "paid" {
+            sqlx::query(
+                "UPDATE order_sales_meta SET payment_status = 'paid', updated_at = now() WHERE order_id = $1",
+            )
+            .bind(order_id)
+            .execute(&mut **tx)
+            .await?;
+        }
+        if stock_released && let Some(payment_id) = triggering_payment_id {
+            let _ = resolve_late_paid_stock(tx, order_id, payment_id).await?;
+        }
+    } else if captured_sum == 0 && current_payment_status == "paid" && order_total_cents > 0 {
+        let has_refunded = sqlx::query_scalar::<_, bool>(
+            "SELECT EXISTS(SELECT 1 FROM payments WHERE order_id = $1 AND status = 'Refunded')",
+        )
+        .bind(order_id)
+        .fetch_one(&mut **tx)
+        .await?;
+        if !has_refunded {
+            sqlx::query(
+                "UPDATE order_sales_meta SET payment_status = 'unpaid', updated_at = now() WHERE order_id = $1",
+            )
+            .bind(order_id)
+            .execute(&mut **tx)
+            .await?;
+        }
+    }
+
+    Ok(())
 }
 
 async fn release_unpaid_order_stock(

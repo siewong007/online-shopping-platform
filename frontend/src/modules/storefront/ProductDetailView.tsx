@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { useI18n } from "../../i18n/LanguageContext";
 import { fetchProductDetail } from "../../modules/reviews/api/reviewsApi";
+import type { ProductReview } from "../../modules/reviews/types";
 import { ApiError } from "../../shared/api/http";
 import { buildProductJsonLd } from "../../shared/seo";
 import type { Product, ProductDetailPayload, StorefrontPayload } from "../../types";
@@ -13,6 +14,7 @@ import {
   ListingStockLine,
   productStockState
 } from "./listing";
+import { ProductReviewsSection } from "./ProductReviewsSection";
 
 type ProductDetailViewProps = {
   activeJobName: string | null;
@@ -214,6 +216,25 @@ export function ProductDetailView({
     onAddToCart(product, quantity);
   };
 
+  const handleReviewCreated = (review: ProductReview) => {
+    const nextReviews = [review, ...payload.reviews];
+    const nextCount = nextReviews.length;
+    const nextAvg = nextReviews.reduce((sum, item) => sum + item.rating, 0) / nextCount;
+    const updatedProduct: Product = {
+      ...product,
+      review_count: nextCount,
+      avg_rating: Number(nextAvg.toFixed(2))
+    };
+    setPayload({
+      ...payload,
+      product: updatedProduct,
+      reviews: nextReviews,
+      can_review: false,
+      already_reviewed: true
+    });
+    onProductLoaded?.(updatedProduct);
+  };
+
   const clampQuantity = (next: number) => {
     const maxAllowed = Math.max(1, Math.floor(product.stock_quantity));
     return Math.min(maxAllowed, Math.max(1, Math.floor(next)));
@@ -339,6 +360,18 @@ export function ProductDetailView({
         </dl>
         <p>{t("shop.detail.verifiedNote")}</p>
       </section>
+
+      {!isFallbackDetail ? (
+        <ProductReviewsSection
+          alreadyReviewed={payload.already_reviewed}
+          avgRating={product.avg_rating}
+          canReview={payload.can_review}
+          onReviewCreated={handleReviewCreated}
+          productId={product.id}
+          reviewCount={product.review_count}
+          reviews={payload.reviews}
+        />
+      ) : null}
 
       {continuationProducts.length > 0 ? (
         <section className="pdp-more" aria-labelledby="pdp-more-heading">

@@ -618,6 +618,7 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
                       disabled={
                         !canUpdate ||
                         selectedConversation.status === nextStatus ||
+                        (selectedConversation.status === "closed" && nextStatus === "pending") ||
                         updatingConversationId === selectedConversation.id
                       }
                       key={nextStatus}

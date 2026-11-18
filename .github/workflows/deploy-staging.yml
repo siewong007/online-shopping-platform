@@ -124,7 +124,7 @@ jobs:
             --cache-to type=gha,mode=max \
             --load \
             --label "org.opencontainers.image.revision=$DEPLOY_SHA" \
-            --tag "online-shopping-backend:$DEPLOY_SHA" \
+            --tag "online-shopping-staging-backend:$DEPLOY_SHA" \
             --file backend/Dockerfile \
             backend
           docker buildx build \
@@ -137,14 +137,14 @@ jobs:
             --build-arg VITE_ENABLE_DELIVERY=false \
             --build-arg VITE_TURNSTILE_SITE_KEY=0x4AAAAAAExJ1ddYQ-cmc9DX \
             --label "org.opencontainers.image.revision=$DEPLOY_SHA" \
-            --tag "online-shopping-frontend:$DEPLOY_SHA" \
+            --tag "online-shopping-staging-frontend:$DEPLOY_SHA" \
             --file frontend/Dockerfile \
             frontend
 
           test "$(docker image inspect --format '{{.Os}}/{{.Architecture}}' \
-            "online-shopping-backend:$DEPLOY_SHA")" = "linux/amd64"
+            "online-shopping-staging-backend:$DEPLOY_SHA")" = "linux/amd64"
           test "$(docker image inspect --format '{{.Os}}/{{.Architecture}}' \
-            "online-shopping-frontend:$DEPLOY_SHA")" = "linux/amd64"
+            "online-shopping-staging-frontend:$DEPLOY_SHA")" = "linux/amd64"
 
       - name: Create checksummed staging release bundle
         shell: bash
@@ -154,8 +154,8 @@ jobs:
           bundle_path="$RUNNER_TEMP/online-shopping-staging-$DEPLOY_SHA.tar.gz"
           mkdir -p "$bundle_dir/images" "$bundle_dir/initdb"
 
-          docker save "online-shopping-backend:$DEPLOY_SHA" | gzip -1 > "$bundle_dir/images/backend.tar.gz"
-          docker save "online-shopping-frontend:$DEPLOY_SHA" | gzip -1 > "$bundle_dir/images/frontend.tar.gz"
+          docker save "online-shopping-staging-backend:$DEPLOY_SHA" | gzip -1 > "$bundle_dir/images/backend.tar.gz"
+          docker save "online-shopping-staging-frontend:$DEPLOY_SHA" | gzip -1 > "$bundle_dir/images/frontend.tar.gz"
 
           cp backend/migrations/*.sql "$bundle_dir/initdb/"
 

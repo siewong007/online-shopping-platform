@@ -51,6 +51,7 @@ CONFIRMED="${2:-}"
 DRY_RUN="${DRY_RUN:-0}"
 APP_DIR="${PGU_APP_DIR:-/opt/online-shopping}"
 COMPOSE_FILE="${PGU_COMPOSE_FILE:-$APP_DIR/docker-compose.prod.yml}"
+PROJECT_NAME="${PGU_PROJECT_NAME:-online-shopping}"
 CONTAINER="${PGU_CONTAINER:-online-shopping-db}"
 DB_USER="${PGU_DB_USER:-shop_admin}"
 DATABASE="${PGU_DATABASE:-online_shopping}"
@@ -103,7 +104,7 @@ rollback() {
     fi
   fi
   if [[ -n "$COMPOSE_BAK" ]]; then
-    docker compose --project-directory "$APP_DIR" --file "$COMPOSE_FILE" up -d \
+    docker compose --project-name "$PROJECT_NAME" --project-directory "$APP_DIR" --file "$COMPOSE_FILE" up -d \
       >/dev/null 2>&1 || { log "CRITICAL: could not restart the old stack"; manual_rescue; return 1; }
   else
     # Pre-flip failure: containers were only stopped, the old cluster is intact.
@@ -126,7 +127,7 @@ AUTOMATIC ROLLBACK FAILED. Manual recovery, as root on this host:
   docker volume rm $VOLUME
   docker run --rm -v $VOLUME:/var/lib/postgresql -v $APP_DIR:/src:ro \\
     busybox tar xzf /src/$(basename "${SNAPSHOT:-UNKNOWN}") -C /var/lib/postgresql
-  docker compose --project-directory $APP_DIR --file $COMPOSE_FILE up -d
+  docker compose --project-name $PROJECT_NAME --project-directory $APP_DIR --file $COMPOSE_FILE up -d
 Then watch: docker inspect -f '{{.State.Health.Status}}' $CONTAINER
 RESCUE
 }
@@ -138,6 +139,18 @@ trap 'rc=$?; (( rc == 0 )) || [[ "$STAGE" == "preflight" || "$STAGE" == "dump" ]
 
 [[ $(id -u) -eq 0 ]] || die "must run as root (sudo)"
 [[ -f "$COMPOSE_FILE" ]] || die "compose file not found: $COMPOSE_FILE"
+[[ -f "$APP_DIR/secrets.env" ]] || die "secrets file not found: $APP_DIR/secrets.env"
+set -a
+# shellcheck disable=SC1091
+source "$APP_DIR/secrets.env"
+set +a
+if [[ -z "${IMAGE_TAG:-}" ]]; then
+  [[ -s "$APP_DIR/current-tag" ]] || die "current-tag missing: $APP_DIR/current-tag"
+  IMAGE_TAG="$(tr -d '\r\n' < "$APP_DIR/current-tag")"
+fi
+export IMAGE_TAG
+docker compose --project-name "$PROJECT_NAME" --project-directory "$APP_DIR" --file "$COMPOSE_FILE" config >/dev/null \
+  || die "docker compose config failed for $COMPOSE_FILE"
 [[ -d "$APP_DIR/backups" ]] || die "layout unexpected: $APP_DIR/backups missing"
 [[ ! -e "$APP_DIR/deploy.lock" ]] || die "a deploy appears to be in progress ($APP_DIR/deploy.lock)"
 docker inspect "$CONTAINER" >/dev/null 2>&1 || die "container $CONTAINER not found or not created"
@@ -223,7 +236,7 @@ STAGE="restore"
 log "removing the old cluster volume and starting postgres:$TARGET_TAG..."
 docker rm -f "$CONTAINER" >/dev/null
 docker volume rm "$VOLUME" >/dev/null
-docker compose --project-directory "$APP_DIR" --file "$COMPOSE_FILE" up -d postgres >/dev/null
+docker compose --project-name "$PROJECT_NAME" --project-directory "$APP_DIR" --file "$COMPOSE_FILE" up -d postgres >/dev/null
 wait_healthy "$CONTAINER" || die "new engine never became healthy - check docker logs $CONTAINER"
 
 log "restoring the dump into the fresh cluster..."
@@ -237,7 +250,7 @@ log "restore complete, planner statistics refreshed"
 
 STAGE="verify"
 log "starting the full stack..."
-docker compose --project-directory "$APP_DIR" --file "$COMPOSE_FILE" up -d >/dev/null
+docker compose --project-name "$PROJECT_NAME" --project-directory "$APP_DIR" --file "$COMPOSE_FILE" up -d >/dev/null
 wait_healthy online-shopping-backend
 wait_healthy online-shopping-frontend
 curl -fsS http://127.0.0.1:4000/api/health >/dev/null || die "backend health endpoint failed"

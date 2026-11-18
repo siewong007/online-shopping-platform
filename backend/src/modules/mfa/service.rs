@@ -212,6 +212,16 @@ pub async fn begin_enrollment(
     let key = config
         .encryption_key()
         .map_err(map_mfa_error("enrollment start"))?;
+    if db::fetch_active_admin_factor(pool, identity.user_id)
+        .await
+        .map_err(map_mfa_error("enrollment start"))?
+        .is_some()
+    {
+        return Err((
+            axum::http::StatusCode::CONFLICT,
+            "Multi-factor authentication is already enabled. Disable it first to enroll a new authenticator.".to_string(),
+        ));
+    }
     // At most one live QR at a time.
     db::expire_admin_mfa_enrollment_challenges(pool, identity.user_id)
         .await
@@ -264,6 +274,16 @@ pub async fn confirm_enrollment(
     let key = config
         .encryption_key()
         .map_err(map_mfa_error("enrollment confirm"))?;
+    if db::fetch_active_admin_factor(pool, identity.user_id)
+        .await
+        .map_err(map_mfa_error("enrollment confirm"))?
+        .is_some()
+    {
+        return Err((
+            axum::http::StatusCode::CONFLICT,
+            "Multi-factor authentication is already enabled. Disable it first to enroll a new authenticator.".to_string(),
+        ));
+    }
 
     let Some((challenge_id, Some(ciphertext), Some(nonce))) =
         sqlx::query_as::<_, (uuid::Uuid, Option<Vec<u8>>, Option<Vec<u8>>)>(
@@ -296,19 +316,33 @@ pub async fn confirm_enrollment(
         .map_err(map_mfa_error("enrollment confirm"))?;
     if verify_totp_code(&totp, code).is_none() {
         return Err((
-            axum::http::StatusCode::UNAUTHORIZED,
+            axum::http::StatusCode::BAD_REQUEST,
             "That code did not match. Check your authenticator and try again.".to_string(),
         ));
     }
 
+    if !db::consume_admin_mfa_challenge(pool, challenge_id)
+        .await
+        .map_err(map_mfa_error("enrollment confirm"))?
+    {
+        return Err((
+            axum::http::StatusCode::BAD_REQUEST,
+            "No pending multi-factor enrollment. Start enrollment again.".to_string(),
+        ));
+    }
     db::upsert_admin_factor(pool, identity.user_id, &ciphertext, &nonce)
         .await
         .map_err(map_mfa_error("enrollment confirm"))?;
-    db::consume_admin_mfa_challenge(pool, challenge_id)
-        .await
-        .map_err(map_mfa_error("enrollment confirm"))?;
-    // The session that proved possession during enrollment counts as verified.
+    // The session that proved possession during enrollment counts as verified; revoke any other
+    // pre-MFA sessions so they cannot bypass the newly enabled factor.
     sqlx::query("UPDATE admin_sessions SET mfa_verified_at = now() WHERE token = $1")
+        .bind(bearer_token)
+        .execute(pool)
+        .await
+        .map_err(anyhow::Error::from)
+        .map_err(map_mfa_error("enrollment confirm"))?;
+    sqlx::query("DELETE FROM admin_sessions WHERE admin_user_id = $1 AND token <> $2")
+        .bind(identity.user_id)
         .bind(bearer_token)
         .execute(pool)
         .await
@@ -352,7 +386,7 @@ pub async fn disable_factor(
         build_totp(&secret, None, "disable".to_string()).map_err(map_mfa_error("disable"))?;
     if verify_totp_code(&totp, &input.code).is_none() {
         return Err((
-            axum::http::StatusCode::UNAUTHORIZED,
+            axum::http::StatusCode::BAD_REQUEST,
             "That code did not match. Multi-factor authentication stays enabled.".to_string(),
         ));
     }
@@ -365,7 +399,7 @@ pub async fn disable_factor(
         .is_some_and(|user| security::verify_password(&input.password, &user.password_hash));
     if !verified {
         return Err((
-            axum::http::StatusCode::UNAUTHORIZED,
+            axum::http::StatusCode::BAD_REQUEST,
             "Password confirmation failed. Multi-factor authentication stays enabled.".to_string(),
         ));
     }
@@ -480,12 +514,20 @@ pub async fn complete_login(
         });
     }
 
-    db::consume_admin_mfa_challenge(pool, challenge_id)
+    if !db::consume_admin_mfa_challenge(pool, challenge_id)
         .await
-        .map_err(map_mfa_error("login verify"))?;
+        .map_err(map_mfa_error("login verify"))?
+    {
+        return Err(mfa_login_rejection());
+    }
     if let Some(step) = verified_step {
-        sqlx::query(
-            "UPDATE admin_mfa_factors SET last_accepted_step = $1 WHERE admin_user_id = $2",
+        let updated = sqlx::query(
+            r#"
+            UPDATE admin_mfa_factors
+            SET last_accepted_step = $1
+            WHERE admin_user_id = $2
+              AND (last_accepted_step IS NULL OR last_accepted_step < $1)
+            "#,
         )
         .bind(step)
         .bind(admin_user_id)
@@ -493,6 +535,9 @@ pub async fn complete_login(
         .await
         .map_err(anyhow::Error::from)
         .map_err(map_mfa_error("login verify"))?;
+        if updated.rows_affected() == 0 {
+            return Err(mfa_login_rejection());
+        }
     }
 
     let admin_user = db::fetch_admin_user_by_id(pool, admin_user_id)

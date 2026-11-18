@@ -146,6 +146,10 @@ pub async fn update_category(
 }
 
 pub async fn delete_category(pool: &PgPool, slug: &str) -> Result<()> {
+    if slug.trim().eq_ignore_ascii_case("all") {
+        bail!("The default 'all' category cannot be deleted.");
+    }
+
     let product_count = sqlx::query_scalar::<_, i64>(
         r#"
         SELECT COUNT(*)

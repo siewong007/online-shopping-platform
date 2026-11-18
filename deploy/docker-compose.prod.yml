@@ -90,6 +90,8 @@ services:
       # in their default activation mode). TRUST_PROXY and RATE_LIMIT_PER_MINUTE fall back to the
       # same defaults the backend applies when unset (true / 120).
       SMTP_HOST: "${SMTP_HOST:-}"
+      SMTP_PORT: "${SMTP_PORT:-587}"
+      SMTP_USERNAME:
       SMTP_FROM_ADDRESS: "${SMTP_FROM_ADDRESS:-}"
       SMTP_PASSWORD: "${SMTP_PASSWORD:-}"
       MFA_ENCRYPTION_KEY: "${MFA_ENCRYPTION_KEY:-}"

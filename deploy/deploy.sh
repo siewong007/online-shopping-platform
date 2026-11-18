@@ -24,6 +24,7 @@ readonly CURRENT_TAG_FILE="${DEPLOY_CURRENT_TAG_FILE:-$APP_DIR/current-tag}"
 readonly ADMIN_PASSWORD_FILE="${DEPLOY_ADMIN_PASSWORD_FILE:-$APP_DIR/initial-admin-password}"
 readonly BACKUP_DIR="${DEPLOY_BACKUP_DIR:-$APP_DIR/backups}"
 readonly LOCK_FILE="${DEPLOY_LOCK_FILE:-$APP_DIR/deploy.lock}"
+readonly CADDY_LOCK_FILE="${DEPLOY_CADDY_LOCK_FILE:-/run/lock/online-shopping-caddy.lock}"
 readonly SYSTEMD_DIR="${DEPLOY_SYSTEMD_DIR:-/etc/systemd/system}"
 readonly CADDY_FILE=/etc/caddy/Caddyfile
 readonly CADDY_SITE_FILE=/etc/caddy/ekowayhardware.Caddyfile
@@ -514,7 +515,7 @@ backup_existing_database() {
   exec 8>&-
 }
 
-configure_caddy() {
+_configure_caddy_locked() {
   local site_tmp main_backup site_backup=""
   site_tmp=$(mktemp "$APP_DIR/.ekowayhardware.Caddyfile.XXXXXX")
   main_backup=$(mktemp "$APP_DIR/.Caddyfile.XXXXXX")
@@ -558,6 +559,16 @@ configure_caddy() {
   rm -f "$site_tmp" "$main_backup"
   [[ -n "$site_backup" ]] && rm -f "$site_backup"
   return 0
+}
+
+configure_caddy() {
+  local rc=0
+  install -d -m 0755 "$(dirname "$CADDY_LOCK_FILE")"
+  exec 7>"$CADDY_LOCK_FILE"
+  flock 7
+  _configure_caddy_locked || rc=$?
+  exec 7>&-
+  return "$rc"
 }
 
 cleanup_old_releases() {

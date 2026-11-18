@@ -90,6 +90,10 @@ export async function createSupportConversation(
     }
 
     setCustomerAuthToken(null);
+    if (turnstileToken && turnstileToken.trim().length > 0) {
+      throw error;
+    }
+
     return createSupportConversationWithScope(input, "public", turnstileToken);
   }
 }

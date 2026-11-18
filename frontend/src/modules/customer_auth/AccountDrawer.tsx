@@ -195,8 +195,10 @@ export function AccountDrawer({
   });
   const copyTimeoutRef = useRef<number | null>(null);
   const turnstile = useTurnstile();
+  const onAuthenticatedRef = useRef(onAuthenticated);
 
   onCloseRef.current = onClose;
+  onAuthenticatedRef.current = onAuthenticated;
 
   useEffect(() => {
     return () => {
@@ -208,9 +210,9 @@ export function AccountDrawer({
 
   useEffect(() => {
     if (session) {
-      onAuthenticated(session.account.email);
+      onAuthenticatedRef.current(session.account.email);
     }
-  }, [onAuthenticated, session]);
+  }, [session]);
 
   useEffect(() => {
     if (!open) {

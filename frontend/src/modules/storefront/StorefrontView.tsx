@@ -362,7 +362,9 @@ export function StorefrontView({
                       >
                         {preset.maxCents == null
                           ? t("shop.filters.priceOver", { n: formatWorklistPrice(preset.minCents) })
-                          : t("shop.filters.priceUnder", { n: formatWorklistPrice(preset.maxCents) })}
+                          : preset.minCents > 0
+                            ? `${formatWorklistPrice(preset.minCents)} – ${formatWorklistPrice(preset.maxCents)}`
+                            : t("shop.filters.priceUnder", { n: formatWorklistPrice(preset.maxCents) })}
                       </button>
                     ))}
                   </div>

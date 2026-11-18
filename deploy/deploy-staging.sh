@@ -22,9 +22,8 @@ readonly COMPOSE_FILE="${DEPLOY_COMPOSE_FILE:-$APP_DIR/docker-compose.prod.yml}"
 readonly SECRETS_FILE="${DEPLOY_SECRETS_FILE:-$APP_DIR/secrets.env}"
 readonly CURRENT_TAG_FILE="${DEPLOY_CURRENT_TAG_FILE:-$APP_DIR/current-tag}"
 readonly ADMIN_PASSWORD_FILE="${DEPLOY_ADMIN_PASSWORD_FILE:-$APP_DIR/initial-admin-password}"
-readonly BACKUP_DIR="${DEPLOY_BACKUP_DIR:-$APP_DIR/backups}"
 readonly LOCK_FILE="${DEPLOY_LOCK_FILE:-$APP_DIR/deploy.lock}"
-readonly SYSTEMD_DIR="${DEPLOY_SYSTEMD_DIR:-/etc/systemd/system}"
+readonly CADDY_LOCK_FILE="${DEPLOY_CADDY_LOCK_FILE:-/run/lock/online-shopping-caddy.lock}"
 readonly CADDY_FILE=/etc/caddy/Caddyfile
 readonly CADDY_SITE_FILE=/etc/caddy/ekowayhardware-staging.Caddyfile
 
@@ -128,11 +127,11 @@ load_release_images() {
   log "Loading application images for $TAG"
   gzip -dc "$RELEASE_DIR/images/backend.tar.gz" | docker load >/dev/null
   gzip -dc "$RELEASE_DIR/images/frontend.tar.gz" | docker load >/dev/null
-  docker image inspect "online-shopping-backend:$TAG" >/dev/null
-  docker image inspect "online-shopping-frontend:$TAG" >/dev/null
-  [[ $(docker image inspect --format '{{.Architecture}}' "online-shopping-backend:$TAG") == amd64 ]] \
+  docker image inspect "online-shopping-staging-backend:$TAG" >/dev/null
+  docker image inspect "online-shopping-staging-frontend:$TAG" >/dev/null
+  [[ $(docker image inspect --format '{{.Architecture}}' "online-shopping-staging-backend:$TAG") == amd64 ]] \
     || die "backend image architecture is not amd64"
-  [[ $(docker image inspect --format '{{.Architecture}}' "online-shopping-frontend:$TAG") == amd64 ]] \
+  [[ $(docker image inspect --format '{{.Architecture}}' "online-shopping-staging-frontend:$TAG") == amd64 ]] \
     || die "frontend image architecture is not amd64"
 
   if ! docker image inspect postgres:19beta1 >/dev/null 2>&1; then
@@ -264,8 +263,8 @@ backup_existing_database() {
 }
 
 
-configure_caddy() {
-  local site_tmp main_backup site_backup=""
+_configure_caddy_locked() {
+  local site_tmp main_backup site_backup="" hash_file HASH
   site_tmp=$(mktemp "$APP_DIR/.ekowayhardware-staging.Caddyfile.XXXXXX")
   main_backup=$(mktemp "$APP_DIR/.Caddyfile.XXXXXX")
   cp -p "$CADDY_FILE" "$main_backup"
@@ -278,9 +277,11 @@ configure_caddy() {
 
   hash_file="$APP_DIR/basic-auth.hash"
   if [[ ! -s "$hash_file" ]]; then
-    die "missing $hash_file — create with: caddy hash-password --plaintext '…' > $hash_file"
+    log "ERROR: missing $hash_file — create with: caddy hash-password --plaintext '…' > $hash_file" >&2
+    rm -f "$site_tmp" "$main_backup" "$site_backup"
+    return 1
   fi
-  HASH=$(tr -d '\n' < "$hash_file")
+  HASH=$(tr -d '\r\n' < "$hash_file")
   sed -i "s|__STAGING_BASIC_AUTH_HASH__|${HASH}|g" "$site_tmp"
 
   install -m 0644 "$site_tmp" "$CADDY_SITE_FILE"
@@ -315,6 +316,16 @@ configure_caddy() {
   rm -f "$site_tmp" "$main_backup"
   [[ -n "$site_backup" ]] && rm -f "$site_backup"
   return 0
+}
+
+configure_caddy() {
+  local rc=0
+  install -d -m 0755 "$(dirname "$CADDY_LOCK_FILE")"
+  exec 7>"$CADDY_LOCK_FILE"
+  flock 7
+  _configure_caddy_locked || rc=$?
+  exec 7>&-
+  return "$rc"
 }
 
 cleanup_old_releases() {
@@ -439,8 +450,8 @@ main_deploy() {
   if deploy_tag "$TAG" && configure_caddy; then
     printf '%s\n' "$TAG" > "$CURRENT_TAG_FILE"
     chmod 0600 "$CURRENT_TAG_FILE"
-    cleanup_old_images online-shopping-backend "$TAG" "$previous_tag"
-    cleanup_old_images online-shopping-frontend "$TAG" "$previous_tag"
+    cleanup_old_images online-shopping-staging-backend "$TAG" "$previous_tag"
+    cleanup_old_images online-shopping-staging-frontend "$TAG" "$previous_tag"
     cleanup_old_releases "$TAG" "$previous_tag"
     log "Release $TAG is healthy on localhost:4002 and localhost:8084"
     log "Caddy is configured for https://staging.ekowayhardware.com"
@@ -453,8 +464,8 @@ main_deploy() {
   show_diagnostics
 
   if [[ -n "$previous_tag" ]] \
-    && docker image inspect "online-shopping-backend:$previous_tag" >/dev/null 2>&1 \
-    && docker image inspect "online-shopping-frontend:$previous_tag" >/dev/null 2>&1; then
+    && docker image inspect "online-shopping-staging-backend:$previous_tag" >/dev/null 2>&1 \
+    && docker image inspect "online-shopping-staging-frontend:$previous_tag" >/dev/null 2>&1; then
     log "Rolling application containers back to $previous_tag"
     if [[ -f "$RELEASES_DIR/$previous_tag/docker-compose.prod.yml" ]]; then
       install -m 0644 "$RELEASES_DIR/$previous_tag/docker-compose.prod.yml" "$COMPOSE_FILE"

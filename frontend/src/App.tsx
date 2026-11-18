@@ -114,7 +114,10 @@ import {
   type AdminTab
 } from "./app/adminHelpers";
 import {
+  buildShopFilterSearch,
+  DEFAULT_SHOP_FILTER_STATE,
   legalSlugFromPath,
+  parseShopFilterSearch,
   productIdFromPath,
   viewFromPath,
   type View
@@ -173,7 +176,12 @@ const AdminLoginScreen = lazy(() =>
 );
 
 export default function App() {
-  const [view, setView] = useState<View>(() => viewFromPath(window.location.pathname));
+  const initialView = viewFromPath(window.location.pathname);
+  const initialShopFilters =
+    initialView === "store"
+      ? parseShopFilterSearch(window.location.search)
+      : DEFAULT_SHOP_FILTER_STATE;
+  const [view, setView] = useState<View>(initialView);
   // Held in state rather than read from location at render time: moving between two
   // policy pages leaves `view` on "legal", so nothing would trigger a re-render.
   const [legalSlug, setLegalSlug] = useState<LegalSlug | null>(() =>
@@ -187,20 +195,24 @@ export default function App() {
   const [isLoadingMoreProducts, setIsLoadingMoreProducts] = useState(false);
   // Held here, not in StorefrontView: with a paged catalogue these must be part of the
   // query, otherwise they only filter the 60 products that happen to be loaded.
-  const [inStockOnly, setInStockOnly] = useState(false);
-  const [onSaleOnly, setOnSaleOnly] = useState(false);
+  const [inStockOnly, setInStockOnly] = useState(initialShopFilters.inStockOnly);
+  const [onSaleOnly, setOnSaleOnly] = useState(initialShopFilters.onSaleOnly);
   const [isStorefrontRefetching, setIsStorefrontRefetching] = useState(false);
   const [publicOffers, setPublicOffers] = useState<PublicOffersPayload | null>(null);
   const [dashboard, setDashboard] = useState<AdminDashboardPayload | null>(null);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [activeJobId, setActiveJobId] = useState<JobLensId | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState(initialShopFilters.category);
+  const [activeJobId, setActiveJobId] = useState<JobLensId | null>(initialShopFilters.jobId);
+  const [searchTerm, setSearchTerm] = useState(initialShopFilters.q);
   const [returnFocusProductId, setReturnFocusProductId] = useState<number | null>(null);
-  const [minPriceCents, setMinPriceCents] = useState<number | null>(null);
-  const [maxPriceCents, setMaxPriceCents] = useState<number | null>(null);
-  const [sortOption, setSortOption] = useState<StorefrontSort>("featured");
+  const [minPriceCents, setMinPriceCents] = useState<number | null>(
+    initialShopFilters.minPriceCents
+  );
+  const [maxPriceCents, setMaxPriceCents] = useState<number | null>(
+    initialShopFilters.maxPriceCents
+  );
+  const [sortOption, setSortOption] = useState<StorefrontSort>(initialShopFilters.sort);
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
       const stored = window.localStorage.getItem(CART_STORAGE_KEY);
@@ -247,13 +259,13 @@ export default function App() {
   const isInitialStorefrontFilter = useRef(true);
   const lastFetchedFilterKeyRef = useRef(
     JSON.stringify({
-      q: "",
-      category: "all",
-      minPriceCents: null,
-      maxPriceCents: null,
-      sort: "featured",
-      inStockOnly: false,
-      onSaleOnly: false
+      q: initialShopFilters.q,
+      category: initialShopFilters.category,
+      minPriceCents: initialShopFilters.minPriceCents,
+      maxPriceCents: initialShopFilters.maxPriceCents,
+      sort: initialShopFilters.sort,
+      inStockOnly: initialShopFilters.inStockOnly,
+      onSaleOnly: initialShopFilters.onSaleOnly
     })
   );
   const pendingCategoryHintRef = useRef<string | null>(null);
@@ -365,7 +377,25 @@ export default function App() {
     if (!hasStartedStorefrontFetchRef.current) {
       hasStartedStorefrontFetchRef.current = true;
       const requestGeneration = ++storefrontRequestGeneration.current;
-      void fetchStorefront()
+      const initialFilterKey = JSON.stringify({
+        q: searchTerm,
+        category: selectedCategory,
+        minPriceCents,
+        maxPriceCents,
+        sort: sortOption,
+        inStockOnly,
+        onSaleOnly
+      });
+      lastFetchedFilterKeyRef.current = initialFilterKey;
+      void fetchStorefront({
+        q: searchTerm,
+        category: selectedCategory,
+        minPriceCents: minPriceCents ?? undefined,
+        maxPriceCents: maxPriceCents ?? undefined,
+        sort: sortOption,
+        inStockOnly,
+        onSaleOnly
+      })
         .then(({ isFallback, payload }) => {
           if (storefrontRequestGeneration.current === requestGeneration) {
             payload.products.forEach((product) => latestProductsById.current.set(product.id, product));
@@ -513,12 +543,57 @@ export default function App() {
   }, [searchTerm, selectedCategory, minPriceCents, maxPriceCents, sortOption, inStockOnly, onSaleOnly, view]);
 
   useEffect(() => {
+    if (view !== "store") return;
+    const nextSearch = buildShopFilterSearch(
+      {
+        q: searchTerm,
+        category: selectedCategory,
+        minPriceCents,
+        maxPriceCents,
+        sort: sortOption,
+        inStockOnly,
+        onSaleOnly,
+        jobId: activeJobId
+      },
+      window.location.search
+    );
+    if (nextSearch !== window.location.search) {
+      window.history.replaceState(
+        window.history.state,
+        "",
+        `/shop${nextSearch}${window.location.hash}`
+      );
+    }
+  }, [
+    activeJobId,
+    inStockOnly,
+    maxPriceCents,
+    minPriceCents,
+    onSaleOnly,
+    searchTerm,
+    selectedCategory,
+    sortOption,
+    view
+  ]);
+
+  useEffect(() => {
     const onPopState = () => {
       const nextView = viewFromPath(window.location.pathname);
       const nextProductId = productIdFromPath(window.location.pathname);
 
-      if (nextView === "store" && productReturnFocusRef.current !== null) {
-        setReturnFocusProductId(productReturnFocusRef.current);
+      if (nextView === "store") {
+        const urlFilters = parseShopFilterSearch(window.location.search);
+        setSearchTerm(urlFilters.q);
+        setSelectedCategory(urlFilters.category);
+        setMinPriceCents(urlFilters.minPriceCents);
+        setMaxPriceCents(urlFilters.maxPriceCents);
+        setSortOption(urlFilters.sort);
+        setInStockOnly(urlFilters.inStockOnly);
+        setOnSaleOnly(urlFilters.onSaleOnly);
+        setActiveJobId(urlFilters.jobId);
+        if (productReturnFocusRef.current !== null) {
+          setReturnFocusProductId(productReturnFocusRef.current);
+        }
       } else if (nextView === "product") {
         const historyProductId = window.history.state?.storefrontReturnProductId;
         productReturnFocusRef.current =
@@ -545,7 +620,21 @@ export default function App() {
 
   const openView = (nextView: Extract<View, "landing" | "store" | "admin">) => {
     startTransition(() => {
-      const nextPath = nextView === "admin" ? "/admin" : nextView === "store" ? "/shop" : "/";
+      const storeSearch =
+        nextView === "store"
+          ? buildShopFilterSearch({
+              q: searchTerm,
+              category: selectedCategory,
+              minPriceCents,
+              maxPriceCents,
+              sort: sortOption,
+              inStockOnly,
+              onSaleOnly,
+              jobId: activeJobId
+            })
+          : "";
+      const nextPath =
+        nextView === "admin" ? "/admin" : nextView === "store" ? `/shop${storeSearch}` : "/";
       window.history.pushState({}, "", nextPath);
       setView(nextView);
       window.scrollTo({ behavior: "auto", left: 0, top: 0 });

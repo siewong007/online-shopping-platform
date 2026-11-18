@@ -7,6 +7,7 @@ set -Eeuo pipefail
 # not depend on executable bits).
 SCRIPTS=(
   deploy/deploy.sh
+  deploy/deploy-staging.sh
   deploy/backup.sh
   deploy/restore.sh
   deploy/backup-capacity.sh

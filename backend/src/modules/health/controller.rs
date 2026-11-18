@@ -37,7 +37,11 @@ pub async fn health(
                customer_sessions.mfa_verified_at,
                admin_sessions.mfa_verified_at,
                admin_mfa_factors.admin_user_id,
-               customer_mfa_factors.customer_account_id
+               customer_mfa_factors.customer_account_id,
+               payment_activation_grants.id,
+               portal_lookup_attempts.id,
+               admin_login_failures.id,
+               email_outbox.id
         FROM payments
         CROSS JOIN orders
         CROSS JOIN products
@@ -49,6 +53,10 @@ pub async fn health(
         CROSS JOIN admin_sessions
         CROSS JOIN admin_mfa_factors
         CROSS JOIN customer_mfa_factors
+        CROSS JOIN payment_activation_grants
+        CROSS JOIN portal_lookup_attempts
+        CROSS JOIN admin_login_failures
+        CROSS JOIN email_outbox
         LEFT JOIN product_reviews ON product_reviews.product_id = products.id
         LIMIT 0
         "#,

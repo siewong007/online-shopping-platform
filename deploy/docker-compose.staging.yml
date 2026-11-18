@@ -63,7 +63,7 @@ services:
       - database
 
   backend:
-    image: "online-shopping-backend:${IMAGE_TAG:?IMAGE_TAG is required}"
+    image: "online-shopping-staging-backend:${IMAGE_TAG:?IMAGE_TAG is required}"
     container_name: online-shopping-staging-backend
     restart: unless-stopped
     init: true
@@ -76,11 +76,14 @@ services:
       DATABASE_URL: "postgres://shop_admin:${POSTGRES_PASSWORD}@postgres:5432/online_shopping"
       ADMIN_SEED_PASSWORD: "${ADMIN_SEED_PASSWORD:?ADMIN_SEED_PASSWORD is required}"
       FRONTEND_ORIGIN: "https://staging.ekowayhardware.com"
+      PUBLIC_SITE_ORIGIN: "${PUBLIC_SITE_ORIGIN:-https://staging.ekowayhardware.com}"
       # HitPay production capability is intentionally disabled until PAYMENT_PRIMARY_PROVIDER
       # is explicitly set to hitpay and a separate production credential pair is added to the
       # root-owned secrets.env file. Blank values preserve the current provider behavior.
       PAYMENT_PRIMARY_PROVIDER: "${PAYMENT_PRIMARY_PROVIDER:-}"
       HITPAY_MODE: "${HITPAY_MODE:-sandbox}"
+      HITPAY_SANDBOX_API_KEY: "${HITPAY_SANDBOX_API_KEY:-}"
+      HITPAY_SANDBOX_WEBHOOK_SALT: "${HITPAY_SANDBOX_WEBHOOK_SALT:-}"
       HITPAY_PRODUCTION_API_KEY: "${HITPAY_PRODUCTION_API_KEY:-}"
       HITPAY_PRODUCTION_WEBHOOK_SALT: "${HITPAY_PRODUCTION_WEBHOOK_SALT:-}"
       HITPAY_PRODUCTION_API_URL: "https://api.hit-pay.com"
@@ -90,6 +93,8 @@ services:
       # in their default activation mode). TRUST_PROXY and RATE_LIMIT_PER_MINUTE fall back to the
       # same defaults the backend applies when unset (true / 120).
       SMTP_HOST: "${SMTP_HOST:-}"
+      SMTP_PORT: "${SMTP_PORT:-587}"
+      SMTP_USERNAME:
       SMTP_FROM_ADDRESS: "${SMTP_FROM_ADDRESS:-}"
       SMTP_PASSWORD: "${SMTP_PASSWORD:-}"
       MFA_ENCRYPTION_KEY: "${MFA_ENCRYPTION_KEY:-}"
@@ -120,7 +125,7 @@ services:
       - database
 
   frontend:
-    image: "online-shopping-frontend:${IMAGE_TAG:?IMAGE_TAG is required}"
+    image: "online-shopping-staging-frontend:${IMAGE_TAG:?IMAGE_TAG is required}"
     container_name: online-shopping-staging-frontend
     restart: unless-stopped
     init: true

@@ -463,6 +463,36 @@ export const translations = {
   "shop.recent.title": { en: "Recently viewed", bm: "Baru dilihat", zh: "最近浏览" },
   "shop.recent.clear": { en: "Clear", bm: "Padam", zh: "清除" },
   "shop.recent.add": { en: "Add", bm: "Tambah", zh: "加入" },
+  "shop.reviews.eyebrow": { en: "Verified feedback", bm: "Ulasan disahkan", zh: "已验证评价" },
+  "shop.reviews.title": { en: "Customer reviews", bm: "Ulasan pelanggan", zh: "顾客评价" },
+  "shop.reviews.summary": {
+    en: "{rating} / 5 from {n} verified reviews",
+    bm: "{rating} / 5 daripada {n} ulasan disahkan",
+    zh: "{n} 条已验证评价，平均 {rating} / 5"
+  },
+  "shop.reviews.verifiedTag": { en: "Verified purchase", bm: "Pembelian disahkan", zh: "已验证购买" },
+  "shop.reviews.writeAction": { en: "Write a review", bm: "Tulis ulasan", zh: "撰写评价" },
+  "shop.reviews.cancelAction": { en: "Cancel", bm: "Batal", zh: "取消" },
+  "shop.reviews.submitAction": { en: "Submit review", bm: "Hantar ulasan", zh: "提交评价" },
+  "shop.reviews.submitting": { en: "Submitting…", bm: "Menghantar…", zh: "正在提交…" },
+  "shop.reviews.ratingLabel": { en: "Rating", bm: "Penilaian", zh: "评分" },
+  "shop.reviews.starAria": { en: "{n} out of 5", bm: "{n} daripada 5", zh: "{n} / 5 分" },
+  "shop.reviews.bodyLabel": { en: "Your review", bm: "Ulasan anda", zh: "您的评价" },
+  "shop.reviews.bodyPlaceholder": {
+    en: "Share how the item performed on your job.",
+    bm: "Kongsi pengalaman anda menggunakan produk ini.",
+    zh: "分享您的实际使用体验。"
+  },
+  "shop.reviews.submittedBadge": {
+    en: "Verified review submitted",
+    bm: "Ulasan disahkan telah dihantar",
+    zh: "已提交已验证评价"
+  },
+  "shop.reviews.publishedNotice": {
+    en: "Thank you — your review is now shown below.",
+    bm: "Terima kasih — ulasan anda dipaparkan di bawah.",
+    zh: "感谢您的反馈，评价已显示在下方。"
+  },
 
   /* ---- storefront support chat ---- */
   "support.launcher": { en: "Chat with support", bm: "Chat dengan sokongan", zh: "联系支持" },

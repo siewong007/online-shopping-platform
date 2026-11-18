@@ -144,15 +144,15 @@ pub async fn fetch_live_admin_mfa_challenge(
     .map_err(Into::into)
 }
 
-pub async fn consume_admin_mfa_challenge(pool: &PgPool, challenge_id: uuid::Uuid) -> Result<()> {
-    sqlx::query(
+pub async fn consume_admin_mfa_challenge(pool: &PgPool, challenge_id: uuid::Uuid) -> Result<bool> {
+    let result = sqlx::query(
         "UPDATE admin_mfa_challenges SET consumed_at = now() WHERE id = $1 AND consumed_at IS NULL",
     )
     .bind(challenge_id)
     .execute(pool)
     .await?;
 
-    Ok(())
+    Ok(result.rows_affected() == 1)
 }
 
 /// Counts this failed attempt and reports whether the challenge has exhausted its budget.
@@ -163,7 +163,11 @@ pub async fn record_admin_mfa_challenge_attempt(
     let exhausted = sqlx::query_scalar::<_, bool>(
         r#"
         UPDATE admin_mfa_challenges
-        SET attempts = attempts + 1
+        SET attempts = LEAST(attempts + 1, 5),
+            consumed_at = CASE
+                WHEN attempts + 1 >= 5 THEN COALESCE(consumed_at, now())
+                ELSE consumed_at
+            END
         WHERE id = $1
         RETURNING attempts >= 5
         "#,
@@ -171,13 +175,6 @@ pub async fn record_admin_mfa_challenge_attempt(
     .bind(challenge_id)
     .fetch_one(pool)
     .await?;
-
-    if exhausted {
-        sqlx::query("UPDATE admin_mfa_challenges SET consumed_at = now() WHERE id = $1")
-            .bind(challenge_id)
-            .execute(pool)
-            .await?;
-    }
 
     Ok(exhausted)
 }

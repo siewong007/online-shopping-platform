@@ -137,7 +137,7 @@ async function readErrorPayload(response: Response): Promise<ErrorPayload> {
       const body = asRecord(await response.json());
       return {
         code: readString(body, "code", "errorCode"),
-        message: readString(body, "message"),
+        message: readString(body, "message", "error"),
         fieldErrors: body?.fieldErrors ?? body?.errors,
         requestId: readString(body, "requestId", "request_id", "correlationId", "correlation_id") ?? requestId
       };

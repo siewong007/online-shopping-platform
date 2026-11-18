@@ -182,7 +182,7 @@
       const val = entry[lang] != null ? entry[lang] : entry.en;
       el.innerHTML = val;
     });
-    document.documentElement.lang = lang === "zh" ? "zh-Hans" : lang;
+    document.documentElement.lang = lang === "zh" ? "zh-Hans" : lang === "bm" ? "ms" : lang;
     document.querySelectorAll(".lang-toggle [data-lang]").forEach((s) => {
       const active = s.getAttribute("data-lang") === lang;
       s.classList.toggle("on", active);

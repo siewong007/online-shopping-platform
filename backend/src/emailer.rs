@@ -164,7 +164,7 @@ impl Emailer {
             order.id,
             order.created_at,
             format_order_lines(order),
-            format_cents(order.total_cents),
+            format_cents(i64::from(order.total_cents)),
             order.customer_phone.trim(),
             COMPANY_NAME,
         );
@@ -187,7 +187,7 @@ impl Emailer {
         let body = format!(
             "Hi {},\n\nWe have received your payment of {} for order #{}. Thank you.\n\n{}\n",
             contact.customer_name,
-            format_cents(contact.total_cents),
+            format_cents(i64::from(contact.total_cents)),
             contact.order_id,
             COMPANY_NAME,
         );
@@ -210,7 +210,7 @@ impl Emailer {
         let body = format!(
             "Hi {},\n\nA refund of {} for order #{} has been processed. It may take a few business days to appear on your statement.\n\n{}\n",
             contact.customer_name,
-            format_cents(amount_cents),
+            format_cents(i64::from(amount_cents)),
             contact.order_id,
             COMPANY_NAME,
         );
@@ -254,26 +254,36 @@ struct OrderEmailContact {
 }
 
 async fn fetch_order_contact(pool: &PgPool, order_id: i32) -> Option<OrderEmailContact> {
-    sqlx::query_as::<_, (i32, String, String, i32)>(
+    let result = sqlx::query_as::<_, (i32, String, String, i32)>(
         r#"
-        SELECT id, customer_name, customer_email, total_cents
+        SELECT orders.id,
+               orders.customer_name,
+               orders.customer_email,
+               COALESCE(meta.total_cents, orders.subtotal_cents)
         FROM orders
-        WHERE id = $1
+        LEFT JOIN order_sales_meta meta ON meta.order_id = orders.id
+        WHERE orders.id = $1
         "#,
     )
     .bind(order_id)
     .fetch_optional(pool)
-    .await
-    .ok()
-    .flatten()
-    .map(
-        |(order_id, customer_name, customer_email, total_cents)| OrderEmailContact {
-            order_id,
-            customer_name,
-            customer_email,
-            total_cents,
-        },
-    )
+    .await;
+
+    match result {
+        Ok(Some((order_id, customer_name, customer_email, total_cents))) => {
+            Some(OrderEmailContact {
+                order_id,
+                customer_name,
+                customer_email,
+                total_cents,
+            })
+        }
+        Ok(None) => None,
+        Err(error) => {
+            tracing::warn!(%error, order_id, "failed to load order contact for email");
+            None
+        }
+    }
 }
 
 fn parse_mailbox(value: &str) -> Result<Mailbox> {
@@ -282,8 +292,10 @@ fn parse_mailbox(value: &str) -> Result<Mailbox> {
         .with_context(|| format!("\"{value}\" is not a valid email address"))
 }
 
-fn format_cents(cents: i32) -> String {
-    format!("RM {}.{:02}", cents / 100, cents % 100)
+fn format_cents(cents: i64) -> String {
+    let sign = if cents < 0 { "-" } else { "" };
+    let abs = cents.unsigned_abs();
+    format!("{sign}RM {}.{:02}", abs / 100, abs % 100)
 }
 
 fn format_order_lines(order: &crate::models::Order) -> String {
@@ -295,7 +307,7 @@ fn format_order_lines(order: &crate::models::Order) -> String {
                 "- {} x{} ({})",
                 item.product_name,
                 item.quantity,
-                format_cents(item.unit_price_cents * item.quantity)
+                format_cents(i64::from(item.unit_price_cents) * i64::from(item.quantity))
             )
         })
         .collect::<Vec<_>>()

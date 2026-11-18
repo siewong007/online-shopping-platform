@@ -78,7 +78,7 @@ export type CreatePromotionInput = {
   max_redemptions?: number | null;
 };
 
-export type UpdatePromotionInput = Partial<CreatePromotionInput>;
+export type UpdatePromotionInput = CreatePromotionInput;
 
 export type CreateVoucherInput = {
   code: string;
@@ -95,4 +95,4 @@ export type CreateVoucherInput = {
   is_public?: boolean;
 };
 
-export type UpdateVoucherInput = Partial<CreateVoucherInput>;
+export type UpdateVoucherInput = CreateVoucherInput;

@@ -20,7 +20,7 @@ export async function login(
     method: "POST",
     headers: { "Content-Type": "application/json", ...turnstileHeaders(turnstileToken) },
     body: JSON.stringify(input)
-  });
+  }, "public");
 
   if (hasToken(payload)) {
     setAuthToken(payload.token);
@@ -38,7 +38,7 @@ export async function verifyLogin(input: {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input)
-  });
+  }, "public");
 
   setAuthToken(payload.token);
   return payload;

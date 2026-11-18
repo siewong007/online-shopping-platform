@@ -24,7 +24,9 @@ export function fetchCustomerPortalProfiles(
 
 export function lookupCustomer(email: string, orderId: number): Promise<CustomerLookupPayload> {
   return requestJson<CustomerLookupPayload>(
-    `/api/customer-portal/lookup?email=${encodeURIComponent(email)}&order_id=${orderId}`
+    `/api/customer-portal/lookup?email=${encodeURIComponent(email)}&order_id=${orderId}`,
+    {},
+    "public"
   );
 }
 

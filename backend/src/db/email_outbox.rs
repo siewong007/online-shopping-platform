@@ -32,20 +32,26 @@ pub async fn enqueue_email(
 /// Claims the next batch of due emails. `FOR UPDATE SKIP LOCKED` keeps concurrent passes from
 /// double-sending; the locks live only for this transaction, the row status is what persists.
 pub async fn claim_due_emails(pool: &PgPool) -> Result<Vec<QueuedEmail>> {
-    let mut tx = pool.begin().await?;
     let rows = sqlx::query_as::<_, QueuedEmail>(
         r#"
-        SELECT id, recipient, subject, body
-        FROM email_outbox
-        WHERE status <> 'sent' AND attempts < 5 AND next_attempt_at <= now()
-        ORDER BY id
-        LIMIT 20
-        FOR UPDATE SKIP LOCKED
+        UPDATE email_outbox
+        SET status = 'sending',
+            next_attempt_at = now() + interval '5 minutes'
+        WHERE id IN (
+            SELECT id
+            FROM email_outbox
+            WHERE status NOT IN ('sent', 'failed')
+              AND attempts < 5
+              AND next_attempt_at <= now()
+            ORDER BY id
+            LIMIT 20
+            FOR UPDATE SKIP LOCKED
+        )
+        RETURNING id, recipient, subject, body
         "#,
     )
-    .fetch_all(&mut *tx)
+    .fetch_all(pool)
     .await?;
-    tx.commit().await?;
     Ok(rows)
 }
 
@@ -71,7 +77,7 @@ pub async fn mark_email_failed(pool: &PgPool, id: i64, error: &str) -> Result<St
         UPDATE email_outbox
         SET attempts = attempts + 1,
             last_error = $2,
-            status = CASE WHEN attempts + 1 >= 5 THEN 'failed' ELSE status END,
+            status = CASE WHEN attempts + 1 >= 5 THEN 'failed' ELSE 'queued' END,
             next_attempt_at = now() + make_interval(mins => (2 ^ (attempts + 1))::int)
         WHERE id = $1
         RETURNING status

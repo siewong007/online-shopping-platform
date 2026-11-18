@@ -18,6 +18,7 @@ export const ERROR_MESSAGE_MAP: Readonly<Record<string, ErrorCopy>> = Object.fre
   FORBIDDEN: { severity: "error", title: "Access denied", message: "You do not have permission to complete this action." },
   PERMISSION_DENIED: { severity: "error", title: "Access denied", message: "You do not have permission to complete this action." },
   NOT_FOUND: { severity: "warning", title: "Not found", message: "The requested item could not be found." },
+  GONE: { severity: "warning", title: "No longer available", message: "This feature or resource is no longer available." },
   CONFLICT: { severity: "warning", title: "Changes conflict", message: "This item has changed. Refresh and try again." },
   VALIDATION_ERROR: { severity: "warning", title: "Check the highlighted fields", message: "Some information needs your attention." },
   RATE_LIMITED: { severity: "warning", title: "Too many attempts", message: "Wait a moment before trying again.", retryable: true },
@@ -41,7 +42,7 @@ export const ERROR_MESSAGE_MAP: Readonly<Record<string, ErrorCopy>> = Object.fre
 
 const STATUS_CODES: Readonly<Record<number, string>> = Object.freeze({
   400: "BAD_REQUEST", 401: "UNAUTHORIZED", 403: "FORBIDDEN", 404: "NOT_FOUND",
-  405: "METHOD_NOT_ALLOWED", 408: "REQUEST_TIMEOUT", 409: "CONFLICT", 413: "PAYLOAD_TOO_LARGE",
+  405: "METHOD_NOT_ALLOWED", 408: "REQUEST_TIMEOUT", 409: "CONFLICT", 410: "GONE", 413: "PAYLOAD_TOO_LARGE",
   415: "UNSUPPORTED_MEDIA_TYPE", 422: "VALIDATION_ERROR", 429: "RATE_LIMITED",
   500: "SERVER_ERROR", 502: "BAD_GATEWAY", 503: "SERVER_UNAVAILABLE", 504: "GATEWAY_TIMEOUT"
 });

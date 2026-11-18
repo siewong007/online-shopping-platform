@@ -142,7 +142,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          files="deploy/deploy.sh deploy/docker-compose.prod.yml docker-compose.yml \
+          files="deploy/deploy.sh deploy/deploy-staging.sh deploy/docker-compose.prod.yml \
+            deploy/docker-compose.staging.yml docker-compose.yml \
             .github/workflows/ci.yml .github/workflows/pg-upgrade.yml \
             scripts/test-restore-atomicity.sh scripts/restore-proof.sh \
             scripts/test-restore-proof-negative.sh README.md CLAUDE.md"
@@ -154,6 +155,10 @@ jobs:
               changed=1
             fi
           done
+          if [[ -f "backend/src/modules/health/controller.rs" ]] && grep -q 'postgres_target: "${{ inputs.from_tag }}"' backend/src/modules/health/controller.rs; then
+            sed -i 's/postgres_target: "${{ inputs.from_tag }}"/postgres_target: "${{ inputs.target_tag }}"/g' backend/src/modules/health/controller.rs
+            changed=1
+          fi
           echo "changed=$changed" >> "$GITHUB_OUTPUT"
 
       - name: Commit and push the pin flip
