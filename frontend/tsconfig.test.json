@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "composite": true,
+    "noEmit": true,
+    "strict": true,
+    "types": ["bun"]
+  },
+  "include": ["src", "tests"]
+}

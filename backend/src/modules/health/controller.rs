@@ -10,7 +10,7 @@ const RUST_TARGET: &str = match option_env!("CARGO_PKG_RUST_VERSION") {
     Some(version) => version,
     None => "1.95.0",
 };
-const REACT_TARGET: &str = "19.2.7";
+const REACT_TARGET: &str = "19.3.1";
 
 pub async fn health(
     State(state): State<AppState>,
