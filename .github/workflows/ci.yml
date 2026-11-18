@@ -5,7 +5,7 @@ on:
   push:
     # joseph runs CI on push so the backup/restore safety suites gate the working branch
     # too; production deployment stays main-only (deploy.yml workflow_run gate).
-    branches: [main, joseph]
+    branches: [main, master, joseph]
 
 concurrency:
   group: ci-${{ github.ref }}
