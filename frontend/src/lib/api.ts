@@ -49,7 +49,18 @@ export {
   fetchMembership as fetchCustomerPortalMembership,
   fetchTransactions as fetchCustomerPortalTransactions
 } from "../modules/customer_portal/api/customerPortalApi";
-export { checkout, startPaymentCheckout } from "../modules/orders/api/orderApi";
+export { checkout, quoteCheckout, startPaymentCheckout } from "../modules/orders/api/orderApi";
+export {
+  createPromotion,
+  createVoucher,
+  deletePromotion,
+  deleteVoucher,
+  fetchPromotions,
+  fetchPublicOffers,
+  fetchVouchers,
+  updatePromotion,
+  updateVoucher
+} from "../modules/offers/api/offersApi";
 export {
   createAdminOrder,
   deleteAdminOrder,

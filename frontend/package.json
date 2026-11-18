@@ -10,7 +10,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"tests/**/*.{ts,tsx}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"tests/**/*.{ts,tsx}\"",
     "typecheck": "node ./node_modules/typescript/bin/tsc -b",

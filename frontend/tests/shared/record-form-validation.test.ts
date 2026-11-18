@@ -4,7 +4,7 @@ import {
   hasRecordFormErrors,
   type RecordFormField,
   validateRecordFields
-} from "../../src/shared/components/RecordModal";
+} from "../../src/shared/components/recordFormValidation";
 
 type Values = {
   active: boolean;

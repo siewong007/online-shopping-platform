@@ -7,13 +7,14 @@ import { ApiError } from "../../shared/api/http";
 import { buildProductJsonLd } from "../../shared/seo";
 import type { Product, ProductDetailPayload, StorefrontPayload } from "../../types";
 
-import { askPriceHref, formatWorklistPrice, PURCHASE_ENABLED } from "./helpers";
 import {
+  askPriceHref,
+  formatWorklistPrice,
   isGenericPlaceholderImage,
-  ListingProductMedia,
-  ListingStockLine,
-  productStockState
-} from "./listing";
+  productStockState,
+  PURCHASE_ENABLED
+} from "./helpers";
+import { ListingProductMedia, ListingStockLine } from "./listing";
 import { ProductReviewsSection } from "./ProductReviewsSection";
 
 type ProductDetailViewProps = {

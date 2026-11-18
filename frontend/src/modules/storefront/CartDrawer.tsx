@@ -21,11 +21,11 @@ import type { PublicOffersPayload } from "../offers/types";
 import {
   CARD_PAY_ENABLED,
   DELIVERY_CHECKOUT_ENABLED,
+  isGenericPlaceholderImage,
   pickupWhatsAppHref,
   PURCHASE_ENABLED,
   WA_COUNTER
 } from "./helpers";
-import { isGenericPlaceholderImage } from "./listing";
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';

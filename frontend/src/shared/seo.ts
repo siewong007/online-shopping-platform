@@ -1,6 +1,6 @@
 import { LEGAL_DOCUMENTS, type LegalSlug } from "../modules/legal/content";
 import type { View } from "../app/routing";
-import { isGenericPlaceholderImage } from "../modules/storefront/listing";
+import { isGenericPlaceholderImage } from "../modules/storefront/helpers";
 import type { Product } from "../types";
 
 export const SITE_ORIGIN = "https://ekowayhardware.com";

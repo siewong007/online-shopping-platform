@@ -3,17 +3,19 @@ import { type FormEvent, type KeyboardEvent, useEffect, useId, useRef, useState 
 import { fulfillmentLabel } from "../../app/utils";
 import { intlLocaleFor, useI18n } from "../../i18n/LanguageContext";
 import {
-  fetchCustomerMe,
-  fetchCustomerPortalBenefits,
-  fetchCustomerPortalMembership,
-  fetchCustomerPortalTransactions,
-  fetchCustomerSessions,
-  loginCustomer,
-  logoutCustomer,
-  logoutCustomerOtherSessions,
-  logoutCustomerSession,
-  registerCustomer
-} from "../../lib/api";
+  fetchMe as fetchCustomerMe,
+  fetchSessions as fetchCustomerSessions,
+  login as loginCustomer,
+  logout as logoutCustomer,
+  logoutOtherSessions as logoutCustomerOtherSessions,
+  logoutSession as logoutCustomerSession,
+  register as registerCustomer
+} from "./api/customerAuthApi";
+import {
+  fetchBenefits as fetchCustomerPortalBenefits,
+  fetchMembership as fetchCustomerPortalMembership,
+  fetchTransactions as fetchCustomerPortalTransactions
+} from "../customer_portal/api/customerPortalApi";
 import { ApiError, getCustomerAuthToken, setCustomerAuthToken } from "../../shared/api/http";
 import { TurnstileSlot, useTurnstile } from "../../shared/components/TurnstileSlot";
 import { currencyFromCents, formatRelativeTime } from "../../shared/formatters";

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useI18n } from "../../i18n/LanguageContext";
+import { isGenericPlaceholderImage, productStockState } from "./helpers";
 import type { JobLens, JobLensId } from "./jobLenses";
 import type { Category, Product, StorefrontPayload, StorefrontSort } from "../../types";
 import type { PublicOffersPayload } from "../offers/types";
@@ -35,48 +36,6 @@ export type StorefrontViewProps = {
   sortOption: StorefrontSort;
   storefront: StorefrontPayload;
 };
-
-export const PRICE_PRESETS: { minCents: number; maxCents: number | null }[] = [
-  { minCents: 0, maxCents: 5000 },
-  { minCents: 5000, maxCents: 15000 },
-  { minCents: 15000, maxCents: 50000 },
-  { minCents: 50000, maxCents: null }
-];
-
-export function productStockState(product: Product): "in" | "low" | "out" {
-  if (product.stock_quantity <= 0) return "out";
-  if (product.stock_quantity <= product.low_stock_threshold) return "low";
-  return "in";
-}
-
-export function isOnSale(product: Product): boolean {
-  return /sale/i.test(product.badge);
-}
-
-export const GENERIC_PLACEHOLDER_IMAGE_HOSTS = [
-  "dummyimage.com",
-  "lorempixel.com",
-  "loremflickr.com",
-  "picsum.photos",
-  "placehold.co",
-  "placehold.it",
-  "placeholder.com",
-  "via.placeholder.com"
-];
-
-export function isGenericPlaceholderImage(imageUrl: string): boolean {
-  const trimmedUrl = imageUrl.trim();
-  if (!trimmedUrl) return true;
-
-  try {
-    const hostname = new URL(trimmedUrl, window.location.origin).hostname.toLowerCase();
-    return GENERIC_PLACEHOLDER_IMAGE_HOSTS.some(
-      (placeholderHost) => hostname === placeholderHost || hostname.endsWith(`.${placeholderHost}`)
-    );
-  } catch {
-    return false;
-  }
-}
 
 export function IconClose() {
   return (
