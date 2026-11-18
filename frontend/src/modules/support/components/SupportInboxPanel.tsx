@@ -1,4 +1,4 @@
-import { type FormEvent, type KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
+import { type FormEvent, type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ApiError } from "../../../shared/api/http";
 import {
@@ -18,6 +18,14 @@ import type {
 const MAX_MESSAGE_LENGTH = 2_000;
 
 type ListLoadMode = "initial" | "refresh";
+type SupportStatusFilter = "all" | SupportConversationStatus;
+
+const supportStatusFilters: { label: string; value: SupportStatusFilter }[] = [
+  { label: "All", value: "all" },
+  { label: "Open", value: "open" },
+  { label: "Pending", value: "pending" },
+  { label: "Closed", value: "closed" }
+];
 
 type SupportInboxPanelProps = {
   canUpdate: boolean;
@@ -79,7 +87,8 @@ function appendThreadMessage(thread: SupportAdminConversationThread, message: Su
 }
 
 export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInboxPanelProps) {
-  const [status, setStatus] = useState<SupportConversationStatus>("open");
+  const [status, setStatus] = useState<SupportStatusFilter>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [conversations, setConversations] = useState<SupportInboxConversation[]>([]);
   const [nextCursor, setNextCursor] = useState<number | null>(null);
   const [selectedConversationId, setSelectedConversationId] = useState<number | null>(null);
@@ -144,7 +153,10 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
       }
 
       try {
-        const page = await fetchAdminSupportConversations({ limit: 50, status }, controller.signal);
+        const page = await fetchAdminSupportConversations(
+          { limit: 50, status: status === "all" ? undefined : status },
+          controller.signal
+        );
         if (controller.signal.aborted || !mountedRef.current) {
           return;
         }
@@ -196,7 +208,10 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
     setLoadMoreError("");
 
     try {
-      const page = await fetchAdminSupportConversations({ before: cursor, limit: 50, status }, controller.signal);
+      const page = await fetchAdminSupportConversations(
+        { before: cursor, limit: 50, status: status === "all" ? undefined : status },
+        controller.signal
+      );
       if (controller.signal.aborted || !mountedRef.current) {
         return;
       }
@@ -313,7 +328,7 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
     };
   }, [loadList, loadThread]);
 
-  const changeFilterStatus = (nextStatus: SupportConversationStatus) => {
+  const changeFilterStatus = (nextStatus: SupportStatusFilter) => {
     if (nextStatus === status) {
       return;
     }
@@ -435,6 +450,29 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
     }
   };
 
+  const filteredConversations = useMemo(() => {
+    const query = searchQuery.trim().toLocaleLowerCase();
+    return conversations.filter((conversation) => {
+      if (status !== "all" && conversation.status !== status) {
+        return false;
+      }
+      if (!query) {
+        return true;
+      }
+      return [
+        conversation.id,
+        `#${conversation.id}`,
+        conversation.guest_name,
+        conversation.guest_email,
+        conversation.last_message_preview ?? "",
+        conversation.assigned_admin_display_name ?? ""
+      ]
+        .join(" ")
+        .toLocaleLowerCase()
+        .includes(query);
+    });
+  }, [conversations, searchQuery, status]);
+
   const selectedThread = thread?.conversation.id === selectedConversationId ? thread : null;
   const selectedConversation = selectedThread?.conversation ?? conversations.find(
     (conversation) => conversation.id === selectedConversationId
@@ -448,17 +486,32 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
           <h3 id="support-inbox-title">Support inbox</h3>
           <p>Guest conversations are shown by their latest activity.</p>
         </div>
-        <label className="support-inbox__filter">
-          <span>Status</span>
-          <select
-            onChange={(event) => changeFilterStatus(event.target.value as SupportConversationStatus)}
-            value={status}
-          >
-            <option value="open">Open</option>
-            <option value="pending">Pending</option>
-            <option value="closed">Closed</option>
-          </select>
-        </label>
+        <div className="support-inbox__controls">
+          <input
+            aria-label="Search guest conversations"
+            className="support-inbox__search"
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search name, email, order #, or message..."
+            type="search"
+            value={searchQuery}
+          />
+          <div className="admin-filter-pills" role="group" aria-label="Filter conversations by status">
+            {supportStatusFilters.map((option) => {
+              const isActive = status === option.value;
+              return (
+                <button
+                  aria-pressed={isActive}
+                  className={`admin-filter-pill${isActive ? " is-active" : ""}`}
+                  key={option.value}
+                  onClick={() => changeFilterStatus(option.value)}
+                  type="button"
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </header>
 
       <div className="support-inbox__layout">
@@ -471,12 +524,18 @@ export function SupportInboxPanel({ canUpdate, currentAdminUserId }: SupportInbo
           ) : null}
 
           {isListLoading && conversations.length === 0 ? <p className="table-muted">Loading conversations…</p> : null}
-          {!isListLoading && conversations.length === 0 && !listError ? (
-            <p className="table-muted">No {status} conversations.</p>
+          {!isListLoading && filteredConversations.length === 0 && !listError ? (
+            <p className="table-muted">
+              {searchQuery.trim()
+                ? "No conversations match your search."
+                : status === "all"
+                  ? "No conversations yet."
+                  : `No ${status} conversations.`}
+            </p>
           ) : null}
 
           <div className="support-inbox__queue-list">
-            {conversations.map((conversation) => (
+            {filteredConversations.map((conversation) => (
               <button
                 aria-current={conversation.id === selectedConversationId ? "page" : undefined}
                 className={`support-inbox__queue-item ${conversation.id === selectedConversationId ? "is-selected" : ""}`}

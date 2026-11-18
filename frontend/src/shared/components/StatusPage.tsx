@@ -1,38 +1,56 @@
+import { useI18n } from "../../i18n/LanguageContext";
+import type { TranslationKey } from "../../i18n/translations";
+import type { LegalSlug } from "../../modules/legal/content";
+import { PublicSiteChrome } from "../../modules/storefront/ShopChrome";
+
 type StatusPageProps = {
   code: "403" | "404";
   onGoHome: () => void;
+  onOpenLegal?: (slug: LegalSlug) => void;
   onShop: () => void;
 };
 
-const copy = {
+const KEYS_BY_CODE: Record<
+  "403" | "404",
+  { eyebrow: TranslationKey; title: TranslationKey; message: TranslationKey }
+> = {
   "403": {
-    eyebrow: "Access restricted",
-    title: "You don't have permission to view this page.",
-    message: "Your account does not have the access needed for this area. If you think this is a mistake, contact an administrator."
+    eyebrow: "status.403.eyebrow",
+    title: "status.403.title",
+    message: "status.403.message"
   },
   "404": {
-    eyebrow: "Page not found",
-    title: "We couldn't find that page.",
-    message: "The address may be incorrect, or the page may have moved."
+    eyebrow: "status.404.eyebrow",
+    title: "status.404.title",
+    message: "status.404.message"
   }
-} as const;
+};
 
 /** Full-page recovery for an unavailable or inaccessible application route. */
-export function StatusPage({ code, onGoHome, onShop }: StatusPageProps) {
-  const content = copy[code];
+export function StatusPage({ code, onGoHome, onOpenLegal, onShop }: StatusPageProps) {
+  const { t } = useI18n();
+  const keys = KEYS_BY_CODE[code];
 
   return (
-    <main className="status-page" aria-labelledby="status-page-title">
-      <section className="status-page__card">
-        <p className="status-page__code" aria-hidden="true">{code}</p>
-        <p className="eyebrow">{content.eyebrow}</p>
-        <h1 id="status-page-title">{content.title}</h1>
-        <p className="status-page__message">{content.message}</p>
-        <div className="status-page__actions">
-          <button className="solid-button" onClick={onGoHome} type="button">Go to home</button>
-          <button className="outline-button" onClick={onShop} type="button">Browse the store</button>
-        </div>
-      </section>
-    </main>
+    <PublicSiteChrome onHome={onGoHome} onOpenLegal={onOpenLegal} onShop={onShop}>
+      <main className="status-page" aria-labelledby="status-page-title">
+        <section className="status-page__card">
+          <p className="status-page__code" aria-hidden="true">
+            {code}
+          </p>
+          <p className="eyebrow">{t(keys.eyebrow)}</p>
+          <h1 id="status-page-title">{t(keys.title)}</h1>
+          <p className="status-page__message">{t(keys.message)}</p>
+          <div className="status-page__actions">
+            <button className="solid-button" onClick={onGoHome} type="button">
+              {t("status.goHome")}
+            </button>
+            <button className="outline-button" onClick={onShop} type="button">
+              {t("status.browseStore")}
+            </button>
+          </div>
+        </section>
+      </main>
+    </PublicSiteChrome>
   );
 }

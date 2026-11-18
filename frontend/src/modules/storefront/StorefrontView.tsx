@@ -57,9 +57,29 @@ export function StorefrontView({
 }: StorefrontViewProps) {
   const { t } = useI18n();
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [minPriceDraft, setMinPriceDraft] = useState(() =>
+    minPriceCents == null ? "" : String(minPriceCents / 100)
+  );
+  const [maxPriceDraft, setMaxPriceDraft] = useState(() =>
+    maxPriceCents == null ? "" : String(maxPriceCents / 100)
+  );
   const filtersToggleRef = useRef<HTMLButtonElement | null>(null);
   const productFieldRef = useRef<HTMLElement | null>(null);
   const sidebarRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const next = minPriceCents == null ? "" : String(minPriceCents / 100);
+    setMinPriceDraft((current) =>
+      priceInputToCents(current) === minPriceCents ? current : next
+    );
+  }, [minPriceCents]);
+
+  useEffect(() => {
+    const next = maxPriceCents == null ? "" : String(maxPriceCents / 100);
+    setMaxPriceDraft((current) =>
+      priceInputToCents(current) === maxPriceCents ? current : next
+    );
+  }, [maxPriceCents]);
   // Host for the filter drawer portal. It carries `storefront-shell` because every
   // drawer/backdrop rule in styles.css is scoped under that class, and `display:
   // contents` keeps the host itself out of layout.
@@ -89,13 +109,14 @@ export function StorefrontView({
   useEffect(() => {
     if (!isFiltersOpen) return;
 
-    const sidebar = sidebarRef.current;
-    const focusables = Array.from(
-      sidebar?.querySelectorAll<HTMLElement>(
-        "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])"
-      ) ?? []
-    ).filter((element) => element.offsetParent !== null);
-    focusables[0]?.focus();
+    const getFocusables = () =>
+      Array.from(
+        sidebarRef.current?.querySelectorAll<HTMLElement>(
+          "button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex='-1'])"
+        ) ?? []
+      ).filter((element) => element.offsetParent !== null);
+
+    getFocusables()[0]?.focus();
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -103,13 +124,21 @@ export function StorefrontView({
         return;
       }
 
-      if (event.key !== "Tab" || focusables.length === 0) return;
+      if (event.key !== "Tab") return;
+      const focusables = getFocusables();
+      if (focusables.length === 0) return;
       const first = focusables[0];
       const last = focusables[focusables.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
+      const active = document.activeElement as HTMLElement | null;
+      if (!active || !sidebarRef.current?.contains(active)) {
+        event.preventDefault();
+        first.focus();
+        return;
+      }
+      if (event.shiftKey && active === first) {
         event.preventDefault();
         last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
+      } else if (!event.shiftKey && active === last) {
         event.preventDefault();
         first.focus();
       }
@@ -239,6 +268,7 @@ export function StorefrontView({
             </span>
             <div className="worklist-toolbar__controls">
               <button
+                aria-controls="worklist-filter-drawer"
                 aria-expanded={isFiltersOpen}
                 className="worklist-control"
                 onClick={() => setIsFiltersOpen(true)}
@@ -246,7 +276,7 @@ export function StorefrontView({
                 type="button"
               >
                 {t("shop.filters.toggle")}
-                {activeFilterCount > 0 ? <span>{activeFilterCount}</span> : null}
+                {activeFilterCount > 0 ? <> <span>{activeFilterCount}</span></> : null}
               </button>
               <label className="worklist-sort">
                 <span>{t("shop.toolbar.sort")}:</span>
@@ -268,7 +298,14 @@ export function StorefrontView({
                 onClick={() => setIsFiltersOpen(false)}
                 type="button"
               />
-              <aside className="worklist-filter-drawer" aria-label={t("shop.filters.title")} aria-modal="true" role="dialog" ref={sidebarRef}>
+              <aside
+                id="worklist-filter-drawer"
+                className="worklist-filter-drawer"
+                aria-label={t("shop.filters.title")}
+                aria-modal="true"
+                role="dialog"
+                ref={sidebarRef}
+              >
                 <div className="worklist-filter-drawer__header">
                   <h2>{t("shop.filters.title")}</h2>
                   <button aria-label={t("shop.filters.close")} onClick={() => setIsFiltersOpen(false)} type="button">
@@ -334,22 +371,30 @@ export function StorefrontView({
                       <span>{t("shop.filter.min")}</span>
                       <input
                         min="0"
-                        onChange={(event) => onChangeMinPrice(priceInputToCents(event.target.value))}
+                        onBlur={() => setMinPriceDraft(minPriceCents == null ? "" : String(minPriceCents / 100))}
+                        onChange={(event) => {
+                          setMinPriceDraft(event.target.value);
+                          onChangeMinPrice(priceInputToCents(event.target.value));
+                        }}
                         placeholder="RM 0"
                         step="0.01"
                         type="number"
-                        value={minPriceCents == null ? "" : minPriceCents / 100}
+                        value={minPriceDraft}
                       />
                     </label>
                     <label>
                       <span>{t("shop.filter.max")}</span>
                       <input
                         min="0"
-                        onChange={(event) => onChangeMaxPrice(priceInputToCents(event.target.value))}
-                        placeholder="Any"
+                        onBlur={() => setMaxPriceDraft(maxPriceCents == null ? "" : String(maxPriceCents / 100))}
+                        onChange={(event) => {
+                          setMaxPriceDraft(event.target.value);
+                          onChangeMaxPrice(priceInputToCents(event.target.value));
+                        }}
+                        placeholder={t("shop.filter.any")}
                         step="0.01"
                         type="number"
-                        value={maxPriceCents == null ? "" : maxPriceCents / 100}
+                        value={maxPriceDraft}
                       />
                     </label>
                   </div>

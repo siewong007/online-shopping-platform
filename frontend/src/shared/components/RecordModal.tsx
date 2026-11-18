@@ -1,10 +1,11 @@
-import { type FormEvent, type ReactNode, useEffect, useId, useState } from "react";
+import { type FormEvent, type ReactNode, useEffect, useId, useRef, useState } from "react";
 
 type RecordModalTone = "danger" | "live" | "warning";
 
 type RecordModalProps = {
   children: ReactNode;
   eyebrow: string;
+  isBusy?: boolean;
   isOpen: boolean;
   onClose: () => void;
   size?: "standard" | "wide";
@@ -33,6 +34,7 @@ export type RecordFormErrors<TValues extends object> = Partial<
 > & Record<string, string | null | undefined>;
 
 export type RecordFormField<TValues extends object> = {
+  autoComplete?: string;
   description?: string;
   disabled?: boolean;
   helpText?: string;
@@ -54,6 +56,7 @@ export type RecordFormField<TValues extends object> = {
 
 type RecordFormProps<TValues extends object> = {
   cancelLabel?: string;
+  children?: ReactNode;
   disabled?: boolean;
   feedback?: ReactNode;
   fields: RecordFormField<TValues>[];
@@ -155,6 +158,7 @@ function idSafeName(name: string): string {
 export function RecordModal({
   children,
   eyebrow,
+  isBusy = false,
   isOpen,
   onClose,
   size = "standard",
@@ -163,21 +167,80 @@ export function RecordModal({
   title
 }: RecordModalProps) {
   const titleId = useId();
+  const dialogRef = useRef<HTMLElement | null>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  const isBusyRef = useRef(isBusy);
+
+  onCloseRef.current = onClose;
+  isBusyRef.current = isBusy;
 
   useEffect(() => {
     if (!isOpen) {
       return;
     }
 
+    openerRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const getFocusables = () =>
+      Array.from(
+        dialogRef.current?.querySelectorAll<HTMLElement>(
+          "button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex='-1'])"
+        ) ?? []
+      ).filter((element) => element.offsetParent !== null);
+
+    const frameId = window.requestAnimationFrame(() => {
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+      const firstInput = dialog.querySelector<HTMLElement>(
+        "input:not(:disabled):not([type='hidden']), select:not(:disabled), textarea:not(:disabled)"
+      );
+      (firstInput ?? getFocusables()[0] ?? dialog).focus();
+    });
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        onClose();
+        if (!isBusyRef.current) {
+          onCloseRef.current();
+        }
+        return;
+      }
+
+      if (event.key !== "Tab") return;
+      const focusables = getFocusables();
+      if (focusables.length === 0) {
+        event.preventDefault();
+        dialogRef.current?.focus();
+        return;
+      }
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      if (!active || !dialogRef.current?.contains(active)) {
+        event.preventDefault();
+        first.focus();
+      } else if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      if (openerRef.current?.isConnected) {
+        openerRef.current.focus();
+      }
+    };
+  }, [isOpen]);
 
   if (!isOpen) {
     return null;
@@ -185,12 +248,20 @@ export function RecordModal({
 
   return (
     <div className="record-modal-overlay">
-      <button className="record-modal-scrim" aria-label="Close record window" onClick={onClose} />
+      <div
+        className="record-modal-scrim"
+        aria-hidden="true"
+        onClick={() => {
+          if (!isBusy) onClose();
+        }}
+      />
       <section
+        ref={dialogRef}
         aria-labelledby={titleId}
         aria-modal="true"
         className={`record-modal-dialog record-modal-${size}`}
         role="dialog"
+        tabIndex={-1}
       >
         <header className="record-modal-head">
           <div>
@@ -201,7 +272,13 @@ export function RecordModal({
             {statusLabel ? (
               <span className={`status-pill ${statusTone ?? ""}`}>{statusLabel}</span>
             ) : null}
-            <button className="record-modal-close" aria-label="Close record window" onClick={onClose}>
+            <button
+              className="record-modal-close"
+              aria-label="Close record window"
+              disabled={isBusy}
+              onClick={onClose}
+              type="button"
+            >
               &times;
             </button>
           </div>
@@ -214,6 +291,7 @@ export function RecordModal({
 
 export function RecordForm<TValues extends object>({
   cancelLabel = "Cancel",
+  children,
   disabled = false,
   feedback,
   fields,
@@ -227,6 +305,7 @@ export function RecordForm<TValues extends object>({
 }: RecordFormProps<TValues>) {
   const formId = useId().replace(/:/g, "");
   const [errors, setErrors] = useState<RecordFormErrors<TValues>>({});
+  const [revealedPasswords, setRevealedPasswords] = useState<Record<string, boolean>>({});
 
   const fieldId = (name: keyof TValues & string) => `${formId}-${idSafeName(name)}`;
 
@@ -276,7 +355,17 @@ export function RecordForm<TValues extends object>({
           <ul>
             {fieldErrorEntries.map(({ field, message }) => (
               <li key={field.name}>
-                <a href={`#${fieldId(field.name)}`}>{field.label}: {message}</a>
+                <a
+                  href={`#${fieldId(field.name)}`}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    const target = document.getElementById(fieldId(field.name));
+                    target?.focus();
+                    target?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }}
+                >
+                  {field.label}: {message}
+                </a>
               </li>
             ))}
             {unmatchedErrorEntries.map(({ name, message }) => (
@@ -381,10 +470,44 @@ export function RecordForm<TValues extends object>({
                   rows={field.rows ?? 4}
                   value={typeof value === "string" ? value : ""}
                 />
+              ) : control === "password" ? (
+                <div className="record-password-wrap">
+                  <input
+                    aria-describedby={describedBy}
+                    aria-invalid={Boolean(error)}
+                    autoComplete={field.autoComplete}
+                    disabled={fieldDisabled}
+                    id={controlId}
+                    maxLength={field.maxLength}
+                    minLength={field.minLength}
+                    name={field.name}
+                    onChange={(event) => setFieldValue(field.name, event.target.value)}
+                    placeholder={field.placeholder}
+                    required={field.required}
+                    type={revealedPasswords[field.name] ? "text" : "password"}
+                    value={typeof value === "string" ? value : ""}
+                  />
+                  <button
+                    aria-label={revealedPasswords[field.name] ? `Hide ${field.label}` : `Show ${field.label}`}
+                    aria-pressed={Boolean(revealedPasswords[field.name])}
+                    className="record-password-toggle"
+                    disabled={fieldDisabled}
+                    onClick={() =>
+                      setRevealedPasswords((current) => ({
+                        ...current,
+                        [field.name]: !current[field.name]
+                      }))
+                    }
+                    type="button"
+                  >
+                    {revealedPasswords[field.name] ? "Hide" : "Show"}
+                  </button>
+                </div>
               ) : (
                 <input
                   aria-describedby={describedBy}
                   aria-invalid={Boolean(error)}
+                  autoComplete={field.autoComplete}
                   disabled={fieldDisabled}
                   id={controlId}
                   max={field.max}
@@ -407,9 +530,11 @@ export function RecordForm<TValues extends object>({
         })}
       </div>
 
+      {children}
+
       {feedback}
 
-      <div className="form-actions split-actions">
+      <div className="form-actions split-actions record-form-actions-sticky">
         <button className="solid-button" disabled={controlsDisabled} type="submit">
           {isSubmitting ? "Saving..." : submitLabel}
         </button>

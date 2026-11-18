@@ -810,7 +810,277 @@ export const translations = {
     en: "Showing {shown} of {total} products",
     bm: "Memaparkan {shown} daripada {total} produk",
     zh: "已显示 {total} 件中的 {shown} 件"
-  }
+  },
+
+  /* ---- navigation & shared controls ---- */
+  "nav.language": { en: "Language", bm: "Bahasa", zh: "语言" },
+  "shop.filter.any": { en: "Any", bm: "Sebarang", zh: "不限" },
+  "shop.cart.added": {
+    en: "Added {n} × {product} to cart",
+    bm: "Ditambah {n} × {product} ke troli",
+    zh: "已将 {n} × {product} 加入购物车"
+  },
+  "shop.cart.maxStock": {
+    en: "Maximum available stock reached for {product}",
+    bm: "Had stok maksimum dicapai untuk {product}",
+    zh: "{product} 已达可用库存上限"
+  },
+  "shop.paymentReturn.title": {
+    en: "Payment verification in progress",
+    bm: "Pengesahan pembayaran sedang berjalan",
+    zh: "正在核实付款状态"
+  },
+  "shop.paymentReturn.messageOrder": {
+    en: "Order #{id} has returned from the payment page. We are confirming it with the payment provider; the browser return itself does not mark it paid.",
+    bm: "Pesanan #{id} telah kembali daripada halaman pembayaran. Kami sedang mengesahkannya dengan penyedia pembayaran; pulangan pelayar sahaja belum menandakannya dibayar.",
+    zh: "订单 #{id} 已从支付页面返回。我们正在向支付服务商确认；仅返回页面尚不代表付款已完成。"
+  },
+  "shop.paymentReturn.messageGeneric": {
+    en: "We are securely confirming your payment. The browser return itself does not mark an order paid.",
+    bm: "Kami sedang mengesahkan pembayaran anda secara selamat. Pulangan pelayar sahaja belum menandakan pesanan dibayar.",
+    zh: "我们正在安全确认您的付款。仅返回页面尚不代表订单已付款。"
+  },
+  "shop.paymentReturn.viewOrders": {
+    en: "View orders",
+    bm: "Lihat pesanan",
+    zh: "查看订单"
+  },
+  "turnstile.error": {
+    en: "Security verification could not load. Please retry before submitting.",
+    bm: "Pengesahan keselamatan gagal dimuatkan. Sila cuba semula sebelum menghantar.",
+    zh: "安全验证未能加载，请重试后再提交。"
+  },
+  "turnstile.retry": {
+    en: "Retry verification",
+    bm: "Cuba semula pengesahan",
+    zh: "重试验证"
+  },
+
+  /* ---- cart drawer & checkout ---- */
+  "shop.cartd.dialogLabel": { en: "Shopping cart", bm: "Troli beli-belah", zh: "购物车" },
+  "shop.cartd.closeAria": { en: "Close cart", bm: "Tutup troli", zh: "关闭购物车" },
+  "shop.cartd.checkoutTitle": { en: "Checkout", bm: "Daftar keluar", zh: "结账" },
+  "shop.cartd.securePayment": { en: "Secure payment", bm: "Pembayaran selamat", zh: "安全支付" },
+  "shop.cartd.redirectingTitle": {
+    en: "Opening payment page…",
+    bm: "Membuka halaman pembayaran…",
+    zh: "正在打开付款页面…"
+  },
+  "shop.cartd.redirectingBody": {
+    en: "Please complete your payment on the provider page. Do not close this tab until redirection finishes.",
+    bm: "Sila lengkapkan pembayaran anda di halaman penyedia. Jangan tutup tab ini sehingga ubah hala selesai.",
+    zh: "请在支付页面完成付款，跳转完成前请勿关闭此标签页。"
+  },
+  "shop.cartd.browseProducts": { en: "Browse products", bm: "Layari produk", zh: "浏览商品" },
+  "shop.cartd.each": { en: "{price} each", bm: "{price} setiap satu", zh: "每件 {price}" },
+  "shop.cartd.stockLimit": { en: "Max {n} in stock", bm: "Maksimum {n} dalam stok", zh: "库存上限 {n} 件" },
+  "shop.cartd.dealsVouchers": { en: "Deals & vouchers", bm: "Tawaran & baucar", zh: "优惠与优惠券" },
+  "shop.cartd.noPromotion": { en: "No promotion selected", bm: "Tiada promosi dipilih", zh: "未选择促销" },
+  "shop.cartd.removePromotion": { en: "Clear", bm: "Kosongkan", zh: "清除" },
+  "shop.cartd.voucherPlaceholder": { en: "Enter voucher code", bm: "Masukkan kod baucar", zh: "输入优惠码" },
+  "shop.cartd.applyVoucher": { en: "Apply", bm: "Guna", zh: "应用" },
+  "shop.cartd.removeVoucher": { en: "Remove", bm: "Buang", zh: "移除" },
+  "shop.cartd.publicVouchers": { en: "Available vouchers", bm: "Baucar tersedia", zh: "可用优惠券" },
+  "shop.cartd.updatingTotal": { en: "Updating checkout total…", bm: "Mengemas kini jumlah…", zh: "正在更新总额…" },
+  "shop.cartd.proceedCheckout": { en: "Proceed to Checkout", bm: "Teruskan ke Pembayaran", zh: "去结账" },
+  "shop.cartd.pickupStoreNote": {
+    en: "Free collection at Lorong Salim 17, Sibu.",
+    bm: "Ambilan percuma di Lorong Salim 17, Sibu.",
+    zh: "免费到诗巫 Lorong Salim 17 门市自取。"
+  },
+  "shop.cartd.addressHint": {
+    en: "Complete recipient and Sarawak delivery address to calculate shipping options.",
+    bm: "Lengkapkan maklumat penerima dan alamat di Sarawak untuk mengira pilihan penghantaran.",
+    zh: "请填写完整收件人及砂拉越收货地址以计算运费选项。"
+  },
+  "shop.cartd.retryQuote": { en: "Retry quote", bm: "Cuba kira semula", zh: "重新报价" },
+  "shop.cartd.daysEstimate": { en: "{min}-{max} days", bm: "{min}-{max} hari", zh: "{min}-{max} 天" },
+  "shop.cartd.backToCart": { en: "Back to cart", bm: "Kembali ke troli", zh: "返回购物车" },
+  "shop.cartd.placingOrder": { en: "Placing order…", bm: "Memproses pesanan…", zh: "正在提交订单…" },
+  "shop.cartd.placeOrder": { en: "Place Order", bm: "Buat Pesanan", zh: "提交订单" },
+  "shop.cartd.discount": { en: "Discount", bm: "Diskaun", zh: "折扣" },
+  "shop.cartd.tax": { en: "Tax", bm: "Cukai", zh: "税费" },
+  "shop.cartd.shipping": { en: "Shipping", bm: "Penghantaran", zh: "运费" },
+  "shop.cartd.total": { en: "Total", bm: "Jumlah", zh: "总计" },
+  "shop.cartd.orderItems": { en: "Order items ({n})", bm: "Item pesanan ({n})", zh: "订单商品 ({n})" },
+
+  /* ---- account drawer ---- */
+  "account.dialogLabel": { en: "My account", bm: "Akaun saya", zh: "我的账户" },
+  "account.title": { en: "My Account", bm: "Akaun Saya", zh: "我的账户" },
+  "account.close": { en: "Close account drawer", bm: "Tutup panel akaun", zh: "关闭账户面板" },
+  "account.restoring": { en: "Checking your session…", bm: "Menyemak sesi anda…", zh: "正在验证您的登录状态…" },
+  "account.signIn": { en: "Sign in", bm: "Log masuk", zh: "登录" },
+  "account.register": { en: "Create account", bm: "Daftar akaun", zh: "注册账户" },
+  "account.email": { en: "Email", bm: "E-mel", zh: "电子邮箱" },
+  "account.password": { en: "Password", bm: "Kata laluan", zh: "密码" },
+  "account.passwordHint": {
+    en: "Minimum 8 characters.",
+    bm: "Sekurang-kurangnya 8 aksara.",
+    zh: "至少 8 个字符。"
+  },
+  "account.displayName": { en: "Display name", bm: "Nama paparan", zh: "显示名称" },
+  "account.displayNamePlaceholder": { en: "e.g. Wei Ming", bm: "cth. Ahmad", zh: "例如：伟明" },
+  "account.showPassword": { en: "Show", bm: "Tunjuk", zh: "显示" },
+  "account.hidePassword": { en: "Hide", bm: "Sembunyi", zh: "隐藏" },
+  "account.signingIn": { en: "Signing in…", bm: "Sedang log masuk…", zh: "正在登录…" },
+  "account.creatingAccount": { en: "Creating account…", bm: "Mencipta akaun…", zh: "正在创建账户…" },
+  "account.createAccount": { en: "Create account", bm: "Daftar akaun", zh: "创建账户" },
+  "account.signOut": { en: "Log out", bm: "Log keluar", zh: "退出登录" },
+  "account.memberLabel": { en: "{tier} member", bm: "Ahli {tier}", zh: "{tier} 会员" },
+  "account.pointsLabel": { en: "{n} pts", bm: "{n} mata", zh: "{n} 积分" },
+  "account.nextTierLeft": {
+    en: "{amount} more to reach {tier}",
+    bm: "Tambah {amount} lagi untuk capai {tier}",
+    zh: "再消费 {amount} 即可升级至 {tier}"
+  },
+  "account.topTierReached": {
+    en: "Highest membership tier reached",
+    bm: "Tahap keahlian tertinggi dicapai",
+    zh: "已达到最高会员等级"
+  },
+  "account.stat.points": { en: "Points", bm: "Mata ganjaran", zh: "积分" },
+  "account.stat.lifetime": { en: "Lifetime spend", bm: "Jumlah belanja", zh: "累计消费" },
+  "account.stat.orders": { en: "Orders", bm: "Pesanan", zh: "订单数" },
+  "account.stat.lastOrder": { en: "Last purchase", bm: "Pembelian terakhir", zh: "最近下单" },
+  "account.tab.transactions": { en: "Orders", bm: "Pesanan", zh: "订单" },
+  "account.tab.membership": { en: "Membership", bm: "Keahlian", zh: "会员" },
+  "account.tab.benefits": { en: "Benefits", bm: "Manfaat", zh: "礼遇" },
+  "account.tab.sessions": { en: "Sessions", bm: "Sesi", zh: "登录设备" },
+  "account.loadingTransactions": { en: "Loading your orders…", bm: "Memuatkan pesanan anda…", zh: "正在加载订单…" },
+  "account.errorTransactions": {
+    en: "Unable to load your orders right now.",
+    bm: "Tidak dapat memuatkan pesanan anda buat masa ini.",
+    zh: "暂时无法加载您的订单。"
+  },
+  "account.noTransactions": {
+    en: "No orders linked to this account yet.",
+    bm: "Tiada pesanan dipautkan pada akaun ini lagi.",
+    zh: "此账户暂无订单记录。"
+  },
+  "account.retry": { en: "Retry", bm: "Cuba semula", zh: "重试" },
+  "account.orderNumber": { en: "Order #{id}", bm: "Pesanan #{id}", zh: "订单 #{id}" },
+  "account.deliveryProgress": { en: "Fulfillment progress", bm: "Status pesanan", zh: "履约进度" },
+  "account.paymentMethod": { en: "Payment", bm: "Pembayaran", zh: "付款方式" },
+  "account.offerLabel": { en: "Offer", bm: "Tawaran", zh: "优惠" },
+  "account.prevPage": { en: "Previous", bm: "Sebelumnya", zh: "上一页" },
+  "account.nextPage": { en: "Next", bm: "Seterusnya", zh: "下一页" },
+  "account.loadingMembership": { en: "Loading membership…", bm: "Memuatkan keahlian…", zh: "正在加载会员信息…" },
+  "account.errorMembership": {
+    en: "Unable to load membership details right now.",
+    bm: "Tidak dapat memuatkan butiran keahlian buat masa ini.",
+    zh: "暂时无法加载会员详情。"
+  },
+  "account.membershipTier": { en: "Current tier", bm: "Tahap semasa", zh: "当前等级" },
+  "account.discountRate": { en: "Member discount", bm: "Diskaun ahli", zh: "会员折扣" },
+  "account.tierSince": { en: "Tier updated", bm: "Dikemas kini", zh: "等级更新时间" },
+  "account.tierProgress": { en: "Tier progress", bm: "Kemajuan tahap", zh: "升级进度" },
+  "account.maxTierBadge": { en: "Top tier", bm: "Tahap tertinggi", zh: "最高等级" },
+  "account.loadingBenefits": { en: "Loading benefits…", bm: "Memuatkan manfaat…", zh: "正在加载礼遇…" },
+  "account.errorBenefits": {
+    en: "Unable to load benefits right now.",
+    bm: "Tidak dapat memuatkan manfaat buat masa ini.",
+    zh: "暂时无法加载礼遇信息。"
+  },
+  "account.availableOffers": { en: "Available vouchers & promos", bm: "Baucar & promosi tersedia", zh: "可用优惠券与促销" },
+  "account.noActiveOffers": {
+    en: "No public vouchers are active right now.",
+    bm: "Tiada baucar awam yang aktif buat masa ini.",
+    zh: "目前没有可用的公开优惠券。"
+  },
+  "account.copyCode": { en: "Copy", bm: "Salin", zh: "复制" },
+  "account.copiedCode": { en: "Copied", bm: "Disalin", zh: "已复制" },
+  "account.applyInCart": { en: "Use in cart", bm: "Guna di troli", zh: "用于购物车" },
+  "account.tierLadder": { en: "Membership tiers", bm: "Tahap keahlian", zh: "会员等级阶梯" },
+  "account.currentTierBadge": { en: "Current", bm: "Semasa", zh: "当前" },
+  "account.minSpend": { en: "Min. spend {amount}", bm: "Belanja min. {amount}", zh: "最低消费 {amount}" },
+  "account.discountPct": { en: "{pct}% off", bm: "Diskaun {pct}%", zh: "享 {pct}% 折扣" },
+  "account.loadingSessions": { en: "Loading active sessions…", bm: "Memuatkan sesi aktif…", zh: "正在加载活跃设备…" },
+  "account.errorSessions": {
+    en: "Unable to load your sessions right now.",
+    bm: "Tidak dapat memuatkan sesi anda buat masa ini.",
+    zh: "暂时无法加载登录设备。"
+  },
+  "account.noSessions": { en: "No active sessions found.", bm: "Tiada sesi aktif ditemui.", zh: "未找到活跃会话。" },
+  "account.sessionsHint": {
+    en: "Signed-in browsers and devices for this account.",
+    bm: "Pelayar dan peranti yang sedang log masuk untuk akaun ini.",
+    zh: "当前登录此账户的浏览器和设备。"
+  },
+  "account.revokeOthers": { en: "Sign out other devices", bm: "Log keluar peranti lain", zh: "退出其他设备" },
+  "account.revoking": { en: "Signing out…", bm: "Melog keluar…", zh: "正在退出…" },
+  "account.confirmRevokeTitle": {
+    en: "Sign out all other active sessions?",
+    bm: "Log keluar semua sesi aktif yang lain?",
+    zh: "确定退出所有其他活跃设备吗？"
+  },
+  "account.confirmRevokeAction": { en: "Confirm sign out", bm: "Sahkan log keluar", zh: "确认退出" },
+  "account.cancel": { en: "Cancel", bm: "Batal", zh: "取消" },
+  "account.currentDevice": { en: "This device", bm: "Peranti ini", zh: "当前设备" },
+  "account.lastSeen": { en: "Active {time}", bm: "Aktif {time}", zh: "活跃于 {time}" },
+  "account.revokeSession": { en: "Sign out", bm: "Log keluar", zh: "移除" },
+  "account.unknownDevice": { en: "Unknown device", bm: "Peranti tidak dikenali", zh: "未知设备" },
+
+  /* ---- legal & status pages ---- */
+  "legal.lastUpdated": { en: "Last updated {date}", bm: "Dikemas kini {date}", zh: "最后更新：{date}" },
+  "legal.backToStore": { en: "Back to the store", bm: "Kembali ke kedai", zh: "返回商店" },
+  "legal.goHome": { en: "Go to home", bm: "Ke halaman utama", zh: "返回首页" },
+  "legal.navLabel": { en: "Store policies", bm: "Polisi kedai", zh: "门店条款与政策" },
+  "status.403.eyebrow": { en: "Access restricted", bm: "Akses dihadkan", zh: "访问受限" },
+  "status.403.title": {
+    en: "You don't have permission to view this page.",
+    bm: "Anda tidak mempunyai kebenaran untuk melihat halaman ini.",
+    zh: "您没有权限查看此页面。"
+  },
+  "status.403.message": {
+    en: "Your account does not have the access needed for this area. If you think this is a mistake, contact an administrator.",
+    bm: "Akaun anda tidak mempunyai akses yang diperlukan untuk bahagian ini. Jika anda rasa ini kesilapan, hubungi pentadbir.",
+    zh: "您的账户没有访问此区域的权限。如有疑问，请联系管理员。"
+  },
+  "status.404.eyebrow": { en: "Page not found", bm: "Halaman tidak ditemui", zh: "找不到页面" },
+  "status.404.title": {
+    en: "We couldn't find that page.",
+    bm: "Kami tidak dapat menemui halaman tersebut.",
+    zh: "找不到您要访问的页面。"
+  },
+  "status.404.message": {
+    en: "The address may be incorrect, or the page may have moved.",
+    bm: "Alamat mungkin salah, atau halaman ini telah dipindahkan.",
+    zh: "网址可能不正确，或该页面已移动。"
+  },
+  "status.goHome": { en: "Go to home", bm: "Ke halaman utama", zh: "返回首页" },
+  "status.browseStore": { en: "Browse the store", bm: "Layari kedai", zh: "浏览商店" },
+
+  /* ---- support chat additions ---- */
+  "support.guestDetails": { en: "Guest details", bm: "Maklumat tetamu", zh: "访客资料" },
+  "support.orderLookup": { en: "Guest order lookup", bm: "Semakan pesanan tetamu", zh: "访客订单查询" },
+  "support.orderNumberOptional": {
+    en: "Order number (optional)",
+    bm: "Nombor pesanan (pilihan)",
+    zh: "订单号（选填）"
+  },
+  "support.orderNumberPlaceholder": { en: "e.g. 1024", bm: "cth. 1024", zh: "例如 1024" },
+  "support.orderLookupHint": {
+    en: "Enter an order number and our support team will look into it in this chat.",
+    bm: "Masukkan nombor pesanan dan pasukan sokongan kami akan menyemaknya dalam chat ini.",
+    zh: "输入订单号，我们的客服团队将在对话中为您查询。"
+  },
+  "support.error.turnstilePending": {
+    en: "Please complete the security check before sending.",
+    bm: "Sila lengkapkan pengesahan keselamatan sebelum menghantar.",
+    zh: "发送前请先完成安全验证。"
+  },
+
+  /* ---- landing extras ---- */
+  "landing.skipToContent": { en: "Skip to content", bm: "Langkau ke kandungan", zh: "跳至正文" },
+  "landing.shopOnlineCta": { en: "Shop online", bm: "Beli online", zh: "线上选购" },
+  "landing.browseInShop": { en: "Browse in shop", bm: "Lihat di kedai", zh: "进入商店浏览" },
+  "landing.menuOpen": { en: "Open navigation menu", bm: "Buka menu navigasi", zh: "打开导航菜单" },
+  "landing.menuClose": { en: "Close navigation menu", bm: "Tutup menu navigasi", zh: "关闭导航菜单" },
+  "landing.lightboxClose": { en: "Close photo viewer", bm: "Tutup paparan foto", zh: "关闭图片查看" },
+  "landing.lightboxPrev": { en: "Previous photo", bm: "Foto sebelumnya", zh: "上一张照片" },
+  "landing.lightboxNext": { en: "Next photo", bm: "Foto seterusnya", zh: "下一张照片" },
+  "landing.enlargePhoto": { en: "Enlarge photo", bm: "Besarkan foto", zh: "放大查看" },
+  "landing.mapTitle": { en: "Ekoway Hardware Map — Sibu", bm: "Peta Ekoway Hardware — Sibu", zh: "Ekoway 永光五金地图 — 诗巫" }
 } as const satisfies Record<string, Entry>;
 
 export type TranslationKey = keyof typeof translations;

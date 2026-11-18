@@ -30,39 +30,57 @@ export type AdminTab =
   | "settings"
   | "permissions";
 
+export type AdminTabGroup = "Operations" | "Commerce" | "Catalog & Care" | "Administration";
+
+export type ChangeOwnPasswordFormValues = ChangeOwnPasswordInput & {
+  confirm_password: string;
+};
+
 export type PermissionAction = "create" | "read" | "update" | "delete";
 export type AdminAuthSnapshot = AdminAuthPayload | AdminMePayload;
 
-export const adminTabs: { tab: AdminTab; label: string; pageSlug: string }[] = [
-  { tab: "overview", label: "Overview", pageSlug: "admin-overview" },
-  { tab: "team-log", label: "Team Log", pageSlug: "admin-overview" },
-  { tab: "inventory", label: "Inventory", pageSlug: "admin-inventory" },
-  { tab: "fulfillment", label: "Fulfillment", pageSlug: "admin-fulfillment" },
-  { tab: "campaigns", label: "Campaigns", pageSlug: "admin-campaigns" },
-  { tab: "catalog", label: "Catalog", pageSlug: "admin-catalog" },
-  { tab: "customers", label: "Customers", pageSlug: "admin-customers" },
-  { tab: "support", label: "Support", pageSlug: "admin-support" },
-  { tab: "orders", label: "Orders", pageSlug: "admin-orders" },
-  { tab: "payments", label: "Payments", pageSlug: "admin-payments" },
-  { tab: "sales", label: "Sales", pageSlug: "admin-sales" },
-  { tab: "invoices", label: "Invoices", pageSlug: "admin-invoices" },
-  { tab: "settings", label: "Settings", pageSlug: "admin-settings" },
-  { tab: "permissions", label: "Permissions", pageSlug: "admin-permissions" }
+export const adminTabs: { tab: AdminTab; label: string; pageSlug: string; group: AdminTabGroup }[] = [
+  { tab: "overview", label: "Overview", pageSlug: "admin-overview", group: "Operations" },
+  { tab: "fulfillment", label: "Fulfillment", pageSlug: "admin-fulfillment", group: "Operations" },
+  { tab: "inventory", label: "Inventory", pageSlug: "admin-inventory", group: "Operations" },
+  { tab: "team-log", label: "Team Log", pageSlug: "admin-overview", group: "Operations" },
+  { tab: "orders", label: "Orders", pageSlug: "admin-orders", group: "Commerce" },
+  { tab: "sales", label: "Sales", pageSlug: "admin-sales", group: "Commerce" },
+  { tab: "payments", label: "Payments", pageSlug: "admin-payments", group: "Commerce" },
+  { tab: "invoices", label: "Invoices", pageSlug: "admin-invoices", group: "Commerce" },
+  { tab: "catalog", label: "Catalog", pageSlug: "admin-catalog", group: "Catalog & Care" },
+  { tab: "campaigns", label: "Campaigns", pageSlug: "admin-campaigns", group: "Catalog & Care" },
+  { tab: "customers", label: "Customers", pageSlug: "admin-customers", group: "Catalog & Care" },
+  { tab: "support", label: "Support", pageSlug: "admin-support", group: "Catalog & Care" },
+  { tab: "settings", label: "Settings", pageSlug: "admin-settings", group: "Administration" },
+  { tab: "permissions", label: "Permissions", pageSlug: "admin-permissions", group: "Administration" }
 ];
 
-export const changePasswordFields: RecordFormField<ChangeOwnPasswordInput>[] = [
+export const changePasswordFields: RecordFormField<ChangeOwnPasswordFormValues>[] = [
   {
     name: "current_password",
     label: "Current password",
     type: "password",
+    autoComplete: "current-password",
     required: true
   },
   {
     name: "new_password",
     label: "New password",
     type: "password",
+    autoComplete: "new-password",
     required: true,
-    minLength: 8
+    minLength: 8,
+    helpText: "Minimum 8 characters."
+  },
+  {
+    name: "confirm_password",
+    label: "Confirm new password",
+    type: "password",
+    autoComplete: "new-password",
+    required: true,
+    validate: (value, values) =>
+      value !== values.new_password ? "Passwords do not match." : null
   }
 ];
 

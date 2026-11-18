@@ -17,6 +17,26 @@ const categoryLabels: Record<string, string> = {
   shipping: "Shipping"
 };
 
+const settingAcronyms: Record<string, string> = {
+  bps: "BPS",
+  id: "ID",
+  ssm: "SSM",
+  url: "URL",
+  whatsapp: "WhatsApp"
+};
+
+function formatSettingTitle(key: string): string {
+  const suffix = key.includes(".") ? key.slice(key.indexOf(".") + 1) : key;
+  return suffix
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map(
+      (part) =>
+        settingAcronyms[part.toLowerCase()] ?? `${part.charAt(0).toUpperCase()}${part.slice(1)}`
+    )
+    .join(" ");
+}
+
 function groupedByCategory(settings: SystemSetting[]): Record<string, SystemSetting[]> {
   return settings.reduce<Record<string, SystemSetting[]>>((groups, setting) => {
     groups[setting.category] = groups[setting.category]
@@ -138,50 +158,65 @@ export function SettingsPanel({ canUpdate, onUpdateSetting, settings }: Settings
             </div>
 
             <div className="settings-row-list">
-              {categorySettings.map((setting) => (
-                <form
-                  className="settings-row"
-                  key={setting.key}
-                  onSubmit={(event) => void handleSave(event, setting)}
-                >
-                  <label className="admin-field">
-                    {setting.key}
-                    {setting.value_type === "bool" ? (
-                      <select
-                        disabled={!canUpdate}
-                        onChange={(event) =>
-                          setDrafts((current) => ({ ...current, [setting.key]: event.target.value }))
-                        }
-                        value={draftFor(setting)}
+              {categorySettings.map((setting) => {
+                const draftValue = draftFor(setting);
+                const isDirty = draftValue !== setting.value;
+
+                return (
+                  <form
+                    className="settings-row"
+                    key={setting.key}
+                    onSubmit={(event) => void handleSave(event, setting)}
+                  >
+                    <label className="admin-field">
+                      <span>
+                        <span className="setting-title">{formatSettingTitle(setting.key)}</span>
+                        <code className="setting-key">{setting.key}</code>
+                      </span>
+                      {setting.value_type === "bool" ? (
+                        <select
+                          disabled={!canUpdate}
+                          onChange={(event) =>
+                            setDrafts((current) => ({ ...current, [setting.key]: event.target.value }))
+                          }
+                          value={draftValue}
+                        >
+                          <option value="true">Enabled</option>
+                          <option value="false">Disabled</option>
+                        </select>
+                      ) : (
+                        <input
+                          disabled={!canUpdate}
+                          min={setting.key.endsWith("_cents") ? 0 : undefined}
+                          onChange={(event) =>
+                            setDrafts((current) => ({ ...current, [setting.key]: event.target.value }))
+                          }
+                          type={setting.value_type === "int" ? "number" : "text"}
+                          value={draftValue}
+                        />
+                      )}
+                    </label>
+                    <p className="settings-row-description">{setting.description}</p>
+                    <div className="settings-row-footer">
+                      <div className="admin-actions" style={{ alignItems: "center", gap: "0.5rem" }}>
+                        <span>Updated {formatOrderDate(setting.updated_at)}</span>
+                        {isDirty ? (
+                          <strong className="sales-row-dirty" style={{ marginTop: 0 }}>
+                            Modified
+                          </strong>
+                        ) : null}
+                      </div>
+                      <button
+                        className={isDirty ? "solid-button" : "outline-button"}
+                        disabled={!canUpdate || !isDirty || savingKey === setting.key}
+                        type="submit"
                       >
-                        <option value="true">Enabled</option>
-                        <option value="false">Disabled</option>
-                      </select>
-                    ) : (
-                      <input
-                        disabled={!canUpdate}
-                        min={setting.key.endsWith("_cents") ? 0 : undefined}
-                        onChange={(event) =>
-                          setDrafts((current) => ({ ...current, [setting.key]: event.target.value }))
-                        }
-                        type={setting.value_type === "int" ? "number" : "text"}
-                        value={draftFor(setting)}
-                      />
-                    )}
-                  </label>
-                  <p className="settings-row-description">{setting.description}</p>
-                  <div className="settings-row-footer">
-                    <span>Updated {formatOrderDate(setting.updated_at)}</span>
-                    <button
-                      className="outline-button"
-                      disabled={!canUpdate || savingKey === setting.key}
-                      type="submit"
-                    >
-                      {savingKey === setting.key ? "Saving..." : "Save"}
-                    </button>
-                  </div>
-                </form>
-              ))}
+                        {savingKey === setting.key ? "Saving..." : "Save"}
+                      </button>
+                    </div>
+                  </form>
+                );
+              })}
             </div>
           </article>
         ))}

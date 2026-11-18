@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
+import { ConfirmModal } from "../../shared/components/ConfirmModal";
 import { ManagementTable } from "../../shared/components/ManagementTable";
 import { RecordForm, RecordModal, type RecordFormField } from "../../shared/components/RecordModal";
 import { currencyFromCents, formatOrderDate } from "../../shared/formatters";
@@ -12,6 +13,19 @@ import type {
 } from "../../types";
 
 export const membershipTiers = ["Bronze", "Silver", "Gold", "Pro Xtra", "VIP"];
+
+const tierFilterOptions = ["All", ...membershipTiers];
+
+function membershipTierClass(tier: string): string {
+  const slug = tier.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  if (tier === "VIP" || tier === "Pro Xtra") {
+    return `live tier-badge tier-badge--${slug}`;
+  }
+  if (tier === "Gold") {
+    return `warning tier-badge tier-badge--${slug}`;
+  }
+  return `tier-badge tier-badge--${slug}`;
+}
 
 type CustomerPortalFormState = {
   customer_name: string;
@@ -162,6 +176,16 @@ export function CustomerPortalPanel({
   const [isCreating, setIsCreating] = useState(false);
   const [savingProfileId, setSavingProfileId] = useState<number | null>(null);
   const [deletingProfileId, setDeletingProfileId] = useState<number | null>(null);
+  const [pendingDeleteProfile, setPendingDeleteProfile] = useState<CustomerPortalProfile | null>(null);
+  const [tierFilter, setTierFilter] = useState<string>("All");
+
+  const filteredProfiles = useMemo(
+    () =>
+      tierFilter === "All"
+        ? profiles
+        : profiles.filter((profile) => profile.membership_tier === tierFilter),
+    [profiles, tierFilter]
+  );
 
   const totalPoints = profiles.reduce((sum, profile) => sum + profile.points_balance, 0);
   const totalPurchaseCents = profiles.reduce(
@@ -224,20 +248,26 @@ export function CustomerPortalPanel({
     }
   };
 
-  const handleDelete = async (profile: CustomerPortalProfile) => {
+  const requestDelete = (profile: CustomerPortalProfile) => {
     if (!canDelete) {
       notify({ severity: "error", title: "Customer not deleted", message: "The active role cannot delete customer profiles.", scope: "customer-profiles", dedupeKey: "customer-profiles:delete:permission" });
       return;
     }
 
-    if (!window.confirm(`Delete ${profile.customer_name}'s customer portal profile?`)) {
+    setPendingDeleteProfile(profile);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteProfile) {
       return;
     }
 
+    const profile = pendingDeleteProfile;
     setDeletingProfileId(profile.id);
 
     try {
       await onDeleteCustomerPortalProfile(profile.id);
+      setPendingDeleteProfile(null);
       notify({ severity: "success", title: "Customer deleted", message: `${profile.customer_name} was deleted successfully.`, scope: "customer-profiles", dedupeKey: `customer-profiles:${profile.id}:delete:success` });
     } catch (error) {
       notifyError(error, { operation: "delete customer profile", scope: "customer-profiles", dedupeKey: `customer-profiles:${profile.id}:delete:error` });
@@ -262,7 +292,11 @@ export function CustomerPortalPanel({
       key: "tier",
       label: "Tier",
       sortValue: (profile: CustomerPortalProfile) => profile.membership_tier,
-      render: (profile: CustomerPortalProfile) => profile.membership_tier
+      render: (profile: CustomerPortalProfile) => (
+        <span className={`status-pill ${membershipTierClass(profile.membership_tier)}`}>
+          {profile.membership_tier}
+        </span>
+      )
     },
     {
       key: "points",
@@ -325,7 +359,7 @@ export function CustomerPortalPanel({
           <button
             className="outline-button danger-button table-action"
             disabled={!canDelete || deletingProfileId === profile.id}
-            onClick={() => void handleDelete(profile)}
+            onClick={() => requestDelete(profile)}
             type="button"
           >
             {deletingProfileId === profile.id ? "Deleting..." : "Delete"}
@@ -347,16 +381,6 @@ export function CustomerPortalPanel({
 
   return (
     <section className="admin-section active">
-      <div className="panel-header">
-        <div>
-          <p className="eyebrow">Customer portal</p>
-          <h3>Membership, points and purchase controls</h3>
-        </div>
-        <span className={`status-pill ${canCreate || canUpdate || canDelete ? "live" : ""}`}>
-          {canCreate || canUpdate || canDelete ? "Writable" : "Read only"}
-        </span>
-      </div>
-
       <div className="metric-grid customer-summary-grid">
         <article className="metric-card">
           <p>Portal customers</p>
@@ -382,6 +406,9 @@ export function CustomerPortalPanel({
             <h3>Portal profile roster</h3>
           </div>
           <div className="admin-actions">
+            <span className={`status-pill ${canCreate || canUpdate || canDelete ? "live" : ""}`}>
+              {canCreate || canUpdate || canDelete ? "Writable" : "Read only"}
+            </span>
             <span className="status-pill">{profiles.length} rows</span>
             <button
               className="solid-button"
@@ -399,19 +426,57 @@ export function CustomerPortalPanel({
 
         <ManagementTable
           columns={profileColumns}
-          emptyMessage="No customer profiles have been created yet."
+          emptyMessage={
+            profiles.length === 0
+              ? "No customer profiles have been created yet."
+              : "No customer profiles match the current filter."
+          }
+          filterSlot={
+            <div className="admin-filter-pills" role="group" aria-label="Filter customers by tier">
+              {tierFilterOptions.map((tier) => {
+                const count =
+                  tier === "All"
+                    ? profiles.length
+                    : profiles.filter((profile) => profile.membership_tier === tier).length;
+                const isActive = tierFilter === tier;
+                return (
+                  <button
+                    aria-pressed={isActive}
+                    className={`admin-filter-pill${isActive ? " is-active" : ""}`}
+                    key={tier}
+                    onClick={() => setTierFilter(tier)}
+                    type="button"
+                  >
+                    {tier} ({count})
+                  </button>
+                );
+              })}
+            </div>
+          }
           getRowKey={(profile) => profile.id}
+          getSearchText={(profile) =>
+            [
+              profile.id,
+              profile.customer_name,
+              profile.customer_email,
+              profile.membership_tier
+            ]
+              .filter(Boolean)
+              .join(" ")
+          }
           hasMore={hasMore}
           initialSortKey="name"
           isLoadingMore={isLoadingMore}
           onLoadMore={onLoadMore}
-          rows={profiles}
+          rows={filteredProfiles}
+          searchPlaceholder="Search customer name, email, or tier..."
           tableLabel="Customer profile management table"
         />
       </article>
 
       <RecordModal
         eyebrow="New customer"
+        isBusy={isCreating}
         isOpen={isCreateOpen}
         onClose={() => {
           setIsCreateOpen(false);
@@ -436,6 +501,7 @@ export function CustomerPortalPanel({
 
       <RecordModal
         eyebrow="Editing customer"
+        isBusy={Boolean(editingProfile && savingProfileId === editingProfile.id)}
         isOpen={isEditOpen}
         onClose={closeEdit}
         statusLabel={canUpdate ? "Writable" : "Read only"}
@@ -455,88 +521,32 @@ export function CustomerPortalPanel({
           />
         ) : null}
       </RecordModal>
+
+      <ConfirmModal
+        confirmLabel="Delete customer"
+        eyebrow="Customer portal"
+        isConfirming={
+          pendingDeleteProfile !== null && deletingProfileId === pendingDeleteProfile.id
+        }
+        isOpen={pendingDeleteProfile !== null}
+        message={
+          pendingDeleteProfile
+            ? `Delete ${pendingDeleteProfile.customer_name}'s customer portal profile (${pendingDeleteProfile.customer_email})?`
+            : ""
+        }
+        onCancel={() => {
+          if (deletingProfileId === null) {
+            setPendingDeleteProfile(null);
+          }
+        }}
+        onConfirm={confirmDelete}
+        title={
+          pendingDeleteProfile
+            ? `Delete ${pendingDeleteProfile.customer_name}?`
+            : "Delete customer profile"
+        }
+        tone="danger"
+      />
     </section>
-  );
-}
-
-type CustomerPortalFormFieldsProps = {
-  disabled: boolean;
-  form: CustomerPortalFormState;
-  onChange: (form: CustomerPortalFormState) => void;
-};
-
-function CustomerPortalFormFields({ disabled, form, onChange }: CustomerPortalFormFieldsProps) {
-  return (
-    <div className="admin-form-grid">
-      <label className="admin-field">
-        Customer name
-        <input
-          disabled={disabled}
-          onChange={(event) => onChange({ ...form, customer_name: event.target.value })}
-          required
-          value={form.customer_name}
-        />
-      </label>
-      <label className="admin-field">
-        Email
-        <input
-          disabled={disabled}
-          onChange={(event) => onChange({ ...form, customer_email: event.target.value })}
-          required
-          type="email"
-          value={form.customer_email}
-        />
-      </label>
-      <label className="admin-field">
-        Membership
-        <select
-          disabled={disabled}
-          onChange={(event) => onChange({ ...form, membership_tier: event.target.value })}
-          value={form.membership_tier}
-        >
-          {membershipTiers.map((tier) => (
-            <option key={tier} value={tier}>
-              {tier}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="admin-field">
-        Points
-        <input
-          disabled={disabled}
-          min="0"
-          onChange={(event) => onChange({ ...form, points_balance: event.target.value })}
-          required
-          step="1"
-          type="number"
-          value={form.points_balance}
-        />
-      </label>
-      <label className="admin-field">
-        Purchase value
-        <input
-          disabled={disabled}
-          min="0"
-          onChange={(event) => onChange({ ...form, lifetime_purchase: event.target.value })}
-          required
-          step="0.01"
-          type="number"
-          value={form.lifetime_purchase}
-        />
-      </label>
-      <label className="admin-field">
-        Orders
-        <input
-          disabled={disabled}
-          min="0"
-          onChange={(event) => onChange({ ...form, total_orders: event.target.value })}
-          required
-          step="1"
-          type="number"
-          value={form.total_orders}
-        />
-      </label>
-    </div>
   );
 }

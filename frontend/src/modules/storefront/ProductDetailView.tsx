@@ -17,7 +17,7 @@ type ProductDetailViewProps = {
   activeJobName: string | null;
   fallbackProduct: Product | null;
   isCatalogueLoaded: boolean;
-  onAddToCart: (product: Product) => void;
+  onAddToCart: (product: Product, quantity?: number) => void;
   onBack: () => void;
   onOpenDepartment: (slug: string) => void;
   onViewProduct: (productId: number) => void;
@@ -205,7 +205,12 @@ export function ProductDetailView({
   )}`;
 
   const addSelectedQuantity = () => {
-    for (let index = 0; index < quantity; index += 1) onAddToCart(product);
+    onAddToCart(product, quantity);
+  };
+
+  const clampQuantity = (next: number) => {
+    const maxAllowed = Math.max(1, Math.floor(product.stock_quantity));
+    return Math.min(maxAllowed, Math.max(1, Math.floor(next)));
   };
 
   const quantityControl = (condensed = false) => (
@@ -213,14 +218,36 @@ export function ProductDetailView({
       <button
         aria-label={t("shop.detail.decreaseQuantity")}
         disabled={stockState === "out" || quantity <= 1}
-        onClick={() => setQuantity((current) => Math.max(1, current - 1))}
+        onClick={() => setQuantity((current) => clampQuantity(current - 1))}
         type="button"
       >−</button>
-      <input aria-label={t("shop.detail.quantity")} disabled={stockState === "out"} inputMode="numeric" readOnly value={quantity} />
+      <input
+        aria-label={t("shop.detail.quantity")}
+        disabled={stockState === "out"}
+        inputMode="numeric"
+        onChange={(event) => {
+          const digits = event.target.value.replace(/\D+/g, "");
+          if (!digits) return;
+          const parsed = Number.parseInt(digits, 10);
+          if (Number.isFinite(parsed)) {
+            setQuantity(clampQuantity(parsed));
+          }
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowUp") {
+            event.preventDefault();
+            setQuantity((current) => clampQuantity(current + 1));
+          } else if (event.key === "ArrowDown") {
+            event.preventDefault();
+            setQuantity((current) => clampQuantity(current - 1));
+          }
+        }}
+        value={quantity}
+      />
       <button
         aria-label={t("shop.detail.increaseQuantity")}
         disabled={stockState === "out" || quantity >= product.stock_quantity}
-        onClick={() => setQuantity((current) => Math.min(product.stock_quantity, current + 1))}
+        onClick={() => setQuantity((current) => clampQuantity(current + 1))}
         type="button"
       >+</button>
     </div>

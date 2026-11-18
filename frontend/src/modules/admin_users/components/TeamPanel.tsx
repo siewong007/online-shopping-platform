@@ -8,6 +8,7 @@ import {
 } from "../../auth/api/authApi";
 import type { AdminMfaEnrollmentStart } from "../../auth/types";
 import type { Role } from "../../permissions/types";
+import { ConfirmModal } from "../../../shared/components/ConfirmModal";
 import { ManagementTable } from "../../../shared/components/ManagementTable";
 import { RecordForm, type RecordFormField, RecordModal } from "../../../shared/components/RecordModal";
 import { useNotifications } from "../../../shared/notifications";
@@ -68,6 +69,7 @@ function createUserFields(roles: Role[]): RecordFormField<CreateUserFormState>[]
     {
       name: "username",
       label: "Username",
+      autoComplete: "username",
       required: true,
       minLength: 3,
       placeholder: "j.smith"
@@ -83,6 +85,7 @@ function createUserFields(roles: Role[]): RecordFormField<CreateUserFormState>[]
       name: "password",
       label: "Temporary password",
       type: "password",
+      autoComplete: "new-password",
       required: true,
       minLength: 8
     },
@@ -117,6 +120,7 @@ const resetPasswordFields: RecordFormField<ResetPasswordFormState>[] = [
     name: "new_password",
     label: "New password",
     type: "password",
+    autoComplete: "new-password",
     required: true,
     minLength: 8
   }
@@ -132,6 +136,7 @@ function MfaCard({ onChanged }: MfaCardProps) {
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [enrollment, setEnrollment] = useState<AdminMfaEnrollmentStart | null>(null);
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
+  const [copiedCodes, setCopiedCodes] = useState(false);
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [isBusy, setIsBusy] = useState(false);
@@ -168,6 +173,7 @@ function MfaCard({ onChanged }: MfaCardProps) {
     try {
       const result = await confirmMfaEnrollment(code.trim());
       setEnrollment(null);
+      setCopiedCodes(false);
       setRecoveryCodes(result.recovery_codes);
       setEnabled(true);
       setCode("");
@@ -196,6 +202,41 @@ function MfaCard({ onChanged }: MfaCardProps) {
     }
   };
 
+  const handleCopyRecoveryCodes = async () => {
+    if (!recoveryCodes || recoveryCodes.length === 0) {
+      return;
+    }
+
+    if (!navigator.clipboard?.writeText) {
+      notify({
+        severity: "warning",
+        title: "Clipboard unavailable",
+        message: "Copy these recovery codes manually before dismissing.",
+        scope: "team-mfa",
+        dedupeKey: "team-mfa:copy:unavailable"
+      });
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(recoveryCodes.join("\n"));
+      setCopiedCodes(true);
+      notify({
+        severity: "success",
+        title: "Recovery codes copied",
+        message: "Store your single-use recovery codes somewhere safe.",
+        scope: "team-mfa",
+        dedupeKey: "team-mfa:copy:success"
+      });
+    } catch (error) {
+      notifyError(error, {
+        operation: "copy recovery codes",
+        scope: "team-mfa",
+        dedupeKey: "team-mfa:copy:error"
+      });
+    }
+  };
+
   return (
     <section className="dashboard-card team-mfa-card">
       <p className="eyebrow">My sign-in security</p>
@@ -214,9 +255,25 @@ function MfaCard({ onChanged }: MfaCardProps) {
               </li>
             ))}
           </ul>
-          <button className="outline-button" onClick={() => setRecoveryCodes(null)} type="button">
-            I saved my recovery codes
-          </button>
+          <div className="form-actions split-actions">
+            <button
+              className="solid-button"
+              onClick={() => void handleCopyRecoveryCodes()}
+              type="button"
+            >
+              {copiedCodes ? "Copied recovery codes" : "Copy recovery codes"}
+            </button>
+            <button
+              className="outline-button"
+              onClick={() => {
+                setCopiedCodes(false);
+                setRecoveryCodes(null);
+              }}
+              type="button"
+            >
+              I saved my recovery codes
+            </button>
+          </div>
         </>
       ) : enrollment ? (
         <>
@@ -295,6 +352,7 @@ export function TeamPanel({
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isSavingReset, setIsSavingReset] = useState(false);
   const [togglingUserId, setTogglingUserId] = useState<number | null>(null);
+  const [pendingToggleUser, setPendingToggleUser] = useState<AdminUser | null>(null);
 
   const roleNameById = useMemo(() => new Map(roles.map((role) => [role.id, role.name])), [roles]);
   const editingUser =
@@ -400,26 +458,26 @@ export function TeamPanel({
     }
   };
 
-  const handleToggleActive = async (user: AdminUser) => {
+  const requestToggleActive = (user: AdminUser) => {
     if (!canUpdate || user.id === currentUserId) {
       return;
     }
 
-    const nextActive = !user.is_active;
-    const confirmed = window.confirm(
-      nextActive
-        ? `Reactivate ${user.display_name}?`
-        : `Deactivate ${user.display_name}? They will be signed out immediately.`
-    );
+    setPendingToggleUser(user);
+  };
 
-    if (!confirmed) {
+  const confirmToggleActive = async () => {
+    if (!pendingToggleUser || !canUpdate || pendingToggleUser.id === currentUserId) {
       return;
     }
 
+    const user = pendingToggleUser;
+    const nextActive = !user.is_active;
     setTogglingUserId(user.id);
 
     try {
       await onSetUserActive(user.id, { is_active: nextActive });
+      setPendingToggleUser(null);
       notify({ severity: "success", title: nextActive ? "Admin user reactivated" : "Admin user deactivated", message: `${user.display_name} was ${nextActive ? "reactivated" : "deactivated"} successfully.`, scope: "admin-users", dedupeKey: `admin-users:${user.id}:active:success` });
     } catch (error) {
       notifyError(error, { operation: "change admin user status", scope: "admin-users", dedupeKey: `admin-users:${user.id}:active:error` });
@@ -451,9 +509,12 @@ export function TeamPanel({
       label: "Status",
       sortValue: (user: AdminUser) => user.is_active,
       render: (user: AdminUser) => (
-        <span className={`status-pill ${user.is_active ? "live" : ""}`}>
-          {user.is_active ? "Active" : "Deactivated"}
-        </span>
+        <div className="management-action-stack">
+          <span className={`status-pill ${user.is_active ? "live" : ""}`}>
+            {user.is_active ? "Active" : "Deactivated"}
+          </span>
+          {user.id === currentUserId ? <span className="status-pill">(You)</span> : null}
+        </div>
       )
     },
     {
@@ -481,7 +542,7 @@ export function TeamPanel({
           <button
             className={`outline-button table-action ${user.is_active ? "danger-button" : ""}`}
             disabled={!canUpdate || user.id === currentUserId || togglingUserId === user.id}
-            onClick={() => void handleToggleActive(user)}
+            onClick={() => requestToggleActive(user)}
             type="button"
           >
             {togglingUserId === user.id ? "Saving..." : user.is_active ? "Deactivate" : "Activate"}
@@ -515,13 +576,26 @@ export function TeamPanel({
         columns={userColumns}
         emptyMessage="No admin users have been created yet."
         getRowKey={(user) => user.id}
+        getSearchText={(user) =>
+          [
+            user.display_name,
+            user.username,
+            roleNameById.get(user.role_id) ?? "",
+            user.is_active ? "active" : "deactivated",
+            user.id === currentUserId ? "you" : ""
+          ]
+            .filter(Boolean)
+            .join(" ")
+        }
         initialSortKey="name"
         rows={users}
+        searchPlaceholder="Search staff by name, username, role, or status..."
         tableLabel="Admin user management table"
       />
 
       <RecordModal
         eyebrow="New admin user"
+        isBusy={isSavingCreate}
         isOpen={isCreateOpen}
         onClose={closeCreate}
         statusLabel={canCreate ? "Writable" : "Read only"}
@@ -542,6 +616,7 @@ export function TeamPanel({
 
       <RecordModal
         eyebrow="Editing admin user"
+        isBusy={isSavingEdit}
         isOpen={isEditOpen}
         onClose={closeEdit}
         statusLabel={canUpdate ? "Writable" : "Read only"}
@@ -562,6 +637,7 @@ export function TeamPanel({
 
       <RecordModal
         eyebrow="Reset password"
+        isBusy={isSavingReset}
         isOpen={isResetOpen}
         onClose={closeReset}
         statusLabel={canUpdate ? "Writable" : "Read only"}
@@ -579,6 +655,36 @@ export function TeamPanel({
           values={resetForm}
         />
       </RecordModal>
+
+      <ConfirmModal
+        confirmLabel={pendingToggleUser?.is_active ? "Deactivate user" : "Reactivate user"}
+        eyebrow="Team access"
+        isConfirming={
+          pendingToggleUser !== null && togglingUserId === pendingToggleUser.id
+        }
+        isOpen={pendingToggleUser !== null}
+        message={
+          pendingToggleUser
+            ? pendingToggleUser.is_active
+              ? `Deactivate ${pendingToggleUser.display_name}? They will be signed out immediately.`
+              : `Reactivate ${pendingToggleUser.display_name}? They will regain admin console access.`
+            : ""
+        }
+        onCancel={() => {
+          if (togglingUserId === null) {
+            setPendingToggleUser(null);
+          }
+        }}
+        onConfirm={confirmToggleActive}
+        title={
+          pendingToggleUser
+            ? pendingToggleUser.is_active
+              ? `Deactivate ${pendingToggleUser.display_name}?`
+              : `Reactivate ${pendingToggleUser.display_name}?`
+            : "Update user status"
+        }
+        tone={pendingToggleUser?.is_active ? "danger" : "warning"}
+      />
     </article>
   );
 }

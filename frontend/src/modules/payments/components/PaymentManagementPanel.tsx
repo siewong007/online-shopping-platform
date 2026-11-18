@@ -1,5 +1,6 @@
 import { type FormEvent, useMemo, useState } from "react";
 
+import { ConfirmModal } from "../../../shared/components/ConfirmModal";
 import { ManagementTable } from "../../../shared/components/ManagementTable";
 import { RecordModal } from "../../../shared/components/RecordModal";
 import { currencyFromCents, formatOrderDate } from "../../../shared/formatters";
@@ -8,6 +9,14 @@ import type { Order } from "../../orders/types";
 import type { CreatePaymentInput, Payment, PaymentStatus, UpdatePaymentInput } from "../types";
 
 const paymentStatuses: PaymentStatus[] = ["Pending", "Captured", "Refunded", "Failed", "Void"];
+type PaymentStatusFilter = "All" | "Pending" | "Captured" | "Failed" | "Refunded";
+const paymentStatusFilterOptions: PaymentStatusFilter[] = [
+  "All",
+  "Pending",
+  "Captured",
+  "Failed",
+  "Refunded"
+];
 const paymentMethods = ["Card", "Cash", "ACH", "Gift Card", "Store Credit"];
 
 type PaymentFormState = {
@@ -43,6 +52,14 @@ function paymentStatusClass(status: PaymentStatus): string {
 
   if (status === "Pending") {
     return "warning";
+  }
+
+  if (status === "Failed") {
+    return "danger";
+  }
+
+  if (status === "Refunded" || status === "Void") {
+    return "neutral table-muted";
   }
 
   return "";
@@ -132,6 +149,8 @@ export function PaymentManagementPanel({
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingPaymentId, setDeletingPaymentId] = useState<number | null>(null);
+  const [pendingDeletePayment, setPendingDeletePayment] = useState<Payment | null>(null);
+  const [statusFilter, setStatusFilter] = useState<PaymentStatusFilter>("All");
   const canSave = editingPaymentId === null ? canCreate : canUpdate;
   const selectedOrder = orders.find((order) => order.id === Number(form.order_id)) ?? null;
   const capturedTotal = selectedOrder
@@ -145,6 +164,14 @@ export function PaymentManagementPanel({
   const previewRemaining = selectedOrder
     ? Math.max(selectedOrder.subtotal_cents - previewCapturedTotal, 0)
     : 0;
+
+  const filteredPayments = useMemo(
+    () =>
+      statusFilter === "All"
+        ? payments
+        : payments.filter((payment) => payment.status === statusFilter),
+    [payments, statusFilter]
+  );
 
   const paymentTotals = useMemo(() => {
     const captured = payments
@@ -221,17 +248,21 @@ export function PaymentManagementPanel({
     }
   };
 
-  const handleDeletePayment = async (payment: Payment) => {
+  const requestDeletePayment = (payment: Payment) => {
     if (!canDelete) {
       notify({ severity: "error", title: "Payment not deleted", message: "The active role cannot delete payments.", scope: "payments", dedupeKey: "payments:delete:permission" });
       return;
     }
 
-    const confirmed = window.confirm(`Delete payment #${payment.id}?`);
-    if (!confirmed) {
+    setPendingDeletePayment(payment);
+  };
+
+  const confirmDeletePayment = async () => {
+    if (!pendingDeletePayment) {
       return;
     }
 
+    const payment = pendingDeletePayment;
     setDeletingPaymentId(payment.id);
 
     try {
@@ -239,6 +270,7 @@ export function PaymentManagementPanel({
       if (editingPaymentId === payment.id) {
         resetForm();
       }
+      setPendingDeletePayment(null);
       notify({ severity: "success", title: "Payment deleted", message: `Payment #${payment.id} was deleted successfully.`, scope: "payments", dedupeKey: `payments:${payment.id}:delete:success` });
     } catch (error) {
       notifyError(error, { operation: "delete payment", scope: "payments", dedupeKey: `payments:${payment.id}:delete:error` });
@@ -323,7 +355,11 @@ export function PaymentManagementPanel({
       key: "idempotency",
       label: "Key",
       sortValue: (payment: Payment) => payment.idempotency_key,
-      render: (payment: Payment) => <span className="table-muted">{payment.idempotency_key}</span>
+      render: (payment: Payment) => (
+        <code className="admin-mono-chip" title={payment.idempotency_key}>
+          {payment.idempotency_key}
+        </code>
+      )
     },
     {
       key: "notes",
@@ -353,7 +389,7 @@ export function PaymentManagementPanel({
           <button
             className="outline-button danger-button table-action"
             disabled={!canDelete || deletingPaymentId === payment.id}
-            onClick={() => void handleDeletePayment(payment)}
+            onClick={() => requestDeletePayment(payment)}
             type="button"
           >
             {deletingPaymentId === payment.id ? "Deleting..." : "Delete"}
@@ -407,23 +443,64 @@ export function PaymentManagementPanel({
           </div>
         </div>
 
-        {payments.length === 0 ? (
-          <p>No payments have been recorded yet.</p>
-        ) : (
-          <ManagementTable
-            columns={paymentColumns}
-            emptyMessage="No payments have been recorded yet."
-            getRowKey={(payment) => payment.id}
-            initialSortDirection="desc"
-            initialSortKey="updated"
-            rows={payments}
-            tableLabel="Tender and payment management table"
-          />
-        )}
+        <ManagementTable
+          columns={paymentColumns}
+          emptyMessage={
+            payments.length === 0
+              ? "No payments have been recorded yet."
+              : "No payments match the current filter."
+          }
+          filterSlot={
+            <div className="admin-filter-pills" role="group" aria-label="Filter payments by status">
+              {paymentStatusFilterOptions.map((option) => {
+                const count =
+                  option === "All"
+                    ? payments.length
+                    : payments.filter((payment) => payment.status === option).length;
+                const isActive = statusFilter === option;
+                return (
+                  <button
+                    aria-pressed={isActive}
+                    className={`admin-filter-pill${isActive ? " is-active" : ""}`}
+                    key={option}
+                    onClick={() => setStatusFilter(option)}
+                    type="button"
+                  >
+                    {option} ({count})
+                  </button>
+                );
+              })}
+            </div>
+          }
+          getRowKey={(payment) => payment.id}
+          getSearchText={(payment) =>
+            [
+              payment.id,
+              `#${payment.id}`,
+              payment.order_id,
+              `#${payment.order_id}`,
+              payment.order_customer_name,
+              payment.order_customer_email,
+              payment.method,
+              payment.status,
+              payment.reference,
+              payment.idempotency_key,
+              payment.notes
+            ]
+              .filter(Boolean)
+              .join(" ")
+          }
+          initialSortDirection="desc"
+          initialSortKey="updated"
+          rows={filteredPayments}
+          searchPlaceholder="Search payment #, order #, customer, tender, or key..."
+          tableLabel="Tender and payment management table"
+        />
       </article>
 
       <RecordModal
         eyebrow={editingPaymentId === null ? "New payment" : `Payment #${editingPaymentId}`}
+        isBusy={isSaving}
         isOpen={isEditorOpen}
         onClose={resetForm}
         size="wide"
@@ -569,6 +646,30 @@ export function PaymentManagementPanel({
           </div>
         </form>
       </RecordModal>
+
+      <ConfirmModal
+        confirmLabel="Delete payment"
+        eyebrow="Payment control"
+        isConfirming={
+          pendingDeletePayment !== null && deletingPaymentId === pendingDeletePayment.id
+        }
+        isOpen={pendingDeletePayment !== null}
+        message={
+          pendingDeletePayment
+            ? `Delete payment #${pendingDeletePayment.id} (${currencyFromCents(pendingDeletePayment.amount_cents)}) for order #${pendingDeletePayment.order_id}?`
+            : ""
+        }
+        onCancel={() => {
+          if (deletingPaymentId === null) {
+            setPendingDeletePayment(null);
+          }
+        }}
+        onConfirm={confirmDeletePayment}
+        title={
+          pendingDeletePayment ? `Delete payment #${pendingDeletePayment.id}?` : "Delete payment"
+        }
+        tone="danger"
+      />
     </section>
   );
 }

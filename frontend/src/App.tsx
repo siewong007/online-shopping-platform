@@ -266,11 +266,24 @@ export default function App() {
   const [adminCatalog, setAdminCatalog] = useState<AdminCatalogPayload | null>(null);
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const isInitialStorefrontFilter = useRef(true);
+  const lastFetchedFilterKeyRef = useRef(
+    JSON.stringify({
+      q: "",
+      category: "all",
+      minPriceCents: null,
+      maxPriceCents: null,
+      sort: "featured",
+      inStockOnly: false,
+      onSaleOnly: false
+    })
+  );
+  const pendingCategoryHintRef = useRef<string | null>(null);
   const latestProductsById = useRef(
     new Map(initialProductDirectory().map((product) => [product.id, product]))
   );
   const productReturnFocusRef = useRef<number | null>(null);
   const storefrontRequestGeneration = useRef(0);
+  const [cartAnnouncement, setCartAnnouncement] = useState("");
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const { t } = useI18n();
   const { notify, notifyError } = useNotifications();
@@ -297,14 +310,20 @@ export default function App() {
     );
     notify({
       severity: "info",
-      title: "Payment verification in progress",
+      presentation: "banner",
+      persistent: true,
+      title: t("shop.paymentReturn.title"),
       message: pendingPayment
-        ? `Order #${pendingPayment.orderId} has returned from the secure payment page. We are confirming it with the payment provider; the browser return itself does not mark it paid.`
-        : "We are securely confirming your payment. The browser return itself does not mark an order paid.",
+        ? t("shop.paymentReturn.messageOrder", { id: pendingPayment.orderId })
+        : t("shop.paymentReturn.messageGeneric"),
+      action: {
+        label: t("shop.paymentReturn.viewOrders"),
+        onAction: () => setIsAccountOpen(true)
+      },
       scope: "payment-return",
       dedupeKey: "payment-return:verification"
     });
-  }, [notify]);
+  }, [notify, t]);
 
   useEffect(() => {
     document.title =
@@ -319,11 +338,37 @@ export default function App() {
               : view === "legal" && legalSlug
                 ? `${LEGAL_DOCUMENTS[legalSlug].title} — Ekoway Hardware`
                 : "Page not found — Ekoway Hardware";
+
+    const themeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    if (themeMeta) {
+      themeMeta.content =
+        view === "landing" ? "#000000" : view === "admin" ? "#171b20" : "#14342a";
+    }
   }, [legalSlug, view]);
 
   useEffect(() => {
     window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
   }, [cart]);
+
+  const resolveCategoryHint = (categories: Category[], hint: string): string => {
+    const candidates = hint
+      .split("|")
+      .map((part) => part.trim().toLowerCase())
+      .filter(Boolean);
+    for (const candidate of candidates) {
+      const exact = categories.find((cat) => cat.slug.toLowerCase() === candidate);
+      if (exact) return exact.slug;
+    }
+    for (const candidate of candidates) {
+      const partial = categories.find(
+        (cat) =>
+          cat.slug !== "all" &&
+          (cat.slug.toLowerCase().includes(candidate) || cat.name.toLowerCase().includes(candidate))
+      );
+      if (partial) return partial.slug;
+    }
+    return "all";
+  };
 
   useEffect(() => {
     const requestGeneration = ++storefrontRequestGeneration.current;
@@ -334,6 +379,13 @@ export default function App() {
           setCart((current) => reconcileCartStock(current, payload.products));
           setStorefront(payload);
           setIsStorefrontFallback(isFallback);
+          if (pendingCategoryHintRef.current) {
+            const matchedSlug = resolveCategoryHint(payload.categories, pendingCategoryHintRef.current);
+            pendingCategoryHintRef.current = null;
+            if (matchedSlug !== "all") {
+              setSelectedCategory(matchedSlug);
+            }
+          }
         }
       })
       .catch((error) => {
@@ -341,12 +393,16 @@ export default function App() {
       });
   }, []);
 
-  useEffect(() => {
+  const refreshPublicOffers = () => {
     void fetchPublicOffers()
       .then(setPublicOffers)
       .catch((error) => {
         notifyError(error, { operation: "load offers", scope: "offers", dedupeKey: "storefront:offers:error" });
       });
+  };
+
+  useEffect(() => {
+    refreshPublicOffers();
   }, []);
 
   // The API pages the catalogue; this appends the next page rather than replacing, so the
@@ -393,11 +449,27 @@ export default function App() {
       return;
     }
 
+    const filterKey = JSON.stringify({
+      q: searchTerm,
+      category: selectedCategory,
+      minPriceCents,
+      maxPriceCents,
+      sort: sortOption,
+      inStockOnly,
+      onSaleOnly
+    });
+
+    if (storefront !== null && lastFetchedFilterKeyRef.current === filterKey) {
+      setIsStorefrontRefetching(false);
+      return;
+    }
+
     let cancelled = false;
     const requestGeneration = ++storefrontRequestGeneration.current;
 
     const timeout = window.setTimeout(() => {
       setIsStorefrontRefetching(true);
+      lastFetchedFilterKeyRef.current = filterKey;
       void fetchStorefront({
         q: searchTerm,
         category: selectedCategory,
@@ -439,7 +511,6 @@ export default function App() {
       const nextProductId = productIdFromPath(window.location.pathname);
 
       if (nextView === "store" && productReturnFocusRef.current !== null) {
-        setIsStorefrontRefetching(true);
         setReturnFocusProductId(productReturnFocusRef.current);
       } else if (nextView === "product") {
         const historyProductId = window.history.state?.storefrontReturnProductId;
@@ -470,6 +541,16 @@ export default function App() {
       const nextPath = nextView === "admin" ? "/admin" : nextView === "store" ? "/shop" : "/";
       window.history.pushState({}, "", nextPath);
       setView(nextView);
+      window.scrollTo({ behavior: "auto", left: 0, top: 0 });
+    });
+  };
+
+  const openLegal = (slug: LegalSlug) => {
+    startTransition(() => {
+      window.history.pushState({}, "", `/${slug}`);
+      setLegalSlug(slug);
+      setView("legal");
+      window.scrollTo({ behavior: "auto", left: 0, top: 0 });
     });
   };
 
@@ -477,7 +558,8 @@ export default function App() {
     startTransition(() => {
       window.history.pushState(
         {
-          ekowayStorefrontProduct: view === "store",
+          ekowayStorefrontProduct:
+            view === "store" || Boolean(window.history.state?.ekowayStorefrontProduct),
           storefrontReturnProductId: productReturnFocusRef.current
         },
         "",
@@ -485,6 +567,7 @@ export default function App() {
       );
       setProductDetailId(productId);
       setView("product");
+      window.scrollTo({ behavior: "auto", left: 0, top: 0 });
     });
   };
 
@@ -815,7 +898,7 @@ export default function App() {
     void restoreAdminSession();
   }, []);
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, quantity = 1) => {
     if (!PURCHASE_ENABLED) return;
 
     latestProductsById.current.set(product.id, product);
@@ -823,18 +906,28 @@ export default function App() {
     const stockLimit = Math.max(0, Math.floor(currentProduct.stock_quantity));
     if (stockLimit === 0) return;
 
+    const delta = Math.max(1, Math.floor(quantity));
+    const currentInCart = cart.find((item) => item.product.id === product.id)?.quantity ?? 0;
+    const nextQty = Math.min(currentInCart + delta, stockLimit);
+    const addedCount = nextQty - currentInCart;
+
     setCart((current) => {
       const existing = current.find((item) => item.product.id === product.id);
       if (existing) {
         return current.map((item) =>
           item.product.id === product.id
-            ? { ...item, product: currentProduct, quantity: Math.min(item.quantity + 1, stockLimit) }
+            ? { ...item, product: currentProduct, quantity: Math.min(item.quantity + delta, stockLimit) }
             : item
         );
       }
 
-      return [...current, { product: currentProduct, quantity: 1 }];
+      return [...current, { product: currentProduct, quantity: Math.min(delta, stockLimit) }];
     });
+    setCartAnnouncement(
+      addedCount <= 0
+        ? t("shop.cart.maxStock", { product: currentProduct.name })
+        : t("shop.cart.added", { n: addedCount, product: currentProduct.name })
+    );
     setIsCartOpen(true);
   };
 
@@ -1632,14 +1725,34 @@ export default function App() {
     ]);
   };
 
-  const openShop = () => openView("store");
+  const openShop = (categoryHint?: string) => {
+    productReturnFocusRef.current = null;
+    setReturnFocusProductId(null);
+    setActiveJobId(null);
+    if (categoryHint) {
+      if (storefront) {
+        setSelectedCategory(resolveCategoryHint(storefront.categories, categoryHint));
+      } else {
+        pendingCategoryHintRef.current = categoryHint;
+      }
+    }
+    openView("store");
+  };
 
   if (view === "forbidden") {
-    return <StatusPage code="403" onGoHome={() => openView("landing")} onShop={openShop} />;
+    return (
+      <div className="app-shell status-shell">
+        <StatusPage code="403" onGoHome={() => openView("landing")} onOpenLegal={openLegal} onShop={() => openShop()} />
+      </div>
+    );
   }
 
   if (view === "not-found") {
-    return <StatusPage code="404" onGoHome={() => openView("landing")} onShop={openShop} />;
+    return (
+      <div className="app-shell status-shell">
+        <StatusPage code="404" onGoHome={() => openView("landing")} onOpenLegal={openLegal} onShop={() => openShop()} />
+      </div>
+    );
   }
 
   // Policy pages render before the storefront-data gate: they must stay readable when the
@@ -1647,7 +1760,13 @@ export default function App() {
   if (view === "legal" && legalSlug) {
     return (
       <div className="app-shell legal-shell">
-        <LegalPage onBack={openShop} onHome={() => openView("landing")} slug={legalSlug} />
+        <LegalPage
+          onBack={() => openShop()}
+          onHome={() => openView("landing")}
+          onOpenLegal={openLegal}
+          slug={legalSlug}
+        />
+        <SupportChatWidget customerEmail={customerAccountEmail} />
       </div>
     );
   }
@@ -1656,7 +1775,115 @@ export default function App() {
   if (view === "landing") {
     return (
       <div className="app-shell landing-shell">
-        <LandingView onOpenShop={openShop} />
+        <LandingView onOpenLegal={openLegal} onOpenShop={openShop} />
+      </div>
+    );
+  }
+
+  if (view === "admin") {
+    return (
+      <div className="app-shell admin-shell">
+        {adminAuth === "unauthenticated" || adminAuth === "mfa-challenge" ? (
+          <Suspense fallback={<main className="loading-shell admin-loading-shell">Loading admin console...</main>}>
+            <AdminLoginScreen
+              challengeToken={adminAuth === "mfa-challenge" ? adminMfaChallengeToken : null}
+              onBackToStore={() => openShop()}
+              onCancelChallenge={() => {
+                setAdminMfaChallengeToken(null);
+                setAdminAuth("unauthenticated");
+              }}
+              onLogin={handleAdminLogin}
+              onVerify={handleAdminMfaVerify}
+            />
+          </Suspense>
+        ) : adminAuth === "checking" || !dashboard || !adminCatalog ? (
+          <main className="loading-shell admin-loading-shell">Loading admin console...</main>
+        ) : (
+          <Suspense fallback={<main className="loading-shell admin-loading-shell">Loading admin console...</main>}>
+            <AdminView
+              activityFeed={activityFeed}
+              activeRoleId={activeRoleId}
+              adminTab={adminTab}
+              adminUsers={adminUsers}
+              categories={adminCatalog.categories}
+              currentAdmin={currentAdmin}
+              customerProfiles={customerProfiles}
+              dashboard={dashboard}
+              demoMode={adminAuth === "demo"}
+              hasMoreActivity={hasMoreActivity}
+              isChangePasswordOpen={isChangePasswordOpen}
+              isLoadingMoreActivity={isLoadingMoreActivity}
+              isLoadingMoreCustomerProfiles={isLoadingMoreCustomerProfiles}
+              isLoadingMoreInvoices={isLoadingMoreInvoices}
+              isLoadingMoreOrders={isLoadingMoreOrders}
+              isLoadingMoreSales={isLoadingMoreSales}
+              onLoadMoreActivity={() => void loadMoreActivity()}
+              onBackToStore={() => openShop()}
+              onChangeOwnPassword={changeOwnPassword}
+              onChangeTab={setAdminTab}
+              onCloseChangePassword={() => setIsChangePasswordOpen(false)}
+              onCreateAdminOrder={createAdminOrder}
+              onCreateAdminUser={createAdminUser}
+              onCreateCategory={createCategory}
+              onCreateCustomerPortalProfile={createCustomerPortalProfile}
+              onCreateInvoiceFromOrder={createInvoiceFromOrder}
+              onCreatePayment={createPayment}
+              onCreateProduct={createProduct}
+              onCreatePromotion={createPromotion}
+              onCreateRole={createRole}
+              onCreateVoucher={createVoucher}
+              onDeleteAdminOrder={deleteAdminOrder}
+              onDeleteCategory={deleteCategory}
+              onDeleteCustomerPortalProfile={deleteCustomerPortalProfile}
+              onDeletePayment={deletePayment}
+              onDeleteProduct={deleteProduct}
+              onDeletePromotion={deletePromotion}
+              onDeleteRole={deleteRole}
+              onDeleteVoucher={deleteVoucher}
+              onExportAutoCountInvoices={exportAutoCountInvoices}
+              onLogout={() => void handleAdminLogout()}
+              onLoadMoreCustomerProfiles={() => void loadMoreCustomerProfiles()}
+              onLoadMoreInvoices={() => void loadMoreInvoices()}
+              onLoadMoreOrders={() => void loadMoreOrders()}
+              onLoadMoreSales={() => void loadMoreSales()}
+              onOpenChangePassword={() => setIsChangePasswordOpen(true)}
+              onRecordInvoicePayment={recordInvoicePayment}
+              onRefreshCatalog={refreshCatalog}
+              onResetAdminUserPassword={resetAdminUserPassword}
+              onSetAdminUserActive={setAdminUserActive}
+              onUpdateAdminOrder={updateAdminOrder}
+              onUpdateAdminUserProfile={updateAdminUserProfile}
+              onUpdateCategory={updateCategory}
+              onUpdateOrderFulfillment={updateOrderFulfillment}
+              onUpdateInvoiceBilling={updateInvoiceBilling}
+              onUpdatePayment={updatePayment}
+              onUpdateProduct={updateProduct}
+              onUpdatePromotion={updatePromotion}
+              onUpdateRole={updateRole}
+              onUpdateRolePermission={updateRolePermission}
+              onUpdateSalesDetails={updateSalesDetails}
+              onUpdateSalesStatus={updateSalesStatus}
+              onUpdateSystemSetting={updateSystemSetting}
+              onUpdateVoucher={updateVoucher}
+              onVoidInvoice={voidInvoice}
+              hasMoreCustomerProfiles={customerProfilesNextCursor !== null}
+              hasMoreInvoices={invoicesNextCursor !== null}
+              hasMoreOrders={ordersNextCursor !== null}
+              hasMoreSales={salesNextCursor !== null}
+              orders={orders}
+              payments={payments}
+              invoices={invoices}
+              sales={sales}
+              salesSummary={salesSummary}
+              systemSettings={systemSettings}
+              permissions={permissions}
+              products={adminCatalog.products}
+              promotions={promotions}
+              onUpdateCustomerPortalProfile={updateCustomerPortalProfile}
+              vouchers={vouchers}
+            />
+          </Suspense>
+        )}
       </div>
     );
   }
@@ -1666,272 +1893,179 @@ export default function App() {
   }
 
   return (
-    <div
-      className={
-        view === "admin"
-          ? "app-shell admin-shell"
-          : view === "store" || view === "product"
-            ? "app-shell storefront-app-shell"
-            : "app-shell"
-      }
-    >
-      {view === "store" || view === "product" ? (
-        <div className={`storefront-shell${view === "product" ? " storefront-shell--product" : ""}`}>
-          <ShopHeader
-            cartCount={cartCount}
-            categories={storefront.categories}
+    <div className="app-shell storefront-app-shell">
+      <div className={`storefront-shell${view === "product" ? " storefront-shell--product" : ""}`}>
+        <div className="sr-only" aria-live="polite" role="status">
+          {cartAnnouncement}
+        </div>
+        <ShopHeader
+          cartCount={cartCount}
+          categories={storefront.categories}
+          onChangeCategory={(slug) => {
+            setActiveJobId(null);
+            setSelectedCategory(slug);
+            if (view !== "store") {
+              productReturnFocusRef.current = null;
+              setReturnFocusProductId(null);
+              openView("store");
+            }
+          }}
+          onChangeSearch={setSearchTerm}
+          onNavigateHome={() => openView("landing")}
+          onOpenAccount={() => {
+            setIsCartOpen(false);
+            setIsAccountOpen(true);
+          }}
+          onOpenCart={() => {
+            setIsAccountOpen(false);
+            setIsCartOpen(true);
+          }}
+          onSubmitSearch={() => {
+            setActiveJobId(null);
+            if (view !== "store") {
+              productReturnFocusRef.current = null;
+              setReturnFocusProductId(null);
+              openView("store");
+            }
+          }}
+          searchTerm={searchTerm}
+          selectedCategory={
+            view === "product" && productDetailId != null
+              ? storefront.products.find((product) => product.id === productDetailId)?.category_slug ?? selectedCategory
+              : selectedCategory
+          }
+        />
+
+        {view === "store" ? (
+          <StorefrontView
+            activeJobId={activeJobId}
+            filteredProducts={filteredProducts}
+            isRefetching={isStorefrontRefetching}
+            isShowingFallbackData={isShowingFallbackStorefront}
+            isLoadingMoreProducts={isLoadingMoreProducts}
+            inStockOnly={inStockOnly}
+            onSaleOnly={onSaleOnly}
+            onChangeInStockOnly={setInStockOnly}
+            onChangeOnSaleOnly={setOnSaleOnly}
+            onLoadMoreProducts={() => void loadMoreProducts()}
+            totalProducts={storefront.total_products}
+            maxPriceCents={maxPriceCents}
+            minPriceCents={minPriceCents}
+            onAddToCart={addToCart}
             onChangeCategory={(slug) => {
               setActiveJobId(null);
               setSelectedCategory(slug);
-              if (view !== "store") {
-                productReturnFocusRef.current = null;
-                setReturnFocusProductId(null);
-                openView("store");
-              }
             }}
+            onChangeMaxPrice={setMaxPriceCents}
+            onChangeMinPrice={setMinPriceCents}
             onChangeSearch={setSearchTerm}
-            onOpenAccount={() => {
-              setIsCartOpen(false);
-              setIsAccountOpen(true);
+            onChangeSort={setSortOption}
+            onGrabPromotion={grabPromotion}
+            onSelectJob={(jobId) => {
+              setActiveJobId(jobId);
+              setSelectedCategory("all");
             }}
-            onOpenCart={() => {
-              setIsAccountOpen(false);
-              setIsCartOpen(true);
+            onReturnFocusComplete={() => {
+              productReturnFocusRef.current = null;
+              setReturnFocusProductId(null);
             }}
-            onSubmitSearch={() => {
-              setActiveJobId(null);
-              if (view !== "store") {
-                productReturnFocusRef.current = null;
-                setReturnFocusProductId(null);
-                openView("store");
-              }
+            onViewProduct={(productId) => {
+              productReturnFocusRef.current = productId;
+              openProductDetail(productId);
             }}
+            publicOffers={publicOffers}
+            returnFocusProductId={returnFocusProductId}
             searchTerm={searchTerm}
-            selectedCategory={
-              view === "product" && productDetailId != null
-                ? storefront.products.find((product) => product.id === productDetailId)?.category_slug ?? selectedCategory
-                : selectedCategory
-            }
+            selectedCategory={selectedCategory}
+            sortOption={sortOption}
+            storefront={storefront}
           />
-
-          {view === "store" ? (
-            <StorefrontView
-              activeJobId={activeJobId}
-              filteredProducts={filteredProducts}
-              isRefetching={isStorefrontRefetching}
-              isShowingFallbackData={isShowingFallbackStorefront}
-              isLoadingMoreProducts={isLoadingMoreProducts}
-              inStockOnly={inStockOnly}
-              onSaleOnly={onSaleOnly}
-              onChangeInStockOnly={setInStockOnly}
-              onChangeOnSaleOnly={setOnSaleOnly}
-              onLoadMoreProducts={() => void loadMoreProducts()}
-              totalProducts={storefront.total_products}
-              maxPriceCents={maxPriceCents}
-              minPriceCents={minPriceCents}
-              onAddToCart={addToCart}
-              onChangeCategory={(slug) => {
-                setActiveJobId(null);
-                setSelectedCategory(slug);
-              }}
-              onChangeMaxPrice={setMaxPriceCents}
-              onChangeMinPrice={setMinPriceCents}
-              onChangeSearch={setSearchTerm}
-              onChangeSort={setSortOption}
-              onGrabPromotion={grabPromotion}
-              onSelectJob={(jobId) => {
-                setActiveJobId(jobId);
-                setSelectedCategory("all");
-              }}
-              onReturnFocusComplete={() => {
-                productReturnFocusRef.current = null;
-                setReturnFocusProductId(null);
-              }}
-              onViewProduct={(productId) => {
-                productReturnFocusRef.current = productId;
-                openProductDetail(productId);
-              }}
-              publicOffers={publicOffers}
-              returnFocusProductId={returnFocusProductId}
-              searchTerm={searchTerm}
-              selectedCategory={selectedCategory}
-              sortOption={sortOption}
-              storefront={storefront}
-            />
-          ) : (
-            <ProductDetailView
-              activeJobName={
-                activeJobId
-                  ? JOB_LENSES.find((job) => job.id === activeJobId && job.approvedForProduction)?.name ?? null
-                  : null
+        ) : (
+          <ProductDetailView
+            activeJobName={
+              activeJobId
+                ? JOB_LENSES.find((job) => job.id === activeJobId && job.approvedForProduction)?.name ?? null
+                : null
+            }
+            fallbackProduct={
+              isShowingFallbackStorefront && productDetailId != null
+                ? findInitialProductById(productDetailId)
+                : null
+            }
+            isCatalogueLoaded={storefront !== null}
+            onAddToCart={addToCart}
+            onBack={() => {
+              setReturnFocusProductId(productReturnFocusRef.current);
+              if (window.history.state?.ekowayStorefrontProduct === true) {
+                window.history.back();
+                return;
               }
-              fallbackProduct={
-                isShowingFallbackStorefront && productDetailId != null
-                  ? findInitialProductById(productDetailId)
-                  : null
-              }
-              isCatalogueLoaded={storefront !== null}
-              onAddToCart={addToCart}
-              onBack={() => {
-                setIsStorefrontRefetching(true);
-                setReturnFocusProductId(productReturnFocusRef.current);
-                if (window.history.state?.ekowayStorefrontProduct === true) {
-                  window.history.back();
-                  return;
-                }
-                openView("store");
-              }}
-              onOpenDepartment={(slug) => {
-                productReturnFocusRef.current = null;
-                setReturnFocusProductId(null);
-                setActiveJobId(null);
-                setSelectedCategory(slug);
-                openView("store");
-              }}
-              onViewProduct={openProductDetail}
-              productId={productDetailId}
-              storefront={storefront}
-            />
-          )}
-
-          <ShopFooter
-            onOpenCategory={(slug) => {
+              openView("store");
+            }}
+            onOpenDepartment={(slug) => {
               productReturnFocusRef.current = null;
               setReturnFocusProductId(null);
               setActiveJobId(null);
               setSelectedCategory(slug);
-              if (view !== "store") openView("store");
+              openView("store");
             }}
+            onViewProduct={openProductDetail}
+            productId={productDetailId}
             storefront={storefront}
           />
+        )}
 
-          <CartDrawer
-            cart={cart}
-            customerAccountEmail={customerAccountEmail}
-            open={isCartOpen}
-            onCheckout={submitCheckout}
-            onClose={() => setIsCartOpen(false)}
-            onCompleted={clearCart}
-            onPromotionChange={setSelectedPromotionId}
-            onRemoveFromCart={removeFromCart}
-            onUpdateQuantity={updateQuantity}
-            onVoucherCodeChange={setVoucherCode}
-            publicOffers={publicOffers}
-            selectedPromotionId={selectedPromotionId}
-            voucherCode={voucherCode}
-          />
-          <AccountDrawer
-            open={isAccountOpen}
-            customerAccountEmail={customerAccountEmail}
-            onAuthenticated={(email) => {
-              const normalizedEmail = email.trim().toLowerCase();
-              setCustomerAccountEmail(normalizedEmail);
-              rememberAccountEmail(normalizedEmail);
-            }}
-            onClose={() => setIsAccountOpen(false)}
-          />
-          <SupportChatWidget
-            customerEmail={customerAccountEmail}
-            isSuppressed={isCartOpen || isAccountOpen || view === "store" || view === "product"}
-          />
-        </div>
-      ) : adminAuth === "unauthenticated" || adminAuth === "mfa-challenge" ? (
-        <Suspense fallback={<main className="loading-shell">Loading admin console...</main>}>
-          <AdminLoginScreen
-            challengeToken={adminAuth === "mfa-challenge" ? adminMfaChallengeToken : null}
-            onBackToStore={() => openView("store")}
-            onLogin={handleAdminLogin}
-            onVerify={handleAdminMfaVerify}
-          />
-        </Suspense>
-      ) : adminAuth === "checking" || !dashboard || !adminCatalog ? (
-        <main className="loading-shell">Loading admin console...</main>
-      ) : (
-        <Suspense fallback={<main className="loading-shell">Loading admin console...</main>}>
-        <AdminView
-          activityFeed={activityFeed}
-          activeRoleId={activeRoleId}
-          adminTab={adminTab}
-          adminUsers={adminUsers}
-          categories={adminCatalog.categories}
-          currentAdmin={currentAdmin}
-          customerProfiles={customerProfiles}
-          dashboard={dashboard}
-          demoMode={adminAuth === "demo"}
-          hasMoreActivity={hasMoreActivity}
-          isChangePasswordOpen={isChangePasswordOpen}
-          isLoadingMoreActivity={isLoadingMoreActivity}
-          isLoadingMoreCustomerProfiles={isLoadingMoreCustomerProfiles}
-          isLoadingMoreInvoices={isLoadingMoreInvoices}
-          isLoadingMoreOrders={isLoadingMoreOrders}
-          isLoadingMoreSales={isLoadingMoreSales}
-          onLoadMoreActivity={() => void loadMoreActivity()}
-          onBackToStore={() => openView("store")}
-          onChangeOwnPassword={changeOwnPassword}
-          onChangeTab={setAdminTab}
-          onCloseChangePassword={() => setIsChangePasswordOpen(false)}
-          onCreateAdminOrder={createAdminOrder}
-          onCreateAdminUser={createAdminUser}
-          onCreateCategory={createCategory}
-          onCreateCustomerPortalProfile={createCustomerPortalProfile}
-          onCreateInvoiceFromOrder={createInvoiceFromOrder}
-          onCreatePayment={createPayment}
-          onCreateProduct={createProduct}
-          onCreatePromotion={createPromotion}
-          onCreateRole={createRole}
-          onCreateVoucher={createVoucher}
-          onDeleteAdminOrder={deleteAdminOrder}
-          onDeleteCategory={deleteCategory}
-          onDeleteCustomerPortalProfile={deleteCustomerPortalProfile}
-          onDeletePayment={deletePayment}
-          onDeleteProduct={deleteProduct}
-          onDeletePromotion={deletePromotion}
-          onDeleteRole={deleteRole}
-          onDeleteVoucher={deleteVoucher}
-          onExportAutoCountInvoices={exportAutoCountInvoices}
-          onLogout={() => void handleAdminLogout()}
-          onLoadMoreCustomerProfiles={() => void loadMoreCustomerProfiles()}
-          onLoadMoreInvoices={() => void loadMoreInvoices()}
-          onLoadMoreOrders={() => void loadMoreOrders()}
-          onLoadMoreSales={() => void loadMoreSales()}
-          onOpenChangePassword={() => setIsChangePasswordOpen(true)}
-          onRecordInvoicePayment={recordInvoicePayment}
-          onRefreshCatalog={refreshCatalog}
-          onResetAdminUserPassword={resetAdminUserPassword}
-          onSetAdminUserActive={setAdminUserActive}
-          onUpdateAdminOrder={updateAdminOrder}
-          onUpdateAdminUserProfile={updateAdminUserProfile}
-          onUpdateCategory={updateCategory}
-          onUpdateOrderFulfillment={updateOrderFulfillment}
-          onUpdateInvoiceBilling={updateInvoiceBilling}
-          onUpdatePayment={updatePayment}
-          onUpdateProduct={updateProduct}
-          onUpdatePromotion={updatePromotion}
-          onUpdateRole={updateRole}
-          onUpdateRolePermission={updateRolePermission}
-          onUpdateSalesDetails={updateSalesDetails}
-          onUpdateSalesStatus={updateSalesStatus}
-          onUpdateSystemSetting={updateSystemSetting}
-          onUpdateVoucher={updateVoucher}
-          onVoidInvoice={voidInvoice}
-          hasMoreCustomerProfiles={customerProfilesNextCursor !== null}
-          hasMoreInvoices={invoicesNextCursor !== null}
-          hasMoreOrders={ordersNextCursor !== null}
-          hasMoreSales={salesNextCursor !== null}
-          orders={orders}
-          payments={payments}
-          invoices={invoices}
-          sales={sales}
-          salesSummary={salesSummary}
-          systemSettings={systemSettings}
-          permissions={permissions}
-          products={adminCatalog.products}
-          promotions={promotions}
-          onUpdateCustomerPortalProfile={updateCustomerPortalProfile}
-          vouchers={vouchers}
+        <ShopFooter
+          onNavigateHome={() => openView("landing")}
+          onOpenCategory={(slug) => {
+            productReturnFocusRef.current = null;
+            setReturnFocusProductId(null);
+            setActiveJobId(null);
+            setSelectedCategory(slug);
+            if (view !== "store") openView("store");
+          }}
+          onOpenLegal={openLegal}
+          storefront={storefront}
         />
-        </Suspense>
-      )}
+
+        <CartDrawer
+          cart={cart}
+          customerAccountEmail={customerAccountEmail}
+          open={isCartOpen}
+          onCheckout={submitCheckout}
+          onClose={() => setIsCartOpen(false)}
+          onCompleted={clearCart}
+          onPromotionChange={setSelectedPromotionId}
+          onRemoveFromCart={removeFromCart}
+          onUpdateQuantity={updateQuantity}
+          onVoucherCodeChange={setVoucherCode}
+          publicOffers={publicOffers}
+          selectedPromotionId={selectedPromotionId}
+          voucherCode={voucherCode}
+        />
+        <AccountDrawer
+          open={isAccountOpen}
+          customerAccountEmail={customerAccountEmail}
+          onApplyVoucher={(code) => {
+            setVoucherCode(code);
+            setIsAccountOpen(false);
+            setIsCartOpen(true);
+          }}
+          onAuthenticated={(email) => {
+            const normalizedEmail = email.trim().toLowerCase();
+            setCustomerAccountEmail(normalizedEmail);
+            rememberAccountEmail(normalizedEmail);
+            refreshPublicOffers();
+          }}
+          onClose={() => setIsAccountOpen(false)}
+          onLoggedOut={refreshPublicOffers}
+          publicOffers={publicOffers}
+        />
+        <SupportChatWidget
+          customerEmail={customerAccountEmail}
+          isSuppressed={isCartOpen || isAccountOpen || view === "store" || view === "product"}
+        />
+      </div>
     </div>
   );
 }

@@ -1,5 +1,18 @@
+import { useEffect, useRef, type MouseEvent } from "react";
+
 import { LangToggle, useI18n } from "../../i18n/LanguageContext";
 import type { Category, StorefrontPayload } from "../../types";
+import type { LegalSlug } from "../legal/content";
+
+function isPlainLeftClick(event: MouseEvent<HTMLAnchorElement>): boolean {
+  return (
+    event.button === 0 &&
+    !event.metaKey &&
+    !event.ctrlKey &&
+    !event.shiftKey &&
+    !event.altKey
+  );
+}
 
 export function EkowayMark({ compact = false }: { compact?: boolean }) {
   return (
@@ -14,6 +27,7 @@ export type ShopHeaderProps = {
   categories: Category[];
   onChangeCategory: (slug: string) => void;
   onChangeSearch: (value: string) => void;
+  onNavigateHome?: () => void;
   onOpenAccount: () => void;
   onOpenCart: () => void;
   onSubmitSearch: () => void;
@@ -26,6 +40,7 @@ export function ShopHeader({
   categories,
   onChangeCategory,
   onChangeSearch,
+  onNavigateHome,
   onOpenAccount,
   onOpenCart,
   onSubmitSearch,
@@ -33,11 +48,44 @@ export function ShopHeader({
   selectedCategory
 }: ShopHeaderProps) {
   const { t } = useI18n();
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const suppressShortcutSlashUntilRef = useRef(0);
+
+  useEffect(() => {
+    const onGlobalKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      event.preventDefault();
+      suppressShortcutSlashUntilRef.current = Date.now() + 120;
+      searchInputRef.current?.focus();
+      searchInputRef.current?.select();
+    };
+    window.addEventListener("keydown", onGlobalKeyDown);
+    return () => window.removeEventListener("keydown", onGlobalKeyDown);
+  }, []);
 
   return (
     <>
       <header className="site-header worklist-header">
-        <a className="worklist-logo" href="/" aria-label={t("shop.nav.home")}>
+        <a
+          className="worklist-logo"
+          href="/"
+          aria-label={t("shop.nav.home")}
+          onClick={(event) => {
+            if (!onNavigateHome || !isPlainLeftClick(event)) return;
+            event.preventDefault();
+            onNavigateHome();
+          }}
+        >
           <EkowayMark />
           <span className="worklist-logo__word">EKOWAY</span>
           <i aria-hidden="true" />
@@ -56,11 +104,32 @@ export function ShopHeader({
             {t("shop.search.label")}
           </label>
           <input
+            ref={searchInputRef}
             id="storefront-search"
             type="search"
             placeholder={t("shop.search.placeholder")}
             value={searchTerm}
-            onChange={(event) => onChangeSearch(event.target.value)}
+            onChange={(event) => {
+              if (
+                Date.now() < suppressShortcutSlashUntilRef.current &&
+                (event.target.value === "/" || event.target.value === `${searchTerm}/`)
+              ) {
+                suppressShortcutSlashUntilRef.current = 0;
+                return;
+              }
+              suppressShortcutSlashUntilRef.current = 0;
+              onChangeSearch(event.target.value);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                if (searchTerm) {
+                  event.preventDefault();
+                  onChangeSearch("");
+                } else {
+                  event.currentTarget.blur();
+                }
+              }
+            }}
           />
           <button type="submit">{t("shop.search.action")}</button>
         </form>
@@ -81,6 +150,7 @@ export function ShopHeader({
         <div className="dept-chip-list">
           {categories.map((category) => (
             <button
+              aria-current={selectedCategory === category.slug ? "page" : undefined}
               aria-pressed={selectedCategory === category.slug}
               key={category.slug}
               className={"dept-chip" + (selectedCategory === category.slug ? " dept-chip--on" : "")}
@@ -101,35 +171,63 @@ export function ShopHeader({
 }
 
 export function ShopFooter({
+  onNavigateHome,
   onOpenCategory,
+  onOpenLegal,
   storefront
 }: {
+  onNavigateHome?: () => void;
   onOpenCategory: (slug: string) => void;
+  onOpenLegal?: (slug: LegalSlug) => void;
   storefront: StorefrontPayload;
 }) {
   const { t } = useI18n();
+
+  const renderLegalLink = (slug: LegalSlug, label: string) => (
+    <a
+      href={`/${slug}`}
+      onClick={(event) => {
+        if (!onOpenLegal || !isPlainLeftClick(event)) return;
+        event.preventDefault();
+        onOpenLegal(slug);
+      }}
+    >
+      {label}
+    </a>
+  );
 
   return (
     <footer className="shop-footer">
       <div className="shop-footer-grid">
         <div className="shop-footer-brand">
-          <div className="fbrand">
+          <a
+            className="fbrand"
+            href="/"
+            onClick={(event) => {
+              if (!onNavigateHome || !isPlainLeftClick(event)) return;
+              event.preventDefault();
+              onNavigateHome();
+            }}
+          >
             <EkowayMark compact />
             <strong>{t("shop.brand")}</strong>
-          </div>
+          </a>
           <p>{t("shop.footer.about")}</p>
         </div>
         <div>
           <h4>{t("shop.footer.shop")}</h4>
           <ul>
-            {storefront.categories
-              .filter((category) => category.slug !== "all")
+            {(storefront.categories.some((category) => category.slug !== "all")
+              ? storefront.categories.filter((category) => category.slug !== "all")
+              : storefront.categories
+            )
               .slice(0, 6)
               .map((category) => (
                 <li key={category.slug}>
                   <a
                     href="/shop"
                     onClick={(event) => {
+                      if (!isPlainLeftClick(event)) return;
                       event.preventDefault();
                       onOpenCategory(category.slug);
                     }}
@@ -140,14 +238,16 @@ export function ShopFooter({
               ))}
           </ul>
         </div>
-        <div>
-          <h4>{t("shop.footer.services")}</h4>
-          <ul>
-            {storefront.services.map((service) => (
-              <li key={service.name}>{service.name}</li>
-            ))}
-          </ul>
-        </div>
+        {storefront.services.length > 0 ? (
+          <div>
+            <h4>{t("shop.footer.services")}</h4>
+            <ul>
+              {storefront.services.map((service) => (
+                <li key={service.name}>{service.name}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
         <div>
           <h4>{t("shop.footer.contact")}</h4>
           <ul>
@@ -157,30 +257,109 @@ export function ShopFooter({
               </a>
             </li>
             <li>{t("shop.footer.hours")}</li>
-            <li>
-              <a href="/contact">{t("shop.footer.link.contact")}</a>
-            </li>
+            <li>{renderLegalLink("contact", t("shop.footer.link.contact"))}</li>
           </ul>
         </div>
         <div>
           <h4>{t("shop.footer.legal")}</h4>
           <ul>
-            <li>
-              <a href="/privacy">{t("shop.footer.link.privacy")}</a>
-            </li>
-            <li>
-              <a href="/terms">{t("shop.footer.link.terms")}</a>
-            </li>
-            <li>
-              <a href="/returns">{t("shop.footer.link.returns")}</a>
-            </li>
-            <li>
-              <a href="/delivery">{t("shop.footer.link.delivery")}</a>
-            </li>
+            <li>{renderLegalLink("privacy", t("shop.footer.link.privacy"))}</li>
+            <li>{renderLegalLink("terms", t("shop.footer.link.terms"))}</li>
+            <li>{renderLegalLink("returns", t("shop.footer.link.returns"))}</li>
+            <li>{renderLegalLink("delivery", t("shop.footer.link.delivery"))}</li>
           </ul>
         </div>
       </div>
       <div className="shop-footer-copy">{t("shop.footer.copy")}</div>
     </footer>
+  );
+}
+
+/** Zero-dependency architectural chrome for Policy and Status pages before storefront data loads. */
+export function PublicSiteChrome({
+  activeLegalSlug,
+  onHome,
+  onOpenLegal,
+  onShop,
+  children
+}: {
+  activeLegalSlug?: LegalSlug;
+  onHome: () => void;
+  onOpenLegal?: (slug: LegalSlug) => void;
+  onShop: () => void;
+  children: React.ReactNode;
+}) {
+  const { t } = useI18n();
+
+  const legalLinks: { slug: LegalSlug; label: string }[] = [
+    { slug: "privacy", label: t("shop.footer.link.privacy") },
+    { slug: "terms", label: t("shop.footer.link.terms") },
+    { slug: "returns", label: t("shop.footer.link.returns") },
+    { slug: "delivery", label: t("shop.footer.link.delivery") },
+    { slug: "contact", label: t("shop.footer.link.contact") }
+  ];
+
+  return (
+    <div className="public-site-shell">
+      <header className="public-header">
+        <a
+          className="public-logo"
+          href="/"
+          aria-label={t("shop.nav.home")}
+          onClick={(event) => {
+            if (!isPlainLeftClick(event)) return;
+            event.preventDefault();
+            onHome();
+          }}
+        >
+          <EkowayMark />
+          <span className="public-logo__word">EKOWAY</span>
+          <i aria-hidden="true" />
+          <span className="public-logo__sub">HARDWARE</span>
+        </a>
+
+        <div className="public-header__utils">
+          <LangToggle />
+          <a
+            className="public-header__shop"
+            href="/shop"
+            onClick={(event) => {
+              if (!isPlainLeftClick(event)) return;
+              event.preventDefault();
+              onShop();
+            }}
+          >
+            {t("nav.shop")} <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </header>
+
+      {children}
+
+      <footer className="public-footer">
+        <div className="public-footer__inner">
+          <div className="public-footer__meta">
+            <strong>{t("shop.brand")}</strong>
+            <span>{t("shop.footer.copy")}</span>
+          </div>
+          <nav className="public-footer__links" aria-label={t("legal.navLabel")}>
+            {legalLinks.map((item) => (
+              <a
+                key={item.slug}
+                aria-current={activeLegalSlug === item.slug ? "page" : undefined}
+                href={`/${item.slug}`}
+                onClick={(event) => {
+                  if (!onOpenLegal || !isPlainLeftClick(event)) return;
+                  event.preventDefault();
+                  onOpenLegal(item.slug);
+                }}
+              >
+                {item.label}
+              </a>
+            ))}
+          </nav>
+        </div>
+      </footer>
+    </div>
   );
 }

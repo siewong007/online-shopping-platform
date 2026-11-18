@@ -7,7 +7,7 @@ import {
   useState
 } from "react";
 
-import { useI18n } from "../../../i18n/LanguageContext";
+import { intlLocaleFor, useI18n } from "../../../i18n/LanguageContext";
 import { TurnstileSlot, useTurnstile } from "../../../shared/components/TurnstileSlot";
 import { fetchMe as fetchCustomerMe } from "../../customer_auth/api/customerAuthApi";
 import {
@@ -39,11 +39,16 @@ function isUnauthorized(error: unknown): boolean {
   return error instanceof ApiError && error.status === 401;
 }
 
-function formatMessageTime(value: string): string {
+function formatMessageTime(value: string, locale: string): string {
   const date = new Date(value);
   return Number.isNaN(date.getTime())
     ? ""
-    : date.toLocaleString([], { hour: "2-digit", minute: "2-digit", month: "short", day: "numeric" });
+    : date.toLocaleString(locale, {
+        hour: "2-digit",
+        minute: "2-digit",
+        month: "short",
+        day: "numeric"
+      });
 }
 
 function sortMessages(messages: SupportMessage[]): SupportMessage[] {
@@ -51,7 +56,8 @@ function sortMessages(messages: SupportMessage[]): SupportMessage[] {
 }
 
 export function SupportChatWidget({ customerEmail, isSuppressed = false }: SupportChatWidgetProps) {
-  const { t } = useI18n();
+  const { lang, t } = useI18n();
+  const locale = intlLocaleFor(lang);
   const [isOpen, setIsOpen] = useState(false);
   const [conversation, setConversation] = useState<SupportConversation | null>(null);
   const [messages, setMessages] = useState<SupportMessage[]>([]);
@@ -73,6 +79,7 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
   const guestEmailRef = useRef<HTMLInputElement>(null);
   const initialMessageRef = useRef<HTMLTextAreaElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
+  const threadRef = useRef<HTMLOListElement>(null);
   const messagesRef = useRef<SupportMessage[]>([]);
   const latestMessageIdRef = useRef(0);
   const isOpenRef = useRef(false);
@@ -329,7 +336,7 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
   );
 
   useEffect(() => {
-    if (!isOpen || !conversation) {
+    if (!isOpen || isSuppressed || !conversation) {
       return;
     }
 
@@ -350,10 +357,10 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
       document.removeEventListener("visibilitychange", onVisibilityChange);
       controller.abort();
     };
-  }, [conversation, isOpen, pollMessages]);
+  }, [conversation, isOpen, isSuppressed, pollMessages]);
 
   useEffect(() => {
-    if (isOpen || !getSupportAuthToken()) {
+    if (isOpen || isSuppressed || !getSupportAuthToken()) {
       return;
     }
 
@@ -381,7 +388,15 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
       document.removeEventListener("visibilitychange", onVisibilityChange);
       controller.abort();
     };
-  }, [isOpen, pollMessages]);
+  }, [isOpen, isSuppressed, pollMessages]);
+
+  useEffect(() => {
+    if (!isOpen || !conversation || !threadRef.current) {
+      return;
+    }
+
+    threadRef.current.scrollTop = threadRef.current.scrollHeight;
+  }, [conversation, isOpen, messages]);
 
   const startConversation = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -397,6 +412,11 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
 
     if (!/^\S+@\S+\.\S+$/.test(email)) {
       setError(t("support.error.email"));
+      return;
+    }
+
+    if (turnstile.isConfigured && !turnstile.token) {
+      setError(t("support.error.turnstilePending"));
       return;
     }
 
@@ -440,8 +460,13 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
   const sendMessage = async () => {
     const body = draft.trim();
 
-    if (!body || (turnstile.isConfigured && !turnstile.token)) {
+    if (!body) {
       setError(t("support.error.required"));
+      return;
+    }
+
+    if (turnstile.isConfigured && !turnstile.token) {
+      setError(t("support.error.turnstilePending"));
       return;
     }
 
@@ -530,7 +555,11 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
   }
 
   const isConversationClosed = conversation?.status === "closed";
-  const launcherLabel = isOpen ? t("support.closePanel") : t("support.launcher");
+  const launcherLabel = hasUnread
+    ? `${t("support.launcher")} (${t("support.unread")})`
+    : isOpen
+      ? t("support.closePanel")
+      : t("support.launcher");
 
   return (
     <div className={`support-chat-widget ${isOpen ? "support-chat-widget--open" : ""}`}>
@@ -591,7 +620,12 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
                 ) : null}
               </div>
 
-              <ol aria-live="polite" className="support-chat-thread" aria-label={t("support.thread")}>
+              <ol
+                aria-label={t("support.thread")}
+                aria-live="polite"
+                className="support-chat-thread"
+                ref={threadRef}
+              >
                 {messages.map((message) => (
                   <li
                     className={`support-chat-message support-chat-message--${message.author_kind}`}
@@ -599,7 +633,7 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
                   >
                     <div className="support-chat-message__meta">
                       <strong>{message.author_kind === "guest" ? t("support.you") : t("support.team")}</strong>
-                      <time dateTime={message.created_at}>{formatMessageTime(message.created_at)}</time>
+                      <time dateTime={message.created_at}>{formatMessageTime(message.created_at, locale)}</time>
                     </div>
                     <p>{message.body}</p>
                   </li>
@@ -623,6 +657,7 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
                     rows={3}
                     value={draft}
                   />
+                  <TurnstileSlot turnstile={turnstile} />
                   <div className="support-chat-composer__actions">
                     <span id="support-chat-message-hint">{t("support.sendHint")}</span>
                     <button
@@ -643,7 +678,7 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
               {loadState === "expired" ? <p className="support-chat-expired">{t("support.newConversation")}</p> : null}
               <p className="support-chat-welcome">{t("support.welcome")}</p>
               <fieldset className="support-chat-details">
-                <legend>Guest details</legend>
+                <legend>{t("support.guestDetails")}</legend>
                 <label>
                   <span>{t("support.name")}</span>
                   <input
@@ -669,20 +704,20 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
                 </label>
               </fieldset>
               <fieldset className="support-chat-details">
-                <legend>Guest order lookup</legend>
+                <legend>{t("support.orderLookup")}</legend>
                 <label>
-                  <span>Order number (optional)</span>
+                  <span>{t("support.orderNumberOptional")}</span>
                   <input
                     disabled={isStarting}
                     inputMode="numeric"
                     min="1"
                     onChange={(event) => setGuestOrderNumber(event.target.value)}
-                    placeholder="e.g. 1024"
+                    placeholder={t("support.orderNumberPlaceholder")}
                     type="number"
                     value={guestOrderNumber}
                   />
                 </label>
-                <p>Enter an order number and our support team will look into it in this chat.</p>
+                <p>{t("support.orderLookupHint")}</p>
               </fieldset>
               <label>
                 <span>{t("support.firstMessage")}</span>
@@ -697,6 +732,7 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
                   value={initialMessage}
                 />
               </label>
+              <TurnstileSlot turnstile={turnstile} />
               <button
                 className="support-chat-start-form__submit"
                 disabled={isStarting || (turnstile.isConfigured && !turnstile.token)}
@@ -706,8 +742,6 @@ export function SupportChatWidget({ customerEmail, isSuppressed = false }: Suppo
               </button>
             </form>
           )}
-
-          <TurnstileSlot turnstile={turnstile} />
         </section>
       ) : null}
 

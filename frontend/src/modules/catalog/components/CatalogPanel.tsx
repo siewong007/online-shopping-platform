@@ -1,5 +1,6 @@
 import { type ChangeEvent, useEffect, useMemo, useState } from "react";
 
+import { ConfirmModal } from "../../../shared/components/ConfirmModal";
 import { ManagementTable } from "../../../shared/components/ManagementTable";
 import { RecordForm, type RecordFormField, RecordModal } from "../../../shared/components/RecordModal";
 import { currencyFromCents } from "../../../shared/formatters";
@@ -18,6 +19,15 @@ import type {
 
 const MAX_PRODUCT_IMAGE_BYTES = 1_000_000;
 const ACCEPTED_PRODUCT_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
+
+type CatalogConfirmAction =
+  | { kind: "apply-images" }
+  | { kind: "delete-category"; category: Category }
+  | { kind: "delete-product"; product: Product }
+  | { kind: "bulk-delete"; scope: "selected" | "all"; count: number };
+
+type CatalogSubtab = "products" | "departments";
+type ProductStockFilter = "all" | "low" | "out";
 
 type ProductFormState = {
   badge: string;
@@ -302,6 +312,12 @@ export function CatalogPanel({
   const [imageImportReport, setImageImportReport] = useState<ProductImageImportReport | null>(null);
   const [isCheckingImages, setIsCheckingImages] = useState(false);
   const [isApplyingImages, setIsApplyingImages] = useState(false);
+  const [catalogSubtab, setCatalogSubtab] = useState<CatalogSubtab>("products");
+  const [categorySearch, setCategorySearch] = useState("");
+  const [productSearch, setProductSearch] = useState("");
+  const [productCategoryFilter, setProductCategoryFilter] = useState("all");
+  const [productStockFilter, setProductStockFilter] = useState<ProductStockFilter>("all");
+  const [pendingConfirm, setPendingConfirm] = useState<CatalogConfirmAction | null>(null);
 
   // The import calls are self-contained; the parent refresh callback synchronises the
   // catalogue and any currently loaded storefront products after a successful apply.
@@ -357,12 +373,13 @@ export function CatalogPanel({
     }
   };
 
-  const handleApplyImageManifest = async () => {
+  const requestApplyImageManifest = () => {
     if (!imageManifestCsv || !imageImportReport || imageImportReport.approved_rows === 0) return;
-    const confirmed = window.confirm(
-      `Apply ${imageImportReport.products_updated} verified image change(s) from ${imageManifestName}?`
-    );
-    if (!confirmed) return;
+    setPendingConfirm({ kind: "apply-images" });
+  };
+
+  const executeApplyImageManifest = async () => {
+    if (!imageManifestCsv || !imageImportReport || imageImportReport.approved_rows === 0) return;
 
     setIsApplyingImages(true);
     try {
@@ -379,6 +396,7 @@ export function CatalogPanel({
       notifyError(error, { operation: "apply the product image manifest", scope: "product-image-import" });
     } finally {
       setIsApplyingImages(false);
+      setPendingConfirm(null);
     }
   };
   const productFieldList = useMemo(() => productFields(categories), [categories]);
@@ -386,6 +404,40 @@ export function CatalogPanel({
     () => new Map(categories.map((category) => [category.slug, category.name])),
     [categories]
   );
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      if (productCategoryFilter !== "all" && product.category_slug !== productCategoryFilter) {
+        return false;
+      }
+
+      if (productStockFilter === "out") {
+        return product.stock_quantity === 0;
+      }
+
+      if (productStockFilter === "low") {
+        return product.stock_quantity <= product.low_stock_threshold;
+      }
+
+      return true;
+    });
+  }, [productCategoryFilter, productStockFilter, products]);
+
+  const productSearchText = (product: Product) =>
+    `${product.name} ${product.tone} ${product.badge} ${categoryNameBySlug.get(product.category_slug) ?? product.category_slug}`;
+
+  const searchedProductCount = useMemo(() => {
+    const query = productSearch.trim().toLocaleLowerCase();
+    if (!query) {
+      return filteredProducts.length;
+    }
+
+    return filteredProducts.filter((product) =>
+      `${product.name} ${product.tone} ${product.badge} ${categoryNameBySlug.get(product.category_slug) ?? product.category_slug}`
+        .toLocaleLowerCase()
+        .includes(query)
+    ).length;
+  }, [categoryNameBySlug, filteredProducts, productSearch]);
+
   const editingCategory =
     editingCategorySlug === null
       ? null
@@ -520,17 +572,16 @@ export function CatalogPanel({
     }
   };
 
-  const handleDeleteCategory = async (category: Category) => {
+  const requestDeleteCategory = (category: Category) => {
     if (!canDelete) {
       notify({ severity: "error", title: "Category not deleted", message: "The active role cannot delete catalog records.", scope: "catalog", dedupeKey: "catalog:category:delete:permission" });
       return;
     }
 
-    const confirmed = window.confirm(`Delete the ${category.name} category?`);
-    if (!confirmed) {
-      return;
-    }
+    setPendingConfirm({ kind: "delete-category", category });
+  };
 
+  const executeDeleteCategory = async (category: Category) => {
     setDeletingCategorySlug(category.slug);
 
     try {
@@ -540,6 +591,7 @@ export function CatalogPanel({
       notifyError(error, { operation: "delete category", scope: "catalog", dedupeKey: `catalog:category:${category.slug}:delete:error` });
     } finally {
       setDeletingCategorySlug(null);
+      setPendingConfirm(null);
     }
   };
 
@@ -570,17 +622,16 @@ export function CatalogPanel({
     }
   };
 
-  const handleDeleteProduct = async (product: Product) => {
+  const requestDeleteProduct = (product: Product) => {
     if (!canDelete) {
       notify({ severity: "error", title: "Product not deleted", message: "The active role cannot delete catalog records.", scope: "catalog", dedupeKey: "catalog:product:delete:permission" });
       return;
     }
 
-    const confirmed = window.confirm(`Delete ${product.name}?`);
-    if (!confirmed) {
-      return;
-    }
+    setPendingConfirm({ kind: "delete-product", product });
+  };
 
+  const executeDeleteProduct = async (product: Product) => {
     setDeletingProductId(product.id);
 
     try {
@@ -593,17 +644,24 @@ export function CatalogPanel({
       notifyError(error, { operation: "delete product", scope: "catalog", dedupeKey: `catalog:product:${product.id}:delete:error` });
     } finally {
       setDeletingProductId(null);
+      setPendingConfirm(null);
     }
   };
 
   const selectedProducts = products.filter((product) => selectedProductIds.has(product.id));
 
-  const handleBulkDelete = async (scope: "selected" | "all") => {
+  const requestBulkDelete = (scope: "selected" | "all") => {
     const targets = scope === "all" ? products : selectedProducts;
     if (!canDelete || targets.length === 0) return;
+    setPendingConfirm({ kind: "bulk-delete", scope, count: targets.length });
+  };
 
-    const confirmed = window.confirm(`Delete ${targets.length} ${targets.length === 1 ? "inventory record" : "inventory records"}?`);
-    if (!confirmed) return;
+  const executeBulkDelete = async (scope: "selected" | "all") => {
+    const targets = scope === "all" ? products : selectedProducts;
+    if (!canDelete || targets.length === 0) {
+      setPendingConfirm(null);
+      return;
+    }
 
     setIsBulkActionRunning(true);
     try {
@@ -614,6 +672,20 @@ export function CatalogPanel({
       notifyError(error, { operation: `delete ${scope} inventory records`, scope: "catalog", dedupeKey: `catalog:product:bulk-delete:${scope}:error` });
     } finally {
       setIsBulkActionRunning(false);
+      setPendingConfirm(null);
+    }
+  };
+
+  const executePendingConfirm = async () => {
+    if (!pendingConfirm) return;
+    if (pendingConfirm.kind === "apply-images") {
+      await executeApplyImageManifest();
+    } else if (pendingConfirm.kind === "delete-category") {
+      await executeDeleteCategory(pendingConfirm.category);
+    } else if (pendingConfirm.kind === "delete-product") {
+      await executeDeleteProduct(pendingConfirm.product);
+    } else {
+      await executeBulkDelete(pendingConfirm.scope);
     }
   };
 
@@ -666,10 +738,18 @@ export function CatalogPanel({
       render: (category: Category) => (
         <div className="management-action-stack">
           <button
+            className="outline-button table-action"
+            disabled={!canUpdate}
+            onClick={() => openEditCategory(category)}
+            type="button"
+          >
+            Edit
+          </button>
+          <button
             aria-label={`Delete ${category.name}`}
             className="outline-button table-action table-icon-action danger-button"
             disabled={!canDelete || deletingCategorySlug === category.slug}
-            onClick={() => void handleDeleteCategory(category)}
+            onClick={() => requestDeleteCategory(category)}
             title={`Delete ${category.name}`}
             type="button"
           >
@@ -701,6 +781,13 @@ export function CatalogPanel({
         categoryNameBySlug.get(product.category_slug) ?? product.category_slug
     },
     {
+      key: "price",
+      label: "Price",
+      align: "right" as const,
+      sortValue: (product: Product) => product.price_cents,
+      render: (product: Product) => currencyFromCents(product.price_cents)
+    },
+    {
       key: "stock",
       label: "On hand",
       align: "right" as const,
@@ -717,10 +804,26 @@ export function CatalogPanel({
     {
       key: "status",
       label: "Stock status",
-      sortValue: (product: Product) => product.stock_quantity <= product.low_stock_threshold,
+      sortValue: (product: Product) =>
+        product.stock_quantity === 0 ? 0 : product.stock_quantity <= product.low_stock_threshold ? 1 : 2,
+      render: (product: Product) => {
+        const isOut = product.stock_quantity === 0;
+        const isLow = product.stock_quantity <= product.low_stock_threshold;
+
+        return (
+          <span className={`status-pill ${isOut ? "danger" : isLow ? "warning" : "live"}`}>
+            {isOut ? "Out of stock" : isLow ? "Low" : "Healthy"}
+          </span>
+        );
+      }
+    },
+    {
+      key: "featured",
+      label: "Featured",
+      sortValue: (product: Product) => product.featured,
       render: (product: Product) => (
-        <span className={`status-pill ${product.stock_quantity <= product.low_stock_threshold ? "warning" : "live"}`}>
-          {product.stock_quantity <= product.low_stock_threshold ? "Low" : "Healthy"}
+        <span className={`status-pill ${product.featured ? "live" : ""}`}>
+          {product.featured ? "Featured" : "Hidden"}
         </span>
       )
     },
@@ -749,10 +852,18 @@ export function CatalogPanel({
       render: (product: Product) => (
         <div className="management-action-stack">
           <button
+            className="outline-button table-action"
+            disabled={!canUpdate}
+            onClick={() => openEditProduct(product)}
+            type="button"
+          >
+            Edit
+          </button>
+          <button
             aria-label={`Delete ${product.name}`}
             className="outline-button table-action table-icon-action danger-button"
             disabled={!canDelete || deletingProductId === product.id}
-            onClick={() => void handleDeleteProduct(product)}
+            onClick={() => requestDeleteProduct(product)}
             title={`Delete ${product.name}`}
             type="button"
           >
@@ -762,6 +873,50 @@ export function CatalogPanel({
       )
     }
   ];
+
+  const isConfirmBusy =
+    isApplyingImages ||
+    deletingCategorySlug !== null ||
+    deletingProductId !== null ||
+    isBulkActionRunning;
+
+  const confirmModalCopy =
+    pendingConfirm?.kind === "apply-images"
+      ? {
+          eyebrow: "Image manifest",
+          title: "Apply verified product images",
+          message: `Apply ${imageImportReport?.products_updated ?? 0} verified image change(s) from ${imageManifestName}?`,
+          confirmLabel: "Apply images",
+          tone: "warning" as const
+        }
+      : pendingConfirm?.kind === "delete-category"
+        ? {
+            eyebrow: "Department removal",
+            title: `Delete ${pendingConfirm.category.name}`,
+            message: `Delete the ${pendingConfirm.category.name} category?`,
+            confirmLabel: "Delete category",
+            tone: "danger" as const
+          }
+        : pendingConfirm?.kind === "delete-product"
+          ? {
+              eyebrow: "Product removal",
+              title: `Delete ${pendingConfirm.product.name}`,
+              message: `Delete ${pendingConfirm.product.name}?`,
+              confirmLabel: "Delete product",
+              tone: "danger" as const
+            }
+          : pendingConfirm?.kind === "bulk-delete"
+            ? {
+                eyebrow: pendingConfirm.scope === "all" ? "Bulk removal" : "Selected removal",
+                title:
+                  pendingConfirm.scope === "all"
+                    ? "Delete all inventory records"
+                    : "Delete selected inventory records",
+                message: `Delete ${pendingConfirm.count} ${pendingConfirm.count === 1 ? "inventory record" : "inventory records"}?`,
+                confirmLabel: pendingConfirm.scope === "all" ? "Delete all" : "Delete selected",
+                tone: "danger" as const
+              }
+            : null;
 
   return (
     <section className="admin-section active">
@@ -810,7 +965,7 @@ export function CatalogPanel({
           <button
             className="solid-button"
             disabled={!canUpdate || isApplyingImages || imageImportReport.products_updated === 0}
-            onClick={() => void handleApplyImageManifest()}
+            onClick={requestApplyImageManifest}
             type="button"
           >
             {isApplyingImages ? "Applying…" : `Apply ${imageImportReport.products_updated} verified images`}
@@ -857,68 +1012,155 @@ export function CatalogPanel({
         </div>
       ) : null}
 
-      <div className={variant === "catalog" ? "admin-panels two-up" : "admin-panels"}>
-        {variant === "catalog" ? (
-          <article className="dashboard-panel">
-          <div className="panel-header">
-            <div>
-              <p className="eyebrow">Current categories</p>
-              <h3>Department table</h3>
-            </div>
-          </div>
-          <ManagementTable
-            columns={categoryColumns}
-            emptyMessage="No categories have been created yet."
-            getRowKey={(category) => category.slug}
-            initialSortKey="name"
-            rows={categories}
-            onRowClick={canUpdate ? openEditCategory : undefined}
-            tableLabel="Category management table"
-          />
-          </article>
-        ) : null}
+      {variant === "catalog" ? (
+        <div className="record-toolbar catalog-subtabs" role="tablist" aria-label="Catalog sections">
+          <button
+            aria-selected={catalogSubtab === "products"}
+            className={catalogSubtab === "products" ? "solid-button catalog-subtab active" : "outline-button catalog-subtab"}
+            onClick={() => setCatalogSubtab("products")}
+            role="tab"
+            type="button"
+          >
+            Products ({products.length})
+          </button>
+          <button
+            aria-selected={catalogSubtab === "departments"}
+            className={catalogSubtab === "departments" ? "solid-button catalog-subtab active" : "outline-button catalog-subtab"}
+            onClick={() => setCatalogSubtab("departments")}
+            role="tab"
+            type="button"
+          >
+            Departments ({categories.length})
+          </button>
+        </div>
+      ) : null}
 
-        <article className="dashboard-panel">
-          <div className="panel-header">
-            <div>
-              <p className="eyebrow">{variant === "inventory" ? "Stock records" : "Storefront products"}</p>
-              <h3>{variant === "inventory" ? "Inventory management table" : "Product inventory table"}</h3>
-            </div>
-          </div>
-          {variant === "inventory" ? (
-            <div className="inventory-bulk-actions" aria-label="Inventory bulk actions">
-              <span>{selectedProducts.length ? `${selectedProducts.length} selected` : "Select inventory records to run a bulk action"}</span>
+      <div className="admin-panels">
+        {variant === "catalog" && catalogSubtab === "departments" ? (
+          <article className="dashboard-panel">
+            <div className="panel-header">
               <div>
-                <button disabled={!canUpdate || selectedProducts.length === 0 || isBulkActionRunning} onClick={() => void handlePublishSelected()} type="button">
-                  Activate selected storefront
-                </button>
-                <button className="danger-button" disabled={!canDelete || selectedProducts.length === 0 || isBulkActionRunning} onClick={() => void handleBulkDelete("selected")} type="button">
-                  Delete selected
-                </button>
-                <button className="danger-button" disabled={!canDelete || products.length === 0 || isBulkActionRunning} onClick={() => void handleBulkDelete("all")} type="button">
-                  Delete all
-                </button>
+                <p className="eyebrow">Current categories</p>
+                <h3>Department table</h3>
               </div>
             </div>
-          ) : null}
-          <ManagementTable
-            columns={productColumns}
-            emptyMessage="No products have been merchandised yet."
-            getRowKey={(product) => product.id}
-            initialSortKey="name"
-            onRowClick={canUpdate ? openEditProduct : undefined}
-            onSelectionChange={variant === "inventory" ? setSelectedProductIds : undefined}
-            rows={products}
-            selectable={variant === "inventory"}
-            selectedKeys={selectedProductIds}
-            tableLabel="Product inventory management table"
-          />
-        </article>
+            <ManagementTable
+              columns={categoryColumns}
+              emptyMessage={
+                categories.length === 0
+                  ? "No categories have been created yet."
+                  : "No departments match your search."
+              }
+              getRowKey={(category) => category.slug}
+              getSearchText={(category) => `${category.name} ${category.slug} ${category.teaser}`}
+              initialSortKey="name"
+              onRowClick={canUpdate ? openEditCategory : undefined}
+              onSearchChange={setCategorySearch}
+              rows={categories}
+              searchPlaceholder="Search departments..."
+              searchValue={categorySearch}
+              tableLabel="Category management table"
+            />
+          </article>
+        ) : (
+          <article className="dashboard-panel">
+            <div className="panel-header">
+              <div>
+                <p className="eyebrow">{variant === "inventory" ? "Stock records" : "Storefront products"}</p>
+                <h3>{variant === "inventory" ? "Inventory management table" : "Product inventory table"}</h3>
+              </div>
+            </div>
+            {variant === "inventory" ? (
+              <div className="inventory-bulk-actions" aria-label="Inventory bulk actions">
+                <span>{selectedProducts.length ? `${selectedProducts.length} selected` : "Select inventory records to run a bulk action"}</span>
+                <div className="inventory-bulk-controls">
+                  <div className="inventory-bulk-selection-actions">
+                    <button disabled={!canUpdate || selectedProducts.length === 0 || isBulkActionRunning} onClick={() => void handlePublishSelected()} type="button">
+                      Activate selected storefront
+                    </button>
+                    <button className="danger-button" disabled={!canDelete || selectedProducts.length === 0 || isBulkActionRunning} onClick={() => requestBulkDelete("selected")} type="button">
+                      Delete selected
+                    </button>
+                  </div>
+                  <span className="inventory-bulk-separator" aria-hidden="true" />
+                  <button className="danger-button inventory-bulk-all-action" disabled={!canDelete || products.length === 0 || isBulkActionRunning} onClick={() => requestBulkDelete("all")} type="button">
+                    Delete all
+                  </button>
+                </div>
+              </div>
+            ) : null}
+            <ManagementTable
+              columns={productColumns}
+              emptyMessage={
+                products.length === 0
+                  ? "No products have been merchandised yet."
+                  : "No products match the current filters."
+              }
+              filterSlot={
+                <>
+                  <label className="management-filter-select">
+                    <span className="sr-only">Filter by category</span>
+                    <select
+                      aria-label="Filter by category"
+                      className="table-select"
+                      onChange={(event) => setProductCategoryFilter(event.target.value)}
+                      value={productCategoryFilter}
+                    >
+                      <option value="all">All categories</option>
+                      {categories.map((category) => (
+                        <option key={category.slug} value={category.slug}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className="management-filter-pills" role="group" aria-label="Filter by stock status">
+                    {(
+                      [
+                        { key: "all", label: "All" },
+                        { key: "low", label: "Low stock" },
+                        { key: "out", label: "Out of stock" }
+                      ] as const
+                    ).map((pill) => (
+                      <button
+                        aria-pressed={productStockFilter === pill.key}
+                        className={
+                          productStockFilter === pill.key
+                            ? "solid-button table-action"
+                            : "outline-button table-action"
+                        }
+                        key={pill.key}
+                        onClick={() => setProductStockFilter(pill.key)}
+                        type="button"
+                      >
+                        {pill.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              }
+              getRowKey={(product) => product.id}
+              getSearchText={productSearchText}
+              initialSortKey="name"
+              onRowClick={canUpdate ? openEditProduct : undefined}
+              onSearchChange={setProductSearch}
+              onSelectionChange={variant === "inventory" ? setSelectedProductIds : undefined}
+              rows={filteredProducts}
+              searchPlaceholder="Search products, brand, or category..."
+              searchValue={productSearch}
+              selectable={variant === "inventory"}
+              selectedKeys={selectedProductIds}
+              summaryText={`${searchedProductCount} of ${products.length} ${products.length === 1 ? "product" : "products"}`}
+              tableLabel="Product inventory management table"
+            />
+          </article>
+        )}
       </div>
 
       {variant === "catalog" ? (
         <RecordModal
         eyebrow="New category"
+        isBusy={isSavingCategory}
         isOpen={isCategoryModalOpen}
         onClose={() => {
           setIsCategoryModalOpen(false);
@@ -945,6 +1187,7 @@ export function CatalogPanel({
       {variant === "catalog" ? (
         <RecordModal
         eyebrow="Editing category"
+        isBusy={isSavingCategory}
         isOpen={isCategoryEditOpen}
         onClose={closeCategoryEdit}
         statusLabel={canUpdate ? "Writable" : "Read only"}
@@ -966,6 +1209,7 @@ export function CatalogPanel({
 
       <RecordModal
         eyebrow={editingProductId === null ? "New product" : "Editing product"}
+        isBusy={isSavingProduct}
         isOpen={isProductModalOpen}
         onClose={closeProductModal}
         size="wide"
@@ -986,30 +1230,43 @@ export function CatalogPanel({
           onSubmit={() => void handleSaveProduct()}
           submitLabel={editingProductId === null ? "Create Product" : "Save Product"}
           values={productForm}
-        />
-        <div className="image-url-preview">
-          <label className="product-image-upload">
-            <span>Product image</span>
-            <input
-              accept="image/png,image/jpeg,image/webp,image/gif"
-              disabled={editingProductId === null ? !canCreate : !canUpdate}
-              onChange={handleImageFileChange}
-              type="file"
-            />
-            <small>Choose a local PNG, JPEG, WebP, or GIF image up to 1 MB.</small>
-          </label>
-          {productForm.image_url.trim() ? (
-            <>
-              <img src={productForm.image_url.trim()} alt="Product preview" />
-              <button className="text-link" onClick={clearProductImage} type="button">
-                Remove image
-              </button>
-            </>
-          ) : (
-            <p>No image selected — the tone block fallback will be used.</p>
-          )}
-        </div>
+        >
+          <div className="image-url-preview">
+            <label className="product-image-upload">
+              <span>Product image</span>
+              <input
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                disabled={editingProductId === null ? !canCreate : !canUpdate}
+                onChange={handleImageFileChange}
+                type="file"
+              />
+              <small>Choose a local PNG, JPEG, WebP, or GIF image up to 1 MB.</small>
+            </label>
+            {productForm.image_url.trim() ? (
+              <>
+                <img src={productForm.image_url.trim()} alt="Product preview" />
+                <button className="text-link" onClick={clearProductImage} type="button">
+                  Remove image
+                </button>
+              </>
+            ) : (
+              <p>No image selected — the tone block fallback will be used.</p>
+            )}
+          </div>
+        </RecordForm>
       </RecordModal>
+
+      <ConfirmModal
+        confirmLabel={confirmModalCopy?.confirmLabel ?? "Confirm"}
+        eyebrow={confirmModalCopy?.eyebrow}
+        isConfirming={isConfirmBusy}
+        isOpen={confirmModalCopy !== null}
+        message={confirmModalCopy?.message ?? ""}
+        onCancel={() => setPendingConfirm(null)}
+        onConfirm={executePendingConfirm}
+        title={confirmModalCopy?.title ?? "Confirm action"}
+        tone={confirmModalCopy?.tone ?? "danger"}
+      />
     </section>
   );
 }

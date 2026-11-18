@@ -1,5 +1,6 @@
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 
+import { ConfirmModal } from "../../../shared/components/ConfirmModal";
 import { ManagementTable } from "../../../shared/components/ManagementTable";
 import { RecordModal } from "../../../shared/components/RecordModal";
 import { currencyFromCents, formatOrderDate } from "../../../shared/formatters";
@@ -81,7 +82,7 @@ function fulfillmentLabel(value: string): string {
     .join(" ");
 }
 
-function fulfillmentTone(status: FulfillmentStatus): string {
+function fulfillmentTone(status: FulfillmentStatus): "danger" | "live" | "warning" | undefined {
   if (status === "completed" || status === "delivered") {
     return "live";
   }
@@ -94,7 +95,40 @@ function fulfillmentTone(status: FulfillmentStatus): string {
     return "warning";
   }
 
-  return "";
+  return undefined;
+}
+
+type OrderStatusFilter =
+  | "all"
+  | "received"
+  | "picking"
+  | "packed"
+  | "ready_or_delivery"
+  | "completed";
+
+const orderStatusFilters: { key: OrderStatusFilter; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "received", label: "Received" },
+  { key: "picking", label: "Picking" },
+  { key: "packed", label: "Packed" },
+  { key: "ready_or_delivery", label: "Ready / Delivery" },
+  { key: "completed", label: "Completed" }
+];
+
+function matchesOrderStatusFilter(order: Order, filter: OrderStatusFilter): boolean {
+  if (filter === "all") return true;
+  if (filter === "ready_or_delivery") {
+    return (
+      order.fulfillment_status === "ready_for_pickup" ||
+      order.fulfillment_status === "out_for_delivery"
+    );
+  }
+  if (filter === "completed") {
+    return (
+      order.fulfillment_status === "completed" || order.fulfillment_status === "delivered"
+    );
+  }
+  return order.fulfillment_status === filter;
 }
 
 function nextFulfillmentStatuses(order: Order): FulfillmentStatus[] {
@@ -179,6 +213,9 @@ export function OrderControlPanel({
   }>({ to_status: "picking", note: "" });
   const [savingFulfillmentId, setSavingFulfillmentId] = useState<number | null>(null);
   const [historyOrderId, setHistoryOrderId] = useState<number | null>(null);
+  const [confirmDeleteOrder, setConfirmDeleteOrder] = useState<Order | null>(null);
+  const [orderSearch, setOrderSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<OrderStatusFilter>("all");
   const canSave = editingOrderId === null ? canCreate : canUpdate;
   const fulfillmentOrder =
     fulfillmentOrderId === null
@@ -189,6 +226,24 @@ export function OrderControlPanel({
     : [];
   const historyOrder =
     historyOrderId === null ? null : orders.find((order) => order.id === historyOrderId) ?? null;
+  const filteredOrders = useMemo(
+    () => orders.filter((order) => matchesOrderStatusFilter(order, statusFilter)),
+    [orders, statusFilter]
+  );
+  const orderSearchText = (order: Order) =>
+    `#${order.id} ${order.customer_name} ${order.customer_email} ${fulfillmentLabel(order.fulfillment_status)} ${fulfillmentLabel(order.fulfillment_method)} ${order.items.map((item) => item.product_name).join(" ")}`;
+  const searchedOrderCount = useMemo(() => {
+    const query = orderSearch.trim().toLocaleLowerCase();
+    if (!query) {
+      return filteredOrders.length;
+    }
+
+    return filteredOrders.filter((order) =>
+      `#${order.id} ${order.customer_name} ${order.customer_email} ${fulfillmentLabel(order.fulfillment_status)} ${fulfillmentLabel(order.fulfillment_method)} ${order.items.map((item) => item.product_name).join(" ")}`
+        .toLocaleLowerCase()
+        .includes(query)
+    ).length;
+  }, [filteredOrders, orderSearch]);
   const previewSubtotal = form.items.reduce((sum, item) => {
     const product = products.find((candidate) => candidate.id === Number(item.product_id));
     const quantity = Number(item.quantity);
@@ -325,17 +380,22 @@ export function OrderControlPanel({
     }
   };
 
-  const handleDeleteOrder = async (order: Order) => {
+  const requestDeleteOrder = (order: Order) => {
     if (!canDelete) {
       notify({ severity: "error", title: "Order not deleted", message: "The active role cannot delete orders.", scope: "orders", dedupeKey: "orders:delete:permission" });
       return;
     }
 
-    const confirmed = window.confirm(`Delete order #${order.id}?`);
-    if (!confirmed) {
+    setConfirmDeleteOrder(order);
+  };
+
+  const executeDeleteOrder = async () => {
+    if (!confirmDeleteOrder || !canDelete) {
+      setConfirmDeleteOrder(null);
       return;
     }
 
+    const order = confirmDeleteOrder;
     setDeletingOrderId(order.id);
 
     try {
@@ -343,11 +403,15 @@ export function OrderControlPanel({
       if (editingOrderId === order.id) {
         resetForm();
       }
+      if (historyOrderId === order.id) {
+        setHistoryOrderId(null);
+      }
       notify({ severity: "success", title: "Order deleted", message: `Order #${order.id} was deleted successfully.`, scope: "orders", dedupeKey: `orders:${order.id}:delete:success` });
     } catch (error) {
       notifyError(error, { operation: "delete order", scope: "orders", dedupeKey: `orders:${order.id}:delete:error` });
     } finally {
       setDeletingOrderId(null);
+      setConfirmDeleteOrder(null);
     }
   };
 
@@ -398,7 +462,7 @@ export function OrderControlPanel({
       sortValue: (order: Order) => `${order.fulfillment_status}-${order.fulfillment_method}`,
       render: (order: Order) => (
         <div className="table-cell-main">
-          <span className={`status-pill ${fulfillmentTone(order.fulfillment_status)}`}>
+          <span className={`status-pill ${fulfillmentTone(order.fulfillment_status) ?? ""}`}>
             {fulfillmentLabel(order.fulfillment_status)}
           </span>
           <span>{fulfillmentLabel(order.fulfillment_method)}</span>
@@ -426,12 +490,10 @@ export function OrderControlPanel({
           </button>
           <button
             className="outline-button table-action"
-            onClick={() =>
-              setHistoryOrderId((current) => (current === order.id ? null : order.id))
-            }
+            onClick={() => setHistoryOrderId(order.id)}
             type="button"
           >
-            {historyOrderId === order.id ? "Hide History" : "History"}
+            History
           </button>
           <button
             className="outline-button table-action"
@@ -444,7 +506,7 @@ export function OrderControlPanel({
           <button
             className="outline-button danger-button table-action"
             disabled={!canDelete || deletingOrderId === order.id}
-            onClick={() => void handleDeleteOrder(order)}
+            onClick={() => requestDeleteOrder(order)}
             type="button"
           >
             {deletingOrderId === order.id ? "Deleting..." : "Delete"}
@@ -456,27 +518,21 @@ export function OrderControlPanel({
 
   return (
     <section className="admin-section active">
-      <div className="panel-header">
-        <div>
-          <p className="eyebrow">{variant === "fulfillment" ? "Fulfillment management" : "Order control"}</p>
-          <h3>{variant === "fulfillment" ? "Manage orders and their fulfillment flow" : "Create, edit and remove checkout orders"}</h3>
-        </div>
-        <span className={`status-pill ${canCreate || canUpdate || canDelete ? "live" : ""}`}>
-          {orders.length} total
-        </span>
-      </div>
-
       <article className="dashboard-panel">
         <div className="panel-header">
           <div>
-              <p className="eyebrow">{variant === "fulfillment" ? "Fulfillment queue" : "Order book"}</p>
-              <h3>{variant === "fulfillment" ? "Fulfillment management table" : "Recent checkout orders"}</h3>
+            <p className="eyebrow">{variant === "fulfillment" ? "Fulfillment queue" : "Order book"}</p>
+            <h3>{variant === "fulfillment" ? "Manage orders and their fulfillment flow" : "Create, edit and remove checkout orders"}</h3>
           </div>
           <div className="admin-actions">
-            <span className="status-pill">{orders.length} rows</span>
-            <button className="solid-button" disabled={!canCreate} onClick={createOrder} type="button">
-              Create Order
-            </button>
+            <span className={`status-pill ${canCreate || canUpdate || canDelete ? "live" : ""}`}>
+              {orders.length} {orders.length === 1 ? "order" : "orders"}
+            </span>
+            {variant !== "fulfillment" ? (
+              <button className="solid-button" disabled={!canCreate} onClick={createOrder} type="button">
+                Create Order
+              </button>
+            ) : null}
           </div>
         </div>
 
@@ -485,56 +541,46 @@ export function OrderControlPanel({
         ) : (
           <ManagementTable
             columns={orderColumns}
-            emptyMessage="No orders have been placed yet."
+            emptyMessage="No orders match the current filter."
+            filterSlot={
+              <div className="management-filter-pills" role="group" aria-label="Filter by fulfillment status">
+                {orderStatusFilters.map((pill) => (
+                  <button
+                    aria-pressed={statusFilter === pill.key}
+                    className={
+                      statusFilter === pill.key
+                        ? "solid-button table-action"
+                        : "outline-button table-action"
+                    }
+                    key={pill.key}
+                    onClick={() => setStatusFilter(pill.key)}
+                    type="button"
+                  >
+                    {pill.label}
+                  </button>
+                ))}
+              </div>
+            }
             getRowKey={(order) => order.id}
+            getSearchText={orderSearchText}
             hasMore={hasMore}
             initialSortDirection="desc"
             initialSortKey="id"
             isLoadingMore={isLoadingMore}
             onLoadMore={onLoadMore}
-            rows={orders}
+            onSearchChange={setOrderSearch}
+            rows={filteredOrders}
+            searchPlaceholder="Search order #, customer, or item..."
+            searchValue={orderSearch}
+            summaryText={`${searchedOrderCount} of ${orders.length} ${orders.length === 1 ? "order" : "orders"}`}
             tableLabel={variant === "fulfillment" ? "Fulfillment management table" : "Order management table"}
           />
         )}
-
-        {historyOrder ? (
-          <div className="order-history-panel">
-            <div className="panel-header">
-              <div>
-                <p className="eyebrow">Fulfillment history</p>
-                <h3>Order #{historyOrder.id}</h3>
-              </div>
-              <button
-                className="outline-button"
-                onClick={() => setHistoryOrderId(null)}
-                type="button"
-              >
-                Close
-              </button>
-            </div>
-            {historyOrder.fulfillment_history.length === 0 ? (
-              <p>No fulfillment transitions have been recorded yet.</p>
-            ) : (
-              <div className="order-history-list">
-                {historyOrder.fulfillment_history.map((entry) => (
-                  <div className="order-history-item" key={entry.id}>
-                    <span>
-                      {entry.from_status ? fulfillmentLabel(entry.from_status) : "New"} to{" "}
-                      {fulfillmentLabel(entry.to_status)}
-                    </span>
-                    <strong>{entry.changed_by}</strong>
-                    <small>{formatOrderDate(entry.happened_at)}</small>
-                    {entry.note ? <p>{entry.note}</p> : null}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : null}
       </article>
 
       <RecordModal
         eyebrow={editingOrderId === null ? "New order" : `Order #${editingOrderId}`}
+        isBusy={isSaving}
         isOpen={isEditorOpen}
         onClose={resetForm}
         size="wide"
@@ -600,7 +646,7 @@ export function OrderControlPanel({
                   >
                     {products.map((product) => (
                       <option key={product.id} value={product.id}>
-                        {product.name}
+                        {product.name} · {currencyFromCents(product.price_cents)} ({product.stock_quantity} left)
                       </option>
                     ))}
                   </select>
@@ -651,7 +697,7 @@ export function OrderControlPanel({
             <strong>{currencyFromCents(previewSubtotal)}</strong>
           </div>
 
-          <div className="form-actions split-actions">
+          <div className="form-actions split-actions record-form-actions-sticky">
             <button className="solid-button" disabled={!canSave || isSaving} type="submit">
               {isSaving ? "Saving..." : editingOrderId === null ? "Create Order" : "Save Order"}
             </button>
@@ -664,6 +710,7 @@ export function OrderControlPanel({
 
       <RecordModal
         eyebrow={fulfillmentOrder ? `Order #${fulfillmentOrder.id}` : "Fulfillment"}
+        isBusy={Boolean(fulfillmentOrder && savingFulfillmentId === fulfillmentOrder.id)}
         isOpen={Boolean(fulfillmentOrder)}
         onClose={closeFulfillmentEditor}
         statusLabel={canUpdate ? "Writable" : "Read only"}
@@ -673,7 +720,7 @@ export function OrderControlPanel({
         {fulfillmentOrder ? (
           <form className="admin-form" onSubmit={handleSubmitFulfillment}>
             <div className="order-status-summary">
-              <span className={`status-pill ${fulfillmentTone(fulfillmentOrder.fulfillment_status)}`}>
+              <span className={`status-pill ${fulfillmentTone(fulfillmentOrder.fulfillment_status) ?? ""}`}>
                 {fulfillmentLabel(fulfillmentOrder.fulfillment_status)}
               </span>
               <strong>{fulfillmentLabel(fulfillmentOrder.fulfillment_method)}</strong>
@@ -712,7 +759,7 @@ export function OrderControlPanel({
               />
             </label>
 
-            <div className="form-actions split-actions">
+            <div className="form-actions split-actions record-form-actions-sticky">
               <button
                 className="solid-button"
                 disabled={
@@ -736,6 +783,51 @@ export function OrderControlPanel({
           </form>
         ) : null}
       </RecordModal>
+
+      <RecordModal
+        eyebrow="Fulfillment history"
+        isOpen={Boolean(historyOrder)}
+        onClose={() => setHistoryOrderId(null)}
+        statusLabel={historyOrder ? fulfillmentLabel(historyOrder.fulfillment_status) : undefined}
+        statusTone={historyOrder ? fulfillmentTone(historyOrder.fulfillment_status) : undefined}
+        title={historyOrder ? `Order #${historyOrder.id} · ${historyOrder.customer_name}` : "Fulfillment history"}
+      >
+        {historyOrder ? (
+          historyOrder.fulfillment_history.length === 0 ? (
+            <p>No fulfillment transitions have been recorded yet.</p>
+          ) : (
+            <div className="order-history-list">
+              {historyOrder.fulfillment_history.map((entry) => (
+                <div className="order-history-item" key={entry.id}>
+                  <span>
+                    {entry.from_status ? fulfillmentLabel(entry.from_status) : "New"} to{" "}
+                    {fulfillmentLabel(entry.to_status)}
+                  </span>
+                  <strong>{entry.changed_by}</strong>
+                  <small>{formatOrderDate(entry.happened_at)}</small>
+                  {entry.note ? <p>{entry.note}</p> : null}
+                </div>
+              ))}
+            </div>
+          )
+        ) : null}
+      </RecordModal>
+
+      <ConfirmModal
+        confirmLabel="Delete order"
+        eyebrow="Order removal"
+        isConfirming={confirmDeleteOrder !== null && deletingOrderId === confirmDeleteOrder.id}
+        isOpen={confirmDeleteOrder !== null}
+        message={
+          confirmDeleteOrder
+            ? `Delete order #${confirmDeleteOrder.id} for ${confirmDeleteOrder.customer_name}?`
+            : ""
+        }
+        onCancel={() => setConfirmDeleteOrder(null)}
+        onConfirm={executeDeleteOrder}
+        title={confirmDeleteOrder ? `Delete order #${confirmDeleteOrder.id}` : "Delete order"}
+        tone="danger"
+      />
     </section>
   );
 }

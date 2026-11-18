@@ -1,5 +1,8 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 
+import { ConfirmModal } from "../../../shared/components/ConfirmModal";
+import { ManagementTable } from "../../../shared/components/ManagementTable";
+import { RecordForm, type RecordFormField, RecordModal } from "../../../shared/components/RecordModal";
 import { currencyFromCents, formatOrderDate } from "../../../shared/formatters";
 import { useNotifications } from "../../../shared/notifications";
 import type { Order } from "../../orders/types";
@@ -15,12 +18,83 @@ import type {
 
 const paymentMethods = ["Card", "Cash", "ACH", "Check", "Store Credit"];
 
+type InvoiceStatusFilter = "all" | InvoiceStatus;
+
+const invoiceStatusFilters: { key: InvoiceStatusFilter; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "unpaid", label: "Unpaid" },
+  { key: "partial", label: "Partial" },
+  { key: "paid", label: "Paid" },
+  { key: "overdue", label: "Overdue" },
+  { key: "void", label: "Void" }
+];
+
 type BillingDraft = {
   billing_address: string;
   buyer_tin: string;
   buyer_registration_number: string;
   buyer_sst_registration_number: string;
 };
+
+type PaymentDraft = {
+  amount: string;
+  method: string;
+  note: string;
+};
+
+const billingFields: RecordFormField<BillingDraft>[] = [
+  {
+    name: "billing_address",
+    label: "Billing address",
+    type: "textarea",
+    rows: 3,
+    placeholder: "Street, city, postcode"
+  },
+  {
+    name: "buyer_tin",
+    label: "Buyer TIN",
+    placeholder: "Optional"
+  },
+  {
+    name: "buyer_registration_number",
+    label: "Registration no.",
+    placeholder: "Optional"
+  },
+  {
+    name: "buyer_sst_registration_number",
+    label: "SST no.",
+    placeholder: "Optional"
+  }
+];
+
+const paymentFields: RecordFormField<PaymentDraft>[] = [
+  {
+    name: "amount",
+    label: "Amount",
+    type: "number",
+    required: true,
+    min: 0.01,
+    step: "0.01",
+    validate: (value) => {
+      const cents = Math.round(Number(value) * 100);
+      return Number.isFinite(cents) && cents > 0
+        ? null
+        : "Enter a payment amount above zero.";
+    }
+  },
+  {
+    name: "method",
+    label: "Method",
+    type: "select",
+    required: true,
+    options: paymentMethods.map((method) => ({ label: method, value: method }))
+  },
+  {
+    name: "note",
+    label: "Note",
+    placeholder: "Optional"
+  }
+];
 
 type InvoicesPanelProps = {
   canCreate: boolean;
@@ -80,17 +154,31 @@ export function InvoicesPanel({
   settings
 }: InvoicesPanelProps) {
   const { notify, notifyError } = useNotifications();
-  const invoicedOrderIds = new Set(invoices.map((invoice) => invoice.order_id));
-  const uninvoicedOrders = orders.filter((order) => !invoicedOrderIds.has(order.id));
+  const uninvoicedOrders = useMemo(() => {
+    const invoicedOrderIds = new Set(invoices.map((invoice) => invoice.order_id));
+    return orders.filter((order) => !invoicedOrderIds.has(order.id));
+  }, [invoices, orders]);
 
   const [newInvoiceOrderId, setNewInvoiceOrderId] = useState(
     uninvoicedOrders[0] ? String(uninvoicedOrders[0].id) : ""
   );
   const [newInvoiceDiscount, setNewInvoiceDiscount] = useState("0.00");
-  const [billingDrafts, setBillingDrafts] = useState<Record<number, BillingDraft>>({});
-  const [paymentDrafts, setPaymentDrafts] = useState<
-    Record<number, { amount: string; method: string; note: string }>
-  >({});
+  const [editingBillingInvoiceId, setEditingBillingInvoiceId] = useState<number | null>(null);
+  const [billingForm, setBillingForm] = useState<BillingDraft>({
+    billing_address: "",
+    buyer_tin: "",
+    buyer_registration_number: "",
+    buyer_sst_registration_number: ""
+  });
+  const [paymentInvoiceId, setPaymentInvoiceId] = useState<number | null>(null);
+  const [paymentForm, setPaymentForm] = useState<PaymentDraft>({
+    amount: "",
+    method: paymentMethods[0],
+    note: ""
+  });
+  const [voidingInvoice, setVoidingInvoice] = useState<Invoice | null>(null);
+  const [invoiceSearch, setInvoiceSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<InvoiceStatusFilter>("all");
   const [busyInvoiceId, setBusyInvoiceId] = useState<number | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -101,23 +189,84 @@ export function InvoicesPanel({
   });
   const [printingInvoice, setPrintingInvoice] = useState<Invoice | null>(null);
 
-  const companyName = settingValue(settings, "general.company_name", "Project Depot");
+  const companyName = settingValue(settings, "general.company_name", "Ekoway Hardware");
   const companyAddress = settingValue(settings, "general.company_address", "");
   const paymentTermsDays = settingValue(settings, "invoicing.payment_terms_days", "30");
 
-  const billingDraftFor = (invoice: Invoice): BillingDraft =>
-    billingDrafts[invoice.id] ?? {
+  useEffect(() => {
+    if (uninvoicedOrders.length === 0) {
+      if (newInvoiceOrderId !== "") {
+        setNewInvoiceOrderId("");
+      }
+      return;
+    }
+
+    if (!uninvoicedOrders.some((order) => String(order.id) === newInvoiceOrderId)) {
+      setNewInvoiceOrderId(String(uninvoicedOrders[0].id));
+    }
+  }, [newInvoiceOrderId, uninvoicedOrders]);
+
+  const billingInvoice =
+    editingBillingInvoiceId === null
+      ? null
+      : invoices.find((invoice) => invoice.id === editingBillingInvoiceId) ?? null;
+
+  const paymentInvoice =
+    paymentInvoiceId === null
+      ? null
+      : invoices.find((invoice) => invoice.id === paymentInvoiceId) ?? null;
+
+  const filteredInvoices = useMemo(() => {
+    if (statusFilter === "all") {
+      return invoices;
+    }
+
+    return invoices.filter((invoice) => invoice.status === statusFilter);
+  }, [invoices, statusFilter]);
+
+  const invoiceSearchText = (invoice: Invoice) =>
+    `${invoice.invoice_number} #${invoice.order_id} ${invoice.billing_name} ${invoice.billing_email} ${invoice.buyer_tin ?? ""} ${invoice.status}`;
+
+  const searchedInvoiceCount = useMemo(() => {
+    const query = invoiceSearch.trim().toLocaleLowerCase();
+    if (!query) {
+      return filteredInvoices.length;
+    }
+
+    return filteredInvoices.filter((invoice) =>
+      `${invoice.invoice_number} #${invoice.order_id} ${invoice.billing_name} ${invoice.billing_email} ${invoice.buyer_tin ?? ""} ${invoice.status}`
+        .toLocaleLowerCase()
+        .includes(query)
+    ).length;
+  }, [filteredInvoices, invoiceSearch]);
+
+  const openBillingModal = (invoice: Invoice) => {
+    setEditingBillingInvoiceId(invoice.id);
+    setBillingForm({
       billing_address: invoice.billing_address,
       buyer_tin: invoice.buyer_tin ?? "",
       buyer_registration_number: invoice.buyer_registration_number ?? "",
       buyer_sst_registration_number: invoice.buyer_sst_registration_number ?? ""
-    };
-  const paymentDraftFor = (invoice: Invoice) =>
-    paymentDrafts[invoice.id] ?? {
-      amount: ((invoice.total_cents - invoice.amount_paid_cents) / 100).toFixed(2),
+    });
+  };
+
+  const closeBillingModal = () => {
+    setEditingBillingInvoiceId(null);
+  };
+
+  const openPaymentModal = (invoice: Invoice) => {
+    const remainingCents = Math.max(invoice.total_cents - invoice.amount_paid_cents, 0);
+    setPaymentInvoiceId(invoice.id);
+    setPaymentForm({
+      amount: (remainingCents / 100).toFixed(2),
       method: paymentMethods[0],
       note: ""
-    };
+    });
+  };
+
+  const closePaymentModal = () => {
+    setPaymentInvoiceId(null);
+  };
 
   const handleCreateInvoice = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -150,89 +299,84 @@ export function InvoicesPanel({
     }
   };
 
-  const handleSaveBilling = async (event: FormEvent<HTMLFormElement>, invoice: Invoice) => {
-    event.preventDefault();
+  const handleSaveBilling = async () => {
+    if (!billingInvoice) {
+      return;
+    }
 
     if (!canUpdate) {
       notify({ severity: "error", title: "Billing not updated", message: "The active role cannot update billing details.", scope: "invoices", dedupeKey: "invoices:billing:permission" });
       return;
     }
 
-    setBusyInvoiceId(invoice.id);
+    setBusyInvoiceId(billingInvoice.id);
 
     try {
-      const draft = billingDraftFor(invoice);
-      const updated = await onUpdateInvoiceBilling(invoice.id, {
-        billing_address: draft.billing_address.trim(),
-        buyer_tin: draft.buyer_tin.trim() || null,
-        buyer_registration_number: draft.buyer_registration_number.trim() || null,
-        buyer_sst_registration_number: draft.buyer_sst_registration_number.trim() || null
+      const updated = await onUpdateInvoiceBilling(billingInvoice.id, {
+        billing_address: billingForm.billing_address.trim(),
+        buyer_tin: billingForm.buyer_tin.trim() || null,
+        buyer_registration_number: billingForm.buyer_registration_number.trim() || null,
+        buyer_sst_registration_number: billingForm.buyer_sst_registration_number.trim() || null
       });
-      setBillingDrafts((current) => ({
-        ...current,
-        [updated.id]: {
-          billing_address: updated.billing_address,
-          buyer_tin: updated.buyer_tin ?? "",
-          buyer_registration_number: updated.buyer_registration_number ?? "",
-          buyer_sst_registration_number: updated.buyer_sst_registration_number ?? ""
-        }
-      }));
+      closeBillingModal();
       notify({ severity: "success", title: "Billing details updated", message: `Billing details for ${updated.invoice_number} were updated successfully.`, scope: "invoices", dedupeKey: `invoices:${updated.id}:billing:success` });
     } catch (error) {
-      notifyError(error, { operation: "update invoice billing", scope: "invoices", dedupeKey: `invoices:${invoice.id}:billing:error` });
+      notifyError(error, { operation: "update invoice billing", scope: "invoices", dedupeKey: `invoices:${billingInvoice.id}:billing:error` });
     } finally {
       setBusyInvoiceId(null);
     }
   };
 
-  const handleRecordPayment = async (event: FormEvent<HTMLFormElement>, invoice: Invoice) => {
-    event.preventDefault();
+  const handleRecordPayment = async () => {
+    if (!paymentInvoice) {
+      return;
+    }
 
     if (!canUpdate) {
       notify({ severity: "error", title: "Payment not recorded", message: "The active role cannot record invoice payments.", scope: "invoices", dedupeKey: "invoices:payment:permission" });
       return;
     }
 
-    const draft = paymentDraftFor(invoice);
-    const amountCents = Math.round(Number(draft.amount) * 100);
+    const amountCents = Math.round(Number(paymentForm.amount) * 100);
 
     if (!Number.isFinite(amountCents) || amountCents <= 0) {
-      notify({ severity: "warning", title: "Check the payment amount", message: "Enter a payment amount above zero.", scope: "invoices", dedupeKey: `invoices:${invoice.id}:payment:validation` });
+      notify({ severity: "warning", title: "Check the payment amount", message: "Enter a payment amount above zero.", scope: "invoices", dedupeKey: `invoices:${paymentInvoice.id}:payment:validation` });
       return;
     }
 
-    setBusyInvoiceId(invoice.id);
+    setBusyInvoiceId(paymentInvoice.id);
 
     try {
-      const updated = await onRecordInvoicePayment(invoice.id, {
+      const updated = await onRecordInvoicePayment(paymentInvoice.id, {
         amount_cents: amountCents,
-        method: draft.method,
-        note: draft.note.trim()
+        method: paymentForm.method,
+        note: paymentForm.note.trim()
       });
-      setPaymentDrafts((current) => {
-        const next = { ...current };
-        delete next[updated.id];
-        return next;
-      });
+      closePaymentModal();
       notify({ severity: "success", title: "Payment recorded", message: `Payment for ${updated.invoice_number} was recorded successfully.`, scope: "invoices", dedupeKey: `invoices:${updated.id}:payment:success` });
     } catch (error) {
-      notifyError(error, { operation: "record invoice payment", scope: "invoices", dedupeKey: `invoices:${invoice.id}:payment:error` });
+      notifyError(error, { operation: "record invoice payment", scope: "invoices", dedupeKey: `invoices:${paymentInvoice.id}:payment:error` });
     } finally {
       setBusyInvoiceId(null);
     }
   };
 
-  const handleVoidInvoice = async (invoice: Invoice) => {
+  const requestVoidInvoice = (invoice: Invoice) => {
     if (!canUpdate) {
       notify({ severity: "error", title: "Invoice not voided", message: "The active role cannot void invoices.", scope: "invoices", dedupeKey: "invoices:void:permission" });
       return;
     }
 
-    const confirmed = window.confirm(`Void invoice ${invoice.invoice_number}?`);
-    if (!confirmed) {
+    setVoidingInvoice(invoice);
+  };
+
+  const executeVoidInvoice = async () => {
+    if (!voidingInvoice || !canUpdate) {
+      setVoidingInvoice(null);
       return;
     }
 
+    const invoice = voidingInvoice;
     setBusyInvoiceId(invoice.id);
 
     try {
@@ -242,6 +386,7 @@ export function InvoicesPanel({
       notifyError(error, { operation: "void invoice", scope: "invoices", dedupeKey: `invoices:${invoice.id}:void:error` });
     } finally {
       setBusyInvoiceId(null);
+      setVoidingInvoice(null);
     }
   };
 
@@ -281,9 +426,136 @@ export function InvoicesPanel({
     }
   };
 
+  const invoiceColumns = [
+    {
+      key: "invoice_number",
+      label: "Invoice #",
+      sortValue: (invoice: Invoice) => invoice.invoice_number,
+      render: (invoice: Invoice) => (
+        <div className="table-cell-main">
+          <strong>{invoice.invoice_number}</strong>
+          <span>Issued {formatOrderDate(invoice.issued_at)}</span>
+        </div>
+      )
+    },
+    {
+      key: "order_id",
+      label: "Order #",
+      align: "right" as const,
+      sortValue: (invoice: Invoice) => invoice.order_id,
+      render: (invoice: Invoice) => `#${invoice.order_id}`
+    },
+    {
+      key: "customer",
+      label: "Customer",
+      sortValue: (invoice: Invoice) => invoice.billing_name,
+      render: (invoice: Invoice) => (
+        <div className="table-cell-main">
+          <strong>{invoice.billing_name}</strong>
+          <span>{invoice.billing_email}</span>
+        </div>
+      )
+    },
+    {
+      key: "total",
+      label: "Total",
+      align: "right" as const,
+      sortValue: (invoice: Invoice) => invoice.total_cents,
+      render: (invoice: Invoice) => currencyFromCents(invoice.total_cents)
+    },
+    {
+      key: "balance_due",
+      label: "Balance Due",
+      align: "right" as const,
+      sortValue: (invoice: Invoice) => Math.max(invoice.total_cents - invoice.amount_paid_cents, 0),
+      render: (invoice: Invoice) => {
+        const remainingCents = Math.max(invoice.total_cents - invoice.amount_paid_cents, 0);
+        return (
+          <div className="table-cell-main">
+            <strong>{currencyFromCents(remainingCents)}</strong>
+            <span>Due {formatOrderDate(invoice.due_at)}</span>
+          </div>
+        );
+      }
+    },
+    {
+      key: "status",
+      label: "Status",
+      sortValue: (invoice: Invoice) => invoice.status,
+      render: (invoice: Invoice) => (
+        <div className="table-cell-main">
+          <span className={`status-pill ${statusPillClass(invoice.status)}`}>{invoice.status}</span>
+          <span className={`status-pill ${invoice.buyer_tin ? "live" : "warning"}`}>
+            {invoice.buyer_tin ? "E-Invoice TIN" : "No TIN"}
+          </span>
+        </div>
+      )
+    },
+    {
+      key: "exported",
+      label: "AutoCount",
+      sortValue: (invoice: Invoice) => Boolean(invoice.exported_to_autocount_at),
+      render: (invoice: Invoice) => (
+        <span className={`status-pill ${invoice.exported_to_autocount_at ? "live" : ""}`}>
+          {invoice.exported_to_autocount_at ? "Exported" : "Not exported"}
+        </span>
+      )
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (invoice: Invoice) => {
+        const remainingCents = invoice.total_cents - invoice.amount_paid_cents;
+        const isBusy = busyInvoiceId === invoice.id;
+        const canVoid = invoice.status !== "void" && invoice.amount_paid_cents === 0;
+        const canRecordPayment = invoice.status !== "void" && remainingCents > 0;
+
+        return (
+          <div className="management-action-stack">
+            <button
+              className="outline-button table-action"
+              disabled={!canUpdate || isBusy}
+              onClick={() => openBillingModal(invoice)}
+              type="button"
+            >
+              Manage Billing
+            </button>
+            {canRecordPayment ? (
+              <button
+                className="solid-button table-action"
+                disabled={!canUpdate || isBusy}
+                onClick={() => openPaymentModal(invoice)}
+                type="button"
+              >
+                Record Payment
+              </button>
+            ) : null}
+            <button
+              className="outline-button table-action"
+              onClick={() => handlePrint(invoice)}
+              type="button"
+            >
+              Print
+            </button>
+            {canVoid ? (
+              <button
+                className="outline-button danger-button table-action"
+                disabled={!canUpdate || isBusy}
+                onClick={() => requestVoidInvoice(invoice)}
+                type="button"
+              >
+                Void
+              </button>
+            ) : null}
+          </div>
+        );
+      }
+    }
+  ];
+
   return (
     <section className="admin-section active">
-      <div className="panel-header">
+      <div className="panel-header no-print">
         <div>
           <p className="eyebrow">Invoicing</p>
           <h3>Generate and manage invoices</h3>
@@ -291,337 +563,246 @@ export function InvoicesPanel({
         <span className="status-pill">{invoices.length} invoices</span>
       </div>
 
+      <div className="admin-panels two-up invoices-utility-grid no-print">
+        <article className="dashboard-panel">
+          <div className="panel-header">
+            <div>
+              <p className="eyebrow">New invoice</p>
+              <h3>Create from an order</h3>
+            </div>
+            <span className={`status-pill ${canCreate ? "live" : ""}`}>
+              {canCreate ? "Writable" : "Read only"}
+            </span>
+          </div>
+
+          {uninvoicedOrders.length === 0 ? (
+            <p>Every order already has an invoice.</p>
+          ) : (
+            <form className="admin-form-grid sales-inline-form" onSubmit={(event) => void handleCreateInvoice(event)}>
+              <label className="admin-field">
+                Order
+                <select
+                  disabled={!canCreate}
+                  onChange={(event) => setNewInvoiceOrderId(event.target.value)}
+                  value={newInvoiceOrderId}
+                >
+                  {uninvoicedOrders.map((order) => (
+                    <option key={order.id} value={order.id}>
+                      #{order.id} {order.customer_name} - {currencyFromCents(order.subtotal_cents)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="admin-field">
+                Discount
+                <input
+                  disabled={!canCreate}
+                  min="0"
+                  onChange={(event) => setNewInvoiceDiscount(event.target.value)}
+                  step="0.01"
+                  type="number"
+                  value={newInvoiceDiscount}
+                />
+              </label>
+              <button className="solid-button" disabled={!canCreate || isCreating} type="submit">
+                {isCreating ? "Creating..." : "Create invoice"}
+              </button>
+            </form>
+          )}
+        </article>
+
+        <article className="dashboard-panel">
+          <div className="panel-header">
+            <div>
+              <p className="eyebrow">Accounting</p>
+              <h3>AutoCount export</h3>
+            </div>
+            <span className={`status-pill ${canUpdate ? "live" : ""}`}>
+              {canUpdate ? "Ready" : "Read only"}
+            </span>
+          </div>
+
+          <form className="admin-form-grid sales-inline-form" onSubmit={(event) => void handleExportAutoCount(event)}>
+            <label className="admin-field">
+              Issued from
+              <input
+                disabled={!canUpdate}
+                onChange={(event) =>
+                  setExportDraft((current) => ({ ...current, issued_from: event.target.value }))
+                }
+                type="date"
+                value={exportDraft.issued_from}
+              />
+            </label>
+            <label className="admin-field">
+              Issued to
+              <input
+                disabled={!canUpdate}
+                onChange={(event) =>
+                  setExportDraft((current) => ({ ...current, issued_to: event.target.value }))
+                }
+                type="date"
+                value={exportDraft.issued_to}
+              />
+            </label>
+            <label className="admin-field checkbox-field">
+              <input
+                checked={exportDraft.include_exported}
+                disabled={!canUpdate}
+                onChange={(event) =>
+                  setExportDraft((current) => ({
+                    ...current,
+                    include_exported: event.target.checked
+                  }))
+                }
+                type="checkbox"
+              />
+              Include exported
+            </label>
+            <button className="solid-button" disabled={!canUpdate || isExporting} type="submit">
+              {isExporting ? "Exporting..." : "Download CSV"}
+            </button>
+          </form>
+        </article>
+      </div>
+
       <article className="dashboard-panel no-print">
         <div className="panel-header">
           <div>
-            <p className="eyebrow">New invoice</p>
-            <h3>Create from an order</h3>
+            <p className="eyebrow">Invoice ledger</p>
+            <h3>Customer invoices</h3>
           </div>
-          <span className={`status-pill ${canCreate ? "live" : ""}`}>
-            {canCreate ? "Writable" : "Read only"}
-          </span>
+          <span className="status-pill">{invoices.length} loaded</span>
         </div>
 
-        {uninvoicedOrders.length === 0 ? (
-          <p>Every order already has an invoice.</p>
+        {invoices.length === 0 ? (
+          <p>No invoices have been created yet.</p>
         ) : (
-          <form className="admin-form-grid sales-inline-form" onSubmit={(event) => void handleCreateInvoice(event)}>
-            <label className="admin-field">
-              Order
-              <select
-                disabled={!canCreate}
-                onChange={(event) => setNewInvoiceOrderId(event.target.value)}
-                value={newInvoiceOrderId}
-              >
-                {uninvoicedOrders.map((order) => (
-                  <option key={order.id} value={order.id}>
-                    #{order.id} {order.customer_name} - {currencyFromCents(order.subtotal_cents)}
-                  </option>
+          <ManagementTable
+            columns={invoiceColumns}
+            emptyMessage="No invoices match the current filter."
+            filterSlot={
+              <div className="management-filter-pills" role="group" aria-label="Filter by invoice status">
+                {invoiceStatusFilters.map((pill) => (
+                  <button
+                    aria-pressed={statusFilter === pill.key}
+                    className={
+                      statusFilter === pill.key
+                        ? "solid-button table-action"
+                        : "outline-button table-action"
+                    }
+                    key={pill.key}
+                    onClick={() => setStatusFilter(pill.key)}
+                    type="button"
+                  >
+                    {pill.label}
+                  </button>
                 ))}
-              </select>
-            </label>
-            <label className="admin-field">
-              Discount
-              <input
-                disabled={!canCreate}
-                min="0"
-                onChange={(event) => setNewInvoiceDiscount(event.target.value)}
-                step="0.01"
-                type="number"
-                value={newInvoiceDiscount}
-              />
-            </label>
-            <button className="solid-button" disabled={!canCreate || isCreating} type="submit">
-              {isCreating ? "Creating..." : "Create invoice"}
-            </button>
-          </form>
+              </div>
+            }
+            getRowKey={(invoice) => invoice.id}
+            getSearchText={invoiceSearchText}
+            hasMore={hasMore}
+            initialSortDirection="desc"
+            initialSortKey="invoice_number"
+            isLoadingMore={isLoadingMore}
+            onLoadMore={onLoadMore}
+            onSearchChange={setInvoiceSearch}
+            rows={filteredInvoices}
+            searchPlaceholder="Search invoice #, order #, customer, or TIN..."
+            searchValue={invoiceSearch}
+            summaryText={`${searchedInvoiceCount} of ${invoices.length} ${invoices.length === 1 ? "invoice" : "invoices"}`}
+            tableLabel="Invoice management table"
+          />
         )}
       </article>
 
-      <article className="dashboard-panel no-print">
-        <div className="panel-header">
-          <div>
-            <p className="eyebrow">Accounting</p>
-            <h3>AutoCount export</h3>
-          </div>
-          <span className={`status-pill ${canUpdate ? "live" : ""}`}>
-            {canUpdate ? "Ready" : "Read only"}
-          </span>
-        </div>
-
-        <form className="admin-form-grid sales-inline-form" onSubmit={(event) => void handleExportAutoCount(event)}>
-          <label className="admin-field">
-            Issued from
-            <input
+      <div className="no-print">
+        <RecordModal
+          eyebrow={billingInvoice ? billingInvoice.invoice_number : "Billing"}
+          isBusy={billingInvoice !== null && busyInvoiceId === billingInvoice.id}
+          isOpen={billingInvoice !== null}
+          onClose={closeBillingModal}
+          statusLabel={canUpdate ? "Writable" : "Read only"}
+          statusTone={canUpdate ? "live" : undefined}
+          title={billingInvoice ? `Manage billing · ${billingInvoice.billing_name}` : "Manage billing"}
+        >
+          {billingInvoice ? (
+            <RecordForm
               disabled={!canUpdate}
-              onChange={(event) =>
-                setExportDraft((current) => ({ ...current, issued_from: event.target.value }))
-              }
-              type="date"
-              value={exportDraft.issued_from}
+              fields={billingFields}
+              isSubmitting={busyInvoiceId === billingInvoice.id}
+              onCancel={closeBillingModal}
+              onChange={setBillingForm}
+              onSubmit={() => void handleSaveBilling()}
+              submitLabel="Save billing"
+              values={billingForm}
             />
-          </label>
-          <label className="admin-field">
-            Issued to
-            <input
-              disabled={!canUpdate}
-              onChange={(event) =>
-                setExportDraft((current) => ({ ...current, issued_to: event.target.value }))
-              }
-              type="date"
-              value={exportDraft.issued_to}
-            />
-          </label>
-          <label className="admin-field checkbox-field">
-            <input
-              checked={exportDraft.include_exported}
-              disabled={!canUpdate}
-              onChange={(event) =>
-                setExportDraft((current) => ({
-                  ...current,
-                  include_exported: event.target.checked
-                }))
-              }
-              type="checkbox"
-            />
-            Include exported
-          </label>
-          <button className="solid-button" disabled={!canUpdate || isExporting} type="submit">
-            {isExporting ? "Exporting..." : "Download CSV"}
-          </button>
-        </form>
-      </article>
-
-      {invoices.length === 0 ? (
-        <p className="no-print">No invoices have been created yet.</p>
-      ) : (
-        <div className="invoices-list no-print">
-          {invoices.map((invoice) => {
-            const remainingCents = invoice.total_cents - invoice.amount_paid_cents;
-            const billingDraft = billingDraftFor(invoice);
-            const paymentDraft = paymentDraftFor(invoice);
-            const isBusy = busyInvoiceId === invoice.id;
-            const canVoid = invoice.status !== "void" && invoice.amount_paid_cents === 0;
-            const canRecordPayment = invoice.status !== "void" && remainingCents > 0;
-
-            return (
-              <article className="dashboard-panel" key={invoice.id}>
-                <div className="panel-header">
-                  <div>
-                    <p className="eyebrow">{invoice.invoice_number}</p>
-                    <h4>{invoice.billing_name}</h4>
-                    <span>
-                      Order #{invoice.order_id} &middot; {invoice.billing_email}
-                    </span>
-                  </div>
-                  <span className={`status-pill ${statusPillClass(invoice.status)}`}>{invoice.status}</span>
-                </div>
-
-                <div className="sales-detail-grid">
-                  <div>
-                    <span>Subtotal</span>
-                    <strong>{currencyFromCents(invoice.subtotal_cents)}</strong>
-                  </div>
-                  <div>
-                    <span>Discount</span>
-                    <strong>{currencyFromCents(invoice.discount_cents)}</strong>
-                  </div>
-                  <div>
-                    <span>Tax</span>
-                    <strong>{currencyFromCents(invoice.tax_cents)}</strong>
-                  </div>
-                  <div>
-                    <span>Total</span>
-                    <strong>{currencyFromCents(invoice.total_cents)}</strong>
-                  </div>
-                  <div>
-                    <span>Paid</span>
-                    <strong>{currencyFromCents(invoice.amount_paid_cents)}</strong>
-                  </div>
-                  <div>
-                    <span>Remaining</span>
-                    <strong>{currencyFromCents(Math.max(remainingCents, 0))}</strong>
-                  </div>
-                  <div>
-                    <span>Issued</span>
-                    <strong>{formatOrderDate(invoice.issued_at)}</strong>
-                  </div>
-                  <div>
-                    <span>Due</span>
-                    <strong>{formatOrderDate(invoice.due_at)}</strong>
-                  </div>
-                  <div>
-                    <span>AutoCount</span>
-                    <strong>
-                      {invoice.exported_to_autocount_at
-                        ? formatOrderDate(invoice.exported_to_autocount_at)
-                        : "Not exported"}
-                    </strong>
-                  </div>
-                </div>
-
-                <form
-                  className="admin-form-grid sales-inline-form"
-                  onSubmit={(event) => void handleSaveBilling(event, invoice)}
-                >
-                  <label className="admin-field">
-                    Billing address
-                    <input
-                      disabled={!canUpdate}
-                      onChange={(event) =>
-                        setBillingDrafts((current) => ({
-                          ...current,
-                          [invoice.id]: { ...billingDraft, billing_address: event.target.value }
-                        }))
-                      }
-                      value={billingDraft.billing_address}
-                    />
-                  </label>
-                  <label className="admin-field">
-                    Buyer TIN
-                    <input
-                      disabled={!canUpdate}
-                      onChange={(event) =>
-                        setBillingDrafts((current) => ({
-                          ...current,
-                          [invoice.id]: { ...billingDraft, buyer_tin: event.target.value }
-                        }))
-                      }
-                      placeholder="Optional"
-                      value={billingDraft.buyer_tin}
-                    />
-                  </label>
-                  <label className="admin-field">
-                    Registration no.
-                    <input
-                      disabled={!canUpdate}
-                      onChange={(event) =>
-                        setBillingDrafts((current) => ({
-                          ...current,
-                          [invoice.id]: {
-                            ...billingDraft,
-                            buyer_registration_number: event.target.value
-                          }
-                        }))
-                      }
-                      placeholder="Optional"
-                      value={billingDraft.buyer_registration_number}
-                    />
-                  </label>
-                  <label className="admin-field">
-                    SST no.
-                    <input
-                      disabled={!canUpdate}
-                      onChange={(event) =>
-                        setBillingDrafts((current) => ({
-                          ...current,
-                          [invoice.id]: {
-                            ...billingDraft,
-                            buyer_sst_registration_number: event.target.value
-                          }
-                        }))
-                      }
-                      placeholder="Optional"
-                      value={billingDraft.buyer_sst_registration_number}
-                    />
-                  </label>
-                  <button className="outline-button" disabled={!canUpdate || isBusy} type="submit">
-                    Save billing
-                  </button>
-                </form>
-
-                {canRecordPayment ? (
-                  <form
-                    className="admin-form-grid sales-inline-form"
-                    onSubmit={(event) => void handleRecordPayment(event, invoice)}
-                  >
-                    <label className="admin-field">
-                      Amount
-                      <input
-                        disabled={!canUpdate}
-                        min="0.01"
-                        onChange={(event) =>
-                          setPaymentDrafts((current) => ({
-                            ...current,
-                            [invoice.id]: { ...paymentDraft, amount: event.target.value }
-                          }))
-                        }
-                        step="0.01"
-                        type="number"
-                        value={paymentDraft.amount}
-                      />
-                    </label>
-                    <label className="admin-field">
-                      Method
-                      <select
-                        disabled={!canUpdate}
-                        onChange={(event) =>
-                          setPaymentDrafts((current) => ({
-                            ...current,
-                            [invoice.id]: { ...paymentDraft, method: event.target.value }
-                          }))
-                        }
-                        value={paymentDraft.method}
-                      >
-                        {paymentMethods.map((method) => (
-                          <option key={method} value={method}>
-                            {method}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="admin-field">
-                      Note
-                      <input
-                        disabled={!canUpdate}
-                        onChange={(event) =>
-                          setPaymentDrafts((current) => ({
-                            ...current,
-                            [invoice.id]: { ...paymentDraft, note: event.target.value }
-                          }))
-                        }
-                        placeholder="Optional"
-                        value={paymentDraft.note}
-                      />
-                    </label>
-                    <button className="solid-button" disabled={!canUpdate || isBusy} type="submit">
-                      {isBusy ? "Saving..." : "Record payment"}
-                    </button>
-                  </form>
-                ) : null}
-
-                <div className="order-actions">
-                  <button className="outline-button" onClick={() => handlePrint(invoice)} type="button">
-                    Print
-                  </button>
-                  {canVoid ? (
-                    <button
-                      className="outline-button danger-button"
-                      disabled={!canUpdate || isBusy}
-                      onClick={() => void handleVoidInvoice(invoice)}
-                      type="button"
-                    >
-                      Void
-                    </button>
-                  ) : null}
-                </div>
-              </article>
-            );
-          })}
-          {hasMore ? (
-            <div className="table-pagination-actions">
-              <button
-                className="outline-button"
-                disabled={isLoadingMore}
-                onClick={onLoadMore}
-                type="button"
-              >
-                {isLoadingMore ? "Loading..." : "Load more"}
-              </button>
-            </div>
           ) : null}
-        </div>
-      )}
+        </RecordModal>
+
+        <RecordModal
+          eyebrow={paymentInvoice ? paymentInvoice.invoice_number : "Invoice payment"}
+          isBusy={paymentInvoice !== null && busyInvoiceId === paymentInvoice.id}
+          isOpen={paymentInvoice !== null}
+          onClose={closePaymentModal}
+          statusLabel={paymentInvoice ? paymentInvoice.status : undefined}
+          statusTone={
+            paymentInvoice
+              ? (statusPillClass(paymentInvoice.status) as "live" | "warning" | "danger" | "") || undefined
+              : undefined
+          }
+          title={paymentInvoice ? `Record payment · ${paymentInvoice.billing_name}` : "Record payment"}
+        >
+          {paymentInvoice ? (
+            <RecordForm
+              disabled={!canUpdate}
+              fields={paymentFields}
+              isSubmitting={busyInvoiceId === paymentInvoice.id}
+              onCancel={closePaymentModal}
+              onChange={setPaymentForm}
+              onSubmit={() => void handleRecordPayment()}
+              submitLabel="Record payment"
+              values={paymentForm}
+            >
+              <div className="sales-detail-grid">
+                <div>
+                  <span>Invoice total</span>
+                  <strong>{currencyFromCents(paymentInvoice.total_cents)}</strong>
+                </div>
+                <div>
+                  <span>Paid so far</span>
+                  <strong>{currencyFromCents(paymentInvoice.amount_paid_cents)}</strong>
+                </div>
+                <div>
+                  <span>Balance due</span>
+                  <strong>
+                    {currencyFromCents(
+                      Math.max(paymentInvoice.total_cents - paymentInvoice.amount_paid_cents, 0)
+                    )}
+                  </strong>
+                </div>
+              </div>
+            </RecordForm>
+          ) : null}
+        </RecordModal>
+
+        <ConfirmModal
+          confirmLabel="Void invoice"
+          eyebrow="Void invoice"
+          isConfirming={voidingInvoice !== null && busyInvoiceId === voidingInvoice.id}
+          isOpen={voidingInvoice !== null}
+          message={
+            voidingInvoice
+              ? `Void invoice ${voidingInvoice.invoice_number} for ${voidingInvoice.billing_name}?`
+              : ""
+          }
+          onCancel={() => setVoidingInvoice(null)}
+          onConfirm={executeVoidInvoice}
+          title={voidingInvoice ? `Void invoice ${voidingInvoice.invoice_number}` : "Void invoice"}
+          tone="danger"
+        />
+      </div>
 
       {printingInvoice ? (
         <div className="invoice-print-view">

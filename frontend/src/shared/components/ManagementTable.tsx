@@ -1,4 +1,4 @@
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
 type SortDirection = "asc" | "desc";
 type SortValue = boolean | Date | number | string | null | undefined;
@@ -14,17 +14,23 @@ export type ManagementTableColumn<T> = {
 type ManagementTableProps<T> = {
   columns: ManagementTableColumn<T>[];
   emptyMessage: string;
+  filterSlot?: ReactNode;
   getRowKey: (row: T) => number | string;
+  getSearchText?: (row: T) => string;
   hasMore?: boolean;
   initialSortDirection?: SortDirection;
   initialSortKey?: string;
   isLoadingMore?: boolean;
   onLoadMore?: () => void;
   onRowClick?: (row: T) => void;
+  onSearchChange?: (value: string) => void;
   onSelectionChange?: (selectedKeys: Set<number | string>) => void;
   rows: T[];
+  searchPlaceholder?: string;
+  searchValue?: string;
   selectable?: boolean;
   selectedKeys?: Set<number | string>;
+  summaryText?: string;
   tableLabel: string;
 };
 
@@ -82,17 +88,23 @@ function compareSortValues(left: SortValue, right: SortValue): number {
 export function ManagementTable<T>({
   columns,
   emptyMessage,
+  filterSlot,
   getRowKey,
+  getSearchText,
   hasMore = false,
   initialSortDirection = "asc",
   initialSortKey,
   isLoadingMore = false,
   onLoadMore,
   onRowClick,
+  onSearchChange,
   onSelectionChange,
   rows,
+  searchPlaceholder = "Search rows...",
+  searchValue,
   selectable = false,
   selectedKeys = new Set<number | string>(),
+  summaryText,
   tableLabel
 }: ManagementTableProps<T>) {
   const firstSortableColumn = columns.find((column) => column.sortValue);
@@ -107,19 +119,32 @@ export function ManagementTable<T>({
         }
       : null
   );
+  const [internalSearch, setInternalSearch] = useState("");
+  const selectAllRef = useRef<HTMLInputElement | null>(null);
+
+  const effectiveSearch = searchValue ?? internalSearch;
+  const hasSearch = searchValue !== undefined || Boolean(onSearchChange) || Boolean(getSearchText);
+
+  const filteredRows = useMemo(() => {
+    const query = effectiveSearch.trim().toLocaleLowerCase();
+    if (!query || !getSearchText) {
+      return rows;
+    }
+    return rows.filter((row) => getSearchText(row).toLocaleLowerCase().includes(query));
+  }, [effectiveSearch, getSearchText, rows]);
 
   const sortedRows = useMemo(() => {
     if (!sort) {
-      return rows;
+      return filteredRows;
     }
 
     const sortColumn = columns.find((column) => column.key === sort.key);
 
     if (!sortColumn?.sortValue) {
-      return rows;
+      return filteredRows;
     }
 
-    return rows
+    return filteredRows
       .map((row, index) => ({ index, row }))
       .sort((left, right) => {
         const comparison = compareSortValues(
@@ -134,7 +159,7 @@ export function ManagementTable<T>({
         return sort.direction === "asc" ? comparison : -comparison;
       })
       .map(({ row }) => row);
-  }, [columns, rows, sort]);
+  }, [columns, filteredRows, sort]);
 
   const toggleSort = (column: ManagementTableColumn<T>) => {
     if (!column.sortValue) {
@@ -148,7 +173,17 @@ export function ManagementTable<T>({
     );
   };
 
-  const allRowsSelected = rows.length > 0 && rows.every((row) => selectedKeys.has(getRowKey(row)));
+  const allRowsSelected =
+    sortedRows.length > 0 && sortedRows.every((row) => selectedKeys.has(getRowKey(row)));
+  const someRowsSelected =
+    sortedRows.some((row) => selectedKeys.has(getRowKey(row))) && !allRowsSelected;
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = someRowsSelected;
+    }
+  }, [someRowsSelected]);
+
   const toggleRowSelection = (row: T) => {
     const key = getRowKey(row);
     const next = new Set(selectedKeys);
@@ -158,12 +193,42 @@ export function ManagementTable<T>({
 
   const toggleAllRows = () => {
     onSelectionChange?.(
-      allRowsSelected ? new Set() : new Set(rows.map((row) => getRowKey(row)))
+      allRowsSelected ? new Set() : new Set(sortedRows.map((row) => getRowKey(row)))
     );
   };
 
+  const handleSearchInput = (nextValue: string) => {
+    if (searchValue === undefined) {
+      setInternalSearch(nextValue);
+    }
+    onSearchChange?.(nextValue);
+  };
+
+  const showToolbar = hasSearch || Boolean(filterSlot) || Boolean(summaryText);
+
   return (
     <div className="management-table-shell">
+      {showToolbar ? (
+        <div className="management-table-toolbar">
+          {hasSearch ? (
+            <label className="management-table-search">
+              <span className="sr-only">{`Search ${tableLabel}`}</span>
+              <input
+                aria-label={`Search ${tableLabel}`}
+                onChange={(event) => handleSearchInput(event.target.value)}
+                placeholder={searchPlaceholder}
+                type="search"
+                value={effectiveSearch}
+              />
+            </label>
+          ) : null}
+          {filterSlot ? <div className="management-table-filters">{filterSlot}</div> : null}
+          <span className="management-table-summary">
+            {summaryText ??
+              `${sortedRows.length} ${sortedRows.length === 1 ? "row" : "rows"}`}
+          </span>
+        </div>
+      ) : null}
       <div className="management-table-scroll">
         <table className="management-table" aria-label={tableLabel}>
           <thead>
@@ -171,6 +236,7 @@ export function ManagementTable<T>({
               {selectable ? (
                 <th className="management-cell-center management-selection-cell" scope="col">
                   <input
+                    ref={selectAllRef}
                     aria-label={allRowsSelected ? "Clear all row selections" : "Select all rows"}
                     checked={allRowsSelected}
                     onChange={toggleAllRows}
@@ -180,12 +246,13 @@ export function ManagementTable<T>({
               ) : null}
               {columns.map((column) => {
                 const isActiveSort = sort?.key === column.key;
-                const sortLabel =
-                  isActiveSort && sort?.direction === "desc"
-                    ? "Z-A"
-                    : isActiveSort
-                      ? "A-Z"
-                      : "";
+                const sortIndicator = !column.sortValue
+                  ? ""
+                  : isActiveSort
+                    ? sort.direction === "desc"
+                      ? "↓"
+                      : "↑"
+                    : "↕";
 
                 return (
                   <th
@@ -198,12 +265,12 @@ export function ManagementTable<T>({
                   >
                     {column.sortValue ? (
                       <button
-                        className="management-table-sort"
+                        className={`management-table-sort${isActiveSort ? " is-sorted" : ""}`}
                         onClick={() => toggleSort(column)}
                         type="button"
                       >
                         <span>{column.label}</span>
-                        {sortLabel ? <span className="sort-state">{sortLabel}</span> : null}
+                        <span className="sort-state" aria-hidden="true">{sortIndicator}</span>
                       </button>
                     ) : (
                       column.label
@@ -221,43 +288,66 @@ export function ManagementTable<T>({
                 </td>
               </tr>
             ) : (
-              sortedRows.map((row) => (
-                <tr
-                  className={onRowClick ? "management-table-row-clickable" : undefined}
-                  key={getRowKey(row)}
-                  onClick={(event) => {
-                    if ((event.target as HTMLElement).closest("button, input, a, select, textarea, label")) {
-                      return;
-                    }
-                    onRowClick?.(row);
-                  }}
-                >
-                  {selectable ? (
-                    <td className="management-cell-center management-selection-cell">
-                      <input
-                        aria-label={`Select ${getRowKey(row)}`}
-                        checked={selectedKeys.has(getRowKey(row))}
-                        onChange={() => toggleRowSelection(row)}
-                        type="checkbox"
-                      />
-                    </td>
-                  ) : null}
-                  {columns.map((column) => (
-                    <td
-                      className={column.align ? `management-cell-${column.align}` : undefined}
-                      key={column.key}
-                    >
-                      {column.render(row)}
-                    </td>
-                  ))}
-                </tr>
-              ))
+              sortedRows.map((row) => {
+                const rowKey = getRowKey(row);
+                const isSelected = selectedKeys.has(rowKey);
+                const rowClassNames = [
+                  onRowClick ? "management-table-row-clickable" : "",
+                  isSelected ? "management-table-row-selected" : ""
+                ]
+                  .filter(Boolean)
+                  .join(" ");
+
+                return (
+                  <tr
+                    className={rowClassNames || undefined}
+                    key={rowKey}
+                    tabIndex={onRowClick ? 0 : undefined}
+                    onClick={(event) => {
+                      if ((event.target as HTMLElement).closest("button, input, a, select, textarea, label")) {
+                        return;
+                      }
+                      onRowClick?.(row);
+                    }}
+                    onKeyDown={(event) => {
+                      if (!onRowClick) return;
+                      if ((event.target as HTMLElement).closest("button, input, a, select, textarea, label")) {
+                        return;
+                      }
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        onRowClick(row);
+                      }
+                    }}
+                  >
+                    {selectable ? (
+                      <td className="management-cell-center management-selection-cell">
+                        <input
+                          aria-label={`Select ${rowKey}`}
+                          checked={isSelected}
+                          onChange={() => toggleRowSelection(row)}
+                          type="checkbox"
+                        />
+                      </td>
+                    ) : null}
+                    {columns.map((column) => (
+                      <td
+                        className={column.align ? `management-cell-${column.align}` : undefined}
+                        key={column.key}
+                      >
+                        {column.render(row)}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
       </div>
       {hasMore && onLoadMore ? (
         <div className="table-pagination-actions">
+          <span className="table-pagination-count">Showing {rows.length} loaded</span>
           <button className="outline-button" disabled={isLoadingMore} onClick={onLoadMore} type="button">
             {isLoadingMore ? "Loading..." : "Load more"}
           </button>

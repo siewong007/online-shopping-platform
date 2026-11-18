@@ -111,6 +111,8 @@ export function OperationsConsole({ activity, canRefresh, dashboard, demoMode, o
   const [detailId, setDetailId] = useState<number | null>(null);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement | null>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
 
   const queue = useMemo(() => orders.map((order) => makeQueueItem(order, payments)), [orders, payments]);
   const paymentIssues = queue.filter((item) => item.paymentStatus === "Failed" || item.paymentStatus === "Pending" || item.paymentStatus === "Not recorded").length;
@@ -151,16 +153,72 @@ export function OperationsConsole({ activity, canRefresh, dashboard, demoMode, o
 
   const allVisibleSelected = filteredQueue.length > 0 && filteredQueue.every((item) => selectedIds.has(item.order.id));
   const hasFilters = query || paymentFilter !== "all" || methodFilter !== "all" || priorityFilter !== "all" || dateFilter !== "all" || savedView !== "requires-action";
+  const isDrawerOpen = detailItem !== null;
 
   useEffect(() => {
-    if (detailId === null) return;
-    closeButtonRef.current?.focus();
+    if (!isDrawerOpen) return;
+
+    openerRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const getFocusables = () =>
+      Array.from(
+        drawerRef.current?.querySelectorAll<HTMLElement>(
+          "button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex='-1'])"
+        ) ?? []
+      ).filter((element) => element.offsetParent !== null);
+
+    const frameId = window.requestAnimationFrame(() => {
+      const drawer = drawerRef.current;
+      if (!drawer) return;
+      (closeButtonRef.current ?? getFocusables()[0] ?? drawer).focus();
+    });
+
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setDetailId(null);
+      if (event.key === "Escape") {
+        setDetailId(null);
+        return;
+      }
+
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const focusables = getFocusables();
+      if (focusables.length === 0) {
+        event.preventDefault();
+        drawerRef.current?.focus();
+        return;
+      }
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+
+      if (!active || !drawerRef.current?.contains(active)) {
+        event.preventDefault();
+        first.focus();
+      } else if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
+
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [detailId]);
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      if (openerRef.current?.isConnected) {
+        openerRef.current.focus();
+      }
+    };
+  }, [isDrawerOpen]);
 
   const selectView = (view: SavedView) => {
     setSavedView(view);
@@ -213,7 +271,7 @@ export function OperationsConsole({ activity, canRefresh, dashboard, demoMode, o
       {paymentIssues > 0 ? <aside className="console-exception" aria-label="Active operational alert"><span className="console-alert-icon"><SvgIcon name="alert" /></span><div><span className="console-alert-kicker">Needs attention · Payment operations</span><strong>{paymentIssues} {paymentIssues === 1 ? "order has" : "orders have"} an unresolved payment exception</strong><p>Verify settlement or failure details before releasing affected orders to fulfilment.</p></div><button onClick={onOpenPayments} type="button">Review payments <SvgIcon name="chevron" /></button></aside> : null}
 
       <section className="console-workspace" aria-labelledby="queue-title">
-        <div className="console-section-heading"><div><p className="eyebrow">Priority work queue</p><h3 id="queue-title">Orders requiring review</h3><p>{filteredQueue.length} {filteredQueue.length === 1 ? "result" : "results"} · sorted by {sort.key}</p></div><button className="console-secondary-button console-columns-button" type="button" title="Column visibility is optimised for this view"><SvgIcon name="columns" />Columns</button></div>
+        <div className="console-section-heading"><div><p className="eyebrow">Priority work queue</p><h3 id="queue-title">Orders requiring review</h3><p>{filteredQueue.length} {filteredQueue.length === 1 ? "result" : "results"} · sorted by {sort.key}</p></div></div>
 
         <div className="console-saved-views" aria-label="Saved views">
           {savedViews.map((view) => <button aria-pressed={savedView === view.value} className={savedView === view.value ? "active" : ""} key={view.value} onClick={() => selectView(view.value)} type="button">{view.label}{view.value === "requires-action" ? <span>{requiresAction}</span> : null}</button>)}
@@ -245,7 +303,7 @@ export function OperationsConsole({ activity, canRefresh, dashboard, demoMode, o
 
       <footer className="console-help" id="console-help"><SvgIcon name="help" /><div><strong>Need help with an exception?</strong><p>Open an order to see its timeline and recommended next action. Financial changes are completed in Payment management.</p></div></footer>
 
-      {detailItem ? <div className="console-drawer-layer" role="presentation"><button aria-label="Close order details" className="console-drawer-scrim" onClick={() => setDetailId(null)} type="button"/><aside aria-labelledby="detail-title" aria-modal="true" className="console-drawer" role="dialog"><header><div><p className="eyebrow">Order #{detailItem.order.id}</p><h3 id="detail-title">{detailItem.order.customer_name}</h3><div><span className={`console-priority ${detailItem.priority.toLowerCase()}`}><i />{detailItem.priority}</span><span className={`console-status ${statusClass(detailItem.paymentStatus)}`}>{detailItem.paymentStatus}</span></div></div><button aria-label="Close order details" className="console-drawer-close" onClick={() => setDetailId(null)} ref={closeButtonRef} type="button"><SvgIcon name="close" /></button></header><div className="console-drawer-body"><section className="console-next-action"><span><SvgIcon name="alert" /></span><div><p className="eyebrow">Recommended next action</p><strong>{detailItem.paymentStatus === "Pending" ? "Confirm settlement before releasing fulfilment" : detailItem.paymentStatus === "Failed" || detailItem.paymentStatus === "Not recorded" ? "Review and resolve the payment exception" : detailItem.requiresAction ? "Review the current fulfilment stage" : "No urgent action is required"}</strong><p>{detailItem.issue}.</p></div></section><section><h4>Order summary</h4><dl className="console-detail-grid"><div><dt>Order value</dt><dd>{currencyFromCents(detailItem.order.subtotal_cents)}</dd></div><div><dt>Channel</dt><dd>Online store</dd></div><div><dt>Method</dt><dd>{sentenceCase(detailItem.order.fulfillment_method)}</dd></div><div><dt>Created</dt><dd>{formatOrderDate(detailItem.order.created_at)}</dd></div></dl><div className="console-line-items">{detailItem.order.items.map((item) => <div key={item.product_id}><span>{item.quantity}× {item.product_name}</span><strong>{currencyFromCents(item.unit_price_cents * item.quantity)}</strong></div>)}</div></section><section><h4>Customer</h4><div className="console-contact-card"><div><strong>{detailItem.order.customer_name}</strong><span>{detailItem.order.customer_email}</span></div><a href={`mailto:${detailItem.order.customer_email}`}>Contact customer</a></div></section><section><h4>Payment timeline</h4>{detailItem.payment ? <div className="console-timeline"><div><i /><strong>{detailItem.payment.status} · {detailItem.payment.method}</strong><span>{detailItem.payment.reference || "No provider reference"}</span><small>{formatOrderDate(detailItem.payment.updated_at)}</small></div></div> : <p className="console-muted-state">No payment has been recorded for this order.</p>}</section><section><h4>Fulfilment timeline</h4><div className="console-timeline">{detailItem.order.fulfillment_history.length ? detailItem.order.fulfillment_history.slice().reverse().map((event) => <div key={event.id}><i /><strong>{sentenceCase(event.to_status)}</strong><span>{event.note || "Status updated"}</span><small>{event.changed_by} · {formatOrderDate(event.happened_at)}</small></div>) : <div><i /><strong>Order received</strong><span>Waiting for the first fulfilment update.</span><small>{formatOrderDate(detailItem.order.created_at)}</small></div>}</div></section><section><h4>Relevant system events</h4><div className="console-event-list">{activity.slice(0, 3).map((item, index) => <div key={`${item.happened_at}-${index}`}><SvgIcon name="check"/><span>{item.detail}</span><small>{item.happened_at}</small></div>)}</div></section></div><footer><button className="console-secondary-button" onClick={onOpenPayments} type="button">Open payments</button><button className="console-primary-button" onClick={onOpenFulfillment} type="button">Update fulfilment</button></footer></aside></div> : null}
+      {detailItem ? <div className="console-drawer-layer" role="presentation"><button aria-label="Close order details" className="console-drawer-scrim" onClick={() => setDetailId(null)} tabIndex={-1} type="button"/><aside aria-labelledby="detail-title" aria-modal="true" className="console-drawer" ref={drawerRef} role="dialog" tabIndex={-1}><header><div><p className="eyebrow">Order #{detailItem.order.id}</p><h3 id="detail-title">{detailItem.order.customer_name}</h3><div><span className={`console-priority ${detailItem.priority.toLowerCase()}`}><i />{detailItem.priority}</span><span className={`console-status ${statusClass(detailItem.paymentStatus)}`}>{detailItem.paymentStatus}</span></div></div><button aria-label="Close order details" className="console-drawer-close" onClick={() => setDetailId(null)} ref={closeButtonRef} type="button"><SvgIcon name="close" /></button></header><div className="console-drawer-body"><section className="console-next-action"><span><SvgIcon name="alert" /></span><div><p className="eyebrow">Recommended next action</p><strong>{detailItem.paymentStatus === "Pending" ? "Confirm settlement before releasing fulfilment" : detailItem.paymentStatus === "Failed" || detailItem.paymentStatus === "Not recorded" ? "Review and resolve the payment exception" : detailItem.requiresAction ? "Review the current fulfilment stage" : "No urgent action is required"}</strong><p>{detailItem.issue}.</p></div></section><section><h4>Order summary</h4><dl className="console-detail-grid"><div><dt>Order value</dt><dd>{currencyFromCents(detailItem.order.subtotal_cents)}</dd></div><div><dt>Channel</dt><dd>Online store</dd></div><div><dt>Method</dt><dd>{sentenceCase(detailItem.order.fulfillment_method)}</dd></div><div><dt>Created</dt><dd>{formatOrderDate(detailItem.order.created_at)}</dd></div></dl><div className="console-line-items">{detailItem.order.items.map((item) => <div key={item.product_id}><span>{item.quantity}× {item.product_name}</span><strong>{currencyFromCents(item.unit_price_cents * item.quantity)}</strong></div>)}</div></section><section><h4>Customer</h4><div className="console-contact-card"><div><strong>{detailItem.order.customer_name}</strong><span>{detailItem.order.customer_email}</span></div><a href={`mailto:${detailItem.order.customer_email}`}>Contact customer</a></div></section><section><h4>Payment timeline</h4>{detailItem.payment ? <div className="console-timeline"><div><i /><strong>{detailItem.payment.status} · {detailItem.payment.method}</strong><span>{detailItem.payment.reference || "No provider reference"}</span><small>{formatOrderDate(detailItem.payment.updated_at)}</small></div></div> : <p className="console-muted-state">No payment has been recorded for this order.</p>}</section><section><h4>Fulfilment timeline</h4><div className="console-timeline">{detailItem.order.fulfillment_history.length ? detailItem.order.fulfillment_history.slice().reverse().map((event) => <div key={event.id}><i /><strong>{sentenceCase(event.to_status)}</strong><span>{event.note || "Status updated"}</span><small>{event.changed_by} · {formatOrderDate(event.happened_at)}</small></div>) : <div><i /><strong>Order received</strong><span>Waiting for the first fulfilment update.</span><small>{formatOrderDate(detailItem.order.created_at)}</small></div>}</div></section><section><h4>Relevant system events</h4><div className="console-event-list">{activity.slice(0, 3).map((item, index) => <div key={`${item.happened_at}-${index}`}><SvgIcon name="check"/><span>{item.detail}</span><small>{item.happened_at}</small></div>)}</div></section></div><footer><button className="console-secondary-button" onClick={onOpenPayments} type="button">Open payments</button><button className="console-primary-button" onClick={onOpenFulfillment} type="button">Update fulfilment</button></footer></aside></div> : null}
     </section>
   );
 }

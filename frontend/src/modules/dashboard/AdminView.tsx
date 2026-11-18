@@ -1,6 +1,13 @@
-import { lazy, useEffect, useState } from "react";
+import { Fragment, lazy, Suspense, useEffect, useMemo, useState } from "react";
 
-import { adminTabs, canAccess, changePasswordFields, type AdminTab } from "../../app/adminHelpers";
+import {
+  adminTabs,
+  canAccess,
+  changePasswordFields,
+  type AdminTab,
+  type AdminTabGroup,
+  type ChangeOwnPasswordFormValues
+} from "../../app/adminHelpers";
 import { EkowayMark } from "../storefront/ShopChrome";
 import { CustomerPortalPanel } from "../customer_portal/CustomerPortalPanel";
 import type {
@@ -279,11 +286,13 @@ export function AdminView({
 }: AdminViewProps) {
   const { notify, notifyError } = useNotifications();
   const [permissionEditorRoleId, setPermissionEditorRoleId] = useState<number | null>(activeRoleId);
-  const [changePasswordForm, setChangePasswordForm] = useState<ChangeOwnPasswordInput>({
+  const [changePasswordForm, setChangePasswordForm] = useState<ChangeOwnPasswordFormValues>({
     current_password: "",
-    new_password: ""
+    new_password: "",
+    confirm_password: ""
   });
   const [isSavingChangePassword, setIsSavingChangePassword] = useState(false);
+  const [teamLogQuery, setTeamLogQuery] = useState("");
   const activeRole = currentAdmin?.role ?? permissions?.roles.find((role) => role.id === activeRoleId) ?? null;
   const canCreateCatalog = canAccess(permissions, activeRoleId, "admin-catalog", "create");
   const canUpdateCatalog = canAccess(permissions, activeRoleId, "admin-catalog", "update");
@@ -309,13 +318,36 @@ export function AdminView({
   const canRunOperationsSync = canAccess(permissions, activeRoleId, "admin-overview", "update");
   const canCreateAdminUsers = canAccess(permissions, activeRoleId, "admin-permissions", "create");
   const canUpdateAdminUsers = canAccess(permissions, activeRoleId, "admin-permissions", "update");
+  const canDeleteAdminUsers = canAccess(permissions, activeRoleId, "admin-permissions", "delete");
+
+  const resetChangePasswordForm = () => {
+    setChangePasswordForm({
+      current_password: "",
+      new_password: "",
+      confirm_password: ""
+    });
+  };
+
+  const closeChangePasswordModal = () => {
+    resetChangePasswordForm();
+    onCloseChangePassword();
+  };
+
+  useEffect(() => {
+    if (!isChangePasswordOpen) {
+      resetChangePasswordForm();
+    }
+  }, [isChangePasswordOpen]);
 
   const handleChangeOwnPassword = async () => {
     setIsSavingChangePassword(true);
 
     try {
-      await onChangeOwnPassword(changePasswordForm);
-      setChangePasswordForm({ current_password: "", new_password: "" });
+      await onChangeOwnPassword({
+        current_password: changePasswordForm.current_password,
+        new_password: changePasswordForm.new_password
+      });
+      resetChangePasswordForm();
       onCloseChangePassword();
       notify({ severity: "success", title: "Password changed", message: "Your password was changed successfully.", scope: "admin-account", dedupeKey: "admin-account:password:success" });
     } catch (error) {
@@ -324,6 +356,26 @@ export function AdminView({
       setIsSavingChangePassword(false);
     }
   };
+
+  const adminTabGroups: AdminTabGroup[] = [
+    "Operations",
+    "Commerce",
+    "Catalog & Care",
+    "Administration"
+  ];
+
+  const filteredActivityFeed = useMemo(() => {
+    const query = teamLogQuery.trim().toLocaleLowerCase();
+    if (!query) {
+      return activityFeed;
+    }
+
+    return activityFeed.filter(
+      (item) =>
+        item.happened_at.toLocaleLowerCase().includes(query) ||
+        item.detail.toLocaleLowerCase().includes(query)
+    );
+  }, [activityFeed, teamLogQuery]);
 
   useEffect(() => {
     if (!permissions || permissions.roles.length === 0) {
@@ -355,7 +407,7 @@ export function AdminView({
 
   return (
     <main className="admin-layout">
-      <aside className="admin-sidebar">
+      <aside className="admin-sidebar no-print">
         <div className="admin-brand">
           <EkowayMark compact />
           <div>
@@ -365,19 +417,33 @@ export function AdminView({
         </div>
 
         <nav className="admin-nav" aria-label="Admin">
-          {adminTabs.map(({ tab, label, pageSlug }) => {
-            const canReadTab = canAccess(permissions, activeRoleId, pageSlug, "read");
+          {adminTabGroups.map((group) => {
+            const groupTabs = adminTabs.filter((item) => item.group === group);
+            if (groupTabs.length === 0) {
+              return null;
+            }
 
             return (
-              <button
-                key={tab}
-                className={`admin-nav-item ${adminTab === tab ? "active" : ""}`}
-                disabled={!canReadTab}
-                onClick={() => onChangeTab(tab)}
-              >
-                <span>{label}</span>
-                {!canReadTab ? <small>Locked</small> : null}
-              </button>
+              <Fragment key={group}>
+                <span className="admin-nav-group">{group}</span>
+                {groupTabs.map(({ tab, label, pageSlug }) => {
+                  const canReadTab = canAccess(permissions, activeRoleId, pageSlug, "read");
+
+                  return (
+                    <button
+                      aria-current={adminTab === tab ? "page" : undefined}
+                      key={tab}
+                      className={`admin-nav-item ${adminTab === tab ? "active" : ""}`}
+                      disabled={!canReadTab}
+                      onClick={() => onChangeTab(tab)}
+                      type="button"
+                    >
+                      <span>{label}</span>
+                      {!canReadTab ? <small>Locked</small> : null}
+                    </button>
+                  );
+                })}
+              </Fragment>
             );
           })}
         </nav>
@@ -390,285 +456,361 @@ export function AdminView({
           {activeRole?.is_super_admin ? <span className="status-pill live">Ultimate access</span> : null}
           {demoMode ? <span className="status-pill warning">Fallback</span> : null}
           {!demoMode ? (
-            <button className="outline-button" onClick={onOpenChangePassword}>
+            <button className="outline-button" onClick={onOpenChangePassword} type="button">
               Change Password
             </button>
           ) : null}
         </div>
 
-        <button className="outline-button" onClick={onBackToStore}>
+        <button className="outline-button" onClick={onBackToStore} type="button">
           Back to Storefront
         </button>
         {!demoMode ? (
-          <button className="outline-button" onClick={onLogout}>
+          <button className="outline-button" onClick={onLogout} type="button">
             Logout
           </button>
         ) : null}
       </aside>
 
       <section className="admin-main">
-        {adminTab !== "overview" ? <header className="admin-topbar">
-          <div><p className="eyebrow">Store operations</p><h2>{adminTabs.find((item) => item.tab === adminTab)?.label}</h2></div>
-          <div className="admin-actions"><button className="solid-button" disabled={!canRunOperationsSync} onClick={() => void onRefreshCatalog()}>Refresh data</button></div>
-        </header> : null}
+        <div className="admin-mobile-account-bar no-print">
+          <div className="admin-mobile-account-identity">
+            <strong>{currentAdmin?.user.display_name ?? "Read-only demo"}</strong>
+            <span>
+              {activeRole?.name ?? "Fallback data"}
+              {demoMode ? " · Fallback" : ""}
+            </span>
+          </div>
+          <div className="admin-mobile-account-actions">
+            {!demoMode ? (
+              <button className="outline-button" onClick={onOpenChangePassword} type="button">
+                Password
+              </button>
+            ) : null}
+            <button className="outline-button" onClick={onBackToStore} type="button">
+              Storefront
+            </button>
+            {!demoMode ? (
+              <button className="outline-button" onClick={onLogout} type="button">
+                Log out
+              </button>
+            ) : null}
+          </div>
+        </div>
+
+        {adminTab !== "overview" ? (
+          <header className="admin-topbar no-print">
+            <div>
+              <p className="eyebrow">Store operations</p>
+              <h2>{adminTabs.find((item) => item.tab === adminTab)?.label}</h2>
+            </div>
+            <div className="admin-actions">
+              <button
+                className="solid-button"
+                disabled={!canRunOperationsSync}
+                onClick={() => void onRefreshCatalog()}
+                type="button"
+              >
+                Refresh data
+              </button>
+            </div>
+          </header>
+        ) : null}
 
         {demoMode && adminTab !== "overview" ? (
-          <p className="admin-demo-banner">
+          <p className="admin-demo-banner no-print">
             API unreachable. Showing fallback admin data with write controls disabled.
           </p>
         ) : null}
 
-        {adminTab === "overview" ? (
-          <OperationsConsole
-            activity={activityFeed}
-            canRefresh={canRunOperationsSync}
-            dashboard={dashboard}
-            demoMode={demoMode}
-            onOpenFulfillment={() => onChangeTab("fulfillment")}
-            onOpenOrders={() => onChangeTab("orders")}
-            onOpenPayments={() => onChangeTab("payments")}
-            onRefresh={onRefreshCatalog}
-            orders={orders}
-            payments={payments}
-          />
-        ) : null}
-
-        {adminTab === "inventory" ? (
-          <CatalogPanel
-            canCreate={canCreateCatalog}
-            canDelete={canDeleteCatalog}
-            canUpdate={canUpdateCatalog}
-            categories={categories}
-            onCreateCategory={onCreateCategory}
-            onCreateProduct={onCreateProduct}
-            onDeleteCategory={onDeleteCategory}
-            onDeleteProduct={onDeleteProduct}
-            onRefreshCatalog={onRefreshCatalog}
-            onUpdateCategory={onUpdateCategory}
-            onUpdateProduct={onUpdateProduct}
-            products={products}
-            variant="inventory"
-          />
-        ) : null}
-
-        {adminTab === "fulfillment" ? (
-          <OrderControlPanel
-            canCreate={canCreateOrders}
-            canDelete={canDeleteOrders}
-            canUpdate={canUpdateOrders}
-            hasMore={hasMoreOrders}
-            isLoadingMore={isLoadingMoreOrders}
-            onCreateOrder={onCreateAdminOrder}
-            onDeleteOrder={onDeleteAdminOrder}
-            onLoadMore={onLoadMoreOrders}
-            onUpdateOrder={onUpdateAdminOrder}
-            onUpdateFulfillment={onUpdateOrderFulfillment}
-            orders={orders}
-            products={products}
-            variant="fulfillment"
-          />
-        ) : null}
-
-        {adminTab === "campaigns" ? (
-          <OfferManagementPanel
-            canCreate={canCreateCampaigns}
-            canDelete={canDeleteCampaigns}
-            canUpdate={canUpdateCampaigns}
-            demoMode={demoMode}
-            onCreatePromotion={onCreatePromotion}
-            onCreateVoucher={onCreateVoucher}
-            onDeletePromotion={onDeletePromotion}
-            onDeleteVoucher={onDeleteVoucher}
-            onUpdatePromotion={onUpdatePromotion}
-            onUpdateVoucher={onUpdateVoucher}
-            promotions={promotions}
-            vouchers={vouchers}
-          />
-        ) : null}
-
-        {adminTab === "catalog" ? (
-          <CatalogPanel
-            canCreate={canCreateCatalog}
-            canDelete={canDeleteCatalog}
-            canUpdate={canUpdateCatalog}
-            categories={categories}
-            onCreateCategory={onCreateCategory}
-            onCreateProduct={onCreateProduct}
-            onDeleteCategory={onDeleteCategory}
-            onDeleteProduct={onDeleteProduct}
-            onRefreshCatalog={onRefreshCatalog}
-            onUpdateCategory={onUpdateCategory}
-            onUpdateProduct={onUpdateProduct}
-            products={products}
-          />
-        ) : null}
-
-        {adminTab === "customers" ? (
-          <CustomerPortalPanel
-            canCreate={canCreateCustomers}
-            canDelete={canDeleteCustomers}
-            canUpdate={canUpdateCustomers}
-            hasMore={hasMoreCustomerProfiles}
-            isLoadingMore={isLoadingMoreCustomerProfiles}
-            onCreateCustomerPortalProfile={onCreateCustomerPortalProfile}
-            onDeleteCustomerPortalProfile={onDeleteCustomerPortalProfile}
-            onLoadMore={onLoadMoreCustomerProfiles}
-            onUpdateCustomerPortalProfile={onUpdateCustomerPortalProfile}
-            orders={orders}
-            profiles={customerProfiles}
-          />
-        ) : null}
-
-        {adminTab === "support" && canReadSupport ? (
-          <SupportInboxPanel
-            canUpdate={canUpdateSupport}
-            currentAdminUserId={currentAdmin?.user.id ?? null}
-          />
-        ) : null}
-
-        {adminTab === "orders" ? (
-          <OrderControlPanel
-            canCreate={canCreateOrders}
-            canDelete={canDeleteOrders}
-            canUpdate={canUpdateOrders}
-            hasMore={hasMoreOrders}
-            isLoadingMore={isLoadingMoreOrders}
-            onCreateOrder={onCreateAdminOrder}
-            onDeleteOrder={onDeleteAdminOrder}
-            onLoadMore={onLoadMoreOrders}
-            onUpdateOrder={onUpdateAdminOrder}
-            onUpdateFulfillment={onUpdateOrderFulfillment}
-            orders={orders}
-            products={products}
-          />
-        ) : null}
-
-        {adminTab === "payments" ? (
-          <PaymentManagementPanel
-            canCreate={canCreatePayments}
-            canDelete={canDeletePayments}
-            canUpdate={canUpdatePayments}
-            onCreatePayment={onCreatePayment}
-            onDeletePayment={onDeletePayment}
-            onUpdatePayment={onUpdatePayment}
-            orders={orders}
-            payments={payments}
-          />
-        ) : null}
-
-        {adminTab === "sales" ? (
-          <SalesPanel
-            canUpdate={canUpdateSales}
-            hasMore={hasMoreSales}
-            isLoadingMore={isLoadingMoreSales}
-            onLoadMore={onLoadMoreSales}
-            onUpdateSalesDetails={onUpdateSalesDetails}
-            onUpdateSalesStatus={onUpdateSalesStatus}
-            sales={sales}
-            summary={salesSummary}
-          />
-        ) : null}
-
-        {adminTab === "invoices" ? (
-          <InvoicesPanel
-            canCreate={canCreateInvoices}
-            canUpdate={canUpdateInvoices}
-            hasMore={hasMoreInvoices}
-            invoices={invoices}
-            isLoadingMore={isLoadingMoreInvoices}
-            onCreateInvoiceFromOrder={onCreateInvoiceFromOrder}
-            onExportAutoCountInvoices={onExportAutoCountInvoices}
-            onLoadMore={onLoadMoreInvoices}
-            onRecordInvoicePayment={onRecordInvoicePayment}
-            onUpdateInvoiceBilling={onUpdateInvoiceBilling}
-            onVoidInvoice={onVoidInvoice}
-            orders={orders}
-            settings={systemSettings}
-          />
-        ) : null}
-
-        {adminTab === "settings" ? (
-          <SettingsPanel
-            canUpdate={canUpdateSettings}
-            onUpdateSetting={onUpdateSystemSetting}
-            settings={systemSettings}
-          />
-        ) : null}
-
-        {adminTab === "permissions" ? (
-          <>
-            <PermissionsPanel
-              activeRoleId={permissionEditorRoleId}
-              onChangeRole={setPermissionEditorRoleId}
-              onCreateRole={onCreateRole}
-              onDeleteRole={onDeleteRole}
-              onUpdateRole={onUpdateRole}
-              onUpdateRolePermission={onUpdateRolePermission}
-              permissions={permissions}
-            />
-            <TeamPanel
-              canCreate={canCreateAdminUsers}
-              canUpdate={canUpdateAdminUsers}
-              currentUserId={currentAdmin?.user.id ?? -1}
-              onCreateUser={onCreateAdminUser}
-              onResetUserPassword={onResetAdminUserPassword}
-              onSetUserActive={onSetAdminUserActive}
-              onUpdateUserProfile={onUpdateAdminUserProfile}
-              roles={permissions?.roles ?? []}
-              users={adminUsers}
-            />
-          </>
-        ) : null}
-
-        {adminTab === "team-log" ? <section className="dashboard-panel activity-feed" aria-labelledby="team-log-title">
-          <div className="panel-header">
-            <div>
-              <p className="eyebrow">Recent activity</p>
-              <h3 id="team-log-title">Team log</h3>
+        <Suspense
+          fallback={
+            <div className="admin-panel-skeleton" role="status" aria-live="polite">
+              Loading workspace…
             </div>
-            <span className="status-pill">
-              {activityFeed.length} {activityFeed.length === 1 ? "event" : "events"}
-            </span>
-          </div>
-          <div className="activity-list">
-            {activityFeed.length > 0 ? (
-              activityFeed.map((item, index) => (
-                <div key={`${item.happened_at}-${item.detail}-${index}`}>
-                  <strong>{item.happened_at}</strong>
-                  <span>{item.detail}</span>
-                </div>
-              ))
-            ) : (
-              <p>No team activity has been recorded yet.</p>
-            )}
-          </div>
-          {hasMoreActivity ? (
-            <button
-              type="button"
-              className="outline-button"
-              disabled={isLoadingMoreActivity}
-              onClick={onLoadMoreActivity}
-            >
-              {isLoadingMoreActivity ? "Loading..." : "Load more"}
-            </button>
+          }
+        >
+          {adminTab === "overview" ? (
+            <OperationsConsole
+              activity={activityFeed}
+              canRefresh={canRunOperationsSync}
+              dashboard={dashboard}
+              demoMode={demoMode}
+              onOpenFulfillment={() => onChangeTab("fulfillment")}
+              onOpenOrders={() => onChangeTab("orders")}
+              onOpenPayments={() => onChangeTab("payments")}
+              onRefresh={onRefreshCatalog}
+              orders={orders}
+              payments={payments}
+            />
           ) : null}
-        </section> : null}
+
+          {adminTab === "inventory" ? (
+            <CatalogPanel
+              canCreate={canCreateCatalog}
+              canDelete={canDeleteCatalog}
+              canUpdate={canUpdateCatalog}
+              categories={categories}
+              onCreateCategory={onCreateCategory}
+              onCreateProduct={onCreateProduct}
+              onDeleteCategory={onDeleteCategory}
+              onDeleteProduct={onDeleteProduct}
+              onRefreshCatalog={onRefreshCatalog}
+              onUpdateCategory={onUpdateCategory}
+              onUpdateProduct={onUpdateProduct}
+              products={products}
+              variant="inventory"
+            />
+          ) : null}
+
+          {adminTab === "fulfillment" ? (
+            <OrderControlPanel
+              canCreate={canCreateOrders}
+              canDelete={canDeleteOrders}
+              canUpdate={canUpdateOrders}
+              hasMore={hasMoreOrders}
+              isLoadingMore={isLoadingMoreOrders}
+              onCreateOrder={onCreateAdminOrder}
+              onDeleteOrder={onDeleteAdminOrder}
+              onLoadMore={onLoadMoreOrders}
+              onUpdateOrder={onUpdateAdminOrder}
+              onUpdateFulfillment={onUpdateOrderFulfillment}
+              orders={orders}
+              products={products}
+              variant="fulfillment"
+            />
+          ) : null}
+
+          {adminTab === "campaigns" ? (
+            <OfferManagementPanel
+              canCreate={canCreateCampaigns}
+              canDelete={canDeleteCampaigns}
+              canUpdate={canUpdateCampaigns}
+              demoMode={demoMode}
+              onCreatePromotion={onCreatePromotion}
+              onCreateVoucher={onCreateVoucher}
+              onDeletePromotion={onDeletePromotion}
+              onDeleteVoucher={onDeleteVoucher}
+              onUpdatePromotion={onUpdatePromotion}
+              onUpdateVoucher={onUpdateVoucher}
+              promotions={promotions}
+              vouchers={vouchers}
+            />
+          ) : null}
+
+          {adminTab === "catalog" ? (
+            <CatalogPanel
+              canCreate={canCreateCatalog}
+              canDelete={canDeleteCatalog}
+              canUpdate={canUpdateCatalog}
+              categories={categories}
+              onCreateCategory={onCreateCategory}
+              onCreateProduct={onCreateProduct}
+              onDeleteCategory={onDeleteCategory}
+              onDeleteProduct={onDeleteProduct}
+              onRefreshCatalog={onRefreshCatalog}
+              onUpdateCategory={onUpdateCategory}
+              onUpdateProduct={onUpdateProduct}
+              products={products}
+            />
+          ) : null}
+
+          {adminTab === "customers" ? (
+            <CustomerPortalPanel
+              canCreate={canCreateCustomers}
+              canDelete={canDeleteCustomers}
+              canUpdate={canUpdateCustomers}
+              hasMore={hasMoreCustomerProfiles}
+              isLoadingMore={isLoadingMoreCustomerProfiles}
+              onCreateCustomerPortalProfile={onCreateCustomerPortalProfile}
+              onDeleteCustomerPortalProfile={onDeleteCustomerPortalProfile}
+              onLoadMore={onLoadMoreCustomerProfiles}
+              onUpdateCustomerPortalProfile={onUpdateCustomerPortalProfile}
+              orders={orders}
+              profiles={customerProfiles}
+            />
+          ) : null}
+
+          {adminTab === "support" && canReadSupport ? (
+            <SupportInboxPanel
+              canUpdate={canUpdateSupport}
+              currentAdminUserId={currentAdmin?.user.id ?? null}
+            />
+          ) : null}
+
+          {adminTab === "orders" ? (
+            <OrderControlPanel
+              canCreate={canCreateOrders}
+              canDelete={canDeleteOrders}
+              canUpdate={canUpdateOrders}
+              hasMore={hasMoreOrders}
+              isLoadingMore={isLoadingMoreOrders}
+              onCreateOrder={onCreateAdminOrder}
+              onDeleteOrder={onDeleteAdminOrder}
+              onLoadMore={onLoadMoreOrders}
+              onUpdateOrder={onUpdateAdminOrder}
+              onUpdateFulfillment={onUpdateOrderFulfillment}
+              orders={orders}
+              products={products}
+            />
+          ) : null}
+
+          {adminTab === "payments" ? (
+            <PaymentManagementPanel
+              canCreate={canCreatePayments}
+              canDelete={canDeletePayments}
+              canUpdate={canUpdatePayments}
+              onCreatePayment={onCreatePayment}
+              onDeletePayment={onDeletePayment}
+              onUpdatePayment={onUpdatePayment}
+              orders={orders}
+              payments={payments}
+            />
+          ) : null}
+
+          {adminTab === "sales" ? (
+            <SalesPanel
+              canUpdate={canUpdateSales}
+              hasMore={hasMoreSales}
+              isLoadingMore={isLoadingMoreSales}
+              onLoadMore={onLoadMoreSales}
+              onUpdateSalesDetails={onUpdateSalesDetails}
+              onUpdateSalesStatus={onUpdateSalesStatus}
+              sales={sales}
+              summary={salesSummary}
+            />
+          ) : null}
+
+          {adminTab === "invoices" ? (
+            <InvoicesPanel
+              canCreate={canCreateInvoices}
+              canUpdate={canUpdateInvoices}
+              hasMore={hasMoreInvoices}
+              invoices={invoices}
+              isLoadingMore={isLoadingMoreInvoices}
+              onCreateInvoiceFromOrder={onCreateInvoiceFromOrder}
+              onExportAutoCountInvoices={onExportAutoCountInvoices}
+              onLoadMore={onLoadMoreInvoices}
+              onRecordInvoicePayment={onRecordInvoicePayment}
+              onUpdateInvoiceBilling={onUpdateInvoiceBilling}
+              onVoidInvoice={onVoidInvoice}
+              orders={orders}
+              settings={systemSettings}
+            />
+          ) : null}
+
+          {adminTab === "settings" ? (
+            <SettingsPanel
+              canUpdate={canUpdateSettings}
+              onUpdateSetting={onUpdateSystemSetting}
+              settings={systemSettings}
+            />
+          ) : null}
+
+          {adminTab === "permissions" ? (
+            <>
+              <PermissionsPanel
+                activeRoleId={permissionEditorRoleId}
+                canCreate={canCreateAdminUsers}
+                canDelete={canDeleteAdminUsers}
+                canUpdate={canUpdateAdminUsers}
+                onChangeRole={setPermissionEditorRoleId}
+                onCreateRole={onCreateRole}
+                onDeleteRole={onDeleteRole}
+                onUpdateRole={onUpdateRole}
+                onUpdateRolePermission={onUpdateRolePermission}
+                permissions={permissions}
+              />
+              <TeamPanel
+                canCreate={canCreateAdminUsers}
+                canUpdate={canUpdateAdminUsers}
+                currentUserId={currentAdmin?.user.id ?? -1}
+                onCreateUser={onCreateAdminUser}
+                onResetUserPassword={onResetAdminUserPassword}
+                onSetUserActive={onSetAdminUserActive}
+                onUpdateUserProfile={onUpdateAdminUserProfile}
+                roles={permissions?.roles ?? []}
+                users={adminUsers}
+              />
+            </>
+          ) : null}
+
+          {adminTab === "team-log" ? (
+            <section className="dashboard-panel activity-feed" aria-labelledby="team-log-title">
+              <div className="panel-header">
+                <div>
+                  <p className="eyebrow">Recent activity</p>
+                  <h3 id="team-log-title">Team log</h3>
+                </div>
+                <span className="status-pill">
+                  {filteredActivityFeed.length} {filteredActivityFeed.length === 1 ? "event" : "events"}
+                </span>
+              </div>
+
+              <div className="management-table-toolbar">
+                <label className="management-table-search">
+                  <span className="sr-only">Search team log</span>
+                  <input
+                    aria-label="Search team log"
+                    onChange={(event) => setTeamLogQuery(event.target.value)}
+                    placeholder="Filter activity by time or action..."
+                    type="search"
+                    value={teamLogQuery}
+                  />
+                </label>
+                <span className="management-table-summary">
+                  {teamLogQuery.trim()
+                    ? `${filteredActivityFeed.length} of ${activityFeed.length} loaded`
+                    : `${activityFeed.length} loaded`}
+                </span>
+              </div>
+
+              <div className="activity-list">
+                {filteredActivityFeed.length > 0 ? (
+                  filteredActivityFeed.map((item, index) => (
+                    <div className="activity-log-row" key={`${item.happened_at}-${item.detail}-${index}`}>
+                      <strong className="activity-log-time">{item.happened_at}</strong>
+                      <span className="activity-log-detail">{item.detail}</span>
+                    </div>
+                  ))
+                ) : activityFeed.length > 0 ? (
+                  <p>No activity events match “{teamLogQuery.trim()}”.</p>
+                ) : (
+                  <p>No team activity has been recorded yet.</p>
+                )}
+              </div>
+
+              {hasMoreActivity ? (
+                <div className="table-pagination-actions">
+                  <span className="table-pagination-count">
+                    Showing {filteredActivityFeed.length} of {activityFeed.length} loaded
+                  </span>
+                  <button
+                    type="button"
+                    className="outline-button"
+                    disabled={isLoadingMoreActivity}
+                    onClick={onLoadMoreActivity}
+                  >
+                    {isLoadingMoreActivity ? "Loading..." : "Load more"}
+                  </button>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
+        </Suspense>
       </section>
 
       <RecordModal
         eyebrow="Account security"
+        isBusy={isSavingChangePassword}
         isOpen={isChangePasswordOpen}
-        onClose={() => {
-          onCloseChangePassword();
-        }}
+        onClose={closeChangePasswordModal}
         title="Change Password"
       >
         <RecordForm
           fields={changePasswordFields}
           isSubmitting={isSavingChangePassword}
-          onCancel={() => {
-            onCloseChangePassword();
-          }}
+          onCancel={closeChangePasswordModal}
           onChange={setChangePasswordForm}
           onSubmit={() => void handleChangeOwnPassword()}
           submitLabel="Change Password"

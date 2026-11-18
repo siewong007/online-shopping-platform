@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
+import { ConfirmModal } from "../../../shared/components/ConfirmModal";
 import { ManagementTable } from "../../../shared/components/ManagementTable";
 import {
   RecordForm,
@@ -8,6 +9,7 @@ import {
   RecordModal
 } from "../../../shared/components/RecordModal";
 import { currencyFromCents, formatOrderDate } from "../../../shared/formatters";
+import { useNotifications } from "../../../shared/notifications";
 import type {
   CreatePromotionInput,
   CreateVoucherInput,
@@ -17,6 +19,18 @@ import type {
   UpdateVoucherInput,
   Voucher
 } from "../types";
+
+type OfferTab = "promotions" | "vouchers";
+type OfferStatusFilter = "all" | "active" | "inactive";
+type PendingOfferDelete =
+  | { kind: "promotion"; record: Promotion }
+  | { kind: "voucher"; record: Voucher };
+
+const offerStatusFilters: { label: string; value: OfferStatusFilter }[] = [
+  { label: "All", value: "all" },
+  { label: "Active", value: "active" },
+  { label: "Inactive", value: "inactive" }
+];
 
 type OfferFormState = {
   title: string;
@@ -237,149 +251,182 @@ function validateVoucherForm(values: VoucherFormState): RecordFormErrors<Voucher
   return errors;
 }
 
-const promotionFields: RecordFormField<PromotionFormState>[] = [
-  { name: "label", label: "Label", required: true, minLength: 2, placeholder: "Seasonal savings" },
-  { name: "title", label: "Title", required: true, minLength: 2, placeholder: "Summer project event" },
-  {
-    name: "description",
-    label: "Description",
-    type: "textarea",
-    required: true,
-    minLength: 8,
-    rows: 4
-  },
-  {
-    name: "discount_type",
-    label: "Discount type",
-    type: "select",
-    options: [
-      { label: "Display only (no checkout discount)", value: "" },
-      { label: "Fixed amount (cents)", value: "fixed_cents" },
-      { label: "Percentage (basis points)", value: "percent_bps" }
-    ]
-  },
-  {
-    name: "discount_value",
-    label: "Discount value",
-    type: "number",
-    min: 0,
-    step: "1",
-    placeholder: "1500",
-    helpText: "Use cents for a fixed amount or basis points for a percentage.",
-    validate: validateNonNegativeInteger
-  },
-  {
-    name: "minimum_subtotal_cents",
-    label: "Minimum subtotal (cents)",
-    type: "number",
-    required: true,
-    min: 0,
-    step: "1",
-    validate: validateNonNegativeInteger
-  },
-  {
-    name: "starts_at",
-    label: "Starts at",
-    helpText: "Optional ISO 8601 timestamp.",
-    placeholder: "2026-07-16T09:00:00Z"
-  },
-  {
-    name: "ends_at",
-    label: "Ends at",
-    helpText: "Optional ISO 8601 timestamp.",
-    placeholder: "2026-07-31T23:59:59Z"
-  },
-  { name: "max_redemptions", label: "Maximum redemptions", type: "number", min: 0, step: "1", validate: validateNonNegativeInteger },
-  {
-    name: "is_active",
-    label: "Active",
-    type: "toggle",
-    description: "Make this promotion available to qualifying guests."
-  },
-  {
-    name: "is_stackable",
-    label: "Stackable",
-    type: "toggle",
-    description: "Allow this promotion to combine with other eligible offers."
-  }
-];
-
-const voucherFields: RecordFormField<VoucherFormState>[] = [
-  { name: "code", label: "Voucher code", required: true, minLength: 2, placeholder: "SUMMER15" },
-  { name: "title", label: "Title", required: true, minLength: 2, placeholder: "Summer savings" },
-  {
-    name: "description",
-    label: "Description",
-    type: "textarea",
-    required: true,
-    minLength: 8,
-    rows: 4
-  },
-  {
-    name: "discount_type",
-    label: "Discount type",
-    type: "select",
-    required: true,
-    options: [
-      { label: "Fixed amount (cents)", value: "fixed_cents" },
-      { label: "Percentage (basis points)", value: "percent_bps" }
-    ]
-  },
-  {
-    name: "discount_value",
-    label: "Discount value",
-    type: "number",
-    required: true,
-    min: 0,
-    step: "1",
-    placeholder: "1500",
-    helpText: "Use cents for a fixed amount or basis points for a percentage.",
-    validate: validateNonNegativeInteger
-  },
-  {
-    name: "minimum_subtotal_cents",
-    label: "Minimum subtotal (cents)",
-    type: "number",
-    required: true,
-    min: 0,
-    step: "1",
-    validate: validateNonNegativeInteger
-  },
-  {
-    name: "starts_at",
-    label: "Starts at",
-    helpText: "Optional ISO 8601 timestamp.",
-    placeholder: "2026-07-16T09:00:00Z"
-  },
-  {
-    name: "ends_at",
-    label: "Ends at",
-    helpText: "Optional ISO 8601 timestamp.",
-    placeholder: "2026-07-31T23:59:59Z"
-  },
-  { name: "max_redemptions", label: "Maximum redemptions", type: "number", min: 0, step: "1", validate: validateNonNegativeInteger },
-  {
-    name: "is_active",
-    label: "Active",
-    type: "toggle",
-    description: "Make this voucher available to qualifying guests."
-  },
-  {
-    name: "is_stackable",
-    label: "Stackable",
-    type: "toggle",
-    description: "Allow this voucher to combine with other eligible offers."
-  },
-  {
-    name: "is_public",
-    label: "Public voucher",
-    type: "toggle",
-    description: "Allow guests to discover this voucher without a private code share."
-  }
-];
-
 function formatPercentBps(value: number): string {
   return `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value / 100)}%`;
+}
+
+function discountValueHelpText(discountType: "" | DiscountType, rawValue: string): string {
+  const trimmed = rawValue.trim();
+  const parsed = trimmed ? Number(trimmed) : NaN;
+  const isValidInt = Number.isInteger(parsed) && parsed >= 0;
+
+  if (discountType === "fixed_cents") {
+    const preview = isValidInt ? `${parsed} cents = ${currencyFromCents(parsed)} off · ` : "";
+    return `${preview}Enter whole cents (e.g. 1500 cents = RM 15.00).`;
+  }
+
+  if (discountType === "percent_bps") {
+    const preview = isValidInt ? `${parsed} bps = ${formatPercentBps(parsed)} off · ` : "";
+    return `${preview}Enter basis points (e.g. 1500 bps = 15%, 500 bps = 5%).`;
+  }
+
+  return "Use cents for fixed amount (e.g. 1500 cents = RM 15.00) or basis points for percentage (e.g. 1500 bps = 15%).";
+}
+
+function minimumSubtotalHelpText(rawValue: string): string {
+  const trimmed = rawValue.trim();
+  const parsed = trimmed ? Number(trimmed) : NaN;
+  if (Number.isInteger(parsed) && parsed >= 0) {
+    return `${parsed} cents = ${currencyFromCents(parsed)} minimum order (e.g. 1500 cents = RM 15.00, 0 = no minimum).`;
+  }
+  return "Enter whole cents (e.g. 1500 cents = RM 15.00, 0 = no minimum).";
+}
+
+function buildPromotionFields(form: PromotionFormState): RecordFormField<PromotionFormState>[] {
+  return [
+    { name: "label", label: "Label", required: true, minLength: 2, placeholder: "Seasonal savings" },
+    { name: "title", label: "Title", required: true, minLength: 2, placeholder: "Summer project event" },
+    {
+      name: "description",
+      label: "Description",
+      type: "textarea",
+      required: true,
+      minLength: 8,
+      rows: 4
+    },
+    {
+      name: "discount_type",
+      label: "Discount type",
+      type: "select",
+      options: [
+        { label: "Display only (no checkout discount)", value: "" },
+        { label: "Fixed amount (cents)", value: "fixed_cents" },
+        { label: "Percentage (basis points)", value: "percent_bps" }
+      ]
+    },
+    {
+      name: "discount_value",
+      label: "Discount value",
+      type: "number",
+      min: 0,
+      step: "1",
+      placeholder: "1500",
+      helpText: discountValueHelpText(form.discount_type, form.discount_value),
+      validate: validateNonNegativeInteger
+    },
+    {
+      name: "minimum_subtotal_cents",
+      label: "Minimum subtotal (cents)",
+      type: "number",
+      required: true,
+      min: 0,
+      step: "1",
+      helpText: minimumSubtotalHelpText(form.minimum_subtotal_cents),
+      validate: validateNonNegativeInteger
+    },
+    {
+      name: "starts_at",
+      label: "Starts at",
+      helpText: "Optional ISO 8601 timestamp.",
+      placeholder: "2026-07-16T09:00:00Z"
+    },
+    {
+      name: "ends_at",
+      label: "Ends at",
+      helpText: "Optional ISO 8601 timestamp.",
+      placeholder: "2026-07-31T23:59:59Z"
+    },
+    { name: "max_redemptions", label: "Maximum redemptions", type: "number", min: 0, step: "1", validate: validateNonNegativeInteger },
+    {
+      name: "is_active",
+      label: "Active",
+      type: "toggle",
+      description: "Make this promotion available to qualifying guests."
+    },
+    {
+      name: "is_stackable",
+      label: "Stackable",
+      type: "toggle",
+      description: "Allow this promotion to combine with other eligible offers."
+    }
+  ];
+}
+
+function buildVoucherFields(form: VoucherFormState): RecordFormField<VoucherFormState>[] {
+  return [
+    { name: "code", label: "Voucher code", required: true, minLength: 2, placeholder: "SUMMER15" },
+    { name: "title", label: "Title", required: true, minLength: 2, placeholder: "Summer savings" },
+    {
+      name: "description",
+      label: "Description",
+      type: "textarea",
+      required: true,
+      minLength: 8,
+      rows: 4
+    },
+    {
+      name: "discount_type",
+      label: "Discount type",
+      type: "select",
+      required: true,
+      options: [
+        { label: "Fixed amount (cents)", value: "fixed_cents" },
+        { label: "Percentage (basis points)", value: "percent_bps" }
+      ]
+    },
+    {
+      name: "discount_value",
+      label: "Discount value",
+      type: "number",
+      required: true,
+      min: 0,
+      step: "1",
+      placeholder: "1500",
+      helpText: discountValueHelpText(form.discount_type, form.discount_value),
+      validate: validateNonNegativeInteger
+    },
+    {
+      name: "minimum_subtotal_cents",
+      label: "Minimum subtotal (cents)",
+      type: "number",
+      required: true,
+      min: 0,
+      step: "1",
+      helpText: minimumSubtotalHelpText(form.minimum_subtotal_cents),
+      validate: validateNonNegativeInteger
+    },
+    {
+      name: "starts_at",
+      label: "Starts at",
+      helpText: "Optional ISO 8601 timestamp.",
+      placeholder: "2026-07-16T09:00:00Z"
+    },
+    {
+      name: "ends_at",
+      label: "Ends at",
+      helpText: "Optional ISO 8601 timestamp.",
+      placeholder: "2026-07-31T23:59:59Z"
+    },
+    { name: "max_redemptions", label: "Maximum redemptions", type: "number", min: 0, step: "1", validate: validateNonNegativeInteger },
+    {
+      name: "is_active",
+      label: "Active",
+      type: "toggle",
+      description: "Make this voucher available to qualifying guests."
+    },
+    {
+      name: "is_stackable",
+      label: "Stackable",
+      type: "toggle",
+      description: "Allow this voucher to combine with other eligible offers."
+    },
+    {
+      name: "is_public",
+      label: "Public voucher",
+      type: "toggle",
+      description: "Allow guests to discover this voucher without a private code share."
+    }
+  ];
 }
 
 function discountSummary(discountType: DiscountType | null, discountValue: number | null): string {
@@ -443,6 +490,10 @@ export function OfferManagementPanel({
   onUpdateVoucher,
   onDeleteVoucher
 }: OfferManagementPanelProps) {
+  const { notify, notifyError } = useNotifications();
+  const [activeTab, setActiveTab] = useState<OfferTab>("promotions");
+  const [promotionStatusFilter, setPromotionStatusFilter] = useState<OfferStatusFilter>("all");
+  const [voucherStatusFilter, setVoucherStatusFilter] = useState<OfferStatusFilter>("all");
   const [promotionForm, setPromotionForm] = useState<PromotionFormState>(emptyPromotionForm);
   const [voucherForm, setVoucherForm] = useState<VoucherFormState>(emptyVoucherForm);
   const [editingPromotionId, setEditingPromotionId] = useState<number | null>(null);
@@ -453,7 +504,27 @@ export function OfferManagementPanel({
   const [isSavingVoucher, setIsSavingVoucher] = useState(false);
   const [deletingPromotionId, setDeletingPromotionId] = useState<number | null>(null);
   const [deletingVoucherId, setDeletingVoucherId] = useState<number | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<PendingOfferDelete | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const filteredPromotions = useMemo(() => {
+    if (promotionStatusFilter === "all") {
+      return promotions;
+    }
+    const wantActive = promotionStatusFilter === "active";
+    return promotions.filter((promotion) => promotion.is_active === wantActive);
+  }, [promotionStatusFilter, promotions]);
+
+  const filteredVouchers = useMemo(() => {
+    if (voucherStatusFilter === "all") {
+      return vouchers;
+    }
+    const wantActive = voucherStatusFilter === "active";
+    return vouchers.filter((voucher) => voucher.is_active === wantActive);
+  }, [voucherStatusFilter, vouchers]);
+
+  const promotionFields = useMemo(() => buildPromotionFields(promotionForm), [promotionForm]);
+  const voucherFields = useMemo(() => buildVoucherFields(voucherForm), [voucherForm]);
 
   const canCreateOffers = canCreate && !demoMode;
   const canUpdateOffers = canUpdate && !demoMode;
@@ -484,7 +555,9 @@ export function OfferManagementPanel({
 
   const openCreatePromotion = () => {
     if (!canCreateOffers) {
-      setError(mutationUnavailableMessage(demoMode, "create promotions"));
+      const message = mutationUnavailableMessage(demoMode, "create promotions");
+      setError(message);
+      notify({ severity: "error", title: "Promotion not created", message, scope: "offers", dedupeKey: "offers:promotion:create:permission" });
       return;
     }
 
@@ -496,7 +569,9 @@ export function OfferManagementPanel({
 
   const openEditPromotion = (promotion: Promotion) => {
     if (!canUpdateOffers) {
-      setError(mutationUnavailableMessage(demoMode, "update promotions"));
+      const message = mutationUnavailableMessage(demoMode, "update promotions");
+      setError(message);
+      notify({ severity: "error", title: "Promotion not updated", message, scope: "offers", dedupeKey: "offers:promotion:update:permission" });
       return;
     }
 
@@ -508,7 +583,9 @@ export function OfferManagementPanel({
 
   const openCreateVoucher = () => {
     if (!canCreateOffers) {
-      setError(mutationUnavailableMessage(demoMode, "create vouchers"));
+      const message = mutationUnavailableMessage(demoMode, "create vouchers");
+      setError(message);
+      notify({ severity: "error", title: "Voucher not created", message, scope: "offers", dedupeKey: "offers:voucher:create:permission" });
       return;
     }
 
@@ -520,7 +597,9 @@ export function OfferManagementPanel({
 
   const openEditVoucher = (voucher: Voucher) => {
     if (!canUpdateOffers) {
-      setError(mutationUnavailableMessage(demoMode, "update vouchers"));
+      const message = mutationUnavailableMessage(demoMode, "update vouchers");
+      setError(message);
+      notify({ severity: "error", title: "Voucher not updated", message, scope: "offers", dedupeKey: "offers:voucher:update:permission" });
       return;
     }
 
@@ -532,23 +611,37 @@ export function OfferManagementPanel({
 
   const handleSavePromotion = async () => {
     if (!promotionCanSave) {
-      setError(mutationUnavailableMessage(demoMode, "save promotions"));
+      const message = mutationUnavailableMessage(demoMode, "save promotions");
+      setError(message);
+      notify({ severity: "error", title: "Promotion not saved", message, scope: "offers", dedupeKey: "offers:promotion:save:permission" });
       return;
     }
 
+    const wasCreating = editingPromotionId === null;
     setIsSavingPromotion(true);
     setError(null);
 
     try {
       const input = promotionInputFromForm(promotionForm);
-      if (editingPromotionId === null) {
-        await onCreatePromotion(input);
-      } else {
-        await onUpdatePromotion(editingPromotionId, input);
-      }
+      const saved =
+        editingPromotionId === null
+          ? await onCreatePromotion(input)
+          : await onUpdatePromotion(editingPromotionId, input);
       closePromotionModal();
+      notify({
+        severity: "success",
+        title: wasCreating ? "Promotion created" : "Promotion updated",
+        message: `${saved.title} was ${wasCreating ? "created" : "updated"} successfully.`,
+        scope: "offers",
+        dedupeKey: `offers:promotion:${saved.id}:${wasCreating ? "create" : "update"}:success`
+      });
     } catch (saveError) {
       setError(errorMessage(saveError));
+      notifyError(saveError, {
+        operation: wasCreating ? "create promotion" : "update promotion",
+        scope: "offers",
+        dedupeKey: `offers:promotion:${editingPromotionId ?? "new"}:save:error`
+      });
     } finally {
       setIsSavingPromotion(false);
     }
@@ -556,63 +649,101 @@ export function OfferManagementPanel({
 
   const handleSaveVoucher = async () => {
     if (!voucherCanSave) {
-      setError(mutationUnavailableMessage(demoMode, "save vouchers"));
+      const message = mutationUnavailableMessage(demoMode, "save vouchers");
+      setError(message);
+      notify({ severity: "error", title: "Voucher not saved", message, scope: "offers", dedupeKey: "offers:voucher:save:permission" });
       return;
     }
 
+    const wasCreating = editingVoucherId === null;
     setIsSavingVoucher(true);
     setError(null);
 
     try {
       const input = voucherInputFromForm(voucherForm);
-      if (editingVoucherId === null) {
-        await onCreateVoucher(input);
-      } else {
-        await onUpdateVoucher(editingVoucherId, input);
-      }
+      const saved =
+        editingVoucherId === null
+          ? await onCreateVoucher(input)
+          : await onUpdateVoucher(editingVoucherId, input);
       closeVoucherModal();
+      notify({
+        severity: "success",
+        title: wasCreating ? "Voucher created" : "Voucher updated",
+        message: `${saved.code} was ${wasCreating ? "created" : "updated"} successfully.`,
+        scope: "offers",
+        dedupeKey: `offers:voucher:${saved.id}:${wasCreating ? "create" : "update"}:success`
+      });
     } catch (saveError) {
       setError(errorMessage(saveError));
+      notifyError(saveError, {
+        operation: wasCreating ? "create voucher" : "update voucher",
+        scope: "offers",
+        dedupeKey: `offers:voucher:${editingVoucherId ?? "new"}:save:error`
+      });
     } finally {
       setIsSavingVoucher(false);
     }
   };
 
-  const handleDeletePromotion = async (promotion: Promotion) => {
+  const requestDeletePromotion = (promotion: Promotion) => {
     if (!canDeleteOffers) {
-      setError(mutationUnavailableMessage(demoMode, "delete promotions"));
+      const message = mutationUnavailableMessage(demoMode, "delete promotions");
+      setError(message);
+      notify({ severity: "error", title: "Promotion not deleted", message, scope: "offers", dedupeKey: "offers:promotion:delete:permission" });
       return;
     }
 
-    if (!window.confirm(`Delete promotion \"${promotion.title}\"?`)) {
-      return;
-    }
-
-    setDeletingPromotionId(promotion.id);
-    setError(null);
-
-    try {
-      await onDeletePromotion(promotion.id);
-      if (editingPromotionId === promotion.id) {
-        closePromotionModal();
-      }
-    } catch (deleteError) {
-      setError(errorMessage(deleteError));
-    } finally {
-      setDeletingPromotionId(null);
-    }
+    setPendingDelete({ kind: "promotion", record: promotion });
   };
 
-  const handleDeleteVoucher = async (voucher: Voucher) => {
+  const requestDeleteVoucher = (voucher: Voucher) => {
     if (!canDeleteOffers) {
-      setError(mutationUnavailableMessage(demoMode, "delete vouchers"));
+      const message = mutationUnavailableMessage(demoMode, "delete vouchers");
+      setError(message);
+      notify({ severity: "error", title: "Voucher not deleted", message, scope: "offers", dedupeKey: "offers:voucher:delete:permission" });
       return;
     }
 
-    if (!window.confirm(`Delete voucher \"${voucher.code}\"?`)) {
+    setPendingDelete({ kind: "voucher", record: voucher });
+  };
+
+  const confirmDeleteOffer = async () => {
+    if (!pendingDelete) {
       return;
     }
 
+    if (pendingDelete.kind === "promotion") {
+      const promotion = pendingDelete.record;
+      setDeletingPromotionId(promotion.id);
+      setError(null);
+
+      try {
+        await onDeletePromotion(promotion.id);
+        if (editingPromotionId === promotion.id) {
+          closePromotionModal();
+        }
+        setPendingDelete(null);
+        notify({
+          severity: "success",
+          title: "Promotion deleted",
+          message: `${promotion.title} was deleted successfully.`,
+          scope: "offers",
+          dedupeKey: `offers:promotion:${promotion.id}:delete:success`
+        });
+      } catch (deleteError) {
+        setError(errorMessage(deleteError));
+        notifyError(deleteError, {
+          operation: "delete promotion",
+          scope: "offers",
+          dedupeKey: `offers:promotion:${promotion.id}:delete:error`
+        });
+      } finally {
+        setDeletingPromotionId(null);
+      }
+      return;
+    }
+
+    const voucher = pendingDelete.record;
     setDeletingVoucherId(voucher.id);
     setError(null);
 
@@ -621,8 +752,21 @@ export function OfferManagementPanel({
       if (editingVoucherId === voucher.id) {
         closeVoucherModal();
       }
+      setPendingDelete(null);
+      notify({
+        severity: "success",
+        title: "Voucher deleted",
+        message: `${voucher.code} was deleted successfully.`,
+        scope: "offers",
+        dedupeKey: `offers:voucher:${voucher.id}:delete:success`
+      });
     } catch (deleteError) {
       setError(errorMessage(deleteError));
+      notifyError(deleteError, {
+        operation: "delete voucher",
+        scope: "offers",
+        dedupeKey: `offers:voucher:${voucher.id}:delete:error`
+      });
     } finally {
       setDeletingVoucherId(null);
     }
@@ -700,7 +844,7 @@ export function OfferManagementPanel({
           <button
             className="outline-button table-action danger-button"
             disabled={!canDeleteOffers || deletingPromotionId === promotion.id}
-            onClick={() => void handleDeletePromotion(promotion)}
+            onClick={() => requestDeletePromotion(promotion)}
             type="button"
           >
             {deletingPromotionId === promotion.id ? "Deleting..." : "Delete"}
@@ -783,7 +927,7 @@ export function OfferManagementPanel({
           <button
             className="outline-button table-action danger-button"
             disabled={!canDeleteOffers || deletingVoucherId === voucher.id}
-            onClick={() => void handleDeleteVoucher(voucher)}
+            onClick={() => requestDeleteVoucher(voucher)}
             type="button"
           >
             {deletingVoucherId === voucher.id ? "Deleting..." : "Delete"}
@@ -807,8 +951,29 @@ export function OfferManagementPanel({
 
       <InlineError message={error} />
 
-      <div className="admin-panels two-up">
-        <article className="dashboard-panel">
+      <div className="admin-subtabs" role="tablist" aria-label="Offer sections">
+        <button
+          aria-selected={activeTab === "promotions"}
+          className={`admin-subtab${activeTab === "promotions" ? " is-active" : ""}`}
+          onClick={() => setActiveTab("promotions")}
+          role="tab"
+          type="button"
+        >
+          Promotions ({promotions.length})
+        </button>
+        <button
+          aria-selected={activeTab === "vouchers"}
+          className={`admin-subtab${activeTab === "vouchers" ? " is-active" : ""}`}
+          onClick={() => setActiveTab("vouchers")}
+          role="tab"
+          type="button"
+        >
+          Vouchers ({vouchers.length})
+        </button>
+      </div>
+
+      {activeTab === "promotions" ? (
+        <article className="dashboard-panel" role="tabpanel">
           <div className="panel-header">
             <div>
               <p className="eyebrow">Promotions</p>
@@ -825,15 +990,57 @@ export function OfferManagementPanel({
           </div>
           <ManagementTable
             columns={promotionColumns}
-            emptyMessage="No promotions have been created yet."
+            emptyMessage={
+              promotions.length === 0
+                ? "No promotions have been created yet."
+                : "No promotions match the current filter."
+            }
+            filterSlot={
+              <div className="admin-filter-pills" role="group" aria-label="Filter promotions by status">
+                {offerStatusFilters.map((option) => {
+                  const count =
+                    option.value === "all"
+                      ? promotions.length
+                      : promotions.filter((item) =>
+                          option.value === "active" ? item.is_active : !item.is_active
+                        ).length;
+                  const isActive = promotionStatusFilter === option.value;
+                  return (
+                    <button
+                      aria-pressed={isActive}
+                      className={`admin-filter-pill${isActive ? " is-active" : ""}`}
+                      key={option.value}
+                      onClick={() => setPromotionStatusFilter(option.value)}
+                      type="button"
+                    >
+                      {option.label} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+            }
             getRowKey={(promotion) => promotion.id}
+            getSearchText={(promotion) =>
+              [
+                promotion.id,
+                `#${promotion.id}`,
+                promotion.title,
+                promotion.label,
+                promotion.description,
+                promotion.discount_type ?? "",
+                promotion.is_active ? "active" : "inactive"
+              ]
+                .filter(Boolean)
+                .join(" ")
+            }
             initialSortKey="promotion"
-            rows={promotions}
+            rows={filteredPromotions}
+            searchPlaceholder="Search promotion title, label, or description..."
             tableLabel="Promotion management table"
           />
         </article>
-
-        <article className="dashboard-panel">
+      ) : (
+        <article className="dashboard-panel" role="tabpanel">
           <div className="panel-header">
             <div>
               <p className="eyebrow">Vouchers</p>
@@ -850,17 +1057,61 @@ export function OfferManagementPanel({
           </div>
           <ManagementTable
             columns={voucherColumns}
-            emptyMessage="No vouchers have been created yet."
+            emptyMessage={
+              vouchers.length === 0
+                ? "No vouchers have been created yet."
+                : "No vouchers match the current filter."
+            }
+            filterSlot={
+              <div className="admin-filter-pills" role="group" aria-label="Filter vouchers by status">
+                {offerStatusFilters.map((option) => {
+                  const count =
+                    option.value === "all"
+                      ? vouchers.length
+                      : vouchers.filter((item) =>
+                          option.value === "active" ? item.is_active : !item.is_active
+                        ).length;
+                  const isActive = voucherStatusFilter === option.value;
+                  return (
+                    <button
+                      aria-pressed={isActive}
+                      className={`admin-filter-pill${isActive ? " is-active" : ""}`}
+                      key={option.value}
+                      onClick={() => setVoucherStatusFilter(option.value)}
+                      type="button"
+                    >
+                      {option.label} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+            }
             getRowKey={(voucher) => voucher.id}
+            getSearchText={(voucher) =>
+              [
+                voucher.id,
+                `#${voucher.id}`,
+                voucher.code,
+                voucher.title,
+                voucher.description,
+                voucher.discount_type,
+                voucher.is_active ? "active" : "inactive",
+                voucher.is_public ? "public" : "private"
+              ]
+                .filter(Boolean)
+                .join(" ")
+            }
             initialSortKey="voucher"
-            rows={vouchers}
+            rows={filteredVouchers}
+            searchPlaceholder="Search voucher code, title, or description..."
             tableLabel="Voucher management table"
           />
         </article>
-      </div>
+      )}
 
       <RecordModal
         eyebrow={editingPromotionId === null ? "New promotion" : `Promotion #${editingPromotionId}`}
+        isBusy={isSavingPromotion}
         isOpen={isPromotionModalOpen}
         onClose={closePromotionModal}
         size="wide"
@@ -884,6 +1135,7 @@ export function OfferManagementPanel({
 
       <RecordModal
         eyebrow={editingVoucherId === null ? "New voucher" : `Voucher #${editingVoucherId}`}
+        isBusy={isSavingVoucher}
         isOpen={isVoucherModalOpen}
         onClose={closeVoucherModal}
         size="wide"
@@ -904,6 +1156,40 @@ export function OfferManagementPanel({
           values={voucherForm}
         />
       </RecordModal>
+
+      <ConfirmModal
+        confirmLabel={pendingDelete?.kind === "voucher" ? "Delete voucher" : "Delete promotion"}
+        eyebrow={pendingDelete?.kind === "voucher" ? "Vouchers" : "Promotions"}
+        isConfirming={
+          pendingDelete?.kind === "promotion"
+            ? deletingPromotionId === pendingDelete.record.id
+            : pendingDelete?.kind === "voucher"
+              ? deletingVoucherId === pendingDelete.record.id
+              : false
+        }
+        isOpen={pendingDelete !== null}
+        message={
+          pendingDelete?.kind === "promotion"
+            ? `Delete promotion "${pendingDelete.record.title}"? Guests will no longer see this offer.`
+            : pendingDelete?.kind === "voucher"
+              ? `Delete voucher "${pendingDelete.record.code}"? Guests will no longer be able to redeem it.`
+              : ""
+        }
+        onCancel={() => {
+          if (deletingPromotionId === null && deletingVoucherId === null) {
+            setPendingDelete(null);
+          }
+        }}
+        onConfirm={confirmDeleteOffer}
+        title={
+          pendingDelete?.kind === "promotion"
+            ? `Delete promotion "${pendingDelete.record.title}"?`
+            : pendingDelete?.kind === "voucher"
+              ? `Delete voucher "${pendingDelete.record.code}"?`
+              : "Delete offer"
+        }
+        tone="danger"
+      />
     </section>
   );
 }

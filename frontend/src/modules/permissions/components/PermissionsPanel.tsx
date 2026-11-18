@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 
+import { ConfirmModal } from "../../../shared/components/ConfirmModal";
 import { RecordForm, type RecordFormField, RecordModal } from "../../../shared/components/RecordModal";
 import { useNotifications } from "../../../shared/notifications";
 import type {
@@ -32,6 +33,9 @@ const roleFields: RecordFormField<CreateRoleInput>[] = [
 
 type PermissionsPanelProps = {
   activeRoleId: number | null;
+  canCreate?: boolean;
+  canDelete?: boolean;
+  canUpdate?: boolean;
   onChangeRole: (roleId: number) => void;
   onCreateRole: (input: CreateRoleInput) => Promise<Role>;
   onDeleteRole: (roleId: number) => Promise<void>;
@@ -53,6 +57,9 @@ function emptyPermission(roleId: number, pageId: number): RolePagePermission {
 
 export function PermissionsPanel({
   activeRoleId,
+  canCreate = true,
+  canDelete = true,
+  canUpdate = true,
   onChangeRole,
   onCreateRole,
   onDeleteRole,
@@ -64,14 +71,15 @@ export function PermissionsPanel({
   const [roleForm, setRoleForm] = useState<CreateRoleInput>({ name: "", description: "" });
   const [editForm, setEditForm] = useState<UpdateRoleInput>({ name: "", description: "" });
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
   const [isCreatingRole, setIsCreatingRole] = useState(false);
   const [isSavingRole, setIsSavingRole] = useState(false);
   const [isDeletingRole, setIsDeletingRole] = useState(false);
+  const [pendingDeleteRole, setPendingDeleteRole] = useState<Role | null>(null);
   const [savingPermissionKey, setSavingPermissionKey] = useState<string | null>(null);
 
   const activeRole = permissions?.roles.find((role) => role.id === activeRoleId) ?? null;
-  const canEditActiveRole = Boolean(activeRole && !activeRole.is_super_admin);
+  const canEditActiveRole = Boolean(canUpdate && activeRole && !activeRole.is_super_admin);
+  const canDeleteActiveRole = Boolean(canDelete && activeRole && !activeRole.is_super_admin);
 
   useEffect(() => {
     if (!activeRole) {
@@ -83,6 +91,11 @@ export function PermissionsPanel({
   }, [activeRole]);
 
   const handleCreateRole = async () => {
+    if (!canCreate) {
+      notify({ severity: "error", title: "Role not created", message: "The active role cannot create roles.", scope: "permissions", dedupeKey: "permissions:role:create:permission" });
+      return;
+    }
+
     setIsCreatingRole(true);
 
     try {
@@ -101,8 +114,10 @@ export function PermissionsPanel({
     }
   };
 
-  const handleUpdateRole = async () => {
-    if (!permissions || !activeRole || activeRole.is_super_admin) {
+  const handleUpdateRole = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!permissions || !activeRole || activeRole.is_super_admin || !canUpdate) {
       return;
     }
 
@@ -113,7 +128,6 @@ export function PermissionsPanel({
         name: editForm.name.trim(),
         description: editForm.description.trim()
       });
-      setIsEditOpen(false);
       notify({ severity: "success", title: "Role updated", message: `${role.name} was updated successfully.`, scope: "permissions", dedupeKey: `permissions:role:${role.id}:update:success` });
     } catch (error) {
       notifyError(error, { operation: "update role", scope: "permissions", dedupeKey: `permissions:role:${activeRole.id}:update:error` });
@@ -122,28 +136,33 @@ export function PermissionsPanel({
     }
   };
 
-  const handleDeleteRole = async () => {
-    if (!permissions || !activeRole || activeRole.is_super_admin) {
+  const requestDeleteRole = () => {
+    if (!permissions || !activeRole || activeRole.is_super_admin || !canDelete) {
       return;
     }
 
-    const confirmed = window.confirm(`Delete the ${activeRole.name} role?`);
-    if (!confirmed) {
+    setPendingDeleteRole(activeRole);
+  };
+
+  const confirmDeleteRole = async () => {
+    if (!permissions || !pendingDeleteRole || pendingDeleteRole.is_super_admin || !canDelete) {
       return;
     }
 
+    const roleToDelete = pendingDeleteRole;
     setIsDeletingRole(true);
 
     try {
       const nextRoleId =
-        permissions.roles.find((role) => role.id !== activeRole.id)?.id ?? null;
-      await onDeleteRole(activeRole.id);
+        permissions.roles.find((role) => role.id !== roleToDelete.id)?.id ?? null;
+      await onDeleteRole(roleToDelete.id);
+      setPendingDeleteRole(null);
       if (nextRoleId !== null) {
         onChangeRole(nextRoleId);
       }
-      notify({ severity: "success", title: "Role deleted", message: `${activeRole.name} was deleted successfully.`, scope: "permissions", dedupeKey: `permissions:role:${activeRole.id}:delete:success` });
+      notify({ severity: "success", title: "Role deleted", message: `${roleToDelete.name} was deleted successfully.`, scope: "permissions", dedupeKey: `permissions:role:${roleToDelete.id}:delete:success` });
     } catch (error) {
-      notifyError(error, { operation: "delete role", scope: "permissions", dedupeKey: `permissions:role:${activeRole.id}:delete:error` });
+      notifyError(error, { operation: "delete role", scope: "permissions", dedupeKey: `permissions:role:${roleToDelete.id}:delete:error` });
     } finally {
       setIsDeletingRole(false);
     }
@@ -232,111 +251,83 @@ export function PermissionsPanel({
           <p className="eyebrow">Access control</p>
           <h3>Roles and page permissions</h3>
         </div>
-        <span className="status-pill live">{permissions.roles.length} roles</span>
+        <div className="admin-actions">
+          <span className="status-pill live">{permissions.roles.length} roles</span>
+          <button
+            className="solid-button"
+            disabled={!canCreate}
+            onClick={() => {
+              setRoleForm({ name: "", description: "" });
+              setIsCreateOpen(true);
+            }}
+            type="button"
+          >
+            New role
+          </button>
+        </div>
       </div>
 
-      <div className="permission-layout">
-        <article className="dashboard-panel">
-          <div className="panel-header">
-            <div>
-              <p className="eyebrow">Role editor</p>
-              <h3>{activeRole?.name ?? "Select a role"}</h3>
-            </div>
-            {activeRole?.is_super_admin ? <span className="status-pill live">Reserved</span> : null}
+      <article className="dashboard-panel">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">Role editor</p>
+            <h3>{activeRole?.name ?? "Select a role"}</h3>
           </div>
+          {activeRole?.is_super_admin ? <span className="status-pill live">Reserved</span> : null}
+        </div>
 
+        <label className="admin-field">
+          Active role
+          <select
+            value={activeRoleId ?? ""}
+            onChange={(event) => onChangeRole(Number(event.target.value))}
+          >
+            {permissions.roles.map((role) => (
+              <option key={role.id} value={role.id}>
+                {role.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <form className="admin-form role-edit-form" onSubmit={handleUpdateRole}>
           <label className="admin-field">
-            Active role
-            <select
-              value={activeRoleId ?? ""}
-              onChange={(event) => onChangeRole(Number(event.target.value))}
-            >
-              {permissions.roles.map((role) => (
-                <option key={role.id} value={role.id}>
-                  {role.name}
-                </option>
-              ))}
-            </select>
+            Role name
+            <input
+              disabled={!canEditActiveRole}
+              value={editForm.name}
+              onChange={(event) => setEditForm((current) => ({ ...current, name: event.target.value }))}
+              required
+            />
           </label>
 
-          <form className="admin-form role-edit-form" onSubmit={handleUpdateRole}>
-            <label className="admin-field">
-              Role name
-              <input
-                disabled={!canEditActiveRole}
-                value={editForm.name}
-                onChange={(event) => setEditForm((current) => ({ ...current, name: event.target.value }))}
-                required
-              />
-            </label>
+          <label className="admin-field">
+            Description
+            <textarea
+              disabled={!canEditActiveRole}
+              rows={3}
+              value={editForm.description}
+              onChange={(event) =>
+                setEditForm((current) => ({ ...current, description: event.target.value }))
+              }
+            />
+          </label>
 
-            <label className="admin-field">
-              Description
-              <textarea
-                disabled={!canEditActiveRole}
-                rows={3}
-                value={editForm.description}
-                onChange={(event) =>
-                  setEditForm((current) => ({ ...current, description: event.target.value }))
-                }
-              />
-            </label>
-
-            <div className="form-actions split-actions">
-              <button className="solid-button" disabled={!canEditActiveRole || isSavingRole} type="submit">
-                {isSavingRole ? "Saving..." : "Save Role"}
-              </button>
-              <button
-                className="outline-button danger-button"
-                disabled={!canEditActiveRole || isDeletingRole}
-                onClick={() => void handleDeleteRole()}
-                type="button"
-              >
-                {isDeletingRole ? "Deleting..." : "Delete Role"}
-              </button>
-            </div>
-          </form>
-        </article>
-
-        <article className="dashboard-panel">
-          <div className="panel-header">
-            <div>
-              <p className="eyebrow">New role</p>
-              <h3>Create dynamic roles</h3>
-            </div>
+          <div className="form-actions split-actions">
+            <button className="solid-button" disabled={!canEditActiveRole || isSavingRole} type="submit">
+              {isSavingRole ? "Saving..." : "Save Role"}
+            </button>
+            <button
+              className="outline-button danger-button"
+              disabled={!canDeleteActiveRole || isDeletingRole}
+              onClick={requestDeleteRole}
+              type="button"
+            >
+              {isDeletingRole ? "Deleting..." : "Delete Role"}
+            </button>
           </div>
-
-          <form className="admin-form" onSubmit={handleCreateRole}>
-            <label className="admin-field">
-              Role name
-              <input
-                value={roleForm.name}
-                onChange={(event) => setRoleForm((current) => ({ ...current, name: event.target.value }))}
-                placeholder="Regional Admin"
-                required
-              />
-            </label>
-
-            <label className="admin-field">
-              Description
-              <textarea
-                value={roleForm.description}
-                onChange={(event) =>
-                  setRoleForm((current) => ({ ...current, description: event.target.value }))
-                }
-                placeholder="Owns regional catalog and fulfillment access."
-                rows={4}
-              />
-            </label>
-
-            <div className="form-actions">
-              <button className="solid-button" disabled={isCreatingRole} type="submit">
-                {isCreatingRole ? "Creating..." : "Create Role"}
-              </button>
-            </div>
-          </form>
-        </article>
-      </div>
+        </form>
+      </article>
 
       <article className="dashboard-panel permission-matrix-panel">
         <div className="panel-header">
@@ -399,6 +390,51 @@ export function PermissionsPanel({
           })}
         </div>
       </article>
+
+      <RecordModal
+        eyebrow="New role"
+        isBusy={isCreatingRole}
+        isOpen={isCreateOpen}
+        onClose={() => {
+          if (!isCreatingRole) {
+            setIsCreateOpen(false);
+          }
+        }}
+        statusLabel={canCreate ? "Writable" : "Read only"}
+        statusTone={canCreate ? "live" : undefined}
+        title="Create dynamic role"
+      >
+        <RecordForm
+          disabled={!canCreate}
+          fields={roleFields}
+          isSubmitting={isCreatingRole}
+          onCancel={() => setIsCreateOpen(false)}
+          onChange={setRoleForm}
+          onSubmit={() => void handleCreateRole()}
+          submitLabel="Create Role"
+          values={roleForm}
+        />
+      </RecordModal>
+
+      <ConfirmModal
+        confirmLabel="Delete role"
+        eyebrow="Access control"
+        isConfirming={isDeletingRole}
+        isOpen={pendingDeleteRole !== null}
+        message={
+          pendingDeleteRole
+            ? `Delete the ${pendingDeleteRole.name} role? Staff assigned to this role must be reassigned first.`
+            : ""
+        }
+        onCancel={() => {
+          if (!isDeletingRole) {
+            setPendingDeleteRole(null);
+          }
+        }}
+        onConfirm={confirmDeleteRole}
+        title={pendingDeleteRole ? `Delete ${pendingDeleteRole.name}?` : "Delete role"}
+        tone="danger"
+      />
     </section>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { ManagementTable } from "../../../shared/components/ManagementTable";
 import { currencyFromCents, formatOrderDate } from "../../../shared/formatters";
@@ -12,6 +12,15 @@ import type {
 } from "../types";
 
 const salesChannels = ["web", "pro-desk", "phone", "in-store"];
+type SalesStatusFilter = "all" | SalesStatus;
+const salesStatusFilters: { label: string; value: SalesStatusFilter }[] = [
+  { label: "All", value: "all" },
+  { label: "Confirmed", value: "confirmed" },
+  { label: "Processing", value: "processing" },
+  { label: "Paid", value: "paid" },
+  { label: "Fulfilled", value: "fulfilled" },
+  { label: "Cancelled", value: "cancelled" }
+];
 
 const salesTransitions: Record<SalesStatus, SalesStatus[]> = {
   confirmed: ["processing", "cancelled"],
@@ -46,6 +55,21 @@ function detailsDraftFor(sale: SalesRecord): DetailsDraft {
   };
 }
 
+function isDetailsDirty(sale: SalesRecord, draft: DetailsDraft): boolean {
+  const saved = detailsDraftFor(sale);
+  if (draft.channel !== saved.channel || draft.sales_rep !== saved.sales_rep) {
+    return true;
+  }
+
+  const trimmedDiscount = draft.discount.trim();
+  if (!trimmedDiscount) {
+    return true;
+  }
+
+  const parsedCents = Math.round(Number(trimmedDiscount) * 100);
+  return !Number.isFinite(parsedCents) || parsedCents !== sale.discount_cents;
+}
+
 function statusPillClass(status: SalesStatus): string {
   if (status === "paid" || status === "fulfilled") {
     return "live";
@@ -72,8 +96,20 @@ export function SalesPanel({
   const [detailsDrafts, setDetailsDrafts] = useState<Record<number, DetailsDraft>>({});
   const [statusDrafts, setStatusDrafts] = useState<Record<number, { status: string; note: string }>>({});
   const [savingOrderId, setSavingOrderId] = useState<number | null>(null);
+  const [statusFilter, setStatusFilter] = useState<SalesStatusFilter>("all");
 
   const draftFor = (sale: SalesRecord): DetailsDraft => detailsDrafts[sale.order_id] ?? detailsDraftFor(sale);
+  const filteredSales = useMemo(
+    () =>
+      statusFilter === "all"
+        ? sales
+        : sales.filter((sale) => sale.status === statusFilter),
+    [sales, statusFilter]
+  );
+  const dirtyCount = useMemo(
+    () => sales.filter((sale) => isDetailsDirty(sale, detailsDrafts[sale.order_id] ?? detailsDraftFor(sale))).length,
+    [detailsDrafts, sales]
+  );
   const statusDraftFor = (sale: SalesRecord) =>
     statusDrafts[sale.order_id] ?? {
       status: salesTransitions[sale.status][0] ?? sale.status,
@@ -145,7 +181,16 @@ export function SalesPanel({
       label: "Order",
       align: "right" as const,
       sortValue: (sale: SalesRecord) => sale.order_id,
-      render: (sale: SalesRecord) => `#${sale.order_id}`
+      render: (sale: SalesRecord) => {
+        const dirty = isDetailsDirty(sale, draftFor(sale));
+
+        return (
+          <div className="table-cell-main" style={{ minWidth: "4.5rem" }}>
+            <strong>#{sale.order_id}</strong>
+            {dirty ? <span className="sales-row-dirty">Unsaved</span> : null}
+          </div>
+        );
+      }
     },
     {
       key: "customer",
@@ -281,10 +326,11 @@ export function SalesPanel({
       label: "Details",
       render: (sale: SalesRecord) => {
         const isSaving = savingOrderId === sale.order_id;
+        const dirty = isDetailsDirty(sale, draftFor(sale));
 
         return (
           <button
-            className="outline-button table-action"
+            className={`${dirty ? "solid-button" : "outline-button"} table-action`}
             disabled={!canUpdate || isSaving}
             onClick={() => void saveDetails(sale)}
             type="button"
@@ -391,22 +437,74 @@ export function SalesPanel({
         </div>
       ) : null}
 
-      {sales.length === 0 ? (
-        <p>No sales have been recorded yet.</p>
-      ) : (
+      <article className="dashboard-panel">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">Sales ledger</p>
+            <h3>Channels, sales reps and status updates</h3>
+          </div>
+          <div className="admin-actions">
+            {dirtyCount > 0 ? (
+              <span className="status-pill warning">{dirtyCount} unsaved</span>
+            ) : null}
+            <span className="status-pill">{sales.length} rows</span>
+          </div>
+        </div>
+
         <ManagementTable
           columns={salesColumns}
-          emptyMessage="No sales have been recorded yet."
+          emptyMessage={
+            sales.length === 0
+              ? "No sales have been recorded yet."
+              : "No sales match the current filter."
+          }
+          filterSlot={
+            <div className="admin-filter-pills" role="group" aria-label="Filter sales by status">
+              {salesStatusFilters.map((option) => {
+                const count =
+                  option.value === "all"
+                    ? sales.length
+                    : sales.filter((sale) => sale.status === option.value).length;
+                const isActive = statusFilter === option.value;
+                return (
+                  <button
+                    aria-pressed={isActive}
+                    className={`admin-filter-pill${isActive ? " is-active" : ""}`}
+                    key={option.value}
+                    onClick={() => setStatusFilter(option.value)}
+                    type="button"
+                  >
+                    {option.label} ({count})
+                  </button>
+                );
+              })}
+            </div>
+          }
           getRowKey={(sale) => sale.order_id}
+          getSearchText={(sale) =>
+            [
+              sale.order_id,
+              `#${sale.order_id}`,
+              sale.customer_name,
+              sale.customer_email,
+              sale.status,
+              sale.payment_status,
+              sale.channel,
+              sale.sales_rep
+            ]
+              .filter(Boolean)
+              .join(" ")
+          }
           hasMore={hasMore}
           initialSortDirection="desc"
           initialSortKey="updated"
           isLoadingMore={isLoadingMore}
           onLoadMore={onLoadMore}
-          rows={sales}
+          rows={filteredSales}
+          searchPlaceholder="Search order #, customer, channel, rep, or payment..."
           tableLabel="Sales management table"
         />
-      )}
+      </article>
     </section>
   );
 }
